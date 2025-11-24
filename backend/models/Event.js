@@ -1,0 +1,97 @@
+const mongoose = require('mongoose');
+
+const eventSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  endDate: {
+    type: Date
+  },
+  time: {
+    type: String,
+    trim: true
+  },
+  location: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    enum: ['conference', 'service', 'workshop', 'youth', 'children', 'community', 'prayer', 'other'],
+    default: 'other'
+  },
+  speaker: {
+    type: String,
+    trim: true
+  },
+  imageUrl: {
+    type: String,
+    trim: true
+  },
+  registrationRequired: {
+    type: Boolean,
+    default: false
+  },
+  maxAttendees: {
+    type: Number
+  },
+  currentAttendees: {
+    type: Number,
+    default: 0
+  },
+  contactEmail: {
+    type: String,
+    trim: true
+  },
+  contactPhone: {
+    type: String,
+    trim: true
+  },
+  isPublished: {
+    type: Boolean,
+    default: true
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Update updatedAt on save
+eventSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Index for search
+eventSchema.index({ title: 'text', description: 'text', location: 'text', speaker: 'text' });
+
+module.exports = mongoose.model('Event', eventSchema);

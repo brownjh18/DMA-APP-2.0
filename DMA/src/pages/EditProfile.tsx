@@ -1,0 +1,415 @@
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonText,
+  IonIcon,
+  IonLoading,
+  IonAlert,
+  IonAvatar
+} from '@ionic/react';
+import { person, call, create, checkmarkCircle, camera, image } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+import apiService from '../services/api';
+import { AuthContext } from '../App';
+
+const EditProfile: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const history = useHistory();
+  const { updateUser } = useContext(AuthContext);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: ''
+  });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          apiService.setToken(token);
+          const userData = await apiService.getProfile();
+          setUser(userData.user);
+          setFormData({
+            name: userData.user.name || '',
+            phone: userData.user.phone || ''
+          });
+        } catch (error) {
+          localStorage.removeItem('token');
+          apiService.clearToken();
+          history.push('/signin');
+        }
+      } else {
+        history.push('/signin');
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, [history]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name) {
+      setError('Name is required');
+      setShowAlert(true);
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update profile information
+      const profileResponse = await apiService.updateProfile({
+        name: formData.name,
+        phone: formData.phone
+      });
+
+      let profilePictureUrl = user?.profilePicture;
+      let finalResponse = profileResponse;
+
+      // Upload profile picture if selected
+      if (selectedImage) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('profilePicture', selectedImage);
+        const uploadResponse = await apiService.uploadProfilePicture(formDataUpload);
+        profilePictureUrl = uploadResponse.user.profilePicture;
+        finalResponse = uploadResponse; // Use the upload response if it has the token
+      }
+
+      // Update token in localStorage if new token provided
+      if (finalResponse.token) {
+        localStorage.setItem('token', finalResponse.token);
+        apiService.setToken(finalResponse.token);
+      }
+
+      // Update global user state
+      updateUser(finalResponse.user);
+
+      // Clear selection
+      setSelectedImage(null);
+      setImagePreview(null);
+
+      // Redirect to profile page after successful save
+      setTimeout(() => {
+        history.push('/profile');
+      }, 500);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile. Please try again.');
+      setShowAlert(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <IonPage>
+        <IonHeader translucent>
+          <IonToolbar className="toolbar-ios">
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/profile" />
+            </IonButtons>
+            <IonTitle className="title-ios">Edit Profile</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent fullscreen className="content-ios">
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            Loading...
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  if (!user) {
+    return (
+      <IonPage>
+        <IonHeader translucent>
+          <IonToolbar className="toolbar-ios">
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/profile" />
+            </IonButtons>
+            <IonTitle className="title-ios">Edit Profile</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent fullscreen className="content-ios">
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <IonIcon icon={person} style={{ fontSize: '4em', color: 'var(--ion-text-color)', marginBottom: '20px' }} />
+            <h2 style={{ color: 'var(--ion-text-color)', marginBottom: '20px' }}>Authentication Required</h2>
+            <p style={{ color: 'var(--ion-text-color)', marginBottom: '30px' }}>
+              Please sign in to edit your profile.
+            </p>
+            <IonButton
+              expand="block"
+              style={{
+                backgroundColor: 'var(--ion-color-primary)',
+                color: 'white',
+                borderRadius: '12px',
+                fontWeight: '600'
+              }}
+              onClick={() => history.push('/signin')}
+            >
+              Sign In
+            </IonButton>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return (
+    <IonPage>
+      <IonHeader translucent>
+        <IonToolbar className="toolbar-ios">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/profile" />
+          </IonButtons>
+          <IonTitle className="title-ios">Edit Profile</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent fullscreen className="content-ios">
+        <div style={{
+          padding: '20px',
+          maxWidth: '400px',
+          margin: '0 auto',
+          paddingTop: '40px'
+        }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <IonIcon
+              icon={create}
+              style={{
+                fontSize: '3em',
+                color: 'var(--ion-color-primary)',
+                marginBottom: '16px'
+              }}
+            />
+            <h1 style={{
+              margin: '0 0 8px 0',
+              fontSize: '1.8em',
+              fontWeight: '700',
+              color: 'var(--ion-text-color)'
+            }}>
+              Edit Profile
+            </h1>
+            <p style={{
+              margin: '0 0 4px 0',
+              color: 'var(--ion-text-color)',
+              opacity: 0.7,
+              fontSize: '1em'
+            }}>
+              Update your account information
+            </p>
+            <p style={{
+              margin: '0',
+              color: 'var(--ion-color-medium)',
+              fontSize: '0.9em'
+            }}>
+              {user.email}
+            </p>
+          </div>
+
+          {/* Profile Picture Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{
+              margin: '0 0 16px 0',
+              fontSize: '1.4em',
+              fontWeight: '600',
+              color: 'var(--ion-text-color)'
+            }}>
+              Profile Picture
+            </h2>
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              {/* Current/Preview Image */}
+              <div style={{ position: 'relative' }}>
+                <IonAvatar style={{
+                  width: '120px',
+                  height: '120px',
+                  border: '4px solid var(--ion-color-primary)'
+                }}>
+                  <img
+                    src={imagePreview || (user?.profilePicture ? `http://localhost:5000${user.profilePicture}` : 'https://i.pravatar.cc/150?img=12')}
+                    alt="Profile Preview"
+                  />
+                </IonAvatar>
+
+                {/* Camera overlay */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '8px',
+                  backgroundColor: 'var(--ion-color-primary)',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}>
+                  <IonIcon icon={camera} style={{ color: 'white', fontSize: '1.2em' }} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Edit Profile Form */}
+          <form onSubmit={handleSave}>
+            {/* Name Input */}
+            <IonItem
+              style={{
+                marginBottom: '16px',
+                borderRadius: '12px',
+                border: '1px solid var(--ion-color-step-300)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                '--border-radius': '12px'
+              }}
+              lines="none"
+            >
+              <IonIcon icon={person} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonInput
+                type="text"
+                value={formData.name}
+                onIonChange={(e) => handleInputChange('name', e.detail.value!)}
+                placeholder="Full name"
+                required
+                style={{ color: 'var(--ion-text-color)' }}
+              />
+            </IonItem>
+
+            {/* Phone Input */}
+            <IonItem
+              style={{
+                marginBottom: '24px',
+                borderRadius: '12px',
+                border: '1px solid var(--ion-color-step-300)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                '--border-radius': '12px'
+              }}
+              lines="none"
+            >
+              <IonIcon icon={call} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonInput
+                type="tel"
+                value={formData.phone}
+                onIonChange={(e) => handleInputChange('phone', e.detail.value!)}
+                placeholder="Phone number (optional)"
+                style={{ color: 'var(--ion-text-color)' }}
+              />
+            </IonItem>
+
+            {/* Save Button */}
+            <IonButton
+              expand="block"
+              type="submit"
+              style={{
+                height: '44px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                backgroundColor: 'var(--ion-color-primary)',
+                '--border-radius': '8px'
+              }}
+              disabled={saving}
+            >
+              <IonIcon icon={checkmarkCircle} slot="start" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </IonButton>
+          </form>
+
+          {/* Footer */}
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <IonText style={{
+              color: 'var(--ion-text-color)',
+              opacity: 0.6,
+              fontSize: '0.8em'
+            }}>
+              Dove Ministries Africa
+            </IonText>
+          </div>
+        </div>
+
+        {/* Loading Spinner */}
+        <IonLoading
+          isOpen={saving}
+          message="Saving your changes..."
+          spinner="crescent"
+        />
+
+        {/* Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={success ? 'Success' : 'Error'}
+          message={success || error}
+          buttons={success ? ['OK'] : ['Try Again']}
+        />
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default EditProfile;

@@ -1,0 +1,303 @@
+/* For information on how to create your own theme, please refer to:
+http://ionicframework.com/docs/theming/ */
+
+/* Modern Design Variables */
+:root {
+  --primary-color: #6366f1;
+  --secondary-color: #8b5cf6;
+  --accent-color: #f59e0b;
+  --background-light: #f8fafc;
+  --background-dark: #1e293b;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Modern Sidebar Styling */
+.menu-content {
+  --background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 0 16px 16px 0;
+}
+
+.menu-item {
+  --border-radius: var(--border-radius);
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin: 4px 8px;
+  transition: all 0.2s ease;
+  --color: #1e293b;
+  --detail-icon-color: #1e293b;
+}
+
+.menu-item:hover {
+  --background: rgba(0, 0, 0, 0.05);
+  transform: translateX(4px);
+  --color: #1e293b;
+  --detail-icon-color: #1e293b;
+}
+
+.menu-item ion-icon {
+  color: #1e293b;
+}
+
+.menu-section {
+  --background: transparent;
+  --color: #1e293b;
+  --padding-start: 16px;
+  --padding-top: 24px;
+  --padding-bottom: 8px;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.menu-section:hover {
+  --background: rgba(0, 0, 0, 0.05);
+}
+
+.menu-section ion-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.user-profile {
+  --background: rgba(0, 0, 0, 0.05);
+  --border-radius: 12px;
+  margin: 10px;
+  margin-bottom: 20px;
+}
+
+.user-profile ion-avatar {
+  --border-radius: 50%;
+}
+
+.user-profile h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.user-profile p {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.menu-section ion-icon {
+  color: #1e293b;
+}
+
+.menu-header {
+  --background: #000000;
+  --color: white;
+}
+
+.menu-header ion-title {
+  font-weight: 600;
+}
+
+/* Global Header Styles - Frosted Glass Effect */
+.global-header {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.global-header ion-toolbar {
+  --background: rgba(255, 255, 255, 0.95);
+  --border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Tab Bar Styling */
+.tab-bar {
+  --background: rgba(255, 255, 255, 0.95);
+  --border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-lg);
+}
+
+.tab-button {
+  --color-selected: var(--primary-color);
+  --background-selected: rgba(99, 102, 241, 0.1);
+  --border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.tab-button ion-icon {
+  transition: transform 0.2s ease;
+}
+
+.tab-button.tab-selected ion-icon {
+  transform: scale(1.1);
+}
+
+/* Solid background effect – Modern style tab bar */
+.ios-glass-tabbar {
+  --background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05);
+
+  /* Layout */
+  position: fixed;
+  bottom: 13px;
+  left: 7px;
+  right: 7px;
+  z-index: 999;
+  padding: 4px 6px 4px 6px;
+  border-radius: 35px;
+
+  /* Prevent clipping on iOS */
+  overflow: hidden;
+}
+
+.ios-glass-tabbar .tab-button {
+  --color: #64748b;
+  --color-selected: #ffffff;
+  --background-selected: #1e293b;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.72rem;
+  padding: 8px 4px;
+  min-height: 44px;
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin: 0 2px;
+  position: relative;
+}
+
+
+.ios-glass-tabbar .tab-button.ion-selected {
+  font-weight: 600;
+  transform: translateY(-2px);
+}
+
+.ios-glass-tabbar .tab-button ion-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.ios-glass-tabbar .tab-button.ion-selected ion-icon {
+  color: #2735fd;
+  transform: scale(1.1);
+}
+
+/* Content spacing */
+.content-ios,
+.sermons-content,
+.gallery-content,
+ion-content[fullscreen] {
+  --padding-bottom: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .content-ios,
+  .sermons-content,
+  .gallery-content,
+  ion-content[fullscreen] {
+    --padding-bottom: 100px; /* Account for smaller nav bar */
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-light: var(--background-dark);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+  }
+
+  .menu-content {
+    --background: linear-gradient(180deg, #1a1a2e 0%, #000000 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 0 16px 16px 0;
+  }
+
+  .menu-item {
+    --color: #f1f5f9;
+    --detail-icon-color: #f1f5f9;
+  }
+
+  .menu-item:hover {
+    --background: rgba(255, 255, 255, 0.1);
+    --color: #f1f5f9;
+    --detail-icon-color: #f1f5f9;
+  }
+
+  .menu-item ion-icon {
+    color: #f1f5f9;
+  }
+
+  .menu-section {
+    --color: #f1f5f9;
+  }
+
+  .menu-section:hover {
+    --background: rgba(255, 255, 255, 0.1);
+  }
+
+  .menu-section ion-icon {
+    color: #f1f5f9;
+  }
+
+  .user-profile {
+    --background: rgba(255, 255, 255, 0.1);
+  }
+
+  .user-profile h2 {
+    color: #f1f5f9;
+  }
+
+  .user-profile p {
+    color: #94a3b8;
+  }
+
+  .tab-bar {
+    --background: rgba(30, 41, 59, 0.95);
+    --border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .ios-glass-tabbar {
+    --background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .ios-glass-tabbar .tab-button {
+    --color: #cbd5e1;
+    --color-selected: #1e293b;
+    --background-selected: #ffffff;
+  }
+
+
+  .ios-glass-tabbar .tab-button.ion-selected ion-icon {
+    color: #a78bfa;
+  }
+
+  /* Global Header - Dark Mode Background */
+  .global-header {
+    background-color: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}

@@ -1,0 +1,62 @@
+/* Dark mode support for Admin Dashboard page */
+@media (prefers-color-scheme: dark) {
+  /* Dashboard cards */
+  .dashboard-card {
+    background: rgba(30, 41, 59, 0.8) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .card-title {
+    color: #f1f5f9 !important;
+  }
+
+  .card-content {
+    color: #94a3b8 !important;
+  }
+
+  /* Stats */
+  .stat-number {
+    color: #60a5fa !important;
+  }
+
+  .stat-label {
+    color: #94a3b8 !important;
+  }
+
+  /* Buttons */
+  .action-button {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3) !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+ .dashboard-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .card-title {
+   font-size: 16px;
+ }
+
+ .card-content {
+   font-size: 14px;
+ }
+
+ .stat-number {
+   font-size: 18px;
+ }
+
+ .stat-label {
+   font-size: 12px;
+ }
+
+ .action-button {
+   --padding-start: 12px;
+   --padding-end: 12px;
+   font-size: 14px;
+ }
+}

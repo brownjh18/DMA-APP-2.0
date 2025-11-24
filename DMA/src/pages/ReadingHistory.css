@@ -1,0 +1,57 @@
+/* Dark mode support for Reading History page */
+@media (prefers-color-scheme: dark) {
+  /* Header section */
+  .reading-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .reading-title {
+    color: #f1f5f9 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .reading-subtitle {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* History items */
+  .history-item {
+    background: #000000 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .history-title {
+    color: #f1f5f9 !important;
+  }
+
+  .history-meta {
+    color: #94a3b8 !important;
+  }
+
+  /* Empty state */
+  .empty-state {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .empty-title {
+    color: #f1f5f9 !important;
+  }
+
+  .empty-text {
+    color: #94a3b8 !important;
+  }
+
+  /* Stats card */
+  .stats-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .stats-text {
+    color: #94a3b8 !important;
+  }
+}

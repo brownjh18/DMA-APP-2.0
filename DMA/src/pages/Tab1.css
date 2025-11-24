@@ -1,0 +1,776 @@
+/* Global layout */
+.content-ios {
+  --ion-background-color: #f7f8fb;
+  --card-radius: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  padding-bottom: 48px;
+}
+
+/* Toolbar */
+.toolbar-ios {
+  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.5));
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+.title-ios {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+/* Sections */
+.section-padding {
+  padding: 16px;
+}
+.sermons-section {
+  padding-bottom: 0px;
+}
+.programs-section {
+  padding-top: 0px;
+}
+.small-gap {
+  padding-bottom: 8px;
+}
+
+/* Section header */
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title ion-icon {
+  font-size: 20px;
+  color: #667eea;
+}
+.section-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.view-all-link {
+  font-size: 13px;
+  color: #0026ff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Devotion card - iOS glass */
+.devotion-card {
+  position: relative;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 200px;
+  box-shadow: 0 12px 30px rgba(20,20,40,0.06);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+
+/* subtle background image */
+.devotion-media {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.45) contrast(0.9);
+  transform: scale(1.03);
+  z-index: 0;
+}
+
+/* content placed above bg */
+.devotion-content {
+  position: relative;
+  z-index: 2;
+  padding: 18px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+}
+
+/* top row */
+.devotion-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.devotion-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.devotion-label ion-icon { font-size: 18px; }
+.devotion-date {
+  background: rgba(255, 255, 255, 0.911);
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* verse */
+.devotion-verse h3 {
+  margin: 8px 0 6px 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.verse-text {
+  margin: 0;
+  font-style: italic;
+  opacity: 0.95;
+}
+
+/* bottom */
+.devotion-bottom {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.devotion-summary {
+  margin: 0;
+  font-size: 13px;
+  max-width: 68%;
+  opacity: 0.95;
+}
+.devoction-cta {} /* intentional */
+.cta-btn {
+  --border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+/* Sermons row */
+.sermons-row { margin-top: 20px; }
+.sermon-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  /* min-height: 150px; */
+  -webkit-overflow-scrolling: touch;
+}
+.sermon-card {
+  min-width: 280px;
+  flex: 0 0 280px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(20,20,40,0.06);
+  border: 1px solid rgba(20,20,40,0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  outline: none;
+  transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
+}
+.sermon-card:active,
+.sermon-card:focus { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(20,20,40,0.12); }
+
+.sermon-thumb-wrap { position: relative; height: 120px; overflow: hidden; }
+.sermon-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display:block;
+}
+.sermon-duration {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(0,0,0,0.72);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.sermon-play-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.48);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+}
+.sermon-info {
+  padding: 12px;
+}
+.sermon-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.sermon-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #7a7a86;
+  display:flex;
+  gap: 8px;
+  align-items:center;
+}
+
+/* Programs */
+.programs-row {
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  padding-bottom:8px;
+  -webkit-overflow-scrolling: touch;
+}
+.program-card {
+  min-width: 200px;
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 8px 25px rgba(20,20,40,0.08);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.program-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(20,20,40,0.12);
+}
+.program-badge {
+  width:48px;
+  height:48px;
+  border-radius: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:800;
+  font-size:16px;
+  flex-shrink:0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.program-body { font-size:14px; flex:1; }
+.program-name {
+  font-weight:700;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.program-time {
+  font-size:13px;
+  color:#64748b;
+  margin:0;
+  font-weight: 500;
+}
+
+/* Updates */
+.updates-list { margin-top:16px; }
+.update-item {
+  --inner-border-width: 0;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.update-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+.update-item:hover::before {
+  left: 100%;
+}
+.update-item:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+}
+.update-badge {
+  margin-right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.update-body strong {
+  font-size:16px;
+  font-weight: 700;
+  color: #ffffff;
+  display: block;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.update-body .muted {
+  margin:0;
+  color:#c7d2fe;
+  font-size:14px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* Events */
+.events-list { margin-top:16px; }
+.event-item {
+  --inner-border-width: 0;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  align-items: flex-start;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.event-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  transition: left 0.6s;
+}
+.event-item:hover::before {
+  left: 100%;
+}
+.event-item:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+}
+.event-rail {
+  width:12px;
+  height:80px;
+  border-radius:10px;
+  margin-right:20px;
+  flex-shrink:0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.event-body {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+  flex:1;
+}
+.event-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+}
+.event-title {
+  margin:0;
+  font-size:17px;
+  font-weight:700;
+  color: #ffffff;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.event-meta {
+  font-size:14px;
+  color:#c7d2fe;
+  display:flex;
+  gap:20px;
+  flex-direction:column;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* About */
+.about-card {
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(20,20,40,0.1);
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.2);
+  margin-top:16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.about-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 50%;
+}
+.stats-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:20px;
+  position: relative;
+  z-index: 2;
+}
+.stat {
+  text-align:center;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(139, 92, 246, 0.05));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  padding:16px;
+  border-radius:16px;
+  transition: all 0.3s ease;
+}
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+}
+.stat-number {
+  font-size:20px;
+  font-weight:800;
+  color:#667eea;
+  display: block;
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size:13px;
+  color:#64748b;
+  font-weight: 500;
+}
+
+/* Devotions Row - Horizontal Scrolling */
+.devotions-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 0 16px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.devotions-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Small Devotion Cards */
+.devotion-card-small {
+  min-width: 280px;
+  height: 200px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.devotion-card-small:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+}
+
+.devotion-media-small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.devotion-media-small::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2));
+  z-index: 1;
+}
+
+.devotion-content-small {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.devotion-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.devotion-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.devotion-label ion-icon {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.devotion-label span {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.devotion-verse h3 {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  line-height: 1.2;
+}
+
+.devotion-verse .verse-text {
+  color: #ffffff;
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.9;
+  font-weight: 400;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Page background */
+.content-ios {
+  background: #000000 !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .content-ios {
+    --ion-background-color: #000000;
+  }
+
+  .toolbar-ios {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+  }
+
+  .section-title ion-icon {
+    color: #f1f5f9;
+  }
+
+  .view-all-link {
+    color: #94a3b8;
+  }
+
+  .devotion-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .devotion-content {
+    color: #f1f5f9;
+  }
+
+  .devotion-date {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .sermon-card {
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .sermon-duration {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .sermon-play-overlay {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .sermon-meta {
+    color: #94a3b8;
+  }
+
+  .program-card {
+    background: linear-gradient(180deg, #000000, #000000);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .update-item {
+    background: #000000;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .update-body .muted {
+    color: #94a3b8;
+  }
+
+  .event-meta {
+    color: #94a3b8;
+  }
+
+  .about-card {
+    background: #000000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .stat {
+    background: #000000;
+  }
+
+  .stat-number {
+    color: #f1f5f9;
+  }
+
+  .stat-label {
+    color: #94a3b8;
+  }
+
+  /* Programs - Dark Mode */
+  .program-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .program-name {
+    color: #f1f5f9;
+  }
+
+  .program-time {
+    color: #94a3b8;
+  }
+
+  /* Updates - Dark Mode */
+  .update-item {
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .update-item:hover {
+    background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .update-body strong {
+    color: #ffffff;
+  }
+
+  .update-body .muted {
+    color: #c7d2fe;
+  }
+
+  /* Events - Dark Mode */
+  .event-item {
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .event-item:hover {
+    background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .event-title {
+    color: #ffffff;
+  }
+
+  .event-meta {
+    color: #c7d2fe;
+  }
+
+  /* About - Dark Mode */
+  .about-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+  }
+
+  .about-card::before {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
+  }
+
+  .stat {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .stat-number {
+    color: #f1f5f9;
+  }
+
+  .stat-label {
+    color: #94a3b8;
+  }
+}
+
+/* small screens */
+@media (max-width: 420px) {
+  .sermon-card { min-width: 240px; flex: 0 0 240px; }
+  .devotion-summary { max-width: 60%; font-size:13px; }
+}

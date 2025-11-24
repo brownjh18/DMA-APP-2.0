@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.npm
+.eslintcache
+.cache
+
+# Android build files
+**/android/app/build/
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+
+# Uploads (if sensitive)
+# backend/uploads/
+
+# MongoDB installer
+*.msi
+
+# Temporary files
+*.tmp
+*.temp
+

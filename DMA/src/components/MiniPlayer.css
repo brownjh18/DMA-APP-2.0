@@ -1,0 +1,144 @@
+/* Mini Player Styles */
+.mini-player {
+  position: fixed;
+  bottom: 98px; /* Above the primary navigation with 5px space */
+  left: 18px;
+  right: 18px;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 30px;
+  /* box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2); */
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini-player-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mini-player-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini-player-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.7);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-player-play-overlay ion-icon {
+  color: white;
+  font-size: 12px;
+}
+
+.mini-player-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mini-player-title {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-player-duration {
+  font-size: 0.8em;
+  color: var(--ion-color-medium);
+  line-height: 1.2;
+}
+
+.mini-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-player-controls ion-button {
+  --color: var(--ion-color-primary);
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.mini-player-controls ion-button:last-child {
+  --color: var(--ion-color-medium);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mini-player {
+    background-color: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .mini-player-title {
+    color: #f1f5f9;
+  }
+
+  .mini-player-duration {
+    color: #94a3b8;
+  }
+
+  .mini-player-controls ion-button {
+    --color: #a78bfa;
+  }
+
+  .mini-player-controls ion-button:last-child {
+    --color: #94a3b8;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+ .mini-player {
+   bottom: 88px; /* Adjust for smaller nav bar */
+   left: 12px;
+   right: 12px;
+   padding: 6px 10px;
+ }
+
+ .mini-player-thumbnail {
+   width: 36px;
+   height: 36px;
+ }
+
+ .mini-player-title {
+   font-size: 0.8em;
+ }
+
+ .mini-player-duration {
+   font-size: 0.7em;
+ }
+
+ .mini-player-controls ion-button {
+   --padding-start: 6px;
+   --padding-end: 6px;
+ }
+}

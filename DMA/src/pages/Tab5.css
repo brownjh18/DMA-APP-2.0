@@ -1,0 +1,275 @@
+/* Dark mode support for About page */
+@media (prefers-color-scheme: dark) {
+  /* Hero section */
+  .hero-section {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .hero-icon-bg {
+    background-color: rgba(255,255,255,0.1) !important;
+  }
+
+  .hero-title {
+    color: #f1f5f9 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .hero-subtitle {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* Contact cards */
+  .contact-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .contact-title {
+    color: #f1f5f9 !important;
+  }
+
+  .contact-subtitle {
+    color: #94a3b8 !important;
+  }
+
+  /* Action buttons */
+  .action-button {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .action-button-secondary {
+    background: rgba(255,255,255,0.1) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255,255,255,0.2) !important;
+  }
+
+  /* Story & mission cards */
+  .story-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .story-title {
+    color: #f1f5f9 !important;
+  }
+
+  .story-text {
+    color: #94a3b8 !important;
+  }
+
+  .verse-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .verse-text {
+    color: #f1f5f9 !important;
+  }
+
+  .verse-reference {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .mission-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .mission-text {
+    color: #f1f5f9 !important;
+  }
+
+  .impact-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .impact-title {
+    color: #f1f5f9 !important;
+  }
+
+  .impact-number {
+    color: #f1f5f9 !important;
+  }
+
+  .impact-label {
+    color: #94a3b8 !important;
+  }
+
+  /* What we do cards */
+  .service-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .service-title {
+    color: #f1f5f9 !important;
+  }
+
+  .service-description {
+    color: #94a3b8 !important;
+  }
+
+  .service-icon-bg {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Service times card */
+  .service-times-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .service-times-title {
+    color: #f1f5f9 !important;
+  }
+
+  .service-times-text {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  .service-times-detail {
+    background: rgba(255,255,255,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+  }
+
+  /* Join community card */
+  .join-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .join-title {
+    color: #f1f5f9 !important;
+  }
+
+  .join-text {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  .join-button-primary {
+    background: rgba(255,255,255,0.2) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255,255,255,0.3) !important;
+  }
+
+  .join-button-secondary {
+    color: rgba(255,255,255,0.8) !important;
+    border-color: rgba(255,255,255,0.3) !important;
+  }
+
+  .contact-info {
+    background: rgba(255,255,255,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+  }
+
+  .contact-info-title {
+    color: #f1f5f9 !important;
+  }
+
+  .contact-info-text {
+    color: rgba(255,255,255,0.9) !important;
+  }
+
+  /* Footer actions */
+  .footer-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .footer-title {
+    color: #f1f5f9 !important;
+  }
+
+  .action-item {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .action-item:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .action-icon-bg {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .action-text {
+    color: #f1f5f9 !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+ .hero-section {
+   padding: 40px 20px;
+ }
+
+ .hero-title {
+   font-size: 28px;
+ }
+
+ .hero-subtitle {
+   font-size: 16px;
+ }
+
+ .contact-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .contact-title {
+   font-size: 16px;
+ }
+
+ .contact-subtitle {
+   font-size: 14px;
+ }
+
+ .story-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .story-title {
+   font-size: 18px;
+ }
+
+ .story-text {
+   font-size: 14px;
+ }
+
+ .service-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .service-title {
+   font-size: 16px;
+ }
+
+ .service-description {
+   font-size: 14px;
+ }
+
+ .footer-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .footer-title {
+   font-size: 18px;
+ }
+
+ .action-item {
+   padding: 12px;
+ }
+
+ .action-text {
+   font-size: 14px;
+ }
+}

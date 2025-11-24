@@ -1,0 +1,1013 @@
+
+/* Stats Section */
+.stats-section {
+  padding: 0 16px 24px 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin: 8px;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Category Section */
+.category-section {
+  padding: 24px 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  margin: 0 -16px 24px -16px;
+}
+
+.category-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.category-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.category-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.category-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-chips ion-chip {
+  flex-shrink: 0;
+  --background: rgba(255,255,255,0.8);
+  --color: #374151;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.category-chips .chip-selected {
+  --background: #667eea;
+  --color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.chip-badge {
+  margin-left: 8px;
+}
+
+/* Enhanced Devotion Card */
+.devotion-card-enhanced {
+  position: relative;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 380px;
+  box-shadow: 0 12px 30px rgba(20,20,40,0.06);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+
+.devotion-card-enhanced .devotion-media {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.45) contrast(0.9);
+  transform: scale(1.03);
+  z-index: 0;
+}
+
+.devotion-card-enhanced .devotion-content {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+}
+
+.devotion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.devotion-category-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.category-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  color: white !important;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+.devotion-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.devotion-main-content {
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.devotion-header-section {
+  margin-bottom: 20px;
+}
+
+.devotion-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.devotion-content-container {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.scripture-block,
+.reflection-block,
+.prayer-block {
+  margin-bottom: 16px;
+}
+
+.scripture-block:last-child,
+.reflection-block:last-child,
+.prayer-block:last-child {
+  margin-bottom: 0;
+}
+
+.scripture-header,
+.reflection-header,
+.prayer-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.section-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+
+.scripture-text {
+  margin: 0;
+  padding: 0;
+  border-left: 3px solid #667eea;
+  font-style: italic;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.scripture-text p {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+  color: rgba(255,255,255,0.95);
+}
+
+.scripture-footer {
+  margin-top: 8px;
+}
+
+.scripture-reference {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+  font-style: normal;
+}
+
+.reflection-content,
+.prayer-content {
+  padding: 0;
+}
+
+.reflection-text,
+.prayer-text {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  color: rgba(255,255,255,0.9);
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.devotion-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.primary-action-btn {
+  --border-radius: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  flex: 1;
+  min-width: 140px;
+}
+
+.secondary-action-btn {
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --border-color: rgba(255,255,255,0.3);
+  --color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.share-action-btn {
+  --color: rgba(255,255,255,0.8);
+  --padding-start: 10px;
+  --padding-end: 10px;
+}
+
+/* Section Meta */
+.section-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.series-badge {
+  --background: rgba(102, 126, 234, 0.2);
+  --color: #667eea;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  font-weight: 600;
+}
+
+.reading-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Devotions Grid Section */
+.devotions-grid-section {
+  padding: 0 16px 32px 16px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.section-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.devotions-grid {
+  padding: 0;
+}
+
+.devotion-card-modern {
+  --background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  margin: 8px 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.devotion-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+}
+
+.devotion-card-content {
+  padding: 20px;
+}
+
+.devotion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.devotion-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.devotion-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.devotion-card-body {
+  margin-bottom: 16px;
+}
+
+.devotion-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.devotion-scripture {
+  font-size: 14px;
+  font-style: italic;
+  color: #667eea;
+  margin: 0 0 12px 0;
+}
+
+.devotion-preview {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.devotion-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.read-button {
+  --border-radius: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin: 24px 0;
+}
+
+.empty-state ion-icon {
+  font-size: 48px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .devotion-card-enhanced {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .category-indicator {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .progress-bar {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .devotion-date-badge {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .devotion-content-container {
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .secondary-action-btn {
+    --border-color: rgba(255, 255, 255, 0.4);
+    --color: #f9fafb;
+  }
+
+  .share-action-btn {
+    --color: rgba(255, 255, 255, 0.6);
+  }
+
+  .series-badge {
+    --background: rgba(102, 126, 234, 0.3);
+    --color: #93c5fd;
+    border: 1px solid rgba(102, 126, 234, 0.4);
+  }
+
+  .reading-time {
+    color: #9ca3af;
+  }
+
+  .stat-item {
+    background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .category-section {
+    background: linear-gradient(135deg, rgba(30,41,59,0.3), rgba(30,41,59,0.1));
+  }
+
+  .category-header h2 {
+    color: #f9fafb;
+  }
+
+  .category-header p {
+    color: #9ca3af;
+  }
+
+  .category-chips ion-chip {
+    --background: rgba(30,41,59,0.6);
+    --color: #e5e7eb;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .section-header h2 {
+    color: #f9fafb;
+  }
+
+  .section-header p {
+    color: #9ca3af;
+  }
+
+  .devotion-card-modern {
+    --background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .devotion-title {
+    color: #f9fafb;
+  }
+
+  .devotion-preview {
+    color: #d1d5db;
+  }
+
+  .devotion-date {
+    color: #9ca3af;
+  }
+
+  .empty-state {
+    background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .empty-state h3 {
+    color: #e5e7eb;
+  }
+
+  .empty-state p {
+    color: #9ca3af;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .devotion-card-enhanced {
+    min-height: 340px;
+  }
+
+  .devotion-card-enhanced .devotion-content {
+    padding: 16px;
+    min-height: 340px;
+  }
+
+  .devotion-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .devotion-category-info {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .progress-indicator {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .progress-bar {
+    width: 70px;
+  }
+
+  .devotion-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .scripture-block,
+  .reflection-block,
+  .prayer-block {
+    margin-bottom: 12px;
+  }
+
+  .devotion-content-container {
+    padding: 12px;
+  }
+
+  .scripture-text,
+  .reflection-text,
+  .prayer-text {
+    font-size: 13px;
+  }
+
+  .devotion-actions {
+    gap: 6px;
+  }
+
+  .primary-action-btn {
+    min-width: 120px;
+  }
+
+  .section-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .stat-item {
+    margin: 4px;
+    padding: 12px;
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .devotion-card-content {
+    padding: 16px;
+  }
+}
+
+/* iOS 18 Style Full Devotion Page */
+.ios18-style {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.ios18-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding: 20px 16px 24px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(20px);
+}
+
+.ios18-header-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ios18-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.ios18-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.ios18-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ios18-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ios18-content {
+  padding: 20px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ios18-card {
+  background: #ffffff;
+  border-radius: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.08);
+  border: 1px solid rgba(255,255,255,0.8);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ios18-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.ios18-card:last-child {
+  margin-bottom: 120px;
+}
+
+.ios18-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 16px 20px;
+}
+
+.ios18-icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scripture-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.reflection-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.prayer-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.ios18-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.ios18-card-content {
+  padding: 0 20px 20px 20px;
+}
+
+.ios18-scripture-text,
+.ios18-reflection-text,
+.ios18-prayer-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #374151;
+  margin: 0 0 12px 0;
+}
+
+.ios18-scripture-text {
+  font-style: italic;
+}
+
+.ios18-prayer-text {
+  font-style: italic;
+}
+
+.ios18-scripture-ref {
+  text-align: right;
+  font-size: 14px;
+  color: #667eea;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.ios18-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  padding: 16px 20px;
+  z-index: 100;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+}
+
+.ios18-action-buttons {
+  display: flex;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ios18-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ios18-save-btn {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.ios18-save-btn:hover {
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  transform: translateY(-1px);
+}
+
+.ios18-share-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.ios18-share-btn:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-1px);
+}
+
+/* iOS 18 Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .ios18-style {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+
+  .ios18-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-bottom-color: rgba(255,255,255,0.1);
+  }
+
+  .ios18-title {
+    color: #f1f5f9;
+  }
+
+  .ios18-meta-item {
+    color: #94a3b8;
+  }
+
+  .ios18-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .ios18-card-title {
+    color: #f1f5f9;
+  }
+
+  .ios18-scripture-text,
+  .ios18-reflection-text,
+  .ios18-prayer-text {
+    color: #e2e8f0;
+  }
+
+  .ios18-scripture-ref {
+    color: #93c5fd;
+  }
+
+  .ios18-action-bar {
+    background: rgba(30,41,59,0.95);
+    border-top-color: rgba(255,255,255,0.1);
+  }
+
+  .ios18-save-btn {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+    color: #e2e8f0;
+  }
+
+  .ios18-save-btn:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  }
+}
+
+/* iOS 18 Responsive */
+@media (max-width: 576px) {
+  .ios18-header {
+    padding: 16px 16px 20px 16px;
+  }
+
+  .ios18-title {
+    font-size: 24px;
+  }
+
+  .ios18-meta {
+    gap: 12px;
+  }
+
+  .ios18-content {
+    padding: 16px;
+  }
+
+  .ios18-card {
+    margin-bottom: 16px;
+    border-radius: 20px;
+  }
+
+  .ios18-card-header {
+    padding: 16px 16px 12px 16px;
+  }
+
+  .ios18-card-content {
+    padding: 0 16px 16px 16px;
+  }
+
+  .ios18-icon-circle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ios18-card-title {
+    font-size: 16px;
+  }
+
+  .ios18-scripture-quote {
+    padding: 12px 16px;
+  }
+
+  .ios18-scripture-quote p {
+    font-size: 15px;
+  }
+
+  .ios18-reflection-text,
+  .ios18-prayer-text {
+    font-size: 15px;
+  }
+
+  .ios18-action-bar {
+    padding: 12px 16px;
+  }
+
+  .ios18-action-buttons {
+    gap: 8px;
+  }
+
+  .ios18-action-btn {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+}
