@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonItem,
   IonLabel,
   IonInput,
@@ -15,9 +13,10 @@ import {
   IonIcon,
   IonLoading
 } from '@ionic/react';
-import { personAdd, mail, lockClosed, person, call, eye, eyeOff } from 'ionicons/icons';
+import { personAdd, mail, lockClosed, person, call, eye, eyeOff, globe, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
+import { AuthContext } from '../App';
 
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -33,6 +32,11 @@ const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const history = useHistory();
+  const { login, setAuthState } = useContext(AuthContext);
+
+  const handleGoogleSignUp = () => {
+    apiService.initiateGoogleAuth();
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -62,20 +66,32 @@ const SignUp: React.FC = () => {
     setSuccess('');
 
     try {
-      await apiService.register({
+      const response = await apiService.register({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password
       });
 
-      // Show success message and redirect to sign in
-      setSuccess('Account created successfully! Redirecting to sign in...');
+      // The backend now returns a token and user data for automatic login
+      if (response.token && response.user) {
+        // Use the setAuthState function to properly update the authentication state
+        setAuthState(response.token, response.user);
 
-      // Redirect to sign in after a short delay
-      setTimeout(() => {
-        history.push('/signin');
-      }, 2000);
+        // Show success message
+        setSuccess('Account created successfully! You are now logged in.');
+
+        // Redirect to main app after a short delay
+        setTimeout(() => {
+          history.push('/tab1');
+        }, 1500);
+      } else {
+        // Fallback for backward compatibility
+        setSuccess('Account created successfully! Redirecting to sign in...');
+        setTimeout(() => {
+          history.push('/signin');
+        }, 2000);
+      }
 
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
@@ -88,10 +104,51 @@ const SignUp: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/signin" />
-          </IonButtons>
           <IonTitle className="title-ios">Sign Up</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -129,6 +186,51 @@ const SignUp: React.FC = () => {
             }}>
               Create your account to get started
             </p>
+          </div>
+
+          {/* Social Login */}
+          <div style={{ marginBottom: '24px' }}>
+            <IonButton
+              expand="block"
+              fill="outline"
+              onClick={handleGoogleSignUp}
+              style={{
+                marginBottom: '12px',
+                height: '44px',
+                border: '1px solid var(--ion-color-step-300)',
+                '--border-radius': '8px'
+              }}
+            >
+              <IonIcon icon={globe} slot="start" />
+              Continue with Google
+            </IonButton>
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            margin: '20px 0',
+            opacity: 0.6
+          }}>
+            <div style={{
+              flex: 1,
+              height: '1px',
+              background: 'var(--ion-color-step-300)'
+            }} />
+            <span style={{
+              padding: '0 16px',
+              fontSize: '0.9em',
+              color: 'var(--ion-text-color)',
+              fontWeight: '500'
+            }}>
+              or
+            </span>
+            <div style={{
+              flex: 1,
+              height: '1px',
+              background: 'var(--ion-color-step-300)'
+            }} />
           </div>
 
           {/* Error Message */}

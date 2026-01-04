@@ -55,10 +55,6 @@ const sermonSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  likeCount: {
-    type: Number,
-    default: 0
-  },
   isPublished: {
     type: Boolean,
     default: true
@@ -67,10 +63,52 @@ const sermonSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  type: {
+    type: String,
+    enum: ['sermon', 'podcast', 'live_broadcast'],
+    default: 'sermon'
+  },
+  isLive: {
+    type: Boolean,
+    default: false
+  },
+  streamUrl: {
+    type: String,
+    trim: true
+  },
+  broadcastStartTime: {
+    type: Date
+  },
+  broadcastEndTime: {
+    type: Date
+  },
+  recordingStatus: {
+    type: String,
+    enum: ['none', 'recording', 'completed', 'failed'],
+    default: 'none'
+  },
+  recordingPid: {
+    type: Number
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false // Temporarily make optional for testing
+  },
+  lastListenIncrement: {
+    type: Number,
+    default: 0
+  },
+  youtubeComments: [{
+    author: { type: String, trim: true },
+    text: { type: String, trim: true },
+    publishedAt: { type: Date },
+    authorChannelUrl: { type: String, trim: true },
+    likeCount: { type: Number, default: 0 }
+  }],
+  subscribeUrl: {
+    type: String,
+    trim: true
   },
   createdAt: {
     type: Date,

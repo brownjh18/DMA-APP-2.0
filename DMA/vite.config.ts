@@ -16,11 +16,21 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5000', // Backend server
         changeOrigin: true,
         secure: false,
+        timeout: 60000, // 60 second timeout for file uploads
+        proxyTimeout: 60000,
+      },
+      '/uploads': {
+        target: 'http://localhost:5000', // Backend server for media files
+        changeOrigin: true,
+        secure: false,
+        timeout: 60000,
+        proxyTimeout: 60000,
       }
     }
   }

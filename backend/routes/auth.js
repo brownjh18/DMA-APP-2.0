@@ -5,11 +5,13 @@ const User = require('../models/User');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 // Configure multer for profile picture uploads
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, process.env.UPLOAD_PATH || './uploads');
+    cb(null, './uploads');
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -20,7 +22,7 @@ const profileStorage = multer.diskStorage({
 const profileUpload = multer({
   storage: profileStorage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit for profile pictures
+    fileSize: 10 * 1024 * 1024 // 10MB limit for profile pictures
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -28,6 +30,79 @@ const profileUpload = multer({
     } else {
       cb(new Error('Only image files are allowed!'), false);
     }
+  }
+});
+
+// Passport Google OAuth configuration
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback"
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      // Check if user already exists with this Google ID
+      let user = await User.findOne({ googleId: profile.id });
+
+      if (user) {
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+        return done(null, user);
+      }
+
+      // Check if user exists with same email
+      user = await User.findOne({ email: profile.emails[0].value });
+
+      if (user) {
+        // Link Google account to existing user
+        user.googleId = profile.id;
+        user.lastLogin = new Date();
+        if (!user.profilePicture && profile.photos && profile.photos.length > 0) {
+          user.profilePicture = profile.photos[0].value;
+        }
+        await user.save();
+        return done(null, user);
+      }
+
+      // Create new user
+      const newUser = new User({
+        name: profile.displayName,
+        email: profile.emails[0].value,
+        googleId: profile.id,
+        profilePicture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
+        role: 'user',
+        isActive: true,
+        lastLogin: new Date(),
+        notificationPreferences: {
+          sermons: true,
+          podcasts: true,
+          liveBroadcasts: true,
+          events: true,
+          ministries: true,
+          devotions: true,
+          saved: true
+        }
+      });
+
+      await newUser.save();
+      return done(null, newUser);
+    } catch (error) {
+      return done(error, null);
+    }
+  }
+));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
   }
 });
 
@@ -61,17 +136,43 @@ router.post('/signup', [
         email,
         password,
         phone,
-        role: 'user'
+        role: 'user',
+        notificationPreferences: {
+          sermons: true,
+          podcasts: true,
+          liveBroadcasts: true,
+          events: true,
+          ministries: true,
+          devotions: true,
+          saved: true
+        }
       });
       await user.save();
 
+      // Generate JWT token for automatic login
+      const token = jwt.sign(
+        {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePicture: user.profilePicture,
+          phone: user.phone
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '365d' }
+      );
+
       res.status(201).json({
-        message: 'Account created successfully. Please sign in.',
+        message: 'Account created successfully! You are now logged in.',
+        token,
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
+          profilePicture: user.profilePicture,
+          phone: user.phone
         }
       });
     } catch (dbError) {
@@ -108,7 +209,21 @@ router.post('/register', [
     }
 
     // Create new user
-    const user = new User({ name, email, password, role });
+    const user = new User({
+      name,
+      email,
+      password,
+      role,
+      notificationPreferences: {
+        sermons: true,
+        podcasts: true,
+        liveBroadcasts: true,
+        events: true,
+        ministries: true,
+        devotions: true,
+        saved: true
+      }
+    });
     await user.save();
 
     res.status(201).json({
@@ -124,6 +239,15 @@ router.post('/register', [
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// Debug route to test raw body
+router.post('/debug', (req, res) => {
+  console.log('Debug route hit');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('Raw body:', req.rawBody);
+  res.json({ received: req.body, headers: req.headers });
 });
 
 // Login
@@ -254,6 +378,13 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
+    console.log('Profile update request:', {
+      userId: req.user.id,
+      isDemoUser: req.user.id.startsWith('demo-'),
+      requestBody: req.body,
+      currentUserName: req.user.name
+    });
+
     // For demo users, return updated data with new token
     if (req.user.id.startsWith('demo-')) {
       const updatedUser = {
@@ -263,6 +394,8 @@ router.put('/profile', authenticateToken, [
         role: req.user.role,
         phone: req.body.phone
       };
+
+      console.log('Demo user update - using current user data:', updatedUser);
 
       // Generate new token with updated data
       const newToken = jwt.sign(updatedUser, process.env.JWT_SECRET, { expiresIn: '365d' });
@@ -279,6 +412,8 @@ router.put('/profile', authenticateToken, [
     if (req.body.name) updates.name = req.body.name;
     if (req.body.phone) updates.phone = req.body.phone;
 
+    console.log('Database updates to apply:', updates);
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
       updates,
@@ -289,9 +424,22 @@ router.put('/profile', authenticateToken, [
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log('Updated user from database:', user);
+
+    const responseUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profilePicture: user.profilePicture,
+      phone: user.phone
+    };
+
+    console.log('Sending response:', responseUser);
+
     res.json({
       message: 'Profile updated successfully',
-      user
+      user: responseUser
     });
   } catch (error) {
     console.error('Profile update error:', error);
@@ -350,7 +498,8 @@ router.post('/upload-profile-picture', [
         name: user.name,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        phone: user.phone
       }
     });
   } catch (error) {
@@ -398,7 +547,26 @@ router.put('/change-password', authenticateToken, [
 router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await User.find({}).select('-password').sort({ createdAt: -1 });
-    res.json({ users });
+
+    // Include demo users if the current user is a demo user
+    const allUsers = [...users];
+    if (req.user.id.startsWith('demo-')) {
+      // Add the current demo user to the list
+      const demoUser = {
+        _id: req.user.id,
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        isActive: true, // Demo users are always active
+        profilePicture: req.user.profilePicture,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      allUsers.unshift(demoUser); // Add to beginning of array
+    }
+
+    res.json({ users: allUsers });
   } catch (error) {
     console.error('Users fetch error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -420,6 +588,28 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     if (req.body.role) updates.role = req.body.role;
     if (req.body.isActive !== undefined) updates.isActive = req.body.isActive;
 
+    // Handle demo users (non-MongoDB ObjectId IDs)
+    if (req.params.id.startsWith('demo-')) {
+      // For demo users, return a mock response since they don't exist in the database
+      const mockUser = {
+        _id: req.params.id,
+        id: req.params.id,
+        name: req.params.id === 'demo-admin-id' ? 'Admin User' : 'Demo User',
+        email: req.params.id === 'demo-admin-id' ? 'admin@doveministriesafrica.org' : 'demo@example.com',
+        role: req.body.role || (req.params.id === 'demo-admin-id' ? 'admin' : 'user'),
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+        profilePicture: req.params.id === 'demo-admin-id' ? '/uploads/profile-demo-admin-id-1763714358980-580467867.jpg' : null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      res.json({
+        message: 'User updated successfully',
+        user: mockUser
+      });
+      return;
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       updates,
@@ -439,5 +629,63 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Delete user (admin only)
+router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('User delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Google OAuth routes
+router.get('/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/signin' }),
+  async (req, res) => {
+    try {
+      // Generate JWT token for the authenticated user
+      const token = jwt.sign(
+        {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          profilePicture: req.user.profilePicture,
+          phone: req.user.phone
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '365d' }
+      );
+
+      // Redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        profilePicture: req.user.profilePicture,
+        phone: req.user.phone
+      }))}`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect('/signin?error=auth_failed');
+    }
+  }
+);
 
 module.exports = router;

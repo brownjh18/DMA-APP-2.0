@@ -1,0 +1,81 @@
+/* Event Detail Page Styles */
+
+.event-detail-header {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  color: white;
+}
+
+.event-detail-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.event-detail-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ion-text-color);
+}
+
+.event-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--ion-color-medium);
+}
+
+.event-detail-description {
+  line-height: 1.6;
+  color: var(--ion-text-color);
+  margin-bottom: 24px;
+}
+
+.event-detail-section {
+  margin-bottom: 24px;
+}
+
+.event-detail-section h2 {
+  font-size: 1.4em;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--ion-text-color);
+}
+
+.event-detail-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-detail-register-btn {
+  height: 48px;
+  border-radius: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.event-detail-share-btn {
+  --color: var(--ion-color-primary);
+}
+
+.event-detail-footer {
+  text-align: center;
+  margin-top: 32px;
+  color: var(--ion-color-medium);
+  font-size: 0.9em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .event-detail-title {
+    font-size: 1.6em;
+  }
+
+  .event-detail-section h2 {
+    font-size: 1.3em;
+  }
+}

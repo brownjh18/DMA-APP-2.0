@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const News = require('../models/News');
-const { authenticateToken, requireModerator } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -13,10 +13,13 @@ router.get('/', async (req, res) => {
       limit = 10,
       search,
       category,
-      published = true
+      published
     } = req.query;
 
-    const query = { isPublished: published };
+    const query = {};
+    if (published !== 'all') {
+      query.isPublished = published === 'true' || published === undefined ? true : false;
+    }
 
     if (search) {
       query.$text = { $search: search };
@@ -87,10 +90,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create news article (moderator+)
+// Create news article (admin only)
 router.post('/', [
   authenticateToken,
-  requireModerator,
+  requireAdmin,
   body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
   body('content').trim().isLength({ min: 1 }).withMessage('Content is required'),
   body('excerpt').optional().trim(),
@@ -110,13 +113,31 @@ router.post('/', [
 
     const newsData = {
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user.id.startsWith('demo-') ? '507f1f77bcf86cd799439011' : req.user.id
     };
 
     const article = new News(newsData);
     await article.save();
 
     await article.populate('createdBy', 'name');
+
+    // Create notifications for all users about the new news article
+    try {
+      await notificationService.createContentNotification(
+        'news',
+        article._id,
+        `News: ${article.title}`,
+        `New article: "${article.title}". ${article.excerpt || article.content.substring(0, 100)}${article.content.length > 100 ? '...' : ''}`,
+        {
+          url: `/news/${article._id}`,
+          category: article.category,
+          author: article.author
+        }
+      );
+    } catch (notificationError) {
+      console.error('Error creating news notification:', notificationError);
+      // Don't fail the request if notification creation fails
+    }
 
     res.status(201).json({
       message: 'News article created successfully',
@@ -128,10 +149,10 @@ router.post('/', [
   }
 });
 
-// Update news article (moderator+)
+// Update news article (admin only)
 router.put('/:id', [
   authenticateToken,
-  requireModerator,
+  requireAdmin,
   body('title').optional().trim().isLength({ min: 1 }).withMessage('Title cannot be empty'),
   body('content').optional().trim().isLength({ min: 1 }).withMessage('Content cannot be empty'),
   body('excerpt').optional().trim(),
@@ -169,8 +190,8 @@ router.put('/:id', [
   }
 });
 
-// Delete news article (moderator+)
-router.delete('/:id', authenticateToken, requireModerator, async (req, res) => {
+// Delete news article (admin only)
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const article = await News.findByIdAndDelete(req.params.id);
 
@@ -204,8 +225,8 @@ router.get('/meta/categories', async (req, res) => {
   }
 });
 
-// Get news statistics (moderator+)
-router.get('/admin/stats', authenticateToken, requireModerator, async (req, res) => {
+// Get news statistics (admin only)
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const totalArticles = await News.countDocuments();
     const publishedArticles = await News.countDocuments({ isPublished: true });

@@ -5,8 +5,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonItem,
   IonLabel,
   IonInput,
@@ -15,24 +13,28 @@ import {
   IonIcon,
   IonLoading,
   IonAlert,
-  IonAvatar
+  IonAvatar,
+  IonToast,
+  IonSelect,
+  IonSelectOption
 } from '@ionic/react';
-import { person, call, create, checkmarkCircle, camera, image } from 'ionicons/icons';
+import { person, call, create, checkmarkCircle, camera, image, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import apiService from '../services/api';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
 
 const EditProfile: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user: authUser, updateUser } = useContext(AuthContext);
+  const [user, setUser] = useState<any>(authUser);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const history = useHistory();
-  const { updateUser } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -40,30 +42,56 @@ const EditProfile: React.FC = () => {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          apiService.setToken(token);
-          const userData = await apiService.getProfile();
-          setUser(userData.user);
+    const loadUserData = async () => {
+      try {
+        if (authUser) {
+          // Use AuthContext user data as primary source
+          setUser(authUser);
           setFormData({
-            name: userData.user.name || '',
-            phone: userData.user.phone || ''
+            name: authUser.name || '',
+            phone: authUser.phone || ''
           });
-        } catch (error) {
-          localStorage.removeItem('token');
-          apiService.clearToken();
-          history.push('/signin');
+
+        } else {
+          // Fallback to API if no AuthContext user
+          const token = localStorage.getItem('token');
+          if (token) {
+            apiService.setToken(token);
+            const userData = await apiService.getProfile();
+            setUser(userData.user);
+            setFormData({
+              name: userData.user.name || '',
+              phone: userData.user.phone || ''
+            });
+
+          } else {
+            history.push('/signin');
+            return;
+          }
         }
-      } else {
-        history.push('/signin');
+      } catch (error) {
+
+        setError('Failed to load user data. Please try again.');
+        setShowAlert(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    checkAuth();
-  }, [history]);
+    loadUserData();
+  }, [authUser, history]);
+
+  // Sync user state when AuthContext user changes
+  useEffect(() => {
+    if (authUser && authUser !== user) {
+      setUser(authUser);
+      setFormData({
+        name: authUser.name || '',
+        phone: authUser.phone || ''
+      });
+
+    }
+  }, [authUser, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -99,11 +127,15 @@ const EditProfile: React.FC = () => {
     setSuccess('');
 
     try {
+
+
       // Update profile information
       const profileResponse = await apiService.updateProfile({
         name: formData.name,
         phone: formData.phone
       });
+
+
 
       let profilePictureUrl = user?.profilePicture;
       let finalResponse = profileResponse;
@@ -113,9 +145,12 @@ const EditProfile: React.FC = () => {
         const formDataUpload = new FormData();
         formDataUpload.append('profilePicture', selectedImage);
         const uploadResponse = await apiService.uploadProfilePicture(formDataUpload);
+  
         profilePictureUrl = uploadResponse.user.profilePicture;
         finalResponse = uploadResponse; // Use the upload response if it has the token
       }
+
+  
 
       // Update token in localStorage if new token provided
       if (finalResponse.token) {
@@ -124,18 +159,28 @@ const EditProfile: React.FC = () => {
       }
 
       // Update global user state
-      updateUser(finalResponse.user);
+      const updatedUser = {
+        ...finalResponse.user,
+        profilePicture: profilePictureUrl
+      };
+      updateUser(updatedUser);
+      setUser(updatedUser);
 
-      // Clear selection
+      // Clear form selections
       setSelectedImage(null);
       setImagePreview(null);
 
-      // Redirect to profile page after successful save
+      // Show success message
+      setSuccess('Profile updated successfully!');
+      setShowToast(true);
+
+      // Redirect to profile page after a short delay
       setTimeout(() => {
         history.push('/profile');
-      }, 500);
+      }, 1500);
 
     } catch (err: any) {
+  
       setError(err.message || 'Failed to update profile. Please try again.');
       setShowAlert(true);
     } finally {
@@ -147,11 +192,52 @@ const EditProfile: React.FC = () => {
     return (
       <IonPage>
         <IonHeader translucent>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonToolbar className="toolbar-ios">
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/profile" />
-            </IonButtons>
-            <IonTitle className="title-ios">Edit Profile</IonTitle>
+              <IonTitle className="title-ios">Edit Profile</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent fullscreen className="content-ios">
@@ -167,10 +253,51 @@ const EditProfile: React.FC = () => {
     return (
       <IonPage>
         <IonHeader translucent>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonToolbar className="toolbar-ios">
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/profile" />
-            </IonButtons>
             <IonTitle className="title-ios">Edit Profile</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -202,11 +329,52 @@ const EditProfile: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
-          <IonTitle className="title-ios">Edit Profile</IonTitle>
+            <IonTitle className="title-ios">Edit Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -274,11 +442,23 @@ const EditProfile: React.FC = () => {
                 <IonAvatar style={{
                   width: '120px',
                   height: '120px',
-                  border: '4px solid var(--ion-color-primary)'
+                  border: '4px solid var(--ion-color-primary)',
+                  background: 'black'
                 }}>
                   <img
-                    src={imagePreview || (user?.profilePicture ? `http://localhost:5000${user.profilePicture}` : 'https://i.pravatar.cc/150?img=12')}
+                    src={imagePreview || 
+                      (user?.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : 
+                       `https://i.pravatar.cc/150?img=12&u=${encodeURIComponent(user?.email || 'default')}`)}
                     alt="Profile Preview"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      // Fallback to default avatar if image fails to load
+                      (e.target as HTMLImageElement).src = `https://i.pravatar.cc/150?img=12&u=${encodeURIComponent(user?.email || 'default')}`;
+                    }}
                   />
                 </IonAvatar>
 
@@ -399,13 +579,23 @@ const EditProfile: React.FC = () => {
           spinner="crescent"
         />
 
+        {/* Success Toast */}
+        <IonToast
+          isOpen={showToast}
+          onDidDismiss={() => setShowToast(false)}
+          message={success}
+          duration={2000}
+          color="success"
+          position="top"
+        />
+
         {/* Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
-          header={success ? 'Success' : 'Error'}
-          message={success || error}
-          buttons={success ? ['OK'] : ['Try Again']}
+          header={error ? 'Error' : 'Success'}
+          message={error || success}
+          buttons={error ? ['Try Again'] : ['OK']}
         />
       </IonContent>
     </IonPage>

@@ -5,8 +5,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonCard,
@@ -23,8 +21,12 @@ import {
   IonBadge,
   IonText,
   IonRefresher,
-  IonRefresherContent
+  IonRefresherContent,
+  IonActionSheet,
+  useIonViewWillEnter,
+  useIonActionSheet
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import {
   add,
   create,
@@ -33,64 +35,82 @@ import {
   eye,
   eyeOff,
   calendar,
-  star
+  star,
+  ellipsisHorizontal,
+  arrowBack
 } from 'ionicons/icons';
 
 const AdminDevotionManager: React.FC = () => {
+  const history = useHistory();
   const [devotions, setDevotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingDevotion, setEditingDevotion] = useState<any>(null);
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    scripture: '',
-    author: '',
-    date: '',
-    status: 'draft',
-    featured: false,
-    description: ''
-  });
+  const [devotionsLoading, setDevotionsLoading] = useState<boolean>(false);
+  const [presentActionSheet] = useIonActionSheet();
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [filterBy, setFilterBy] = useState<string>('all');
+  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
+
+  // Helper function to clear API cache for devotions
+  const clearDevotionsCache = () => {
+    try {
+      // Check if localStorage is available
+      if (typeof localStorage === 'undefined') {
+        console.warn('localStorage is not available');
+        return;
+      }
+      
+      // Remove all cached devotions data from localStorage
+      const keys = Object.keys(localStorage || {});
+      if (Array.isArray(keys)) {
+        keys.forEach(key => {
+          if (key && key.startsWith && key.startsWith('api_cache_') && key.includes('devotions')) {
+            try {
+              localStorage.removeItem(key);
+            } catch (removeError) {
+              console.warn('Failed to remove cache key:', key, removeError);
+            }
+          }
+        });
+        console.log('Devotions API cache cleared');
+      }
+    } catch (error) {
+      console.warn('Failed to clear devotions cache:', error);
+    }
+  };
 
   useEffect(() => {
     loadDevotions();
   }, []);
 
+  // Reload devotions when page becomes active (e.g., when returning from Add/Edit pages)
+  useIonViewWillEnter(() => {
+    loadDevotions();
+  });
+
   const loadDevotions = async () => {
-    // Mock data - replace with API call
-    const mockDevotions = [
-      {
-        id: '1',
-        title: 'God\'s Unconditional Love',
-        scripture: 'John 3:16',
-        author: 'Pastor Daniel Kaggwa',
-        date: '2025-01-15',
-        status: 'published',
-        featured: true,
-        views: 850
-      },
-      {
-        id: '2',
-        title: 'The Power of Faith',
-        scripture: 'Hebrews 11:1',
-        author: 'Pastor Erica Kaggwa',
-        date: '2025-01-08',
-        status: 'published',
-        featured: false,
-        views: 620
-      },
-      {
-        id: '3',
-        title: 'Walking in Grace',
-        scripture: 'Ephesians 2:8-9',
-        author: 'Guest Writer',
-        date: '2025-01-22',
-        status: 'draft',
-        featured: false,
-        views: 0
+    if (devotionsLoading || devotions.length > 0) return; // Prevent multiple calls if already loaded
+
+    try {
+      setDevotionsLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/devotions?page=1&limit=100&published=all', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDevotions(data.devotions); // Keep full devotion objects
+      } else {
+        console.error('Failed to fetch devotions');
       }
-    ];
-    setDevotions(mockDevotions);
-    setLoading(false);
+    } catch (error) {
+      console.error('Error fetching devotions:', error);
+    } finally {
+      setLoading(false);
+      setDevotionsLoading(false);
+    }
   };
 
   const handleRefresh = async (event: CustomEvent) => {
@@ -98,68 +118,230 @@ const AdminDevotionManager: React.FC = () => {
     event.detail.complete();
   };
 
-  const toggleStatus = (id: string) => {
-    setDevotions(devotions.map(devotion =>
-      devotion.id === id
-        ? { ...devotion, status: devotion.status === 'published' ? 'draft' : 'published' }
-        : devotion
-    ));
+  const toggleStatus = async (id: string) => {
+    const devotion = devotions.find(d => d._id === id);
+    if (!devotion) return;
+
+    const newStatus = devotion.isPublished ? false : true;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devotions/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isPublished: newStatus })
+      });
+
+      if (response.ok) {
+        setDevotions(devotions.map(devotion =>
+          devotion._id === id
+            ? { ...devotion, isPublished: newStatus }
+            : devotion
+        ));
+        // Set refresh flag for main pages
+        sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        // Clear API cache for devotions
+        clearDevotionsCache();
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+    }
   };
 
-  const toggleFeatured = (id: string) => {
-    setDevotions(devotions.map(devotion =>
-      devotion.id === id
-        ? { ...devotion, featured: !devotion.featured }
-        : devotion
-    ));
+  const toggleFeatured = async (id: string) => {
+    const devotion = devotions.find(d => d._id === id);
+    if (!devotion) return;
+
+    const newFeatured = !devotion.isFeatured;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devotions/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isFeatured: newFeatured })
+      });
+
+      if (response.ok) {
+        setDevotions(devotions.map(devotion =>
+          devotion._id === id
+            ? { ...devotion, isFeatured: newFeatured }
+            : devotion
+        ));
+        // Set refresh flag for main pages
+        sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        // Clear API cache for devotions
+        clearDevotionsCache();
+      }
+    } catch (error) {
+      console.error('Error toggling featured:', error);
+    }
   };
 
-  const deleteDevotion = (id: string) => {
-    setDevotions(devotions.filter(devotion => devotion.id !== id));
+  const deleteDevotion = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devotions/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setDevotions(devotions.filter(devotion => devotion._id !== id));
+        // Set refresh flag for main pages
+        sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        // Clear API cache for devotions
+        clearDevotionsCache();
+      }
+    } catch (error) {
+      console.error('Error deleting devotion:', error);
+    }
   };
 
-  const openEditModal = (devotion: any) => {
-    setEditingDevotion(devotion);
-    setEditFormData({
-      title: devotion.title || '',
-      scripture: devotion.scripture || '',
-      author: devotion.author || '',
-      date: devotion.date || '',
-      status: devotion.status || 'draft',
-      featured: devotion.featured || false,
-      description: devotion.description || ''
+  const openEditPage = (devotion: any) => {
+    history.push(`/admin/devotions/edit/${devotion._id}`, { devotion });
+  };
+
+  const showOptions = (devotion: any) => {
+    presentActionSheet({
+      header: 'Devotion Options',
+      buttons: [
+        {
+          text: devotion.isFeatured ? 'Remove from Featured' : 'Mark as Featured',
+          icon: star,
+          handler: () => toggleFeatured(devotion._id)
+        },
+        {
+          text: devotion.isPublished ? 'Unpublish' : 'Publish',
+          icon: devotion.isPublished ? eyeOff : eye,
+          handler: () => toggleStatus(devotion._id)
+        },
+        {
+          text: 'Edit',
+          icon: create,
+          handler: () => openEditPage(devotion)
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          icon: trash,
+          handler: () => deleteDevotion(devotion._id)
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
     });
-    setShowEditModal(true);
   };
 
-  const handleEditInputChange = (field: string, value: string | boolean) => {
-    setEditFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleStatClick = (statType: string) => {
+    // Trigger animation
+    setAnimatingStat(statType);
+    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
+
+    // Update sorting/filtering
+    setSortBy(statType);
+    setFilterBy(statType === 'published' || statType === 'featured' ? statType : 'all');
   };
 
-  const handleSaveEdit = () => {
-    if (!editFormData.title || !editFormData.scripture || !editFormData.author || !editFormData.date) {
-      return;
+  const getSortedAndFilteredDevotions = () => {
+    // Apply filter
+    let filtered = devotions;
+    if (filterBy === 'published') {
+      filtered = devotions.filter(d => d.isPublished === true);
+    } else if (filterBy === 'featured') {
+      filtered = devotions.filter(d => d.isFeatured === true);
     }
 
-    setDevotions(devotions.map(devotion =>
-      devotion.id === editingDevotion.id
-        ? { ...devotion, ...editFormData }
-        : devotion
-    ));
-    setShowEditModal(false);
-    setEditingDevotion(null);
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date || a.createdAt || 0);
+          const dateB = new Date(b.date || b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      case 'views':
+        sorted.sort((a, b) => {
+          const viewsA = a.views || 0;
+          const viewsB = b.views || 0;
+          return viewsB - viewsA;
+        });
+        break;
+      case 'published':
+      case 'featured':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date || a.createdAt || 0);
+          const dateB = new Date(b.date || b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
-          </IonButtons>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonTitle className="title-ios">Devotion Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -196,43 +378,169 @@ const AdminDevotionManager: React.FC = () => {
 
           {/* Stats Cards */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: '12px',
+            display: 'flex',
+            gap: '16px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            paddingBottom: '8px',
             marginBottom: '24px'
           }}>
             <div style={{
-              backgroundColor: 'rgba(139, 92, 246, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#8b5cf6' }}>
-                {devotions.length}
+              <div
+                onClick={() => handleStatClick('date')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #8b5cf6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'date' && filterBy === 'all' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'date' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'date' ? '0 8px 25px rgba(139, 92, 246, 0.6), 0 0 0 4px rgba(139, 92, 246, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'date' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#8b5cf6',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'date' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {devotions.length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Devotions</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
             </div>
             <div style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#10b981' }}>
-                {devotions.filter(d => d.status === 'published').length}
+              <div
+                onClick={() => handleStatClick('published')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'published' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'published' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'published' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'published' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'published' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {devotions.filter(d => d.isPublished).length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Published</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Published</div>
             </div>
             <div style={{
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#f59e0b' }}>
-                {devotions.filter(d => d.featured).length}
+              <div
+                onClick={() => handleStatClick('featured')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'featured' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'featured' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'featured' ? '0 8px 25px rgba(245, 158, 11, 0.6), 0 0 0 4px rgba(245, 158, 11, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'featured' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#f59e0b',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'featured' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {devotions.filter(d => d.isFeatured).length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Featured</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Featured</div>
             </div>
           </div>
 
@@ -240,7 +548,7 @@ const AdminDevotionManager: React.FC = () => {
           <div style={{ marginBottom: '24px' }}>
             <IonButton
               expand="block"
-              routerLink="/admin/devotions/add"
+              onClick={() => history.push('/admin/devotions/add')}
               style={{
                 height: '48px',
                 borderRadius: '24px',
@@ -266,11 +574,16 @@ const AdminDevotionManager: React.FC = () => {
               fontWeight: '600',
               color: 'var(--ion-text-color)'
             }}>
-              All Devotions
+              {filterBy === 'all' ? 'All Devotions' :
+               filterBy === 'published' ? 'Published Devotions' :
+               filterBy === 'featured' ? 'Featured Devotions' :
+               'All Devotions'}
+              {sortBy === 'views' && ' (Sorted by Views)'}
+              {sortBy === 'date' && ' (Sorted by Date)'}
             </h2>
 
-            {devotions.map((devotion) => (
-              <IonCard key={devotion.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
+            {getSortedAndFilteredDevotions().map((devotion) => (
+              <IonCard key={devotion._id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
                 <IonCardContent style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
@@ -305,7 +618,7 @@ const AdminDevotionManager: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <IonIcon icon={calendar} />
-                          {devotion.date}
+                          {new Date(devotion.date).toISOString().split('T')[0]}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <IonIcon icon={eye} />
@@ -317,15 +630,15 @@ const AdminDevotionManager: React.FC = () => {
                       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                         <IonBadge
                           style={{
-                            backgroundColor: devotion.status === 'published' ? '#10b981' : '#f59e0b',
+                            backgroundColor: devotion.isPublished ? '#10b981' : '#f59e0b',
                             color: 'white',
                             fontWeight: '600',
                             borderRadius: '8px'
                           }}
                         >
-                          {devotion.status}
+                          {devotion.isPublished ? 'published' : 'draft'}
                         </IonBadge>
-                        {devotion.featured && (
+                        {devotion.isFeatured && (
                           <IonBadge
                             style={{
                               backgroundColor: '#f59e0b',
@@ -338,40 +651,14 @@ const AdminDevotionManager: React.FC = () => {
                           </IonBadge>
                         )}
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={() => toggleFeatured(devotion.id)}
-                          style={{ color: devotion.featured ? '#f59e0b' : 'var(--ion-color-medium)' }}
-                        >
-                          <IonIcon icon={star} />
-                        </IonButton>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={() => toggleStatus(devotion.id)}
-                          style={{ color: 'var(--ion-color-primary)' }}
-                        >
-                          <IonIcon icon={devotion.status === 'published' ? eyeOff : eye} />
-                        </IonButton>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={() => openEditModal(devotion)}
-                          style={{ color: 'var(--ion-color-primary)' }}
-                        >
-                          <IonIcon icon={create} />
-                        </IonButton>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          style={{ color: '#ef4444' }}
-                          onClick={() => deleteDevotion(devotion.id)}
-                        >
-                          <IonIcon icon={trash} />
-                        </IonButton>
-                      </div>
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        onClick={() => showOptions(devotion)}
+                        style={{ color: 'var(--ion-color-medium)' }}
+                      >
+                        <IonIcon icon={ellipsisHorizontal} />
+                      </IonButton>
                     </div>
                   </div>
                 </IonCardContent>
@@ -391,237 +678,6 @@ const AdminDevotionManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Edit Devotion Modal */}
-        {showEditModal && (
-          <>
-            <style>{`
-              .edit-sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0);
-                z-index: 9998;
-                opacity: 1;
-                visibility: visible;
-                transition: all 0.3s ease-in-out;
-              }
-
-              .edit-floating-sidebar {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
-                width: 90%;
-                max-width: 500px;
-                max-height: 70vh;
-                height: auto;
-                padding: 20px;
-                border-radius: 24px;
-                border: 1px solid var(--ion-color-medium);
-                backdrop-filter: blur(22px);
-                -webkit-backdrop-filter: blur(22px);
-                background: rgba(var(--ion-background-color-rgb), 0.9);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                z-index: 9999;
-                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                display: flex;
-                flex-direction: column;
-                overflow: visible;
-              }
-
-              .edit-floating-sidebar.open {
-                transform: translate(-50%, -50%) scale(1);
-              }
-
-              .edit-close-button {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s ease-in-out;
-                z-index: 10000;
-              }
-
-              .edit-close-button:hover {
-                background: rgba(var(--ion-background-color-rgb), 0.5);
-                transform: scale(1.1);
-              }
-
-              .edit-content {
-                margin-top: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                max-height: calc(70vh - 80px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-right: 8px;
-                -webkit-overflow-scrolling: touch;
-              }
-
-              .edit-content::-webkit-scrollbar {
-                width: 6px;
-              }
-
-              .edit-content::-webkit-scrollbar-track {
-                background: rgba(var(--ion-background-color-rgb), 0.1);
-                border-radius: 3px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb {
-                background: var(--ion-color-step-400);
-                border-radius: 3px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb:hover {
-                background: var(--ion-color-step-500);
-              }
-
-              .edit-submit-btn {
-                margin-top: 16px;
-                --border-radius: 16px;
-                font-weight: 600;
-                flex-shrink: 0;
-              }
-
-              @media (max-width: 576px) {
-                .edit-floating-sidebar {
-                  width: 95%;
-                  max-width: 460px;
-                  max-height: 75vh;
-                  padding: 16px;
-                  top: 45%;
-                  transform: translate(-50%, -50%) scale(0.8);
-                }
-
-                .edit-floating-sidebar.open {
-                  top: 50%;
-                  transform: translate(-50%, -50%) scale(1);
-                }
-
-                .edit-content {
-                  max-height: calc(75vh - 80px);
-                  gap: 12px;
-                }
-              }
-
-              @media (max-height: 600px) {
-                .edit-floating-sidebar {
-                  max-height: 80vh;
-                  top: 45%;
-                }
-
-                .edit-content {
-                  max-height: calc(80vh - 80px);
-                }
-              }
-            `}</style>
-
-            <div className="edit-sidebar-overlay" onClick={() => setShowEditModal(false)}></div>
-
-            <div className={`edit-floating-sidebar ${showEditModal ? 'open' : ''}`}>
-              <div className="edit-close-button" onClick={() => setShowEditModal(false)}>
-                <IonIcon icon={trash} />
-              </div>
-
-              <div className="edit-content">
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.3em', fontWeight: '700' }}>
-                    Edit Devotion
-                  </h2>
-                </div>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Devotion Title *</IonLabel>
-                  <IonInput
-                    value={editFormData.title}
-                    onIonChange={(e) => handleEditInputChange('title', e.detail.value!)}
-                    placeholder="Enter devotion title"
-                  />
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Scripture Reference *</IonLabel>
-                  <IonInput
-                    value={editFormData.scripture}
-                    onIonChange={(e) => handleEditInputChange('scripture', e.detail.value!)}
-                    placeholder="e.g., John 3:16"
-                  />
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Author *</IonLabel>
-                  <IonInput
-                    value={editFormData.author}
-                    onIonChange={(e) => handleEditInputChange('author', e.detail.value!)}
-                    placeholder="Enter author name"
-                  />
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Date *</IonLabel>
-                  <IonInput
-                    type="date"
-                    value={editFormData.date}
-                    onIonChange={(e) => handleEditInputChange('date', e.detail.value!)}
-                  />
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Status</IonLabel>
-                  <IonSelect
-                    value={editFormData.status}
-                    onIonChange={(e) => handleEditInputChange('status', e.detail.value)}
-                  >
-                    <IonSelectOption value="draft">Draft</IonSelectOption>
-                    <IonSelectOption value="published">Published</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Featured</IonLabel>
-                  <IonSelect
-                    value={editFormData.featured ? 'true' : 'false'}
-                    onIonChange={(e) => handleEditInputChange('featured', e.detail.value === 'true')}
-                  >
-                    <IonSelectOption value="false">No</IonSelectOption>
-                    <IonSelectOption value="true">Yes</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-
-                <IonItem style={{ '--border-radius': '12px' }}>
-                  <IonLabel position="stacked">Description</IonLabel>
-                  <IonTextarea
-                    value={editFormData.description}
-                    onIonChange={(e) => handleEditInputChange('description', e.detail.value!)}
-                    placeholder="Enter devotion description"
-                    rows={3}
-                  />
-                </IonItem>
-
-                <IonButton
-                  expand="block"
-                  onClick={handleSaveEdit}
-                  disabled={!editFormData.title || !editFormData.scripture || !editFormData.author || !editFormData.date}
-                  className="edit-submit-btn"
-                >
-                  <IonIcon icon={create} slot="start" />
-                  Save Changes
-                </IonButton>
-              </div>
-            </div>
-          </>
-        )}
       </IonContent>
     </IonPage>
   );

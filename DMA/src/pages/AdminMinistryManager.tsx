@@ -5,8 +5,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonCard,
@@ -20,6 +18,7 @@ import {
   IonRefresher,
   IonRefresherContent
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import {
   add,
   create,
@@ -28,56 +27,82 @@ import {
   person,
   eye,
   eyeOff,
-  closeCircle
+  closeCircle,
+  informationCircle,
+  arrowBack
 } from 'ionicons/icons';
 
 const AdminMinistryManager: React.FC = () => {
+  const history = useHistory();
   const [ministries, setMinistries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedMinistry, setSelectedMinistry] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    leader: '',
-    description: '',
-    meetings: ''
-  });
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [filterBy, setFilterBy] = useState<string>('all');
+  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
 
   useEffect(() => {
     loadMinistries();
   }, []);
 
-  const loadMinistries = async () => {
-    const mockMinistries = [
-      {
-        id: '1',
-        name: 'Youth Ministry',
-        leader: 'Pastor Daniel Kaggwa',
-        description: 'Empowering the next generation',
-        members: 45,
-        status: 'active',
-        meetings: 'Sundays 2:00 PM'
-      },
-      {
-        id: '2',
-        name: 'Worship Team',
-        leader: 'Sarah Johnson',
-        description: 'Leading worship and music ministry',
-        members: 12,
-        status: 'active',
-        meetings: 'Wednesdays 7:00 PM'
-      },
-      {
-        id: '3',
-        name: 'Children\'s Ministry',
-        leader: 'Pastor Erica Kaggwa',
-        description: 'Nurturing young hearts for Christ',
-        members: 8,
-        status: 'active',
-        meetings: 'Saturdays 10:00 AM'
+  // Check for updated ministry data from EditMinistry page
+  useEffect(() => {
+    const updatedMinistryData = localStorage.getItem('updatedMinistry');
+    if (updatedMinistryData) {
+      try {
+        const updatedMinistryRaw = JSON.parse(updatedMinistryData);
+        const updatedMinistry = {
+          id: updatedMinistryRaw._id,
+          name: updatedMinistryRaw.name,
+          leader: updatedMinistryRaw.leader,
+          description: updatedMinistryRaw.description,
+          members: updatedMinistryRaw.memberCount || 0,
+          status: updatedMinistryRaw.isActive ? 'active' : 'inactive',
+          meetings: updatedMinistryRaw.meetingSchedule || 'TBD',
+          category: updatedMinistryRaw.category,
+          endTime: updatedMinistryRaw.endTime,
+          contactEmail: updatedMinistryRaw.contactEmail,
+          contactPhone: updatedMinistryRaw.contactPhone
+        };
+        localStorage.removeItem('updatedMinistry'); // Clean up
+        loadMinistries(); // Reload to get updated data from server
+      } catch (error) {
+        console.error('Error parsing updated ministry data:', error);
       }
-    ];
-    setMinistries(mockMinistries);
+    }
+  }, []);
+
+  const loadMinistries = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/ministries?page=1&limit=100', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const formattedMinistries = data.ministries.map((ministry: any) => ({
+          id: ministry._id,
+          name: ministry.name,
+          leader: ministry.leader,
+          description: ministry.description,
+          members: ministry.memberCount || 0,
+          status: ministry.isActive ? 'active' : 'inactive',
+          meetings: ministry.meetingSchedule || 'TBD',
+          category: ministry.category,
+          endTime: ministry.endTime,
+          contactEmail: ministry.contactEmail,
+          contactPhone: ministry.contactPhone
+        }));
+        setMinistries(formattedMinistries);
+      } else {
+        console.error('Failed to load ministries');
+      }
+    } catch (error) {
+      console.error('Error loading ministries:', error);
+    }
     setLoading(false);
   };
 
@@ -86,55 +111,141 @@ const AdminMinistryManager: React.FC = () => {
     event.detail.complete();
   };
 
-  const toggleStatus = (id: string) => {
-    setMinistries(ministries.map(ministry =>
-      ministry.id === id
-        ? { ...ministry, status: ministry.status === 'active' ? 'inactive' : 'active' }
-        : ministry
-    ));
+  const toggleStatus = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const ministry = ministries.find(m => m.id === id);
+      if (!ministry) return;
+
+      const newStatus = ministry.status === 'active' ? false : true;
+
+      const response = await fetch(`/api/ministries/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isActive: newStatus })
+      });
+
+      if (response.ok) {
+        await loadMinistries(); // Reload to get updated data from server
+      } else {
+        console.error('Failed to update ministry status');
+      }
+    } catch (error) {
+      console.error('Error updating ministry status:', error);
+    }
   };
 
-  const deleteMinistry = (id: string) => {
-    setMinistries(ministries.filter(ministry => ministry.id !== id));
+  const deleteMinistry = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/ministries/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        await loadMinistries(); // Reload to get updated data from server
+      } else {
+        console.error('Failed to delete ministry');
+      }
+    } catch (error) {
+      console.error('Error deleting ministry:', error);
+    }
   };
 
-  const openEditModal = (ministry: any) => {
-    setSelectedMinistry(ministry);
-    setEditForm({
-      name: ministry.name,
-      leader: ministry.leader,
-      description: ministry.description,
-      meetings: ministry.meetings
-    });
-    setShowEditModal(true);
+  const openEditPage = (ministry: any) => {
+    history.push(`/admin/ministries/edit/${ministry.id}`, { ministry });
   };
 
-  const handleEditSave = () => {
-    if (!selectedMinistry) return;
+  const handleStatClick = (statType: string) => {
+    // Trigger animation
+    setAnimatingStat(statType);
+    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
 
-    setMinistries(ministries.map(ministry =>
-      ministry.id === selectedMinistry.id
-        ? { ...ministry, ...editForm }
-        : ministry
-    ));
-    setShowEditModal(false);
-    setSelectedMinistry(null);
+    // Update sorting/filtering
+    setSortBy(statType);
+    setFilterBy(statType === 'members' ? statType : 'all');
   };
 
-  const handleEditInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const getSortedAndFilteredMinistries = () => {
+    // Apply filter
+    let filtered = ministries;
+
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        // Since we don't have date fields, sort by name
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'members':
+        sorted.sort((a, b) => {
+          const membersA = a.members || 0;
+          const membersB = b.members || 0;
+          return membersB - membersA;
+        });
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
-          </IonButtons>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonTitle className="title-ios">Ministry Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -151,14 +262,171 @@ const AdminMinistryManager: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#10b981' }}>{ministries.length}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Ministries</div>
+          {/* Stats Cards */}
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            paddingBottom: '8px',
+            marginBottom: '24px'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('date')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'date' && filterBy === 'all' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'date' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'date' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'date' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'date' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {ministries.length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
             </div>
-            <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#3b82f6' }}>{ministries.reduce((sum, m) => sum + m.members, 0)}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Members</div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('members')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'members' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'members' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'members' ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 4px rgba(59, 130, 246, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'members' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#3b82f6',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'members' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {ministries.reduce((sum, m) => sum + m.members, 0)}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Members</div>
+            </div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('published')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'published' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'published' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'published' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'published' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'published' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {ministries.filter(m => m.status === 'active').length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Published</div>
             </div>
           </div>
 
@@ -166,7 +434,7 @@ const AdminMinistryManager: React.FC = () => {
           <div style={{ marginBottom: '24px' }}>
             <IonButton
               expand="block"
-              routerLink="/admin/ministries/add"
+              onClick={() => history.push('/admin/ministries/add')}
               style={{
                 height: '48px',
                 borderRadius: '24px',
@@ -187,9 +455,11 @@ const AdminMinistryManager: React.FC = () => {
           <div style={{ marginBottom: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '1.3em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
               All Ministries
+              {sortBy === 'members' && ' (Sorted by Members)'}
+              {sortBy === 'date' && ' (Sorted by Name)'}
             </h2>
 
-            {ministries.map((ministry) => (
+            {getSortedAndFilteredMinistries().map((ministry) => (
               <IonCard key={ministry.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
                 <IonCardContent style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -209,16 +479,28 @@ const AdminMinistryManager: React.FC = () => {
                         <IonIcon icon={person} />
                         Leader: {ministry.leader}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
                         <IonIcon icon={people} />
                         {ministry.members} members • {ministry.meetings}
                       </div>
+                      {ministry.category && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                          <IonIcon icon={informationCircle} />
+                          Category: {ministry.category}
+                        </div>
+                      )}
+                      {ministry.endTime && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                          <IonIcon icon={informationCircle} />
+                          End Time: {ministry.endTime}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <IonButton fill="clear" size="small" onClick={() => toggleStatus(ministry.id)} style={{ color: 'var(--ion-color-primary)' }}>
                         <IonIcon icon={ministry.status === 'active' ? eyeOff : eye} />
                       </IonButton>
-                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditModal(ministry)}>
+                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditPage(ministry)}>
                         <IonIcon icon={create} />
                       </IonButton>
                       <IonButton fill="clear" size="small" style={{ color: '#ef4444' }} onClick={() => deleteMinistry(ministry.id)}>
@@ -238,229 +520,6 @@ const AdminMinistryManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Edit Ministry Modal */}
-        {showEditModal && (
-          <>
-            {/* INLINE CSS */}
-            <style>{`
-              .edit-sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0);
-                z-index: 9998;
-                opacity: 1;
-                visibility: visible;
-                transition: all 0.3s ease-in-out;
-              }
-
-              .edit-floating-sidebar {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
-                width: 90%;
-                max-width: 500px;
-                max-height: 70vh;
-                height: auto;
-                padding: 20px;
-                border-radius: 24px;
-                border: 1px solid var(--ion-color-medium);
-                backdrop-filter: blur(22px);
-                -webkit-backdrop-filter: blur(22px);
-                background: rgba(var(--ion-background-color-rgb), 0.9);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                z-index: 9999;
-                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                display: flex;
-                flex-direction: column;
-                overflow: visible;
-              }
-
-              .edit-floating-sidebar.open {
-                transform: translate(-50%, -50%) scale(1);
-              }
-
-              .edit-close-button {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s ease-in-out;
-                z-index: 10000;
-              }
-
-              .edit-close-button:hover {
-                background: rgba(var(--ion-background-color-rgb), 0.5);
-                transform: scale(1.1);
-              }
-
-              .edit-close-button ion-icon {
-                font-size: 18px;
-              }
-
-              .edit-content {
-                margin-top: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                max-height: calc(70vh - 80px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-right: 8px;
-                -webkit-overflow-scrolling: touch;
-              }
-
-              .edit-content::-webkit-scrollbar {
-                width: 4px;
-              }
-
-              .edit-content::-webkit-scrollbar-track {
-                background: rgba(var(--ion-background-color-rgb), 0.1);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb {
-                background: var(--ion-color-step-400);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb:hover {
-                background: var(--ion-color-step-500);
-              }
-
-              .edit-submit-btn {
-                margin-top: 16px;
-                --border-radius: 16px;
-                font-weight: 600;
-              }
-
-              @media (max-width: 576px) {
-                .edit-floating-sidebar {
-                  width: 95%;
-                  max-width: 460px;
-                  max-height: 75vh;
-                  padding: 16px;
-                  top: 45%;
-                  transform: translate(-50%, -50%) scale(0.8);
-                }
-
-                .edit-floating-sidebar.open {
-                  top: 50%;
-                  transform: translate(-50%, -50%) scale(1);
-                }
-
-                .edit-content {
-                  max-height: calc(75vh - 80px);
-                  gap: 12px;
-                }
-              }
-
-              @media (max-height: 600px) {
-                .edit-floating-sidebar {
-                  max-height: 80vh;
-                  top: 45%;
-                }
-
-                .edit-content {
-                  max-height: calc(80vh - 80px);
-                }
-              }
-
-              @media (prefers-color-scheme: dark) {
-                .edit-floating-sidebar {
-                  border-color: rgba(255,255,255,0.18);
-                  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-                }
-              }
-            `}</style>
-
-            {/* SIDEBAR OVERLAY */}
-            <div className="edit-sidebar-overlay" onClick={() => setShowEditModal(false)}></div>
-
-            {/* SIDEBAR CONTENT */}
-            <div className={`edit-floating-sidebar ${showEditModal ? 'open' : ''}`}>
-              {/* Close Button */}
-              <div className="edit-close-button" onClick={() => setShowEditModal(false)}>
-                <IonIcon icon={closeCircle} />
-              </div>
-
-              {/* Content */}
-              <div className="edit-content">
-                {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.3em', fontWeight: '700' }}>
-                    Edit Ministry
-                  </h2>
-                </div>
-
-                {/* Form Fields */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Ministry Name</IonLabel>
-                    <IonInput
-                      value={editForm.name}
-                      onIonChange={(e) => handleEditInputChange('name', e.detail.value!)}
-                      placeholder="Enter ministry name"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Leader</IonLabel>
-                    <IonInput
-                      value={editForm.leader}
-                      onIonChange={(e) => handleEditInputChange('leader', e.detail.value!)}
-                      placeholder="Enter leader name"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Description</IonLabel>
-                    <IonTextarea
-                      value={editForm.description}
-                      onIonChange={(e) => handleEditInputChange('description', e.detail.value!)}
-                      placeholder="Enter ministry description"
-                      rows={3}
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Meeting Schedule</IonLabel>
-                    <IonInput
-                      value={editForm.meetings}
-                      onIonChange={(e) => handleEditInputChange('meetings', e.detail.value!)}
-                      placeholder="Enter meeting schedule"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-                </div>
-
-                {/* Submit Button */}
-                <IonButton
-                  expand="block"
-                  onClick={handleEditSave}
-                  className="edit-submit-btn"
-                >
-                  <IonIcon icon={create} slot="start" />
-                  Save Changes
-                </IonButton>
-              </div>
-            </div>
-          </>
-        )}
       </IonContent>
     </IonPage>
   );

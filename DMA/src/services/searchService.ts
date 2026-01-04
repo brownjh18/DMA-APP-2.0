@@ -18,7 +18,7 @@ export interface SearchResponse {
   query: string;
 }
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.100.56:5000/api';
 
 export async function searchContent(query: string, limit: number = 20): Promise<SearchResponse> {
   try {

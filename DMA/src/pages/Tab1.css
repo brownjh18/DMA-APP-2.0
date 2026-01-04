@@ -3,7 +3,7 @@
   --ion-background-color: #f7f8fb;
   --card-radius: 18px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  padding-bottom: 48px;
+  padding-bottom: 120px; /* Account for bottom nav height + position */
 }
 
 /* Toolbar */
@@ -22,6 +22,9 @@
   padding: 16px;
 }
 .sermons-section {
+  padding-bottom: 0px;
+}
+.podcasts-section {
   padding-bottom: 0px;
 }
 .programs-section {
@@ -236,12 +239,118 @@
   align-items:center;
 }
 
+/* Podcasts row */
+.podcasts-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: visible;
+  padding: 0;
+}
+
+/* Podcast cards */
+.podcast-card {
+  min-width: 160px;
+  flex: 0 0 75px;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(20,20,40,0.06);
+  border: 1px solid rgba(20,20,40,0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  outline: none;
+  transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
+  padding: 6px;
+}
+
+.podcast-card:active,
+.podcast-card:focus {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(20,20,40,0.12);
+}
+
+.podcast-thumb-wrap {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+}
+
+.podcast-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 16px 16px 0 0;
+}
+
+.podcast-live-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.podcast-play-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.podcast-card:hover .podcast-play-overlay {
+  opacity: 1;
+}
+
+.podcast-info {
+  padding: 6px 2px 6px 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.podcast-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1a1a1a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.podcast-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #7a7a86;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Programs */
 .programs-row {
   display:flex;
   gap:16px;
   overflow-x:auto;
-  padding-bottom:8px;
+  padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
 }
 .program-card {
@@ -501,7 +610,7 @@
 /* Small Devotion Cards */
 .devotion-card-small {
   min-width: 280px;
-  height: 200px;
+  aspect-ratio: 16/9;
   border-radius: 20px;
   overflow: hidden;
   position: relative;
@@ -525,9 +634,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .devotion-media-small::before {
@@ -537,7 +643,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2));
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.1) 0%,
+    rgba(0,0,0,0.2) 40%,
+    rgba(0,0,0,0.5) 70%,
+    rgba(0,0,0,0.8) 90%,
+    rgba(0,0,0,0.9) 100%
+  );
   z-index: 1;
 }
 
@@ -654,6 +767,24 @@
     color: #94a3b8;
   }
 
+  .podcast-card {
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .podcast-duration {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .podcast-play-overlay {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .podcast-meta {
+    color: #94a3b8;
+  }
+
   .program-card {
     background: linear-gradient(180deg, #000000, #000000);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
@@ -767,10 +898,82 @@
   .stat-label {
     color: #94a3b8;
   }
+
+  /* Podcasts Row - Dark Mode */
+  .podcasts-row {
+    /* No special background in dark mode */
+  }
+
+  .podcast-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .podcast-card:active,
+  .podcast-card:focus {
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .podcast-play-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .podcast-title {
+    color: #f1f5f9;
+  }
+
+  .podcast-meta {
+    color: #94a3b8;
+  }
+}
+
+/* Podcasts section wrapper */
+.podcasts-section-wrapper {
+  padding: 0px;
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+
+/* Tablet styles */
+@media (min-width: 768px) {
+  .podcasts-section-wrapper {
+    max-width: none;
+    padding: 16px;
+  }
+
+  .podcasts-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    overflow-x: visible;
+    padding: 0;
+    flex-direction: row;
+  }
+
+  .podcast-card {
+    min-width: auto;
+    flex: none;
+    width: 100%;
+    padding: 12px;
+  }
 }
 
 /* small screens */
 @media (max-width: 420px) {
   .sermon-card { min-width: 240px; flex: 0 0 240px; }
+  .podcast-card { min-width: 140px; flex: 0 0 72px; }
+  .podcast-thumb-wrap { height: 100px; }
+  .podcast-info { padding: 6px 2px 6px 6px; }
+  .podcast-title { font-size: 13px; }
+  .podcast-meta { font-size: 11px; }
   .devotion-summary { max-width: 60%; font-size:13px; }
+}
+
+/* Live broadcast animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
 }

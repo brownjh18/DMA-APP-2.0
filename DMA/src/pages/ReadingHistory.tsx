@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonIcon, IonBadge } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge } from '@ionic/react';
 import { book, time, removeCircle, library } from 'ionicons/icons';
 
 const ReadingHistory: React.FC = () => {
@@ -62,9 +62,6 @@ const ReadingHistory: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
           <IonTitle className="title-ios">Reading History</IonTitle>
         </IonToolbar>
       </IonHeader>

@@ -1,92 +1,110 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonCheckbox, IonText, IonButtons, IonBackButton, IonAlert, IonIcon, IonModal, IonBadge } from '@ionic/react';
-import { heart, mail, person, lockClosed, globe, time, informationCircle, checkmarkCircle, closeCircle, calendar } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonCheckbox, IonText, IonAlert, IonIcon, IonModal, IonBadge } from '@ionic/react';
+import { heart, mail, person, lockClosed, globe, time, informationCircle, checkmarkCircle, closeCircle, calendar, arrowBack } from 'ionicons/icons';
 import { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
 import './PrayerRequest.css';
 
 const PrayerRequest: React.FC = () => {
+  const history = useHistory();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [request, setRequest] = useState('');
   const [confidential, setConfidential] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [submittedRequest, setSubmittedRequest] = useState<any>(null);
-  const [myRequests, setMyRequests] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await apiService.submitPrayerRequest({
-        name,
-        email,
-        request,
-        isConfidential: confidential,
-        category: 'personal' // Default category
-      });
 
-      // Store submitted request data for modal
-      const newRequest = {
-        id: Date.now().toString(),
-        name,
-        email,
-        request,
-        confidential,
-        submittedAt: new Date().toISOString(),
-        status: 'pending'
-      };
+    // Construct WhatsApp message
+    const message = `*Prayer Request Submission*\n\n*Name:* ${name}\n*Email:* ${email}\n*Request:* ${request}\n*Confidential:* ${confidential ? 'Yes' : 'No'}\n*Submitted:* ${new Date().toLocaleString()}`;
 
-      setSubmittedRequest(newRequest);
-      setMyRequests(prev => [newRequest, ...prev]);
-      setShowModal(true);
+    // Encode the message for URL
+    const encodedMessage = encodeURIComponent(message);
 
-      // Reset form
-      setName('');
-      setEmail('');
-      setRequest('');
-      setConfidential(false);
-    } catch (error) {
-      console.error('Error submitting prayer request:', error);
-      // You could show an error alert here
-    }
+    // WhatsApp URL
+    const whatsappUrl = `https://wa.me/256760255970?text=${encodedMessage}`;
+
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+
+    // Store submitted request data for modal (for UI feedback)
+    const newRequest = {
+      id: Date.now().toString(),
+      name,
+      email,
+      request,
+      confidential,
+      submittedAt: new Date().toISOString(),
+      status: 'pending'
+    };
+
+    setSubmittedRequest(newRequest);
+    setShowModal(true);
+
+    // Reset form
+    setName('');
+    setEmail('');
+    setRequest('');
+    setConfidential(false);
   };
 
-  const handleViewDetails = () => {
-    // Load mock previous requests for demo
-    const mockPreviousRequests = [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        request: 'Please pray for healing for my grandmother who is in the hospital.',
-        confidential: false,
-        submittedAt: '2025-11-15T10:30:00Z',
-        status: 'answered'
-      },
-      {
-        id: '2',
-        name: 'John Doe',
-        email: 'john@example.com',
-        request: 'Thank you for praying for my job interview. I got the position!',
-        confidential: false,
-        submittedAt: '2025-11-10T14:20:00Z',
-        status: 'answered'
-      }
-    ];
-    setMyRequests(prev => [...mockPreviousRequests, ...prev]);
-    setShowDetailsModal(true);
-  };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
+          
           <IonTitle className="title-ios">Prayer Request</IonTitle>
         </IonToolbar>
       </IonHeader>
+
+      {/* Back Button */}
+      <div
+        onClick={() => history.goBack()}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--ion-safe-area-top) - -5px)',
+          left: 20,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseDown={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(0.8)';
+        }}
+        onMouseUp={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          setTimeout(() => {
+            target.style.transform = 'scale(1)';
+          }, 200);
+        }}
+        onMouseLeave={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(1)';
+        }}
+      >
+        <IonIcon
+          icon={arrowBack}
+          style={{
+            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            fontSize: '20px',
+          }}
+        />
+      </div>
 
       <IonContent fullscreen className="content-ios">
         <div style={{
@@ -119,7 +137,7 @@ const PrayerRequest: React.FC = () => {
               opacity: 0.7,
               fontSize: '1em'
             }}>
-              Submit your prayer request to our dedicated team
+              Submit your prayer request via WhatsApp to our prayer team
             </p>
           </div>
 
@@ -224,24 +242,7 @@ const PrayerRequest: React.FC = () => {
               }}
             >
               <IonIcon icon={heart} slot="start" />
-              Submit Prayer Request
-            </IonButton>
-
-            {/* View Details Button */}
-            <IonButton
-              expand="block"
-              fill="outline"
-              onClick={handleViewDetails}
-              style={{
-                height: '44px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                marginTop: '12px',
-                '--border-radius': '8px'
-              }}
-            >
-              <IonIcon icon={time} slot="start" />
-              View My Prayer Requests
+              Send via WhatsApp
             </IonButton>
           </form>
 
@@ -401,271 +402,6 @@ const PrayerRequest: React.FC = () => {
           </div>
         </IonModal>
 
-        {/* View Details Modal - Redesigned like Admin Prayer Request Details */}
-        {showDetailsModal && (
-          <>
-            {/* INLINE CSS */}
-            <style>{`
-              .prayer-sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0);
-                z-index: 9998;
-                opacity: 1;
-                visibility: visible;
-                transition: all 0.3s ease-in-out;
-              }
-
-              .prayer-floating-sidebar {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
-                width: 85%;
-                max-width: 400px;
-                max-height: 50vh;
-                padding: 20px;
-                border-radius: 24px;
-                border: 1px solid var(--ion-color-medium);
-                backdrop-filter: blur(22px);
-                -webkit-backdrop-filter: blur(22px);
-                background: rgba(var(--ion-background-color-rgb), 0.9);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                z-index: 9999;
-                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-              }
-
-              .prayer-floating-sidebar.open {
-                transform: translate(-50%, -50%) scale(1);
-              }
-
-              .prayer-close-button {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s ease-in-out;
-                z-index: 10000;
-              }
-
-              .prayer-close-button:hover {
-                background: rgba(var(--ion-background-color-rgb), 0.5);
-                transform: scale(1.1);
-              }
-
-              .prayer-close-button ion-icon {
-                font-size: 18px;
-              }
-
-              .prayer-content {
-                margin-top: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                flex: 1;
-                overflow-y: auto;
-                padding-right: 4px;
-              }
-
-              .prayer-content::-webkit-scrollbar {
-                width: 4px;
-              }
-
-              .prayer-content::-webkit-scrollbar-track {
-                background: rgba(var(--ion-background-color-rgb), 0.1);
-                border-radius: 2px;
-              }
-
-              .prayer-content::-webkit-scrollbar-thumb {
-                background: var(--ion-color-step-400);
-                border-radius: 2px;
-              }
-
-              .prayer-content::-webkit-scrollbar-thumb:hover {
-                background: var(--ion-color-step-500);
-              }
-
-              .prayer-info-item {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 14px;
-                border-radius: 16px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-              }
-
-              .prayer-info-item ion-icon {
-                font-size: 20px;
-                color: var(--ion-color-primary);
-              }
-
-              .prayer-request-section {
-                padding: 16px;
-                border-radius: 16px;
-                background: rgba(var(--ion-background-color-rgb), 0.4);
-                border: 1px solid var(--ion-color-step-150);
-              }
-
-              .prayer-status-badge {
-                display: inline-flex;
-                align-items: center;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 0.85em;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-              }
-
-              .prayer-status-pending {
-                background: rgba(245, 158, 11, 0.1);
-                color: #f59e0b;
-                border: 1px solid rgba(245, 158, 11, 0.2);
-              }
-
-              .prayer-status-answered {
-                background: rgba(16, 185, 129, 0.1);
-                color: #10b981;
-                border: 1px solid rgba(16, 185, 129, 0.2);
-              }
-
-              @media (max-width: 576px) {
-                .prayer-floating-sidebar {
-                  width: 95%;
-                  max-width: 360px;
-                  max-height: 70vh;
-                  padding: 16px;
-                }
-              }
-
-              @media (prefers-color-scheme: dark) {
-                .prayer-floating-sidebar {
-                  border-color: rgba(255,255,255,0.18);
-                  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-                }
-                .prayer-info-item,
-                .prayer-request-section {
-                  border-color: rgba(255,255,255,0.18);
-                }
-              }
-            `}</style>
-
-            {/* SIDEBAR OVERLAY */}
-            <div className="prayer-sidebar-overlay" onClick={() => setShowDetailsModal(false)}></div>
-
-            {/* SIDEBAR CONTENT */}
-            <div className={`prayer-floating-sidebar ${showDetailsModal ? 'open' : ''}`}>
-              {/* Close Button */}
-              <div className="prayer-close-button" onClick={() => setShowDetailsModal(false)}>
-                <IonIcon icon={closeCircle} />
-              </div>
-
-              {/* Content */}
-              <div className="prayer-content">
-                {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.3em', fontWeight: '700' }}>
-                    My Prayer Requests
-                  </h2>
-                  <p style={{ margin: '0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
-                    Your prayer journey with us
-                  </p>
-                </div>
-
-                {myRequests.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {myRequests.map((req, index) => (
-                      <div key={req.id || index}>
-                        {/* Status Badge */}
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                          <div className={`prayer-status-badge ${req.status === 'answered' ? 'prayer-status-answered' : 'prayer-status-pending'}`}>
-                            {req.status}
-                          </div>
-                        </div>
-
-                        {/* Request Details */}
-                        <div className="prayer-info-item">
-                          <IonIcon icon={person} />
-                          <div>
-                            <div style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>{req.name}</div>
-                            <div style={{ fontSize: '0.85em', color: 'var(--ion-color-medium)' }}>{req.email}</div>
-                          </div>
-                        </div>
-
-                        <div className="prayer-info-item">
-                          <IonIcon icon={calendar} />
-                          <div style={{ color: 'var(--ion-text-color)' }}>
-                            Submitted: {new Date(req.submittedAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Prayer Request */}
-                        <div className="prayer-request-section">
-                          <h3 style={{ margin: '0 0 12px 0', color: 'var(--ion-text-color)', fontSize: '1.1em' }}>
-                            Prayer Request #{myRequests.length - index}
-                          </h3>
-                          <p style={{ margin: '0', color: 'var(--ion-text-color)', lineHeight: '1.5', fontSize: '0.95em' }}>
-                            {req.request}
-                          </p>
-                        </div>
-
-                        {/* Confidential Badge */}
-                        {req.confidential && (
-                          <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <IonBadge color="medium" style={{ fontSize: '0.8em', padding: '6px 12px' }}>
-                              <IonIcon icon={lockClosed} style={{ marginRight: '4px' }} />
-                              Confidential
-                            </IonBadge>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <IonIcon
-                      icon={heart}
-                      style={{
-                        fontSize: '3em',
-                        color: 'var(--ion-color-medium)',
-                        marginBottom: '16px',
-                        opacity: 0.5
-                      }}
-                    />
-                    <p style={{
-                      margin: '0',
-                      color: 'var(--ion-color-medium)',
-                      fontSize: '1em'
-                    }}>
-                      No prayer requests submitted yet
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
       </IonContent>
     </IonPage>
   );

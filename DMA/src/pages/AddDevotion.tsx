@@ -5,9 +5,8 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
+  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -25,7 +24,8 @@ import {
   text,
   calendar,
   person,
-  star
+  star,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
@@ -35,6 +35,34 @@ const AddDevotion: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+  // Helper function to clear API cache for devotions
+  const clearDevotionsCache = () => {
+    try {
+      // Check if localStorage is available
+      if (typeof localStorage === 'undefined') {
+        console.warn('localStorage is not available');
+        return;
+      }
+      
+      // Remove all cached devotions data from localStorage
+      const keys = Object.keys(localStorage || {});
+      if (Array.isArray(keys)) {
+        keys.forEach(key => {
+          if (key && key.startsWith && key.startsWith('api_cache_') && key.includes('devotions')) {
+            try {
+              localStorage.removeItem(key);
+            } catch (removeError) {
+              console.warn('Failed to remove cache key:', key, removeError);
+            }
+          }
+        });
+        console.log('Devotions API cache cleared');
+      }
+    } catch (error) {
+      console.warn('Failed to clear devotions cache:', error);
+    }
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -43,6 +71,7 @@ const AddDevotion: React.FC = () => {
     scripture: '',
     reflection: '',
     prayer: '',
+    category: 'faith-foundation',
     featured: false,
     status: 'draft'
   });
@@ -55,35 +84,123 @@ const AddDevotion: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.content || !formData.author || !formData.date) {
-      setAlertMessage('Please fill in all required fields (Title, Content, Author, Date)');
+    if (!formData.title || !formData.content || !formData.scripture || !formData.reflection || !formData.prayer || !formData.author || !formData.date) {
+      setAlertMessage('Please fill in all required fields (Title, Scripture, Content, Reflection, Prayer, Author, Date)');
       setShowAlert(true);
       return;
     }
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setAlertMessage('Devotion added successfully!');
-      setShowAlert(true);
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token);
 
-      // Navigate back after success
-      setTimeout(() => {
-        history.push('/admin/devotions');
-      }, 1500);
-    }, 1000);
+      if (!token) {
+        setAlertMessage('You must be logged in to add devotions. Please sign in first.');
+        setShowAlert(true);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/devotions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          scripture: formData.scripture,
+          content: formData.content,
+          reflection: formData.reflection,
+          prayer: formData.prayer,
+          date: new Date(formData.date).toISOString(),
+          author: formData.author,
+          category: formData.category,
+          isPublished: formData.status === 'published',
+          isFeatured: formData.featured
+        })
+      });
+
+      if (response.ok) {
+        setLoading(false);
+        setAlertMessage('Devotion added successfully!');
+        setShowAlert(true);
+
+        // Set refresh flag for main pages
+        sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        // Clear API cache for devotions
+        clearDevotionsCache();
+
+        // Navigate back after success
+        setTimeout(() => {
+          history.push('/admin/devotions');
+        }, 1500);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.log('API Error Response:', errorData);
+        setAlertMessage(errorData.error || `Failed to add devotion (${response.status})`);
+        setShowAlert(true);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error adding devotion:', error);
+      setAlertMessage('Network error. Please try again.');
+      setShowAlert(true);
+      setLoading(false);
+    }
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/devotions" />
-          </IonButtons>
-          <IonTitle className="title-ios">Add Devotion</IonTitle>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
+            <IonTitle className="title-ios">Add Devotion</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
               <IonIcon icon={save} />
@@ -150,12 +267,24 @@ const AddDevotion: React.FC = () => {
             </IonItem>
 
             <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Scripture Reference</IonLabel>
+              <IonLabel position="stacked">Scripture Reference *</IonLabel>
               <IonInput
                 value={formData.scripture}
                 onIonChange={(e) => handleInputChange('scripture', e.detail.value!)}
                 placeholder="e.g., Psalm 23:1-6"
               />
+            </IonItem>
+
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Category</IonLabel>
+              <IonSelect
+                value={formData.category}
+                onIonChange={(e) => handleInputChange('category', e.detail.value)}
+              >
+                <IonSelectOption value="faith-foundation">Faith Foundation</IonSelectOption>
+                <IonSelectOption value="love-relationships">Love & Relationships</IonSelectOption>
+                <IonSelectOption value="spiritual-growth">Spiritual Growth</IonSelectOption>
+              </IonSelect>
             </IonItem>
 
             <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
@@ -180,7 +309,7 @@ const AddDevotion: React.FC = () => {
             </IonItem>
 
             <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Reflection Questions</IonLabel>
+              <IonLabel position="stacked">Reflection *</IonLabel>
               <IonTextarea
                 value={formData.reflection}
                 onIonChange={(e) => handleInputChange('reflection', e.detail.value!)}
@@ -190,7 +319,7 @@ const AddDevotion: React.FC = () => {
             </IonItem>
 
             <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Prayer</IonLabel>
+              <IonLabel position="stacked">Prayer *</IonLabel>
               <IonTextarea
                 value={formData.prayer}
                 onIonChange={(e) => handleInputChange('prayer', e.detail.value!)}

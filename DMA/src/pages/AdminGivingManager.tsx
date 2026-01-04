@@ -5,8 +5,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonCard,
@@ -19,6 +17,7 @@ import {
   IonRefresher,
   IonRefresherContent
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import {
   add,
   create,
@@ -28,57 +27,68 @@ import {
   calendar,
   eye,
   eyeOff,
-  closeCircle
+  closeCircle,
+  arrowBack
 } from 'ionicons/icons';
 
 const AdminGivingManager: React.FC = () => {
+  const history = useHistory();
   const [donations, setDonations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedDonation, setSelectedDonation] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
-    donor: '',
-    amount: '',
-    purpose: '',
-    date: '',
-    method: ''
-  });
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [filterBy, setFilterBy] = useState<string>('all');
+  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
 
   useEffect(() => {
     loadDonations();
   }, []);
 
-  const loadDonations = async () => {
-    const mockDonations = [
-      {
-        id: '1',
-        donor: 'Anonymous',
-        amount: 500,
-        purpose: 'Building Fund',
-        date: '2025-01-15',
-        method: 'Online',
-        status: 'completed'
-      },
-      {
-        id: '2',
-        donor: 'John Smith',
-        amount: 200,
-        purpose: 'Missions',
-        date: '2025-01-12',
-        method: 'Cash',
-        status: 'completed'
-      },
-      {
-        id: '3',
-        donor: 'Mary Johnson',
-        amount: 1000,
-        purpose: 'Youth Ministry',
-        date: '2025-01-10',
-        method: 'Check',
-        status: 'pending'
+  // Check for updated donation data from EditDonation page
+  useEffect(() => {
+    const updatedDonationData = localStorage.getItem('updatedDonation');
+    if (updatedDonationData) {
+      try {
+        const updatedDonation = JSON.parse(updatedDonationData);
+        setDonations(prevDonations =>
+          prevDonations.map(donation =>
+            donation.id === updatedDonation.id ? updatedDonation : donation
+          )
+        );
+        localStorage.removeItem('updatedDonation'); // Clean up
+      } catch (error) {
+        console.error('Error parsing updated donation data:', error);
       }
-    ];
-    setDonations(mockDonations);
+    }
+  }, []);
+
+  const loadDonations = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/giving?page=1&limit=100', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const formattedDonations = data.donations.map((donation: any) => ({
+          id: donation._id,
+          donor: donation.isAnonymous ? 'Anonymous' : donation.donorName,
+          amount: donation.amount,
+          purpose: donation.purpose,
+          date: donation.createdAt.split('T')[0], // Format date
+          method: donation.paymentMethod,
+          status: donation.status
+        }));
+        setDonations(formattedDonations);
+      } else {
+        console.error('Failed to load donations');
+      }
+    } catch (error) {
+      console.error('Error loading donations:', error);
+    }
     setLoading(false);
   };
 
@@ -87,47 +97,111 @@ const AdminGivingManager: React.FC = () => {
     event.detail.complete();
   };
 
-  const toggleStatus = (id: string) => {
-    setDonations(donations.map(donation =>
-      donation.id === id
-        ? { ...donation, status: donation.status === 'completed' ? 'pending' : 'completed' }
-        : donation
-    ));
+  const toggleStatus = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const donation = donations.find(d => d.id === id);
+      if (!donation) return;
+
+      const newStatus = donation.status === 'completed' ? 'pending' : 'completed';
+
+      const response = await fetch(`/api/giving/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        setDonations(donations.map(donation =>
+          donation.id === id
+            ? { ...donation, status: newStatus }
+            : donation
+        ));
+      } else {
+        console.error('Failed to update donation status');
+      }
+    } catch (error) {
+      console.error('Error updating donation status:', error);
+    }
   };
 
-  const deleteDonation = (id: string) => {
-    setDonations(donations.filter(donation => donation.id !== id));
+  const deleteDonation = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/giving/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setDonations(donations.filter(donation => donation.id !== id));
+      } else {
+        console.error('Failed to delete donation');
+      }
+    } catch (error) {
+      console.error('Error deleting donation:', error);
+    }
   };
 
-  const openEditModal = (donation: any) => {
-    setSelectedDonation(donation);
-    setEditForm({
-      donor: donation.donor,
-      amount: donation.amount.toString(),
-      purpose: donation.purpose,
-      date: donation.date,
-      method: donation.method
-    });
-    setShowEditModal(true);
+  const openEditPage = (donation: any) => {
+    history.push(`/admin/giving/edit/${donation.id}`, { donation });
   };
 
-  const handleEditSave = () => {
-    if (!selectedDonation) return;
+  const handleStatClick = (statType: string) => {
+    // Trigger animation
+    setAnimatingStat(statType);
+    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
 
-    setDonations(donations.map(donation =>
-      donation.id === selectedDonation.id
-        ? { ...donation, ...editForm, amount: parseFloat(editForm.amount) }
-        : donation
-    ));
-    setShowEditModal(false);
-    setSelectedDonation(null);
+    // Update sorting/filtering
+    setSortBy(statType);
+    setFilterBy(statType === 'completed' || statType === 'pending' ? statType : 'all');
   };
 
-  const handleEditInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const getSortedAndFilteredDonations = () => {
+    // Apply filter
+    let filtered = donations;
+    if (filterBy === 'completed') {
+      filtered = donations.filter(d => d.status === 'completed');
+    } else if (filterBy === 'pending') {
+      filtered = donations.filter(d => d.status === 'pending');
+    }
+
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      case 'amount':
+        sorted.sort((a, b) => {
+          const amountA = a.amount || 0;
+          const amountB = b.amount || 0;
+          return amountB - amountA;
+        });
+        break;
+      case 'completed':
+      case 'pending':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
   };
 
   const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
@@ -136,9 +210,50 @@ const AdminGivingManager: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
-          </IonButtons>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonTitle className="title-ios">Giving Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -155,18 +270,171 @@ const AdminGivingManager: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#ef4444' }}>${totalAmount}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Donations</div>
+          {/* Stats Cards */}
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            paddingBottom: '8px',
+            marginBottom: '24px'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('amount')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'amount' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'amount' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'amount' ? '0 8px 25px rgba(239, 68, 68, 0.6), 0 0 0 4px rgba(239, 68, 68, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'amount' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#ef4444',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'amount' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  ${totalAmount}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
             </div>
-            <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#10b981' }}>{donations.filter(d => d.status === 'completed').length}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Completed</div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('completed')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'completed' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'completed' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'completed' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'completed' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {donations.filter(d => d.status === 'completed').length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Completed</div>
             </div>
-            <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#f59e0b' }}>{donations.filter(d => d.status === 'pending').length}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Pending</div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('pending')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'pending' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'pending' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'pending' ? '0 8px 25px rgba(245, 158, 11, 0.6), 0 0 0 4px rgba(245, 158, 11, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'pending' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#f59e0b',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'pending' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {donations.filter(d => d.status === 'pending').length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Pending</div>
             </div>
           </div>
 
@@ -194,10 +462,15 @@ const AdminGivingManager: React.FC = () => {
 
           <div style={{ marginBottom: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '1.3em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              Recent Donations
+              {filterBy === 'all' ? 'Recent Donations' :
+               filterBy === 'completed' ? 'Completed Donations' :
+               filterBy === 'pending' ? 'Pending Donations' :
+               'Recent Donations'}
+              {sortBy === 'amount' && ' (Sorted by Amount)'}
+              {sortBy === 'date' && ' (Sorted by Date)'}
             </h2>
 
-            {donations.map((donation) => (
+            {getSortedAndFilteredDonations().map((donation) => (
               <IonCard key={donation.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
                 <IonCardContent style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -228,7 +501,7 @@ const AdminGivingManager: React.FC = () => {
                       <IonButton fill="clear" size="small" onClick={() => toggleStatus(donation.id)} style={{ color: 'var(--ion-color-primary)' }}>
                         <IonIcon icon={donation.status === 'completed' ? eyeOff : eye} />
                       </IonButton>
-                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditModal(donation)}>
+                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditPage(donation)}>
                         <IonIcon icon={create} />
                       </IonButton>
                       <IonButton fill="clear" size="small" style={{ color: '#ef4444' }} onClick={() => deleteDonation(donation.id)}>
@@ -248,239 +521,6 @@ const AdminGivingManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Edit Donation Modal */}
-        {showEditModal && (
-          <>
-            {/* INLINE CSS */}
-            <style>{`
-              .edit-sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0);
-                z-index: 9998;
-                opacity: 1;
-                visibility: visible;
-                transition: all 0.3s ease-in-out;
-              }
-
-              .edit-floating-sidebar {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
-                width: 90%;
-                max-width: 500px;
-                max-height: 70vh;
-                height: auto;
-                padding: 20px;
-                border-radius: 24px;
-                border: 1px solid var(--ion-color-medium);
-                backdrop-filter: blur(22px);
-                -webkit-backdrop-filter: blur(22px);
-                background: rgba(var(--ion-background-color-rgb), 0.9);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                z-index: 9999;
-                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                display: flex;
-                flex-direction: column;
-                overflow: visible;
-              }
-
-              .edit-floating-sidebar.open {
-                transform: translate(-50%, -50%) scale(1);
-              }
-
-              .edit-close-button {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s ease-in-out;
-                z-index: 10000;
-              }
-
-              .edit-close-button:hover {
-                background: rgba(var(--ion-background-color-rgb), 0.5);
-                transform: scale(1.1);
-              }
-
-              .edit-close-button ion-icon {
-                font-size: 18px;
-              }
-
-              .edit-content {
-                margin-top: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                max-height: calc(70vh - 80px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-right: 8px;
-                -webkit-overflow-scrolling: touch;
-              }
-
-              .edit-content::-webkit-scrollbar {
-                width: 4px;
-              }
-
-              .edit-content::-webkit-scrollbar-track {
-                background: rgba(var(--ion-background-color-rgb), 0.1);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb {
-                background: var(--ion-color-step-400);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb:hover {
-                background: var(--ion-color-step-500);
-              }
-
-              .edit-submit-btn {
-                margin-top: 16px;
-                --border-radius: 16px;
-                font-weight: 600;
-              }
-
-              @media (max-width: 576px) {
-                .edit-floating-sidebar {
-                  width: 95%;
-                  max-width: 460px;
-                  max-height: 75vh;
-                  padding: 16px;
-                  top: 45%;
-                  transform: translate(-50%, -50%) scale(0.8);
-                }
-
-                .edit-floating-sidebar.open {
-                  top: 50%;
-                  transform: translate(-50%, -50%) scale(1);
-                }
-
-                .edit-content {
-                  max-height: calc(75vh - 80px);
-                  gap: 12px;
-                }
-              }
-
-              @media (max-height: 600px) {
-                .edit-floating-sidebar {
-                  max-height: 80vh;
-                  top: 45%;
-                }
-
-                .edit-content {
-                  max-height: calc(80vh - 80px);
-                }
-              }
-
-              @media (prefers-color-scheme: dark) {
-                .edit-floating-sidebar {
-                  border-color: rgba(255,255,255,0.18);
-                  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-                }
-              }
-            `}</style>
-
-            {/* SIDEBAR OVERLAY */}
-            <div className="edit-sidebar-overlay" onClick={() => setShowEditModal(false)}></div>
-
-            {/* SIDEBAR CONTENT */}
-            <div className={`edit-floating-sidebar ${showEditModal ? 'open' : ''}`}>
-              {/* Close Button */}
-              <div className="edit-close-button" onClick={() => setShowEditModal(false)}>
-                <IonIcon icon={closeCircle} />
-              </div>
-
-              {/* Content */}
-              <div className="edit-content">
-                {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.3em', fontWeight: '700' }}>
-                    Edit Donation
-                  </h2>
-                </div>
-
-                {/* Form Fields */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Donor Name</IonLabel>
-                    <IonInput
-                      value={editForm.donor}
-                      onIonChange={(e) => handleEditInputChange('donor', e.detail.value!)}
-                      placeholder="Enter donor name"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Amount ($)</IonLabel>
-                    <IonInput
-                      type="number"
-                      value={editForm.amount}
-                      onIonChange={(e) => handleEditInputChange('amount', e.detail.value!)}
-                      placeholder="Enter donation amount"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Purpose</IonLabel>
-                    <IonInput
-                      value={editForm.purpose}
-                      onIonChange={(e) => handleEditInputChange('purpose', e.detail.value!)}
-                      placeholder="Enter donation purpose"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Date</IonLabel>
-                    <IonInput
-                      value={editForm.date}
-                      onIonChange={(e) => handleEditInputChange('date', e.detail.value!)}
-                      placeholder="Enter date (YYYY-MM-DD)"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Payment Method</IonLabel>
-                    <IonInput
-                      value={editForm.method}
-                      onIonChange={(e) => handleEditInputChange('method', e.detail.value!)}
-                      placeholder="Enter payment method"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-                </div>
-
-                {/* Submit Button */}
-                <IonButton
-                  expand="block"
-                  onClick={handleEditSave}
-                  className="edit-submit-btn"
-                >
-                  <IonIcon icon={create} slot="start" />
-                  Save Changes
-                </IonButton>
-              </div>
-            </div>
-          </>
-        )}
       </IonContent>
     </IonPage>
   );

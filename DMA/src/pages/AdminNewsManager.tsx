@@ -5,8 +5,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonCard,
@@ -20,6 +18,7 @@ import {
   IonRefresher,
   IonRefresherContent
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import {
   add,
   create,
@@ -28,56 +27,68 @@ import {
   calendar,
   eye,
   eyeOff,
-  closeCircle
+  closeCircle,
+  arrowBack
 } from 'ionicons/icons';
 
 const AdminNewsManager: React.FC = () => {
+  const history = useHistory();
   const [news, setNews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedNews, setSelectedNews] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
-    title: '',
-    excerpt: '',
-    author: '',
-    date: ''
-  });
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [filterBy, setFilterBy] = useState<string>('all');
+  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
 
   useEffect(() => {
     loadNews();
   }, []);
 
-  const loadNews = async () => {
-    const mockNews = [
-      {
-        id: '1',
-        title: 'New Youth Conference Announced',
-        excerpt: 'Join us for an exciting weekend of worship and fellowship...',
-        author: 'Pastor Daniel Kaggwa',
-        date: '2025-01-15',
-        status: 'published',
-        views: 245
-      },
-      {
-        id: '2',
-        title: 'Community Outreach Success',
-        excerpt: 'Our recent food drive helped over 200 families...',
-        author: 'Sarah Johnson',
-        date: '2025-01-10',
-        status: 'published',
-        views: 189
-      },
-      {
-        id: '3',
-        title: 'Upcoming Missions Trip',
-        excerpt: 'Planning a missions trip to support local communities...',
-        author: 'Pastor Erica Kaggwa',
-        date: '2025-01-20',
-        status: 'draft',
-        views: 0
+  // Check for updated news data from EditNewsArticle page
+  useEffect(() => {
+    const updatedNewsData = localStorage.getItem('updatedNews');
+    if (updatedNewsData) {
+      try {
+        const updatedNews = JSON.parse(updatedNewsData);
+        setNews(prevNews =>
+          prevNews.map(item =>
+            item.id === updatedNews.id ? updatedNews : item
+          )
+        );
+        localStorage.removeItem('updatedNews'); // Clean up
+      } catch (error) {
+        console.error('Error parsing updated news data:', error);
       }
-    ];
-    setNews(mockNews);
+    }
+  }, []);
+
+  const loadNews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/news?page=1&limit=100&published=all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const formattedNews = data.news.map((item: any) => ({
+          id: item._id,
+          title: item.title,
+          excerpt: item.excerpt,
+          author: item.author,
+          date: item.publishDate ? item.publishDate.split('T')[0] : item.createdAt.split('T')[0],
+          status: item.isPublished ? 'published' : 'draft',
+          views: item.viewCount || 0
+        }));
+        setNews(formattedNews);
+      } else {
+        console.error('Failed to load news');
+      }
+    } catch (error) {
+      console.error('Error loading news:', error);
+    }
     setLoading(false);
   };
 
@@ -86,55 +97,158 @@ const AdminNewsManager: React.FC = () => {
     event.detail.complete();
   };
 
-  const toggleStatus = (id: string) => {
-    setNews(news.map(item =>
-      item.id === id
-        ? { ...item, status: item.status === 'published' ? 'draft' : 'published' }
-        : item
-    ));
+  const toggleStatus = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const item = news.find(n => n.id === id);
+      if (!item) return;
+
+      const newStatus = item.status === 'published' ? false : true;
+
+      const response = await fetch(`/api/news/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isPublished: newStatus })
+      });
+
+      if (response.ok) {
+        setNews(news.map(item =>
+          item.id === id
+            ? { ...item, status: newStatus ? 'published' : 'draft' }
+            : item
+        ));
+      } else {
+        console.error('Failed to update news status');
+      }
+    } catch (error) {
+      console.error('Error updating news status:', error);
+    }
   };
 
-  const deleteNews = (id: string) => {
-    setNews(news.filter(item => item.id !== id));
+  const deleteNews = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/news/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setNews(news.filter(item => item.id !== id));
+      } else {
+        console.error('Failed to delete news');
+      }
+    } catch (error) {
+      console.error('Error deleting news:', error);
+    }
   };
 
-  const openEditModal = (newsItem: any) => {
-    setSelectedNews(newsItem);
-    setEditForm({
-      title: newsItem.title,
-      excerpt: newsItem.excerpt,
-      author: newsItem.author,
-      date: newsItem.date
-    });
-    setShowEditModal(true);
+  const openEditPage = (newsItem: any) => {
+    history.push(`/admin/news/edit/${newsItem.id}`, { news: newsItem });
   };
 
-  const handleEditSave = () => {
-    if (!selectedNews) return;
+  const handleStatClick = (statType: string) => {
+    // Trigger animation
+    setAnimatingStat(statType);
+    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
 
-    setNews(news.map(item =>
-      item.id === selectedNews.id
-        ? { ...item, ...editForm }
-        : item
-    ));
-    setShowEditModal(false);
-    setSelectedNews(null);
+    // Update sorting/filtering
+    setSortBy(statType);
+    setFilterBy(statType === 'published' || statType === 'views' ? statType : 'all');
   };
 
-  const handleEditInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const getSortedAndFilteredNews = () => {
+    // Apply filter
+    let filtered = news;
+    if (filterBy === 'published') {
+      filtered = news.filter(n => n.status === 'published');
+    }
+
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      case 'views':
+        sorted.sort((a, b) => {
+          const viewsA = a.views || 0;
+          const viewsB = b.views || 0;
+          return viewsB - viewsA;
+        });
+        break;
+      case 'published':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
-          </IonButtons>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonTitle className="title-ios">News Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -151,18 +265,171 @@ const AdminNewsManager: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#6366f1' }}>{news.length}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Articles</div>
+          {/* Stats Cards */}
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            paddingBottom: '8px',
+            marginBottom: '24px'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('date')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #6366f1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'date' && filterBy === 'all' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'date' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'date' ? '0 8px 25px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'date' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#6366f1',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'date' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {news.length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
             </div>
-            <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#10b981' }}>{news.filter(n => n.status === 'published').length}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Published</div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('published')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'published' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'published' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'published' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'published' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'published' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {news.filter(n => n.status === 'published').length}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Published</div>
             </div>
-            <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#3b82f6' }}>{news.reduce((sum, n) => sum + n.views, 0)}</div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total Views</div>
+            <div style={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
+            }}>
+              <div
+                onClick={() => handleStatClick('views')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'views' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'views' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'views' ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 4px rgba(59, 130, 246, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'views' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#3b82f6',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'views' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {news.reduce((sum, n) => sum + n.views, 0)}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Views</div>
             </div>
           </div>
 
@@ -190,10 +457,14 @@ const AdminNewsManager: React.FC = () => {
 
           <div style={{ marginBottom: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '1.3em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              All News Articles
+              {filterBy === 'all' ? 'All News Articles' :
+               filterBy === 'published' ? 'Published Articles' :
+               'All News Articles'}
+              {sortBy === 'views' && ' (Sorted by Views)'}
+              {sortBy === 'date' && ' (Sorted by Date)'}
             </h2>
 
-            {news.map((item) => (
+            {getSortedAndFilteredNews().map((item) => (
               <IonCard key={item.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
                 <IonCardContent style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -225,7 +496,7 @@ const AdminNewsManager: React.FC = () => {
                       <IonButton fill="clear" size="small" onClick={() => toggleStatus(item.id)} style={{ color: 'var(--ion-color-primary)' }}>
                         <IonIcon icon={item.status === 'published' ? eyeOff : eye} />
                       </IonButton>
-                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditModal(item)}>
+                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditPage(item)}>
                         <IonIcon icon={create} />
                       </IonButton>
                       <IonButton fill="clear" size="small" style={{ color: '#ef4444' }} onClick={() => deleteNews(item.id)}>
@@ -245,229 +516,6 @@ const AdminNewsManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Edit News Modal */}
-        {showEditModal && (
-          <>
-            {/* INLINE CSS */}
-            <style>{`
-              .edit-sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0);
-                z-index: 9998;
-                opacity: 1;
-                visibility: visible;
-                transition: all 0.3s ease-in-out;
-              }
-
-              .edit-floating-sidebar {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
-                width: 90%;
-                max-width: 500px;
-                max-height: 70vh;
-                height: auto;
-                padding: 20px;
-                border-radius: 24px;
-                border: 1px solid var(--ion-color-medium);
-                backdrop-filter: blur(22px);
-                -webkit-backdrop-filter: blur(22px);
-                background: rgba(var(--ion-background-color-rgb), 0.9);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                z-index: 9999;
-                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                display: flex;
-                flex-direction: column;
-                overflow: visible;
-              }
-
-              .edit-floating-sidebar.open {
-                transform: translate(-50%, -50%) scale(1);
-              }
-
-              .edit-close-button {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                background: rgba(var(--ion-background-color-rgb), 0.3);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s ease-in-out;
-                z-index: 10000;
-              }
-
-              .edit-close-button:hover {
-                background: rgba(var(--ion-background-color-rgb), 0.5);
-                transform: scale(1.1);
-              }
-
-              .edit-close-button ion-icon {
-                font-size: 18px;
-              }
-
-              .edit-content {
-                margin-top: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                max-height: calc(70vh - 80px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-right: 8px;
-                -webkit-overflow-scrolling: touch;
-              }
-
-              .edit-content::-webkit-scrollbar {
-                width: 4px;
-              }
-
-              .edit-content::-webkit-scrollbar-track {
-                background: rgba(var(--ion-background-color-rgb), 0.1);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb {
-                background: var(--ion-color-step-400);
-                border-radius: 2px;
-              }
-
-              .edit-content::-webkit-scrollbar-thumb:hover {
-                background: var(--ion-color-step-500);
-              }
-
-              .edit-submit-btn {
-                margin-top: 16px;
-                --border-radius: 16px;
-                font-weight: 600;
-              }
-
-              @media (max-width: 576px) {
-                .edit-floating-sidebar {
-                  width: 95%;
-                  max-width: 460px;
-                  max-height: 75vh;
-                  padding: 16px;
-                  top: 45%;
-                  transform: translate(-50%, -50%) scale(0.8);
-                }
-
-                .edit-floating-sidebar.open {
-                  top: 50%;
-                  transform: translate(-50%, -50%) scale(1);
-                }
-
-                .edit-content {
-                  max-height: calc(75vh - 80px);
-                  gap: 12px;
-                }
-              }
-
-              @media (max-height: 600px) {
-                .edit-floating-sidebar {
-                  max-height: 80vh;
-                  top: 45%;
-                }
-
-                .edit-content {
-                  max-height: calc(80vh - 80px);
-                }
-              }
-
-              @media (prefers-color-scheme: dark) {
-                .edit-floating-sidebar {
-                  border-color: rgba(255,255,255,0.18);
-                  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-                }
-              }
-            `}</style>
-
-            {/* SIDEBAR OVERLAY */}
-            <div className="edit-sidebar-overlay" onClick={() => setShowEditModal(false)}></div>
-
-            {/* SIDEBAR CONTENT */}
-            <div className={`edit-floating-sidebar ${showEditModal ? 'open' : ''}`}>
-              {/* Close Button */}
-              <div className="edit-close-button" onClick={() => setShowEditModal(false)}>
-                <IonIcon icon={closeCircle} />
-              </div>
-
-              {/* Content */}
-              <div className="edit-content">
-                {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.3em', fontWeight: '700' }}>
-                    Edit News Article
-                  </h2>
-                </div>
-
-                {/* Form Fields */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Title</IonLabel>
-                    <IonInput
-                      value={editForm.title}
-                      onIonChange={(e) => handleEditInputChange('title', e.detail.value!)}
-                      placeholder="Enter article title"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Author</IonLabel>
-                    <IonInput
-                      value={editForm.author}
-                      onIonChange={(e) => handleEditInputChange('author', e.detail.value!)}
-                      placeholder="Enter author name"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Date</IonLabel>
-                    <IonInput
-                      value={editForm.date}
-                      onIonChange={(e) => handleEditInputChange('date', e.detail.value!)}
-                      placeholder="Enter date (YYYY-MM-DD)"
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-
-                  <IonItem style={{ '--border-radius': '12px', '--padding-start': '16px', '--inner-padding-end': '16px' }}>
-                    <IonLabel position="stacked" style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Excerpt</IonLabel>
-                    <IonTextarea
-                      value={editForm.excerpt}
-                      onIonChange={(e) => handleEditInputChange('excerpt', e.detail.value!)}
-                      placeholder="Enter article excerpt"
-                      rows={3}
-                      style={{ color: 'var(--ion-text-color)' }}
-                    />
-                  </IonItem>
-                </div>
-
-                {/* Submit Button */}
-                <IonButton
-                  expand="block"
-                  onClick={handleEditSave}
-                  className="edit-submit-btn"
-                >
-                  <IonIcon icon={create} slot="start" />
-                  Save Changes
-                </IonButton>
-              </div>
-            </div>
-          </>
-        )}
       </IonContent>
     </IonPage>
   );

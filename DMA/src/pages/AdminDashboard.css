@@ -60,3 +60,19 @@
    font-size: 14px;
  }
 }
+
+/* Content rows */
+.content-row {
+  background-color: var(--ion-color-step-100);
+}
+
+@media (prefers-color-scheme: dark) {
+  .content-row {
+    background-color: rgba(34, 34, 34, 0.781);
+  }
+}
+
+/* Admin title alignment */
+.title-ios {
+  margin-left: 55px;
+}

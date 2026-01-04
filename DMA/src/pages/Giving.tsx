@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonButtons, IonBackButton, IonIcon, IonButton, IonItem, IonLabel, IonInput, IonTextarea } from '@ionic/react';
-import { cash, card, phonePortrait, location, heart, informationCircle } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonItem, IonLabel, IonInput, IonTextarea } from '@ionic/react';
+import { cash, card, phonePortrait, location, heart, informationCircle, arrowBack } from 'ionicons/icons';
 import './Giving.css';
 
 const Giving: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    amount: '',
-    message: ''
-  });
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const history = useHistory();
 
   const givingOptions = [
     {
@@ -40,24 +29,68 @@ const Giving: React.FC = () => {
   ];
 
   const givingCategories = [
-    { name: 'Tithes & Offerings', icon: heart, color: '#ef4444' },
-    { name: 'Building Fund', icon: location, color: '#f59e0b' },
-    { name: 'Missions & Evangelism', icon: phonePortrait, color: '#8b5cf6' },
-    { name: 'Children & Youth', icon: heart, color: '#06b6d4' },
-    { name: 'Community Development', icon: card, color: '#10b981' },
-    { name: 'Special Projects', icon: cash, color: '#ec4899' }
+    { name: 'Tithes', icon: heart, color: '#ef4444' },
+    { name: 'Sunday Offertory', icon: location, color: '#f59e0b' },
+    { name: 'Special Offertory', icon: phonePortrait, color: '#8b5cf6' },
+    { name: 'Thanksgiving Offering', icon: heart, color: '#06b6d4' },
+    { name: 'Building Fund', icon: card, color: '#10b981' },
+    { name: 'Missions Support', icon: cash, color: '#ec4899' }
   ];
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
+          
           <IonTitle className="title-ios">Giving</IonTitle>
         </IonToolbar>
       </IonHeader>
+
+      {/* Back Button */}
+      <div
+        onClick={() => history.goBack()}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--ion-safe-area-top) - -5px)',
+          left: 20,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseDown={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(0.8)';
+        }}
+        onMouseUp={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          setTimeout(() => {
+            target.style.transform = 'scale(1)';
+          }, 200);
+        }}
+        onMouseLeave={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(1)';
+        }}
+      >
+        <IonIcon
+          icon={arrowBack}
+          style={{
+            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            fontSize: '20px',
+          }}
+        />
+      </div>
 
       <IonContent fullscreen className="content-ios">
         <div style={{
@@ -82,7 +115,7 @@ const Giving: React.FC = () => {
               fontWeight: '700',
               color: 'var(--ion-text-color)'
             }}>
-              Give with Joy
+              Tithe & Offertory
             </h1>
             <p style={{
               margin: '0',
@@ -90,7 +123,7 @@ const Giving: React.FC = () => {
               opacity: 0.7,
               fontSize: '1em'
             }}>
-              Your generosity transforms lives across Africa
+              Honor God with your tithes and offerings
             </p>
           </div>
 
@@ -106,8 +139,8 @@ const Giving: React.FC = () => {
               color: 'var(--ion-text-color)',
               lineHeight: '1.5'
             }}>
-              Your generosity transforms lives and spreads God's love across Africa.
-              Every contribution makes a difference in our community.
+              Honor God with your tithes and bring your offerings with joy.
+              Your faithful giving supports the work of ministry across Africa.
             </p>
             <p style={{
               margin: '0',
@@ -116,123 +149,78 @@ const Giving: React.FC = () => {
               textAlign: 'center',
               color: 'var(--ion-color-medium)'
             }}>
-              "Each of you should give what you have decided in your heart to give..."
+              "Bring the whole tithe into the storehouse..."
               <br />
-              <span style={{ fontSize: '0.8em' }}>- 2 Corinthians 9:7</span>
+              <span style={{ fontSize: '0.8em' }}>- Malachi 3:10</span>
             </p>
           </div>
 
-          {/* Giving Form */}
-          <form style={{ marginBottom: '32px' }}>
+          {/* Tithe & Offertory Information */}
+          <div style={{ marginBottom: '32px' }}>
             <h2 style={{
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
               color: 'var(--ion-text-color)'
             }}>
-              Make a Donation
+              Understanding Tithe & Offertory
             </h2>
 
-            {/* Name Input */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={heart} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonInput
-                type="text"
-                value={formData.name}
-                onIonChange={(e) => handleInputChange('name', e.detail.value!)}
-                placeholder="Your full name"
-                style={{ color: 'var(--ion-text-color)' }}
-              />
-            </IonItem>
+            <div style={{
+              backgroundColor: 'rgba(0,0,0,0.05)',
+              padding: '20px',
+              borderRadius: '12px',
+              marginBottom: '16px'
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: 'var(--ion-text-color)' }}>Tithe</h3>
+              <p style={{
+                margin: '0 0 16px 0',
+                color: 'var(--ion-text-color)',
+                lineHeight: '1.5',
+                fontSize: '0.9em'
+              }}>
+                The tithe is 10% of your income given to God as an act of worship and obedience.
+                It is the first portion of your income that belongs to God.
+              </p>
+              <p style={{
+                margin: '0',
+                fontSize: '0.9em',
+                fontStyle: 'italic',
+                color: 'var(--ion-color-medium)'
+              }}>
+                "Honor the Lord with your wealth and with the firstfruits of all your produce."
+                <br />
+                <span style={{ fontSize: '0.8em' }}>- Proverbs 3:9</span>
+              </p>
+            </div>
 
-            {/* Email Input */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={informationCircle} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonInput
-                type="email"
-                value={formData.email}
-                onIonChange={(e) => handleInputChange('email', e.detail.value!)}
-                placeholder="Your email address"
-                style={{ color: 'var(--ion-text-color)' }}
-              />
-            </IonItem>
-
-            {/* Amount Input */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={cash} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonInput
-                type="number"
-                value={formData.amount}
-                onIonChange={(e) => handleInputChange('amount', e.detail.value!)}
-                placeholder="Donation amount (optional)"
-                style={{ color: 'var(--ion-text-color)' }}
-              />
-            </IonItem>
-
-            {/* Message Input */}
-            <IonItem
-              style={{
-                marginBottom: '24px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={heart} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonTextarea
-                value={formData.message}
-                onIonChange={(e) => handleInputChange('message', e.detail.value!)}
-                placeholder="Leave a message or prayer request (optional)"
-                rows={3}
-                style={{ color: 'var(--ion-text-color)' }}
-              />
-            </IonItem>
-
-            {/* Submit Button */}
-            <IonButton
-              expand="block"
-              type="submit"
-              style={{
-                height: '44px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '8px'
-              }}
-            >
-              <IonIcon icon={heart} slot="start" />
-              Submit Donation
-            </IonButton>
-          </form>
+            <div style={{
+              backgroundColor: 'rgba(0,0,0,0.05)',
+              padding: '20px',
+              borderRadius: '12px'
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: 'var(--ion-text-color)' }}>Offertory</h3>
+              <p style={{
+                margin: '0 0 16px 0',
+                color: 'var(--ion-text-color)',
+                lineHeight: '1.5',
+                fontSize: '0.9em'
+              }}>
+                Offerings are additional gifts given above the tithe, given freely from the heart
+                as an expression of gratitude and generosity.
+              </p>
+              <p style={{
+                margin: '0',
+                fontSize: '0.9em',
+                fontStyle: 'italic',
+                color: 'var(--ion-color-medium)'
+              }}>
+                "Each of you should give what you have decided in your heart to give..."
+                <br />
+                <span style={{ fontSize: '0.8em' }}>- 2 Corinthians 9:7</span>
+              </p>
+            </div>
+          </div>
 
           {/* Ways to Give */}
           <div style={{ marginBottom: '32px' }}>
@@ -272,6 +260,34 @@ const Giving: React.FC = () => {
             </div>
           </div>
 
+          {/* Giving Categories */}
+          <div style={{ marginBottom: '32px' }}>
+            <h2 style={{
+              margin: '0 0 16px 0',
+              fontSize: '1.4em',
+              fontWeight: '600',
+              color: 'var(--ion-text-color)'
+            }}>
+              Types of Giving
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {givingCategories.map((category, index) => (
+                <div key={index} style={{
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <IonIcon icon={category.icon} style={{ color: category.color, fontSize: '1.5em' }} />
+                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>{category.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Contact Information */}
           <div style={{ marginBottom: '32px' }}>

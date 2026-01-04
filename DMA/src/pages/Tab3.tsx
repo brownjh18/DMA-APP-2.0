@@ -1,9 +1,11 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonButtons, IonBackButton, IonChip, IonLabel, IonGrid, IonRow, IonCol } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonChip, IonLabel, IonGrid, IonRow, IonCol, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { useState, useEffect } from 'react';
-import { book, heart, flame, play, arrowForward, calendar, time } from 'ionicons/icons';
+import { book, heart, flame, play, arrowForward, calendar, time, chevronBack } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import './Tab3.css';
 
 interface Devotion {
+  id?: string;
   title: string;
   scripture: string;
   content: string;
@@ -86,40 +88,124 @@ const generateDailyDevotions = (): Devotion[] => {
   return devotions;
 };
 
-const devotionCategories: DevotionCategory[] = [
-  { id: 'faith-foundation', name: 'Faith Foundation', icon: 'heart', color: 'primary', totalDays: 7, currentDay: 1 },
-  { id: 'love-relationships', name: 'Love & Relationships', icon: 'heart', color: 'danger', totalDays: 7, currentDay: 1 },
-  { id: 'spiritual-growth', name: 'Spiritual Growth', icon: 'flame', color: 'warning', totalDays: 7, currentDay: 1 }
-];
+const getDevotionCategories = (devotions: Devotion[]): DevotionCategory[] => {
+  const categories = ['faith-foundation', 'love-relationships', 'spiritual-growth'];
+  return categories.map(id => {
+    const categoryDevotions = devotions.filter(d => d.category === id);
+    const maxDay = Math.max(...categoryDevotions.map(d => d.day), 0);
+    return {
+      id,
+      name: id === 'faith-foundation' ? 'Faith Foundation' :
+            id === 'love-relationships' ? 'Love & Relationships' : 'Spiritual Growth',
+      icon: id === 'spiritual-growth' ? 'flame' : 'heart',
+      color: id === 'faith-foundation' ? 'primary' :
+             id === 'love-relationships' ? 'danger' : 'warning',
+      totalDays: maxDay,
+      currentDay: 1 // Can be improved to track user progress
+    };
+  });
+};
 
 const Tab3: React.FC = () => {
+  const history = useHistory();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [allDevotions, setAllDevotions] = useState<Devotion[]>([]);
+  const [devotionCategories, setDevotionCategories] = useState<DevotionCategory[]>([]);
+  const [devotionsLoading, setDevotionsLoading] = useState<boolean>(false);
+
+  const fetchDevotions = async () => {
+    if (devotionsLoading || allDevotions.length > 0) return; // Prevent multiple calls if already loaded
+
+    try {
+      setDevotionsLoading(true);
+      console.log('Loading devotions from API...');
+      const response = await fetch('/api/devotions?published=true&limit=100');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort devotions by date (oldest first) to assign chronological day numbers
+        const chronologicalDevotions = [...data.devotions].sort((a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        // Create a map of devotion IDs to their chronological day numbers
+        const dayNumberMap = new Map();
+        chronologicalDevotions.forEach((devotion: any, index: number) => {
+          dayNumberMap.set(devotion._id || devotion.id, index + 1);
+        });
+
+        // Sort devotions by date (newest first) for display
+        const displayDevotions = [...data.devotions].sort((a: any, b: any) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        const formattedDevotions: Devotion[] = displayDevotions.map((devotion: any) => ({
+          id: devotion._id || devotion.id,
+          title: devotion.title,
+          scripture: devotion.scripture,
+          content: devotion.content,
+          reflection: devotion.reflection,
+          prayer: devotion.prayer,
+          date: new Date(devotion.date).toISOString().split('T')[0],
+          category: devotion.category,
+          day: dayNumberMap.get(devotion._id || devotion.id) || 1, // Use chronological day number
+          week: 1 // Default week
+        }));
+        setAllDevotions(formattedDevotions);
+        setDevotionCategories(getDevotionCategories(formattedDevotions));
+        console.log('Fetched devotions from DB:', formattedDevotions.length);
+      } else {
+        console.error('Failed to fetch devotions from DB, status:', response.status);
+        setAllDevotions([]);
+        setDevotionCategories([]);
+      }
+    } catch (error) {
+      console.error('Error fetching devotions from DB:', error);
+      setAllDevotions([]);
+      setDevotionCategories([]);
+    } finally {
+      setDevotionsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setAllDevotions(generateDailyDevotions());
+    fetchDevotions();
   }, []);
+
+  // Check for refresh flags from admin operations
+  useEffect(() => {
+    const needsRefresh = sessionStorage.getItem('devotionsNeedRefresh');
+    if (needsRefresh === 'true') {
+      sessionStorage.removeItem('devotionsNeedRefresh');
+      fetchDevotions();
+    }
+  }, []);
+
+  const handleRefresh = async (event: CustomEvent) => {
+    await fetchDevotions();
+    event.detail.complete();
+  };
 
   const filteredDevotions = selectedCategory === 'all'
     ? allDevotions
     : allDevotions.filter(d => d.category === selectedCategory);
 
-  const todaysDevotion = allDevotions.find(d => d.date === new Date().toISOString().split('T')[0]);
+  const todaysDevotion = allDevotions[0]; // Always show the latest devotion uploaded
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   return (
     <IonPage>
-      <IonHeader translucent>
-        <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
-          <IonTitle className="title-ios">Devotions</IonTitle>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Devotions</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
+
         {/* TODAY'S DEVOTION - LIKE HOME PAGE */}
         {todaysDevotion && (
           <section className="section-padding">
@@ -162,7 +248,17 @@ const Tab3: React.FC = () => {
                   </p>
 
                   <div className="devotion-cta">
-                    <IonButton fill="outline" size="default" className="cta-btn" aria-label="Read full devotion" routerLink={`/full-devotion?category=${todaysDevotion.category}&day=${todaysDevotion.day}`}>
+                    <IonButton
+                      fill="outline"
+                      size="default"
+                      className="cta-btn"
+                      aria-label="Read full devotion"
+                      onClick={() => {
+                        const devotionId = todaysDevotion.id || `${todaysDevotion.category}-${todaysDevotion.day}`;
+                        console.log('Button clicked, navigating to:', `/full-devotion?id=${devotionId}`);
+                        history.push(`/full-devotion?id=${devotionId}`);
+                      }}
+                    >
                       Read Full Devotion
                       <IonIcon icon={book} slot="end" />
                     </IonButton>
@@ -202,13 +298,13 @@ const Tab3: React.FC = () => {
                   color: 'var(--ion-color-primary)',
                   marginBottom: '4px'
                 }}>
-                  365
+                  {allDevotions.length}
                 </div>
                 <div style={{
                   fontSize: '0.9em',
                   color: 'var(--ion-color-medium)'
                 }}>
-                  Days
+                  Devotions
                 </div>
               </div>
               <div>
@@ -218,7 +314,7 @@ const Tab3: React.FC = () => {
                   color: 'var(--ion-color-primary)',
                   marginBottom: '4px'
                 }}>
-                  3
+                  {new Set(allDevotions.map(d => d.category)).size}
                 </div>
                 <div style={{
                   fontSize: '0.9em',
@@ -234,13 +330,13 @@ const Tab3: React.FC = () => {
                   color: 'var(--ion-color-primary)',
                   marginBottom: '4px'
                 }}>
-                  21
+                  {Math.max(...allDevotions.map(d => d.day), 0)}
                 </div>
                 <div style={{
                   fontSize: '0.9em',
                   color: 'var(--ion-color-medium)'
                 }}>
-                  Devotions
+                  Max Day
                 </div>
               </div>
             </div>
@@ -356,7 +452,7 @@ const Tab3: React.FC = () => {
                       overflow: 'hidden',
                       cursor: 'pointer'
                     }}
-                    onClick={() => window.location.href = `/full-devotion?category=${d.category}&day=${d.day}`}
+                    onClick={() => history.push(`/full-devotion?id=${d.id || `${d.category}-${d.day}`}`)}
                   >
                     <div style={{ padding: '16px' }}>
                       <div style={{
@@ -409,13 +505,25 @@ const Tab3: React.FC = () => {
                         {d.scripture}
                       </p>
                       <p style={{
-                        margin: '0 0 16px 0',
+                        margin: '0 0 8px 0',
                         color: 'var(--ion-color-medium)',
                         fontSize: '0.9em',
                         lineHeight: '1.4'
                       }}>
                         {d.content.substring(0, 120)}...
                       </p>
+
+                      {d.reflection && (
+                        <p style={{
+                          margin: '0 0 16px 0',
+                          color: 'var(--ion-color-primary)',
+                          fontSize: '0.9em',
+                          fontStyle: 'italic',
+                          lineHeight: '1.4'
+                        }}>
+                          "{d.reflection}"
+                        </p>
+                      )}
 
                       <div style={{
                         borderTop: '1px solid rgba(0,0,0,0.1)',

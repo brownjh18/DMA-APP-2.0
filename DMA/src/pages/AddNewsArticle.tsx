@@ -5,9 +5,8 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
+  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -24,7 +23,8 @@ import {
   newspaper,
   person,
   calendar,
-  text
+  text,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
@@ -60,26 +60,98 @@ const AddNewsArticle: React.FC = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setAlertMessage('News article added successfully!');
-      setShowAlert(true);
+    try {
+      const token = localStorage.getItem('token');
+      const newsData = {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt,
+        author: formData.author,
+        category: formData.category,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+        isPublished: formData.status === 'published'
+      };
 
-      // Navigate back after success
-      setTimeout(() => {
-        history.push('/admin/news');
-      }, 1500);
-    }, 1000);
+      const response = await fetch('/api/news', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newsData)
+      });
+
+      if (response.ok) {
+        setAlertMessage('News article added successfully!');
+        setShowAlert(true);
+
+        // Navigate back after success
+        setTimeout(() => {
+          history.push('/admin/news');
+        }, 1500);
+      } else {
+        const error = await response.json();
+        setAlertMessage(error.error || 'Failed to add news article');
+        setShowAlert(true);
+      }
+    } catch (error) {
+      console.error('Error saving news article:', error);
+      setAlertMessage('Failed to add news article. Please try again.');
+      setShowAlert(true);
+    }
+
+    setLoading(false);
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/news" />
-          </IonButtons>
+          
           <IonTitle className="title-ios">Add News Article</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>

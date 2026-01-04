@@ -3,8 +3,6 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonButtons,
-  IonBackButton,
   IonContent,
   IonIcon,
   IonToggle,
@@ -18,27 +16,71 @@ import {
   moon,
   notifications,
   language,
-  volumeHigh,
-  download,
-  person,
-  shield,
-  helpCircle,
   informationCircle,
   settingsSharp,
   heart,
+  arrowBack,
 } from "ionicons/icons";
 
+import { useSettings } from '../contexts/SettingsContext';
+import { useHistory } from 'react-router-dom';
+
 const Settings: React.FC = () => {
+  const history = useHistory();
+  const { language, darkMode, notificationsEnabled, setLanguage, setDarkMode, setNotificationsEnabled } = useSettings();
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
           <IonTitle className="title-ios">Settings</IonTitle>
         </IonToolbar>
       </IonHeader>
+
+      {/* Back Button */}
+      <div
+        onClick={() => history.goBack()}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--ion-safe-area-top) - -5px)',
+          left: 20,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseDown={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(0.8)';
+        }}
+        onMouseUp={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          setTimeout(() => {
+            target.style.transform = 'scale(1)';
+          }, 200);
+        }}
+        onMouseLeave={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(1)';
+        }}
+      >
+        <IonIcon
+          icon={arrowBack}
+          style={{
+            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            fontSize: '20px',
+          }}
+        />
+      </div>
 
       <IonContent fullscreen className="content-ios">
         <div style={{
@@ -75,8 +117,8 @@ const Settings: React.FC = () => {
             </p>
           </div>
 
-          {/* Settings Form */}
-          <form style={{ marginBottom: '32px' }}>
+          {/* Essential Settings */}
+          <div style={{ marginBottom: '32px' }}>
             {/* Language Selection */}
             <IonItem
               style={{
@@ -90,10 +132,26 @@ const Settings: React.FC = () => {
             >
               <IonIcon icon={language} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
               <IonLabel>Language</IonLabel>
-              <IonSelect placeholder="Select language" value="en">
-                <IonSelectOption value="en">English</IonSelectOption>
-                <IonSelectOption value="sw">Swahili</IonSelectOption>
-                <IonSelectOption value="lg">Luganda</IonSelectOption>
+              <IonSelect
+                placeholder="Select language"
+                value={language}
+                onIonChange={(e) => setLanguage(e.detail.value)}
+              >
+                <IonSelectOption value="en">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🇺🇸 English
+                  </div>
+                </IonSelectOption>
+                <IonSelectOption value="sw">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🇰🇪 Swahili
+                  </div>
+                </IonSelectOption>
+                <IonSelectOption value="lg">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🇺🇬 Luganda
+                  </div>
+                </IonSelectOption>
               </IonSelect>
             </IonItem>
 
@@ -110,42 +168,14 @@ const Settings: React.FC = () => {
             >
               <IonIcon icon={moon} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
               <IonLabel>Dark Mode</IonLabel>
-              <IonToggle slot="end" />
+              <IonToggle
+                slot="end"
+                checked={darkMode}
+                onIonChange={(e) => setDarkMode(e.detail.checked)}
+              />
             </IonItem>
 
             {/* Notifications Toggle */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={notifications} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>Push Notifications</IonLabel>
-              <IonToggle slot="end" checked />
-            </IonItem>
-
-            {/* Auto Download Toggle */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={download} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>Auto Download Sermons</IonLabel>
-              <IonToggle slot="end" />
-            </IonItem>
-
-            {/* High Quality Audio Toggle */}
             <IonItem
               style={{
                 marginBottom: '24px',
@@ -156,365 +186,16 @@ const Settings: React.FC = () => {
               }}
               lines="none"
             >
-              <IonIcon icon={volumeHigh} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>High Quality Audio</IonLabel>
-              <IonToggle slot="end" checked />
+              <IonIcon icon={notifications} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonLabel>Push Notifications</IonLabel>
+              <IonToggle
+                slot="end"
+                checked={notificationsEnabled}
+                onIonChange={(e) => setNotificationsEnabled(e.detail.checked)}
+              />
             </IonItem>
-          </form>
-
-          {/* Help Center */}
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{
-              margin: '0 0 16px 0',
-              fontSize: '1.4em',
-              fontWeight: '600',
-              color: 'var(--ion-text-color)'
-            }}>
-              Help Center
-            </h2>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Get Help & Support */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}>
-                <div
-                  onClick={() => {}}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: '#10b981',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={helpCircle} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      Get Help & Support
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      Find answers to common questions and get support
-                    </p>
-                  </div>
-                  <IonIcon icon={settingsSharp} style={{
-                    color: 'var(--ion-color-medium)',
-                    fontSize: '1.4em'
-                  }} />
-                </div>
-              </div>
-
-              {/* Troubleshooting */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}>
-                <div
-                  onClick={() => {}}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: '#f59e0b',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={settingsSharp} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      Troubleshooting
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      Fix common issues and technical problems
-                    </p>
-                  </div>
-                  <IonIcon icon={settingsSharp} style={{
-                    color: 'var(--ion-color-medium)',
-                    fontSize: '1.4em'
-                  }} />
-                </div>
-              </div>
-
-              {/* Contact Support */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}>
-                <div
-                  onClick={() => {}}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: '#3b82f6',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={informationCircle} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      Contact Support
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      Reach out to our support team for assistance
-                    </p>
-                  </div>
-                  <IonIcon icon={settingsSharp} style={{
-                    color: 'var(--ion-color-medium)',
-                    fontSize: '1.4em'
-                  }} />
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* About */}
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{
-              margin: '0 0 16px 0',
-              fontSize: '1.4em',
-              fontWeight: '600',
-              color: 'var(--ion-text-color)'
-            }}>
-              About
-            </h2>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* App Information */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  padding: '16px'
-                }}>
-                  <div style={{
-                    backgroundColor: '#8b5cf6',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={informationCircle} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      Dove Ministries Africa
-                    </p>
-                    <p style={{
-                      margin: '0 0 8px 0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      App Information and Version
-                    </p>
-                    <div style={{
-                      backgroundColor: 'rgba(0,0,0,0.08)',
-                      borderRadius: '8px',
-                      padding: '12px 16px',
-                      border: '1px solid rgba(0,0,0,0.15)'
-                    }}>
-                      <p style={{
-                        margin: '0 0 4px 0',
-                        fontSize: '0.9em',
-                        color: 'var(--ion-text-color)',
-                        fontWeight: '500'
-                      }}>
-                        Version 1.0.0
-                      </p>
-                      <p style={{
-                        margin: '0',
-                        fontSize: '0.8em',
-                        color: 'var(--ion-color-medium)'
-                      }}>
-                        Build 2025.11.19
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* What's New */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}>
-                <div
-                  onClick={() => {}}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: '#06b6d4',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={settingsSharp} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      What's New
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      See the latest updates and features
-                    </p>
-                  </div>
-                  <IonIcon icon={settingsSharp} style={{
-                    color: 'var(--ion-color-medium)',
-                    fontSize: '1.4em'
-                  }} />
-                </div>
-              </div>
-
-              {/* Rate & Review */}
-              <div style={{
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}>
-                <div
-                  onClick={() => {}}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: '#ec4899',
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={heart} style={{ color: 'white', fontSize: '1.4em' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      Rate & Review
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-medium)'
-                    }}>
-                      Share your feedback and help us improve
-                    </p>
-                  </div>
-                  <IonIcon icon={settingsSharp} style={{
-                    color: 'var(--ion-color-medium)',
-                    fontSize: '1.4em'
-                  }} />
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>

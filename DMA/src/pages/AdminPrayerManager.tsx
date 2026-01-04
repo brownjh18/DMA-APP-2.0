@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonItem,
@@ -32,7 +31,8 @@ import {
   calendar,
   eye,
   checkmark,
-  close
+  close,
+  arrowBack
 } from 'ionicons/icons';
 
 interface PrayerRequest {
@@ -57,6 +57,9 @@ const AdminPrayerManager: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<PrayerRequest | null>(null);
   const [responseText, setResponseText] = useState('');
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [filterBy, setFilterBy] = useState<string>('all');
+  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
 
   useEffect(() => {
     loadPrayerRequests();
@@ -138,15 +141,49 @@ const AdminPrayerManager: React.FC = () => {
     setPrayerRequests(mockRequests);
   };
 
-  const getFilteredRequests = () => {
-    switch (activeSegment) {
-      case 'pending':
-        return prayerRequests.filter(req => req.status === 'pending');
-      case 'answered':
-        return prayerRequests.filter(req => req.status === 'answered');
-      default:
-        return prayerRequests;
+  const handleStatClick = (statType: string) => {
+    // Trigger animation
+    setAnimatingStat(statType);
+    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
+
+    // Update sorting/filtering
+    setSortBy(statType);
+    setFilterBy(statType === 'pending' || statType === 'answered' ? statType : 'all');
+
+    // Update segment to match filter
+    if (statType === 'pending') {
+      setActiveSegment('pending');
+    } else if (statType === 'answered') {
+      setActiveSegment('answered');
+    } else {
+      setActiveSegment('all');
     }
+  };
+
+  const getSortedAndFilteredRequests = () => {
+    // Apply filter based on activeSegment and filterBy
+    let filtered = prayerRequests;
+    if (activeSegment === 'pending') {
+      filtered = prayerRequests.filter(req => req.status === 'pending');
+    } else if (activeSegment === 'answered') {
+      filtered = prayerRequests.filter(req => req.status === 'answered');
+    }
+
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
   };
 
 
@@ -205,9 +242,50 @@ const AdminPrayerManager: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
-          </IonButtons>
+          <div
+            onClick={() => history.back()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonTitle className="title-ios">Prayer Requests</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -244,43 +322,169 @@ const AdminPrayerManager: React.FC = () => {
 
           {/* Stats Cards */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: '12px',
+            display: 'flex',
+            gap: '16px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            paddingBottom: '8px',
             marginBottom: '24px'
           }}>
             <div style={{
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#f59e0b' }}>
-                {prayerRequests.filter(r => r.status === 'pending').length}
+              <div
+                onClick={() => handleStatClick('pending')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'pending' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'pending' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'pending' ? '0 8px 25px rgba(245, 158, 11, 0.6), 0 0 0 4px rgba(245, 158, 11, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'pending' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#f59e0b',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'pending' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {prayerRequests.filter(r => r.status === 'pending').length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Pending</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Pending</div>
             </div>
             <div style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#10b981' }}>
-                {prayerRequests.filter(r => r.status === 'answered').length}
+              <div
+                onClick={() => handleStatClick('answered')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: filterBy === 'answered' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'answered' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'answered' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'answered' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#10b981',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'answered' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {prayerRequests.filter(r => r.status === 'answered').length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Answered</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Answered</div>
             </div>
             <div style={{
-              backgroundColor: 'rgba(107, 114, 128, 0.1)',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: '70px'
             }}>
-              <div style={{ fontSize: '1.5em', fontWeight: '700', color: '#6b7280' }}>
-                {prayerRequests.length}
+              <div
+                onClick={() => handleStatClick('date')}
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: '3px solid #6b7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sortBy === 'date' && filterBy === 'all' ? 'rgba(107, 114, 128, 0.2)' : 'rgba(107, 114, 128, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  transform: animatingStat === 'date' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
+                  boxShadow: animatingStat === 'date' ? '0 8px 25px rgba(107, 114, 128, 0.6), 0 0 0 4px rgba(107, 114, 128, 0.3)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {animatingStat === 'date' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: 'radial-gradient(circle, rgba(107, 114, 128, 0.4) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    animation: 'pulse 0.6s ease-out'
+                  }} />
+                )}
+                <div style={{
+                  fontSize: '1.2em',
+                  fontWeight: '700',
+                  color: '#6b7280',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: animatingStat === 'date' ? 'bounce 0.6s ease-out' : 'none'
+                }}>
+                  {prayerRequests.length}
+                </div>
               </div>
-              <div style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>Total</div>
+              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
             </div>
           </div>
 
@@ -301,9 +505,24 @@ const AdminPrayerManager: React.FC = () => {
             </IonSegmentButton>
           </IonSegment>
 
+          <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+            <h3 style={{
+              margin: '0',
+              fontSize: '1.1em',
+              fontWeight: '600',
+              color: 'var(--ion-text-color)',
+              opacity: 0.8
+            }}>
+              {activeSegment === 'pending' ? 'Pending Prayer Requests' :
+               activeSegment === 'answered' ? 'Answered Prayer Requests' :
+               'All Prayer Requests'}
+              {sortBy === 'date' && ' (Sorted by Date)'}
+            </h3>
+          </div>
+
           {/* Prayer Requests List */}
           <div style={{ marginBottom: '20px' }}>
-            {getFilteredRequests().map((request) => (
+            {getSortedAndFilteredRequests().map((request) => (
               <IonCard key={request.id} style={{ marginBottom: '16px', borderRadius: '12px' }}>
                 <IonCardHeader style={{ paddingBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -383,7 +602,7 @@ const AdminPrayerManager: React.FC = () => {
               </IonCard>
             ))}
 
-            {getFilteredRequests().length === 0 && (
+            {getSortedAndFilteredRequests().length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px', color: 'var(--ion-color-medium)' }}>
                 <IonIcon icon={chatbubble} style={{ fontSize: '3em', marginBottom: '16px', opacity: 0.5 }} />
                 <p>No prayer requests in this category</p>

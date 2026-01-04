@@ -1,9 +1,85 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonButtons, IonBackButton, IonIcon, IonRouterLink, IonButton } from '@ionic/react';
-import { heart, people, book, radio, chatbubble, musicalNotes, informationCircle } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonRouterLink, IonButton, IonLoading, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { heart, people, book, radio, chatbubble, musicalNotes, informationCircle, arrowBack } from 'ionicons/icons';
+import { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import './Ministries.css';
 
 const Ministries: React.FC = () => {
-  const ministries = [
+  const [ministries, setMinistries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const history = useHistory();
+
+  useEffect(() => {
+    console.log('Ministries component mounted, fetching data from API');
+    fetchMinistries();
+  }, []);
+
+  const fetchMinistries = async () => {
+    try {
+      console.log('Fetching ministries from /api/ministries');
+      const response = await fetch('/api/ministries?active=true');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched ministries data:', data);
+        // Transform API data to match frontend structure
+        const transformedMinistries = data.ministries.map((ministry: any) => ({
+          id: ministry._id, // Use database _id as unique identifier
+          category: ministry.category, // Keep category for display purposes
+          name: ministry.name,
+          description: ministry.description,
+          icon: getIconForCategory(ministry.category),
+          image: ministry.imageUrl || getImageForCategory(ministry.category), // Use API imageUrl or fallback
+          leader: ministry.leader,
+          meetingSchedule: ministry.meetingSchedule,
+          endTime: ministry.endTime
+        }));
+        setMinistries(transformedMinistries);
+        console.log('Transformed ministries:', transformedMinistries);
+      } else {
+        console.error('Failed to fetch ministries:', response.status);
+        // Fallback to hardcoded if API fails
+        setMinistries(hardcodedMinistries);
+      }
+    } catch (error) {
+      console.error('Error fetching ministries:', error);
+      // Fallback to hardcoded if API fails
+      setMinistries(hardcodedMinistries);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async (event: CustomEvent) => {
+    await fetchMinistries();
+    event.detail.complete();
+  };
+
+  const getIconForCategory = (category: string) => {
+    const iconMap: { [key: string]: any } = {
+      'married-couples': heart,
+      'youth': people,
+      'children': book,
+      'evangelism': radio,
+      'intercessions': chatbubble,
+      'worship': musicalNotes
+    };
+    return iconMap[category] || people;
+  };
+
+  const getImageForCategory = (category: string) => {
+    const imageMap: { [key: string]: string } = {
+      'married-couples': 'hero-marriedcouples.jpg',
+      'youth': 'hero-youth.jpg',
+      'children': 'hero-children.jpg',
+      'evangelism': 'hero-evangelism.jpg',
+      'intercessions': 'hero-intercessions.jpg',
+      'worship': 'hero-worship.jpg'
+    };
+    return imageMap[category] || 'hero-default.jpg';
+  };
+
+  // Keep hardcoded ministries as fallback
+  const hardcodedMinistries = [
     {
       id: 'married-couples',
       name: 'Married Couples Ministry',
@@ -52,14 +128,61 @@ const Ministries: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
+          
           <IonTitle className="title-ios">Ministries</IonTitle>
         </IonToolbar>
       </IonHeader>
 
+      {/* Back Button */}
+      <div
+        onClick={() => history.goBack()}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--ion-safe-area-top) - -5px)',
+          left: 20,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseDown={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(0.8)';
+        }}
+        onMouseUp={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          setTimeout(() => {
+            target.style.transform = 'scale(1)';
+          }, 200);
+        }}
+        onMouseLeave={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(1)';
+        }}
+      >
+        <IonIcon
+          icon={arrowBack}
+          style={{
+            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            fontSize: '20px',
+          }}
+        />
+      </div>
+
       <IonContent fullscreen className="content-ios">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
         <div style={{
           padding: '20px',
           maxWidth: '400px',
@@ -143,7 +266,7 @@ const Ministries: React.FC = () => {
                 }}>
                   <div style={{
                     height: '120px',
-                    backgroundImage: `url(/public/${ministry.image})`,
+                    backgroundImage: `url(${ministry.image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                   }} />
@@ -163,15 +286,35 @@ const Ministries: React.FC = () => {
                       {ministry.name}
                     </h3>
                     <p style={{
-                      margin: '0 0 16px 0',
+                      margin: '0 0 12px 0',
                       color: 'var(--ion-color-medium)',
                       fontSize: '0.9em',
                       lineHeight: '1.4'
                     }}>
                       {ministry.description}
                     </p>
-                    <IonRouterLink routerLink={`/ministry/${ministry.id}`}>
-                      <IonButton style={{
+                    {ministry.leader && (
+                      <div style={{
+                        margin: '0 0 8px 0',
+                        fontSize: '0.8em',
+                        color: 'var(--ion-color-medium)'
+                      }}>
+                        <strong>Leader:</strong> {ministry.leader}
+                      </div>
+                    )}
+                    {ministry.meetingSchedule && (
+                      <div style={{
+                        margin: '0 0 8px 0',
+                        fontSize: '0.8em',
+                        color: 'var(--ion-color-medium)'
+                      }}>
+                        <strong>Meetings:</strong> {ministry.meetingSchedule}
+                        {ministry.endTime && ` (ends ${ministry.endTime})`}
+                      </div>
+                    )}
+                    <IonButton
+                      onClick={() => history.push(`/ministry/${ministry.id}`)}
+                      style={{
                         width: '100%',
                         height: '44px',
                         borderRadius: '8px',
@@ -179,10 +322,9 @@ const Ministries: React.FC = () => {
                         backgroundColor: 'var(--ion-color-primary)',
                         '--border-radius': '8px'
                       }}>
-                        <IonIcon icon={ministry.icon} slot="start" />
-                        Learn More
-                      </IonButton>
-                    </IonRouterLink>
+                      <IonIcon icon={ministry.icon} slot="start" />
+                      Learn More
+                    </IonButton>
                   </div>
                 </div>
               ))}
@@ -226,7 +368,7 @@ const Ministries: React.FC = () => {
                 </p>
               </div>
 
-              <IonButton routerLink="/tab5" style={{
+              <IonButton onClick={() => history.push('/tab5')} style={{
                 height: '44px',
                 borderRadius: '8px',
                 fontWeight: '600',
@@ -251,6 +393,8 @@ const Ministries: React.FC = () => {
             </p>
           </div>
         </div>
+
+        <IonLoading isOpen={loading} message="Loading ministries..." />
       </IonContent>
     </IonPage>
   );

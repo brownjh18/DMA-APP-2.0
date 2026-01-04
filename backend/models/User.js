@@ -16,7 +16,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: function() {
+      return !this.googleId; // Password required only if not a Google user
+    }
+  },
+  googleId: {
+    type: String,
+    sparse: true // Allows multiple null values but unique non-null values
   },
   role: {
     type: String,
@@ -27,9 +33,37 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  profilePicture: {
+    type: String
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
   lastLogin: {
     type: Date
   },
+  notificationPreferences: {
+    sermons: { type: Boolean, default: true },
+    podcasts: { type: Boolean, default: true },
+    liveBroadcasts: { type: Boolean, default: true },
+    events: { type: Boolean, default: true },
+    ministries: { type: Boolean, default: true },
+    devotions: { type: Boolean, default: true },
+    saved: { type: Boolean, default: true }
+  },
+  subscriptions: [{
+    type: String, // Could be ministry/channel names or IDs
+    trim: true
+  }],
+  savedSermons: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Sermon'
+  }],
+  savedPodcasts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Podcast'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -40,9 +74,9 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash password before saving
+// Hash password before saving (only for non-Google users)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
 
   try {
     const salt = await bcrypt.genSalt(12);

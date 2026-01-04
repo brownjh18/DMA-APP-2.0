@@ -1,4 +1,6 @@
 // src/services/youtubeService.ts
+import { apiService } from './api';
+
 export type YouTubeVideo = {
   id: string;
   title: string;
@@ -9,6 +11,30 @@ export type YouTubeVideo = {
   viewCount?: string | number;
   isLive?: boolean;
 };
+
+export interface Sermon {
+  _id: string;
+  title: string;
+  speaker: string;
+  description?: string;
+  scripture?: string;
+  date: string;
+  duration?: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  youtubeId?: string;
+  thumbnailUrl?: string;
+  tags: string[];
+  series?: string;
+  viewCount: number;
+  likeCount: number;
+  isPublished: boolean;
+  isFeatured: boolean;
+  isLive?: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 type FetchResult = {
   videos: YouTubeVideo[];
@@ -25,34 +51,26 @@ type FetchResult = {
  * use the 'fetchDirectFromYouTube' function below — but DO NOT embed long-lived keys in production.
  */
 
-const USE_SERVER_PROXY = false; // set to false to try direct fetch (not recommended)
+const USE_SERVER_PROXY = true; // set to false to try direct fetch (not recommended)
+
+// Global flag to disable YouTube API calls when quota is exceeded
+let youtubeQuotaExceeded = false;
+let quotaCheckTime = 0;
+const QUOTA_RESET_TIME = 60 * 60 * 1000; // 1 hour
 
 export async function fetchRecentSermons(maxResults = 30, pageToken?: string): Promise<FetchResult> {
-  if (USE_SERVER_PROXY) {
-    // YOUR BACKEND /api/youtube/recent should call YouTube using the project API_KEY
-    const q = new URLSearchParams();
-    q.set('maxResults', String(maxResults));
-    if (pageToken) q.set('pageToken', pageToken);
-    const resp = await fetch(`/api/youtube/recent?${q.toString()}`);
-    if (!resp.ok) throw new Error('Server proxy error: ' + resp.statusText);
-    return resp.json();
-  } else {
-    // Quick direct client-side call (DEVELOPMENT ONLY).
-    return await fetchDirectFromYouTube(maxResults, pageToken);
-  }
+  // YouTube integration removed - only return database sermons
+  console.log('🔍 fetchRecentSermons: YouTube integration removed, returning empty result');
+  return { videos: [], nextPageToken: undefined };
 }
 
 /**
  * Fetch live streams specifically
  */
 export async function fetchLiveStreams(maxResults = 10): Promise<YouTubeVideo[]> {
-  if (USE_SERVER_PROXY) {
-    const resp = await fetch(`/api/youtube/live?maxResults=${maxResults}`);
-    if (!resp.ok) throw new Error('Server proxy error: ' + resp.statusText);
-    return resp.json();
-  } else {
-    return await fetchLiveStreamsDirect(maxResults);
-  }
+  // YouTube live streaming removed
+  console.log('🔍 fetchLiveStreams: YouTube live streaming removed, returning empty array');
+  return [];
 }
 
 /* ---------- CLIENT DIRECT CALL (DEV ONLY) ---------- */
@@ -83,6 +101,13 @@ async function fetchDirectFromYouTube(maxResults = 30, pageToken?: string): Prom
    if (!searchResp.ok) {
      const errorText = await searchResp.text();
      console.error('YouTube search error response:', errorText);
+
+     // Check for quota exceeded
+     if (searchResp.status === 403 && errorText.includes('quota')) {
+       youtubeQuotaExceeded = true;
+       quotaCheckTime = Date.now();
+     }
+
      throw new Error(`YouTube search failed: ${searchResp.status} ${searchResp.statusText} - ${errorText}`);
    }
    const searchJson = await searchResp.json();
@@ -109,6 +134,13 @@ async function fetchDirectFromYouTube(maxResults = 30, pageToken?: string): Prom
   if (!videosResp.ok) {
     const errorText = await videosResp.text();
     console.error('YouTube videos error response:', errorText);
+
+    // Check for quota exceeded
+    if (videosResp.status === 403 && errorText.includes('quota')) {
+      youtubeQuotaExceeded = true;
+      quotaCheckTime = Date.now();
+    }
+
     throw new Error(`YouTube videos failed: ${videosResp.status} ${videosResp.statusText} - ${errorText}`);
   }
   const videosJson = await videosResp.json();
@@ -173,7 +205,18 @@ async function fetchLiveStreamsDirect(maxResults = 10): Promise<YouTubeVideo[]> 
   });
 
   const searchResp = await fetch(`https://www.googleapis.com/youtube/v3/search?${sParams.toString()}`);
-  if (!searchResp.ok) throw new Error('YouTube live search failed');
+  if (!searchResp.ok) {
+    const errorText = await searchResp.text();
+    console.error('YouTube live search error response:', errorText);
+
+    // Check for quota exceeded
+    if (searchResp.status === 403 && errorText.includes('quota')) {
+      youtubeQuotaExceeded = true;
+      quotaCheckTime = Date.now();
+    }
+
+    throw new Error('YouTube live search failed');
+  }
   const searchJson = await searchResp.json();
 
   const ids = (searchJson.items || []).map((it: any) => it.id.videoId).filter(Boolean);
@@ -190,7 +233,18 @@ async function fetchLiveStreamsDirect(maxResults = 10): Promise<YouTubeVideo[]> 
   });
 
   const videosResp = await fetch(`https://www.googleapis.com/youtube/v3/videos?${vParams.toString()}`);
-  if (!videosResp.ok) throw new Error('YouTube live videos failed');
+  if (!videosResp.ok) {
+    const errorText = await videosResp.text();
+    console.error('YouTube live videos error response:', errorText);
+
+    // Check for quota exceeded
+    if (videosResp.status === 403 && errorText.includes('quota')) {
+      youtubeQuotaExceeded = true;
+      quotaCheckTime = Date.now();
+    }
+
+    throw new Error('YouTube live videos failed');
+  }
   const videosJson = await videosResp.json();
 
   // Helper: convert ISO 8601 duration to mm:ss or hh:mm:ss
@@ -229,4 +283,131 @@ async function fetchLiveStreamsDirect(maxResults = 10): Promise<YouTubeVideo[]> 
   });
 
   return liveVideos;
+}
+
+/**
+ * Check if a YouTube video is currently live
+ */
+async function checkYouTubeLiveStatus(videoId: string): Promise<boolean> {
+  try {
+    const API_KEY = 'AIzaSyDBYdCJVQ1FpSXPOHd6xFx4eLLuMUBzjw8';
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${API_KEY}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to check live status for video ${videoId}:`, response.status);
+      return false;
+    }
+
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      const liveDetails = data.items[0].liveStreamingDetails;
+      // Video is live if it has concurrent viewers (actively streaming)
+      return !!(liveDetails && liveDetails.concurrentViewers !== undefined);
+    }
+    return false;
+  } catch (error) {
+    console.warn('Error checking YouTube live status:', error);
+    return false;
+  }
+}
+
+/**
+ * Fetch combined sermons from database and YouTube
+ * Prioritizes database sermons - they always show even if YouTube fails
+ */
+export async function fetchCombinedSermons(maxResults = 30, pageToken?: string, includeDrafts = false): Promise<FetchResult> {
+  let dbVideos: YouTubeVideo[] = [];
+
+  // Only fetch database sermons (YouTube integration removed)
+  try {
+    // Get sermons based on includeDrafts flag
+    const uploadedResponse = await apiService.getSermons({
+      published: includeDrafts ? false : true, // false = all, true = published only
+      limit: maxResults
+    });
+
+    // Filter to only include sermons that have videoUrl (admin-uploaded) OR are published
+    // Exclude podcasts (items with audioUrl but no videoUrl)
+    const relevantSermons = (uploadedResponse.sermons || []).filter((sermon: Sermon) =>
+      (sermon.videoUrl || (includeDrafts ? true : sermon.isPublished)) &&
+      !(sermon.audioUrl && !sermon.videoUrl)
+    );
+
+    // Convert database sermons to YouTubeVideo format for compatibility
+    const sermonPromises = relevantSermons.map(async (sermon: Sermon) => {
+      // Determine thumbnail URL
+      let thumbnailUrl = sermon.thumbnailUrl;
+      let isLive = sermon.isLive || false;
+
+      if (sermon.videoUrl && (sermon.videoUrl.includes('youtube.com') || sermon.videoUrl.includes('youtu.be'))) {
+        // Extract YouTube video ID
+        let videoId = '';
+        if (sermon.videoUrl.includes('youtu.be/')) {
+          videoId = sermon.videoUrl.split('youtu.be/')[1]?.split('?')[0];
+        } else if (sermon.videoUrl.includes('live/')) {
+          videoId = sermon.videoUrl.split('live/')[1]?.split('?')[0];
+        } else if (sermon.videoUrl.includes('v=')) {
+          videoId = sermon.videoUrl.split('v=')[1]?.split('&')[0];
+        }
+
+        if (videoId) {
+          // Check if this YouTube video is currently live
+          isLive = await checkYouTubeLiveStatus(videoId);
+
+          // Use maxresdefault for highest quality thumbnails (works for both live and uploaded)
+          if (!thumbnailUrl) {
+            thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+          }
+        }
+      }
+
+      if (!thumbnailUrl) {
+        thumbnailUrl = '/default-sermon-thumb.jpg'; // Fallback
+      }
+
+      return {
+        id: sermon._id, // Always use database _id for database sermons
+        title: sermon.title,
+        description: sermon.description || `${sermon.speaker} - ${sermon.scripture || ''}`,
+        thumbnailUrl: thumbnailUrl,
+        publishedAt: sermon.date,
+        duration: sermon.duration || (sermon.videoUrl ? undefined : '45:00'), // Use actual duration for uploaded videos, fallback for others
+        viewCount: sermon.viewCount,
+        isLive: isLive,
+        // Add database sermon metadata
+        isDatabaseSermon: true,
+        videoUrl: sermon.videoUrl,
+        youtubeId: sermon.youtubeId, // Keep youtubeId for reference
+        speaker: sermon.speaker,
+        scripture: sermon.scripture
+      } as YouTubeVideo & { isDatabaseSermon: boolean; videoUrl?: string; youtubeId?: string; speaker?: string; scripture?: string };
+    });
+
+    // Wait for all live status checks to complete
+    dbVideos = await Promise.all(sermonPromises);
+  } catch (dbError) {
+    console.error('Error fetching database sermons:', dbError);
+    // Continue with empty dbVideos array
+  }
+
+  // Sort by live status first, then by date (live videos first, then newest first)
+  const allVideos = dbVideos.sort((a, b) => {
+    // Live videos always come first
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
+
+    // Then sort by date
+    const dateA = new Date(a.publishedAt || '').getTime();
+    const dateB = new Date(b.publishedAt || '').getTime();
+    return dateB - dateA; // Newest first
+  });
+
+  const result = {
+    videos: allVideos.slice(0, maxResults),
+    nextPageToken: undefined // No pagination for database-only results
+  };
+
+
+  return result;
 }

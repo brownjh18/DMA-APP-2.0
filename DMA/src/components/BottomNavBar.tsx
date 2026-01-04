@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import { menu, homeOutline, playCircleOutline, bookOutline, add } from 'ionicons/icons';
+import { menu, homeOutline, playCircleOutline, bookOutline, add, radio } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
 
@@ -18,282 +18,206 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
   const getActive = () => {
     switch (location.pathname) {
       case '/tab1': return 'home';
-      case '/admin': return 'upload';
       case '/tab2': return 'sermons';
+      case '/tab4': return 'radio';
       case '/tab3': return 'devotions';
       default: return 'home';
     }
   };
   const active = getActive();
 
-  // Use CSS variables for theming
+
+
+  // Enhanced theme colors and styling
+  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const theme = {
     background: 'rgba(var(--ion-background-color-rgb), 0.95)',
     text: 'var(--ion-text-color)',
     active: 'var(--ion-color-primary)',
+    // Enhanced color palette
+    primaryGradient: isDarkMode 
+      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    surface: isDarkMode 
+      ? 'linear-gradient(135deg, rgba(30, 30, 60, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%)'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
+    border: isDarkMode 
+      ? 'rgba(255, 255, 255, 0.1)' 
+      : 'rgba(0, 0, 0, 0.08)',
+    shadow: isDarkMode
+      ? '0 -8px 32px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.3)'
+      : '0 -8px 32px rgba(0, 0, 0, 0.12), 0 -4px 16px rgba(0, 0, 0, 0.08)',
   };
 
-  // Dark frost 3D glassy design for both modes
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const frostedGlassStyle = isDarkMode ? {
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1))',
-    backdropFilter: 'blur(150px) saturate(350%) brightness(0.9) contrast(1.2)',
-    WebkitBackdropFilter: 'blur(150px) saturate(350%) brightness(0.9) contrast(1.2)',
-    border: '1px solid rgba(0, 0, 0, 0.3)',
-    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.6), 0 0 50px rgba(0, 0, 0, 0.4)',
-    transform: 'translateZ(0)',
-    transition: 'all 0.3s ease',
-  } : {
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.07))',
-    backdropFilter: 'blur(150px) saturate(300%) brightness(0.95) contrast(1.1)',
-    WebkitBackdropFilter: 'blur(150px) saturate(300%) brightness(0.95) contrast(1.1)',
-    border: '1px solid rgba(0, 0, 0, 0.2)',
-    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 50px rgba(0, 0, 0, 0.2)',
-    transform: 'translateZ(0)',
-    transition: 'all 0.3s ease',
-  };
-
-  const sidebarItem = { name: 'sidebar', label: '', icon: menu };
-  const primaryNavItems = [
-    { name: 'home', label: 'Home', icon: homeOutline, path: '/tab1' },
-    { name: 'sermons', label: 'Sermons', icon: playCircleOutline, path: '/tab2' },
-    { name: 'devotions', label: 'Devotions', icon: bookOutline, path: '/tab3' },
+  const navigationItems = [
+    { name: 'sidebar', label: 'Menu', icon: menu, path: null, action: 'sidebar' },
+    { name: 'home', label: 'Home', icon: homeOutline, path: '/tab1', action: 'nav' },
+    { name: 'sermons', label: 'Sermons', icon: playCircleOutline, path: '/tab2', action: 'nav' },
+    { name: 'radio', label: 'Radio', icon: radio, path: '/tab4', action: 'nav' },
+    { name: 'devotions', label: 'Devotions', icon: bookOutline, path: '/tab3', action: 'nav' },
   ];
-  const uploadItem = isAdmin ? { name: 'upload', label: 'Upload', icon: add, path: '/admin' } : null;
+
+  const getCurrentLabel = () => {
+    const currentItem = navigationItems.find(item => 
+      item.action === 'nav' ? active === item.name : shineContainer === item.name
+    );
+    return currentItem ? currentItem.label : '';
+  };
 
   const handlePress = (item: any) => {
-    if (item.name === 'sidebar') {
+    if (item.action === 'sidebar') {
       onSidebarToggle();
-      setShineContainer('sidebar');
+      setShineContainer(item.name);
     } else if (item.path) {
       history.push(item.path);
-      if (item.name === 'upload') {
-        setShineContainer('upload');
-      } else {
-        setShineContainer('primary');
-      }
+      setShineContainer(item.name);
     }
     setTimeout(() => setShineContainer(null), 1000);
   };
 
+  const currentLabel = getCurrentLabel();
+
   return (
     <>
       <style>{`
-        @keyframes pulse {
+        @keyframes iconPulse {
           0% { transform: scale(1); }
           50% { transform: scale(1.1); }
           100% { transform: scale(1); }
         }
-        @keyframes reflect {
-          0% { filter: drop-shadow(0 0 0px rgba(0,123,255,0)); }
-          50% { filter: drop-shadow(0 0 10px rgba(0,123,255,0.5)); }
-          100% { filter: drop-shadow(0 0 0px rgba(0,123,255,0)); }
+        @keyframes labelSlideIn {
+          0% {
+            transform: translateX(20px) scale(0.8);
+            opacity: 0;
+          }
+          100% {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+          }
         }
-        @keyframes snake {
-          0% { left: -50%; }
-          100% { left: 100%; }
+        @keyframes iconGlow {
+          0% { 
+            filter: drop-shadow(0 0 4px rgba(102, 126, 234, 0.4));
+          }
+          50% { 
+            filter: drop-shadow(0 0 12px rgba(102, 126, 234, 0.8)) drop-shadow(0 0 24px rgba(102, 126, 234, 0.4));
+          }
+          100% { 
+            filter: drop-shadow(0 0 4px rgba(102, 126, 234, 0.4));
+          }
+        }
+        .nav-icon {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 50%;
+          padding: 12px;
+          position: relative;
+        }
+        .nav-icon:hover {
+          background: rgba(102, 126, 234, 0.1);
+          transform: scale(1.05);
+        }
+        .nav-icon.active {
+          animation: iconPulse 2s infinite;
+        }
+        .nav-icon.active .icon-element {
+          animation: iconGlow 3s infinite;
+        }
+        .label-container {
+          position: fixed;
+          bottom: 90px;
+          right: 20px;
+          z-index: 1000;
+          pointer-events: none;
+        }
+        .nav-label {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 25px;
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          text-transform: capitalize;
+          box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3), 0 4px 16px rgba(0, 0, 0, 0.1);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          animation: labelSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
       `}</style>
-      {/* Sidebar */}
+      
+      {/* Icon-Only Navigation Bar */}
       <div style={{
-        position: 'absolute',
-        bottom: window.innerWidth <= 576 ? 10 : 20,
-        left: window.innerWidth <= 576 ? 10 : 20,
-        height: window.innerWidth <= 576 ? 55 : 70,
-        borderRadius: window.innerWidth <= 576 ? 30 : 40,
-        padding: window.innerWidth <= 576 ? 13 : 14,
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: window.innerWidth <= 576 ? '80px' : '90px',
+        background: 'transparent',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        borderTop: `1px solid ${theme.border}`,
+        boxShadow: theme.shadow,
         zIndex: 999,
-        ...frostedGlassStyle,
-      }}>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            cursor: 'pointer',
-            marginTop: 0,
-          }}
-          onClick={() => handlePress(sidebarItem)}
-        >
-          <IonIcon
-            icon={sidebarItem.icon}
-            style={{
-              fontSize: '29px',
-              color: theme.text,
-            }}
-          />
-        </div>
-        {shineContainer === 'sidebar' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              borderRadius: 'inherit',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                width: '50%',
-                height: '100%',
-                background: 'linear-gradient(90deg, transparent, white, transparent)',
-                animation: 'snake 1s ease-out',
-              }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Primary Navigations */}
-      <div style={{
-        position: 'absolute',
-        bottom: window.innerWidth <= 576 ? 10 : 20,
-        ...(isAdmin ? {
-          left: '22%',
-          transform: 'translateX(-50%)',
-          width: window.innerWidth <= 576 ? 204 : 300,
-        } : {
-          right: window.innerWidth <= 576 ? 10 : 20,
-          width: window.innerWidth <= 576 ? '75%' : '65%',
-        }),
-        height: window.innerWidth <= 576 ? 55 : 70,
         display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-        borderRadius: window.innerWidth <= 576 ? 30 : 40,
-        paddingTop: window.innerWidth <= 576 ? 8 : 10,
-        paddingBottom: window.innerWidth <= 576 ? 8 : 10,
-        paddingLeft: window.innerWidth <= 576 ? 3 : 5,
-        paddingRight: window.innerWidth <= 576 ? 3 : 5,
-        zIndex: 999,
-        ...frostedGlassStyle,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: window.innerWidth <= 576 ? '10px' : '12px',
+        padding: window.innerWidth <= 576 ? '0px 19px 8px 19px' : '8px 29px 3px 29px',
       }}>
-        {primaryNavItems.map((item) => (
-          <div
-            key={item.name}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-            }}
-            onClick={() => handlePress(item)}
-          >
-            <IonIcon
-              icon={item.icon}
-              style={{
-                fontSize: '22px',
-                color: active === item.name ? theme.active : theme.text,
-                animation: active === item.name ? 'pulse 1s infinite, reflect 2s infinite' : 'none',
-              }}
-            />
-            {item.label ? (
-              <span style={{
-                fontSize: 11,
-                marginTop: 1.5,
-                color: active === item.name ? theme.active : theme.text,
-              }}>
-                {item.label}
-              </span>
-            ) : null}
-          </div>
-        ))}
-        {shineContainer === 'primary' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              borderRadius: 'inherit',
-              overflow: 'hidden',
-            }}
-          >
+        {navigationItems.map((item, index) => {
+          const isActive = item.action === 'nav' ? active === item.name : shineContainer === item.name;
+          
+          return (
             <div
+              key={item.name}
+              className={`nav-icon ${isActive ? 'active' : ''}`}
               style={{
-                position: 'absolute',
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
-                animation: 'snake 1s ease-out',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                margin: window.innerWidth <= 576 ? '0 0.25px' : '0 0.5px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Upload Navigation */}
-      {uploadItem && (
-        <div style={{
-          position: 'absolute',
-          bottom: window.innerWidth <= 576 ? 10 : 20,
-          right: window.innerWidth <= 576 ? 10 : 20,
-          height: window.innerWidth <= 576 ? 55 : 70,
-          borderRadius: window.innerWidth <= 576 ? 30 : 40,
-          padding: window.innerWidth <= 576 ? 10 : 10,
-          zIndex: 999,
-          ...frostedGlassStyle,
-        }}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-              marginTop: -8,
-            }}
-            onClick={() => handlePress(uploadItem)}
-          >
-            <IonIcon
-              icon={uploadItem.icon}
-              style={{
-                fontSize: '28px',
-                color: active === uploadItem.name ? theme.active : theme.text,
-                animation: active === uploadItem.name ? 'pulse 1s infinite, reflect 2s infinite' : 'none',
-              }}
-            />
-            {uploadItem.label ? (
-              <span style={{
-                fontSize: 11,
-                marginTop: 1.5,
-                color: active === uploadItem.name ? theme.active : theme.text,
-              }}>
-                {uploadItem.label}
-              </span>
-            ) : null}
-          </div>
-          {shineContainer === 'upload' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                pointerEvents: 'none',
-                borderRadius: 'inherit',
-                overflow: 'hidden',
-              }}
+              onClick={() => handlePress(item)}
             >
-              <div
-                style={{
-                  position: 'absolute',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
-                  animation: 'snake 1s ease-out',
-                }}
-              />
+              <div className="icon-element" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: window.innerWidth <= 576 ? '48px' : '56px',
+                height: window.innerWidth <= 576 ? '48px' : '56px',
+                borderRadius: '50%',
+                background: isActive 
+                  ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)'
+                  : 'transparent',
+                border: isActive
+                  ? '2px solid rgba(102, 126, 234, 0.4)'
+                  : '2px solid transparent',
+                transition: 'all 0.3s ease',
+              }}>
+                <IonIcon
+                  icon={item.icon}
+                  style={{
+                    fontSize: window.innerWidth <= 576 ? '22px' : '24px',
+                    color: isActive 
+                      ? '#667eea' 
+                      : theme.text,
+                    transition: 'all 0.3s ease',
+                  }}
+                />
+              </div>
             </div>
-          )}
+          );
+        })}
+      </div>
+      
+      {/* Dynamic Label Display */}
+      {currentLabel && (
+        <div className="label-container">
+          <div className="nav-label">
+            {currentLabel}
+          </div>
         </div>
       )}
     </>

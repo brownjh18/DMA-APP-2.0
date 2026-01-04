@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonIcon, IonBadge } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge } from '@ionic/react';
 import { play, time, removeCircle, videocam } from 'ionicons/icons';
 
 const WatchHistory: React.FC = () => {
@@ -91,9 +91,6 @@ const WatchHistory: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
           <IonTitle className="title-ios">Watch History</IonTitle>
         </IonToolbar>
       </IonHeader>

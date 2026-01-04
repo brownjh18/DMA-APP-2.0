@@ -22,6 +22,10 @@ const ministrySchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  endTime: {
+    type: String,
+    trim: true
+  },
   contactEmail: {
     type: String,
     trim: true

@@ -5,9 +5,8 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
+  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -25,9 +24,11 @@ import {
   time,
   location,
   people,
-  informationCircle
+  informationCircle,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import apiService from '../services/api';
 
 const AddEvent: React.FC = () => {
   const history = useHistory();
@@ -45,14 +46,39 @@ const AddEvent: React.FC = () => {
     capacity: '',
     organizer: '',
     contactInfo: '',
-    status: 'draft'
+    status: 'draft',
+    imageUrl: ''
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+
+    const formDataUpload = new FormData();
+    formDataUpload.append('thumbnailFile', file);
+
+    try {
+      const data = await apiService.uploadThumbnail(formDataUpload);
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: data.thumbnailUrl
+      }));
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      alert(`Error uploading image: ${error.message || 'Please try again.'}`);
+    }
+
+    setUploadingImage(false);
   };
 
   const handleSave = async () => {
@@ -64,27 +90,94 @@ const AddEvent: React.FC = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const eventData: any = {
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location,
+        maxAttendees: formData.capacity ? parseInt(formData.capacity) : undefined,
+        speaker: formData.organizer,
+        contactPhone: formData.contactInfo,
+        isPublished: formData.status === 'published'
+      };
+
+      // Only include imageUrl if it's not empty
+      if (formData.imageUrl && formData.imageUrl.trim() !== '') {
+        eventData.imageUrl = formData.imageUrl;
+      }
+
+      const result = await apiService.createEvent(eventData);
+
       setAlertMessage('Event added successfully!');
       setShowAlert(true);
+
+      // Set refresh flag for main pages
+      sessionStorage.setItem('eventsNeedRefresh', 'true');
 
       // Navigate back after success
       setTimeout(() => {
         history.push('/admin/events');
       }, 1500);
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error saving event:', error);
+      setAlertMessage(error.message || 'Failed to add event. Please try again.');
+      setShowAlert(true);
+    }
+
+    setLoading(false);
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/events" />
-          </IonButtons>
-          <IonTitle className="title-ios">Add Event</IonTitle>
+            <div
+              onClick={() => history.goBack()}
+              style={{
+                position: 'absolute',
+                top: 'calc(var(--ion-safe-area-top) - -5px)',
+                left: 20,
+                width: 45,
+                height: 45,
+                borderRadius: 25,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 999,
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.8)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+              }}
+            >
+              <IonIcon
+                icon={arrowBack}
+                style={{
+                  color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                  fontSize: '20px',
+                }}
+              />
+            </div>
+            <IonTitle className="title-ios">Add Event</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
               <IonIcon icon={save} />
@@ -215,6 +308,27 @@ const AddEvent: React.FC = () => {
                 placeholder="Describe the event details and purpose"
                 rows={4}
               />
+            </IonItem>
+
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Event Poster/Thumbnail</IonLabel>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }}
+                disabled={uploadingImage}
+              />
+              {uploadingImage && <p style={{ fontSize: '0.9em', color: '#666', marginTop: '4px' }}>Uploading image...</p>}
+              {formData.imageUrl && (
+                <div style={{ marginTop: '8px' }}>
+                  <img
+                    src={formData.imageUrl}
+                    alt="Event poster preview"
+                    style={{ maxWidth: '200px', maxHeight: '150px', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
             </IonItem>
           </div>
 

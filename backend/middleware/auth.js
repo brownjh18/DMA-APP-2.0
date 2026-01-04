@@ -26,7 +26,7 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Middleware to check if user is admin or moderator
+// Middleware to check if user is moderator or admin
 const requireModerator = (req, res, next) => {
   if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
     return res.status(403).json({ error: 'Moderator or admin access required' });

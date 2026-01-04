@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
+  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -17,7 +16,9 @@ import {
   IonSelectOption,
   IonText,
   IonLoading,
-  IonAlert
+  IonAlert,
+  IonRadioGroup,
+  IonRadio
 } from '@ionic/react';
 import {
   save,
@@ -25,45 +26,175 @@ import {
   text,
   calendar,
   person,
-  time
+  time,
+  closeCircle,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
 
+import { AuthContext } from '../App';
+
 const AddSermon: React.FC = () => {
   const history = useHistory();
+  const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [fetchingDetails, setFetchingDetails] = useState(false);
+  const [hasFetchedDetails, setHasFetchedDetails] = useState(false);
+  const [formKey, setFormKey] = useState(Date.now()); // Force re-render key
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Redirect if not logged in or not admin
+  useEffect(() => {
+    if (!isLoggedIn || !isAdmin) {
+      history.push('/signin');
+    }
+  }, [isLoggedIn, isAdmin, history]);
+
+  // Show loading if auth check is in progress
+  if (!isLoggedIn || !isAdmin) {
+    return (
+      <IonPage>
+        <IonContent className="ion-padding">
+          <IonLoading isOpen={true} message="Checking permissions..." />
+        </IonContent>
+      </IonPage>
+    );
+  }
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     speaker: '',
     series: '',
-    status: 'draft',
+    status: 'published',
+    videoSource: 'upload', // 'upload' or 'external'
     videoFile: null as File | null,
-    videoUrl: ''
+    videoUrl: '',
+    duration: '00:00',
+    viewCount: 0,
+    thumbnailUrl: ''
   });
 
+  // Ensure form is reset when component mounts
+  useEffect(() => {
+    setFormData({
+      title: '',
+      description: '',
+      speaker: '',
+      series: '',
+      status: 'published',
+      videoSource: 'upload',
+      videoFile: null,
+      videoUrl: '',
+      duration: '00:00',
+      viewCount: 0,
+      thumbnailUrl: ''
+    });
+    setFormKey(Date.now()); // Force re-render of form inputs
+  }, []);
+
+  useEffect(() => {
+    if (formData.videoSource === 'external' && formData.videoUrl.trim()) {
+      const timeoutId = setTimeout(() => {
+        fetchVideoDetails(formData.videoUrl);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setHasFetchedDetails(false);
+    }
+  }, [formData.videoUrl, formData.videoSource]);
+
+  // Reset file input when form key changes
+  useEffect(() => {
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
+  }, [formKey]);
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log(`Field ${field} changed to:`, value); // Debug log
+    if (field === 'videoSource') {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      if (value === 'upload') {
+        setHasFetchedDetails(false);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
+
+    // Validate file size (100MB limit)
+    if (file && file.size > 100 * 1024 * 1024) {
+      setAlertMessage('Video file size must be less than 100MB');
+      setShowAlert(true);
+      // Clear the file input
+      event.target.value = '';
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       videoFile: file
     }));
   };
 
+  const fetchVideoDetails = async (url: string) => {
+    if (!url.trim()) return;
+    setFetchingDetails(true);
+    try {
+      const details = await apiService.getYouTubeVideoDetails(url);
+      setFormData(prev => ({
+        ...prev,
+        title: details.title || prev.title,
+        description: details.description || prev.description,
+        speaker: details.channelTitle || prev.speaker,
+        series: prev.series,
+        videoUrl: url,
+        duration: details.duration || '00:00',
+        viewCount: details.viewCount || 0,
+        thumbnailUrl: details.thumbnailUrl || ''
+      }));
+      setHasFetchedDetails(true);
+      setAlertMessage('Video details fetched successfully!');
+      setShowAlert(true);
+    } catch (error) {
+      setAlertMessage(error instanceof Error ? error.message : 'Failed to fetch video details');
+      setShowAlert(true);
+    } finally {
+      setFetchingDetails(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!formData.title || !formData.speaker) {
+    if ((formData.videoSource === 'upload' || (formData.videoSource === 'external' && hasFetchedDetails)) && (!formData.title || !formData.speaker)) {
       setAlertMessage('Please fill in all required fields (Title, Speaker)');
+      setShowAlert(true);
+      return;
+    }
+
+    // Validate video source
+    if (formData.videoSource === 'upload' && !formData.videoFile) {
+      setAlertMessage('Please select a video file to upload');
+      setShowAlert(true);
+      return;
+    }
+    if (formData.videoSource === 'external' && !formData.videoUrl.trim()) {
+      setAlertMessage('Please enter a video URL');
+      setShowAlert(true);
+      return;
+    }
+    if (formData.videoSource === 'external' && !hasFetchedDetails) {
+      setAlertMessage('Please wait for video details to load or check the URL');
       setShowAlert(true);
       return;
     }
@@ -72,14 +203,25 @@ const AddSermon: React.FC = () => {
 
     try {
       let videoUrl = '';
+      let thumbnailUrl = '';
+      let videoDuration = '00:00';
 
-      // Upload video if file is selected
-      if (formData.videoFile) {
+      if (formData.videoSource === 'upload') {
+        // Upload video file
+        setUploadingVideo(true);
         const videoFormData = new FormData();
-        videoFormData.append('video', formData.videoFile);
+        videoFormData.append('video', formData.videoFile!);
 
         const uploadResponse = await apiService.uploadSermonVideo(videoFormData);
         videoUrl = uploadResponse.videoUrl;
+        thumbnailUrl = uploadResponse.thumbnailUrl || '';
+        videoDuration = uploadResponse.duration || '00:00';
+        setUploadingVideo(false);
+      } else {
+        // External video URL
+        videoUrl = formData.videoUrl.trim();
+        thumbnailUrl = formData.thumbnailUrl;
+        videoDuration = formData.duration;
       }
 
       // Prepare sermon data
@@ -89,15 +231,24 @@ const AddSermon: React.FC = () => {
         description: formData.description,
         series: formData.series,
         videoUrl: videoUrl,
+        thumbnailUrl: thumbnailUrl || undefined,
+        duration: videoDuration,
+        viewCount: formData.viewCount,
         isPublished: formData.status === 'published'
       };
+
+      console.log('Sending sermon data:', sermonData); // Debug log
 
       // Create sermon
       await apiService.createSermon(sermonData);
 
       setLoading(false);
-      setAlertMessage('Sermon added successfully!');
-      setShowAlert(true);
+
+      // Show success message
+      alert(`Sermon "${formData.title}" uploaded successfully!`);
+
+      // Set refresh flag for main pages
+      sessionStorage.setItem('sermonsNeedRefresh', 'true');
 
       // Navigate back after success
       setTimeout(() => {
@@ -105,6 +256,7 @@ const AddSermon: React.FC = () => {
       }, 1500);
     } catch (error) {
       setLoading(false);
+      setUploadingVideo(false);
       setAlertMessage(error instanceof Error ? error.message : 'Failed to add sermon');
       setShowAlert(true);
     }
@@ -113,10 +265,51 @@ const AddSermon: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/sermons" />
-          </IonButtons>
           <IonTitle className="title-ios">Add Sermon</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
@@ -155,58 +348,147 @@ const AddSermon: React.FC = () => {
             </p>
           </div>
 
+          {/* Video Source Selection */}
+          <IonItem key={`video-source-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+            <IonLabel position="stacked">Video Source</IonLabel>
+            <IonRadioGroup
+              value={formData.videoSource}
+              onIonChange={(e) => handleInputChange('videoSource', e.detail.value)}
+            >
+              <IonItem>
+                <IonLabel style={{ whiteSpace: 'nowrap' }}>Upload Video File</IonLabel>
+                <IonRadio slot="start" value="upload" />
+              </IonItem>
+              <IonItem>
+                <IonLabel style={{ whiteSpace: 'nowrap' }}>External Video Link</IonLabel>
+                <IonRadio slot="start" value="external" />
+              </IonItem>
+            </IonRadioGroup>
+          </IonItem>
+
           <div style={{ marginBottom: '20px' }}>
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Sermon Title *</IonLabel>
-              <IonInput
-                value={formData.title}
-                onIonChange={(e) => handleInputChange('title', e.detail.value!)}
-                placeholder="Enter sermon title"
-              />
-            </IonItem>
+{(formData.videoSource === 'upload' || (formData.videoSource === 'external' && hasFetchedDetails)) && (
+  <>
+    <IonItem key={`title-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+      <IonLabel position="stacked">Sermon Title *</IonLabel>
+      <IonInput
+        value={formData.title}
+        onIonChange={(e) => handleInputChange('title', e.detail.value!)}
+        placeholder="Enter sermon title"
+      />
+    </IonItem>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Speaker *</IonLabel>
-              <IonInput
-                value={formData.speaker}
-                onIonChange={(e) => handleInputChange('speaker', e.detail.value!)}
-                placeholder="Enter speaker name"
-              />
-            </IonItem>
+    <IonItem key={`speaker-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+      <IonLabel position="stacked">Speaker *</IonLabel>
+      <IonInput
+        value={formData.speaker}
+        onIonChange={(e) => handleInputChange('speaker', e.detail.value!)}
+        placeholder="Enter speaker name"
+      />
+    </IonItem>
 
+    <IonItem key={`series-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+      <IonLabel position="stacked">Series</IonLabel>
+      <IonInput
+        value={formData.series}
+        onIonChange={(e) => handleInputChange('series', e.detail.value!)}
+        placeholder="Enter sermon series (optional)"
+      />
+    </IonItem>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Series</IonLabel>
-              <IonInput
-                value={formData.series}
-                onIonChange={(e) => handleInputChange('series', e.detail.value!)}
-                placeholder="Enter sermon series (optional)"
-              />
-            </IonItem>
+    <IonItem key={`description-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+      <IonLabel position="stacked">Description</IonLabel>
+      <IonTextarea
+        value={formData.description}
+        onIonInput={(e) => handleInputChange('description', e.detail.value || '')}
+        placeholder="Enter sermon description or notes"
+        rows={4}
+      />
+    </IonItem>
+  </>
+)}
+            {/* Video File Upload or URL Input */}
+            {formData.videoSource === 'upload' ? (
+              <IonItem key={`video-upload-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+                <IonLabel position="stacked">Video File *</IonLabel>
+                <input
+                  ref={videoInputRef}
+                  key={`file-${formKey}`}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                {!formData.videoFile ? (
+                  <div style={{
+                    border: '2px dashed var(--ion-color-medium)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.02)',
+                    width: '100%'
+                  }}>
+                    <IonIcon icon={videocam} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                    <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                      Select a video file to upload
+                    </p>
+                    <IonButton
+                      onClick={() => videoInputRef.current?.click()}
+                      style={{
+                        '--border-radius': '8px'
+                      }}
+                    >
+                      <IonIcon icon={videocam} slot="start" />
+                      Choose Video
+                    </IonButton>
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '12px',
+                    backgroundColor: 'rgba(0,0,0,0.02)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--ion-color-success)',
+                    width: '100%'
+                  }}>
+                    <IonText style={{ fontSize: '0.9em', color: 'var(--ion-color-success)', fontWeight: '600' }}>
+                      ✓ Selected: {formData.videoFile.name}
+                    </IonText>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, videoFile: null }));
+                        if (videoInputRef.current) {
+                          videoInputRef.current.value = '';
+                        }
+                      }}
+                      style={{ float: 'right' }}
+                    >
+                      <IonIcon icon={closeCircle} />
+                    </IonButton>
+                  </div>
+                )}
+              </IonItem>
+            ) : (
+              <IonItem key={`video-url-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+                <IonLabel position="stacked">Video URL *</IonLabel>
+                <IonInput
+                  value={formData.videoUrl}
+                  onIonChange={(e) => handleInputChange('videoUrl', e.detail.value!)}
+                  placeholder="Enter external video URL (e.g., YouTube, Vimeo)"
+                  type="url"
+                  disabled={fetchingDetails}
+                />
+{formData.videoSource === 'external' && fetchingDetails && (
+  <IonText style={{ fontSize: '0.9em', color: 'var(--ion-color-primary)', marginTop: '8px', display: 'block' }}>
+    Fetching video details...
+  </IonText>
+)}
+              </IonItem>
+            )}
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Video Upload</IonLabel>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleFileChange}
-                style={{
-                  padding: '8px',
-                  border: '1px solid var(--ion-color-light-shade)',
-                  borderRadius: '4px',
-                  backgroundColor: 'var(--ion-item-background)',
-                  color: 'var(--ion-text-color)',
-                  width: '100%'
-                }}
-              />
-              {formData.videoFile && (
-                <IonText style={{ fontSize: '0.9em', color: 'var(--ion-color-primary)', marginTop: '4px' }}>
-                  Selected: {formData.videoFile.name}
-                </IonText>
-              )}
-            </IonItem>
-
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+            <IonItem key={`status-${formKey}`} style={{ marginBottom: '16px', '--border-radius': '12px' }}>
               <IonLabel position="stacked">Status</IonLabel>
               <IonSelect
                 value={formData.status}
@@ -215,16 +497,6 @@ const AddSermon: React.FC = () => {
                 <IonSelectOption value="draft">Draft</IonSelectOption>
                 <IonSelectOption value="published">Published</IonSelectOption>
               </IonSelect>
-            </IonItem>
-
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Description</IonLabel>
-              <IonTextarea
-                value={formData.description}
-                onIonChange={(e) => handleInputChange('description', e.detail.value!)}
-                placeholder="Enter sermon description or notes"
-                rows={4}
-              />
             </IonItem>
           </div>
 
@@ -251,7 +523,7 @@ const AddSermon: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Saving sermon..." />
+        <IonLoading isOpen={loading} message={uploadingVideo ? "Uploading video..." : "Saving sermon..."} />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

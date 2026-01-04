@@ -1,6 +1,5 @@
 const express = require('express');
 const Sermon = require('../models/Sermon');
-const News = require('../models/News');
 const Event = require('../models/Event');
 const Devotion = require('../models/Devotion');
 const Ministry = require('../models/Ministry');
@@ -24,13 +23,13 @@ router.get('/', async (req, res) => {
     const publishedFilter = { isPublished: true };
 
     // Search across all collections
-    const [sermons, news, events, devotions, ministries] = await Promise.all([
-      Sermon.find({ ...searchQuery, ...publishedFilter })
+    const [sermons, podcasts, events, devotions, ministries] = await Promise.all([
+      Sermon.find({ ...searchQuery, ...publishedFilter, type: { $ne: 'podcast' } })
         .select('title speaker description thumbnailUrl date')
         .sort({ score: { $meta: 'textScore' } })
         .limit(5),
-      News.find({ ...searchQuery, ...publishedFilter })
-        .select('title excerpt author category publishDate')
+      Sermon.find({ ...searchQuery, ...publishedFilter, type: 'podcast' })
+        .select('title speaker description thumbnailUrl date')
         .sort({ score: { $meta: 'textScore' } })
         .limit(5),
       Event.find({ ...searchQuery, ...publishedFilter })
@@ -41,7 +40,7 @@ router.get('/', async (req, res) => {
         .select('title content verse date')
         .sort({ score: { $meta: 'textScore' } })
         .limit(5),
-      Ministry.find({ ...searchQuery, ...publishedFilter })
+      Ministry.find({ ...searchQuery, isActive: true })
         .select('name description leader category')
         .sort({ score: { $meta: 'textScore' } })
         .limit(5)
@@ -60,14 +59,15 @@ router.get('/', async (req, res) => {
         url: `/tab2?sermonId=${item._id}`,
         score: item._doc.score || 0
       })),
-      ...news.map(item => ({
+      ...podcasts.map(item => ({
         id: item._id,
-        type: 'news',
+        type: 'podcast',
         title: item.title,
-        subtitle: item.author || item.category,
-        description: item.excerpt?.substring(0, 100) + (item.excerpt?.length > 100 ? '...' : ''),
-        date: item.publishDate,
-        url: `/news/${item._id}`,
+        subtitle: item.speaker,
+        description: item.description?.substring(0, 100) + (item.description?.length > 100 ? '...' : ''),
+        image: item.thumbnailUrl,
+        date: item.date,
+        url: `/podcast-player?id=${item._id}`,
         score: item._doc.score || 0
       })),
       ...events.map(item => ({

@@ -1,10 +1,12 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonButtons, IonBackButton, IonGrid, IonRow, IonCol } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonGrid, IonRow, IonCol } from '@ionic/react';
 import { useState, useEffect } from 'react';
-import { book, heart, flame, play, arrowForward, calendar, time } from 'ionicons/icons';
+import { book, heart, flame, play, arrowForward, calendar, time, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
+import { apiService } from '../services/api';
 import './Tab3.css';
 
 interface Devotion {
+  id?: string;
   title: string;
   scripture: string;
   content: string;
@@ -16,67 +18,6 @@ interface Devotion {
   week: number;
 }
 
-const generateDailyDevotions = (): Devotion[] => {
-  const today = new Date();
-  const devotions: Devotion[] = [];
-
-  const series = [
-    {
-      id: 'faith-foundation',
-      devotions: [
-        {
-          title: 'The Foundation of Faith',
-          scripture: 'Hebrews 11:1',
-          content: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
-          reflection: 'Faith is the cornerstone of our relationship with God. It is the confident assurance that what we hope for will come to pass, and the conviction of things not yet seen. This faith is not blind; it is rooted in the character and promises of God. When we face uncertainties in life, our faith reminds us that God is in control and His plans are perfect.',
-          prayer: 'Lord, increase my faith and help me trust You completely. Strengthen my confidence in Your promises and help me see Your hand at work in my life. Amen.'
-        }
-      ]
-    },
-    {
-      id: 'love-relationships',
-      devotions: [
-        {
-          title: 'God\'s Love for Us',
-          scripture: 'Romans 5:8',
-          content: 'But God demonstrates his own love for us in this: While we were still sinners, Christ died for us.',
-          reflection: 'God\'s love is unconditional and everlasting. It reaches out to every person regardless of their background or circumstances. His love is not based on our performance or worthiness, but on His character and choice. This love is so profound that Christ died for us while we were still sinners, showing that His love is proactive and sacrificial.',
-          prayer: 'Thank You Lord for loving me unconditionally. Help me to understand the depth of Your love and to extend that same love to others. Amen.'
-        }
-      ]
-    },
-    {
-      id: 'spiritual-growth',
-      devotions: [
-        {
-          title: 'Growing in Spiritual Maturity',
-          scripture: 'Ephesians 4:15',
-          content: 'Speaking the truth in love, we will grow to become mature in Christ.',
-          reflection: 'Spiritual growth happens as we become more like Christ. It involves speaking truth with love, building up the body of Christ, and maturing in our faith. This growth is intentional and requires commitment, but it leads to greater freedom and effectiveness in our Christian walk.',
-          prayer: 'Help me to grow spiritually and become more like Jesus. Give me wisdom to speak truth in love and to contribute to the growth of Your church. Amen.'
-        }
-      ]
-    }
-  ];
-
-  let dayCounter = 1;
-  series.forEach((s, seriesIndex) => {
-    s.devotions.forEach((d, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - dayCounter + 1);
-      devotions.push({
-        ...d,
-        category: s.id,
-        day: i + 1,
-        week: seriesIndex + 1,
-        date: date.toISOString().split('T')[0]
-      });
-      dayCounter++;
-    });
-  });
-
-  return devotions;
-};
 
 const FullDevotion: React.FC = () => {
   const history = useHistory();
@@ -84,24 +25,44 @@ const FullDevotion: React.FC = () => {
   const [devotion, setDevotion] = useState<Devotion | null>(null);
 
   useEffect(() => {
-    const allDevotions = generateDailyDevotions();
     const urlParams = new URLSearchParams(location.search);
-    const category = urlParams.get('category');
-    const day = urlParams.get('day');
+    const id = urlParams.get('id');
 
-    let selectedDevotion;
+    console.log('FullDevotion: URL params - id:', id);
 
-    if (category && day) {
-      // Find devotion by category and day
-      selectedDevotion = allDevotions.find(d => d.category === category && d.day === parseInt(day));
+    if (id) {
+      // Fetch specific devotion by ID
+      const fetchDevotion = async () => {
+        try {
+          const data = await apiService.getDevotion(id);
+          const apiDevotion = data.devotion;
+
+          const formattedDevotion = {
+            id: apiDevotion._id || apiDevotion.id,
+            title: apiDevotion.title,
+            scripture: apiDevotion.scripture,
+            content: apiDevotion.content,
+            reflection: apiDevotion.reflection,
+            prayer: apiDevotion.prayer,
+            date: new Date(apiDevotion.date).toISOString().split('T')[0],
+            category: apiDevotion.category,
+            day: apiDevotion.day || 1,
+            week: 1
+          };
+          setDevotion(formattedDevotion);
+          console.log('Fetched devotion by ID:', formattedDevotion.title);
+        } catch (error) {
+          console.error('Failed to fetch devotion by ID:', error);
+          setDevotion(null);
+        }
+      };
+
+      fetchDevotion();
+    } else {
+      // No valid parameters
+      console.log('No valid devotion ID provided');
+      setDevotion(null);
     }
-
-    // Fallback to today's devotion if no specific devotion found
-    if (!selectedDevotion) {
-      selectedDevotion = allDevotions.find(d => d.date === new Date().toISOString().split('T')[0]);
-    }
-
-    setDevotion(selectedDevotion || allDevotions[0]);
   }, [location.search]);
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', {
@@ -125,16 +86,54 @@ const FullDevotion: React.FC = () => {
       <IonPage>
         <IonHeader translucent>
           <IonToolbar className="toolbar-ios">
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/tab3" />
-            </IonButtons>
-            <IonTitle className="title-ios">Devotion</IonTitle>
+            {/* Back Button */}
+            <div
+              onClick={() => history.goBack()}
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 25,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <IonIcon
+                icon={arrowBack}
+                style={{
+                  fontSize: '1.2em',
+                  color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'
+                }}
+              />
+            </div>
+            
+            <IonTitle className="title-ios">Full Devotion</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent fullscreen className="content-ios">
           <div style={{ textAlign: 'center', padding: '50px 20px' }}>
             <IonIcon icon={book} style={{ fontSize: '48px', color: '#9ca3af', marginBottom: '16px' }} />
             <h3>Loading devotion...</h3>
+            <p style={{ color: '#666', marginTop: '20px' }}>
+              If this message persists, the requested devotion could not be found.
+            </p>
           </div>
         </IonContent>
       </IonPage>
@@ -147,9 +146,44 @@ const FullDevotion: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab3" />
-          </IonButtons>
+          {/* Back Button */}
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                fontSize: '1.2em',
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'
+              }}
+            />
+          </div>
+          
           <IonTitle className="title-ios">Full Devotion</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -188,7 +222,7 @@ const FullDevotion: React.FC = () => {
               <h2 className="ios18-card-title">Scripture</h2>
             </div>
             <div className="ios18-card-content">
-              <p className="ios18-scripture-text">"{devotion.content}"</p>
+              <p className="ios18-scripture-text">{devotion.content}</p>
               <div className="ios18-scripture-ref">
                 <span>{devotion.scripture}</span>
               </div>

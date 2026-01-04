@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Ministry = require('../models/Ministry');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const notificationService = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -13,10 +14,13 @@ router.get('/', async (req, res) => {
       limit = 10,
       search,
       category,
-      active = true
+      active
     } = req.query;
 
-    const query = { isActive: active };
+    const query = {};
+    if (active !== 'all') {
+      query.isActive = active === 'true' || active === undefined ? true : false;
+    }
 
     if (search) {
       query.$text = { $search: search };
@@ -74,9 +78,10 @@ router.post('/', [
   body('leader').optional().trim(),
   body('activities').optional().isArray(),
   body('meetingSchedule').optional().trim(),
+  body('endTime').optional().trim(),
   body('contactEmail').optional().isEmail().withMessage('Valid contact email required'),
   body('contactPhone').optional().trim(),
-  body('imageUrl').optional().isURL().withMessage('Valid image URL required'),
+  body('imageUrl').optional().trim(),
   body('category').optional().isIn(['worship', 'youth', 'children', 'evangelism', 'intercessions', 'married-couples', 'other']),
   body('memberCount').optional().isInt({ min: 0 }).withMessage('Member count must be non-negative'),
   body('isActive').optional().isBoolean()
@@ -89,13 +94,31 @@ router.post('/', [
 
     const ministryData = {
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user.id.startsWith('demo-') ? '507f1f77bcf86cd799439011' : req.user.id
     };
 
     const ministry = new Ministry(ministryData);
     await ministry.save();
 
     await ministry.populate('createdBy', 'name');
+
+    // Create notifications for all users about the new ministry
+    try {
+      await notificationService.createContentNotification(
+        'ministry',
+        ministry._id,
+        `New Ministry: ${ministry.name}`,
+        `A new ministry "${ministry.name}" has been established. ${ministry.description.substring(0, 100)}${ministry.description.length > 100 ? '...' : ''}`,
+        {
+          url: `/ministry/${ministry._id}`,
+          leader: ministry.leader,
+          category: ministry.category
+        }
+      );
+    } catch (notificationError) {
+      console.error('Error creating ministry notification:', notificationError);
+      // Don't fail the request if notification creation fails
+    }
 
     res.status(201).json({
       message: 'Ministry created successfully',
@@ -113,8 +136,14 @@ router.put('/:id', [
   requireAdmin,
   body('name').optional().trim().isLength({ min: 1 }).withMessage('Name cannot be empty'),
   body('description').optional().trim().isLength({ min: 1 }).withMessage('Description cannot be empty'),
+  body('leader').optional().trim(),
+  body('activities').optional().isArray(),
+  body('meetingSchedule').optional().trim(),
+  body('endTime').optional().trim(),
   body('contactEmail').optional().isEmail().withMessage('Valid contact email required'),
-  body('imageUrl').optional().isURL().withMessage('Valid image URL required'),
+  body('contactPhone').optional().trim(),
+  body('imageUrl').optional().trim(),
+  body('category').optional().isIn(['worship', 'youth', 'children', 'evangelism', 'intercessions', 'married-couples', 'other']),
   body('memberCount').optional().isInt({ min: 0 }).withMessage('Member count must be non-negative'),
   body('isActive').optional().isBoolean()
 ], async (req, res) => {
@@ -123,6 +152,9 @@ router.put('/:id', [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+
+    // Get the old ministry to check if it was just activated
+    const oldMinistry = await Ministry.findById(req.params.id);
 
     const ministry = await Ministry.findByIdAndUpdate(
       req.params.id,

@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonIcon, IonBadge, IonSegment, IonSegmentButton, IonLabel } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonSegment, IonSegmentButton, IonLabel } from '@ionic/react';
 import { heart, play, book, removeCircle, bookmark } from 'ionicons/icons';
 import { useState } from 'react';
 
@@ -205,9 +205,6 @@ const MyFavorites: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
           <IonTitle className="title-ios">My Favorites</IonTitle>
         </IonToolbar>
       </IonHeader>

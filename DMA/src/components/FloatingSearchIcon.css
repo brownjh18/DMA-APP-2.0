@@ -10,7 +10,7 @@
 }
 
 .floating-search-button ion-icon {
-  color: #ffffff;
+  color: #000000;
 }
 
 .search-backdrop {
@@ -36,7 +36,7 @@
 .floating-search-container {
   position: fixed;
   top: 7px;
-  right: 16px;
+  right: -20px;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

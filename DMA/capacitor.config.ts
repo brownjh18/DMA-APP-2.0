@@ -5,8 +5,17 @@ const config: CapacitorConfig = {
   appName: 'DMA',
   webDir: 'dist',
   server: {
-    url: 'http://192.168.100.43:5000',
+    // Enable Android live reload for emulator development
+    url: 'http://10.0.2.2:5173', // Android emulator localhost
     cleartext: true
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 3000,
+      backgroundColor: '#ffffff',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP'
+    }
   }
 };
 

@@ -1,56 +1,102 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonButtons, IonBackButton, IonIcon, IonAvatar, IonButton, IonBadge, IonText, useIonViewDidEnter } from '@ionic/react';
-import { person, mail, call, location, calendar, heart, book, play, settings, logOut, people, statsChart, home, star, time, checkmarkCircle, personCircleOutline } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonAvatar, IonButton, IonBadge, IonText, useIonViewDidEnter } from '@ionic/react';
+import { person, mail, call, location, calendar, settings, logOut, people, statsChart, home, star, time, checkmarkCircle, personCircleOutline, arrowBack } from 'ionicons/icons';
 import { useState, useEffect, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
-import apiService from '../services/api';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
-
 const Profile: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const history = useHistory();
-  const { user: globalUser, logout, updateUser } = useContext(AuthContext);
-
-  const fetchUserData = async () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        apiService.setToken(token);
-        const userData = await apiService.getProfile();
-        setUser(userData.user);
-        updateUser(userData.user); // Update global user with fresh data
-      } catch (error) {
-        // Token may be expired, but keep cached data to prevent sign out
-        console.log('Failed to fetch profile, using cached data');
-      }
-    }
-    setLoading(false);
-  };
+  const { user, logout, updateUser, isLoggedIn } = useContext(AuthContext);
 
   useEffect(() => {
-    if (globalUser) {
-      setUser(globalUser);
+    // Check auth state immediately
+    if (user && isLoggedIn) {
+      setLoading(false);
+    } else if (!user && !isLoggedIn) {
+      // User is not logged in, show sign-in prompt
       setLoading(false);
     } else {
-      // User is logged out, clear local state and check for token
-      setUser(null);
-      fetchUserData();
-    }
-  }, [globalUser]);
+      // Auth state is still loading, wait a bit
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 500);
 
+      return () => clearTimeout(timer);
+    }
+  }, [user, isLoggedIn]);
+
+  // Refresh user data when the component becomes active
   useIonViewDidEnter(() => {
-    // Always refresh user data when returning to profile page
-    fetchUserData();
+    const refreshUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (token && isLoggedIn) {
+        try {
+          apiService.setToken(token);
+          const userData = await apiService.getProfile();
+          // Update the user context with fresh data
+          if (userData.user) {
+            updateUser(userData.user);
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+        }
+      }
+    };
+
+    refreshUserData();
   });
 
   if (loading) {
     return (
       <IonPage>
         <IonHeader translucent>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonToolbar className="toolbar-ios">
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/tab1" />
-            </IonButtons>
+             
             <IonTitle className="title-ios">Profile</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -63,14 +109,56 @@ const Profile: React.FC = () => {
     );
   }
 
-  if (!user) {
+  if (!user || !isLoggedIn) {
     return (
       <IonPage>
         <IonHeader translucent>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonToolbar className="toolbar-ios">
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/tab1" />
-            </IonButtons>
+             
             <IonTitle className="title-ios">Profile</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -102,10 +190,52 @@ const Profile: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
+           
           <IonTitle className="title-ios">Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -126,8 +256,9 @@ const Profile: React.FC = () => {
               border: '3px solid var(--ion-color-primary)'
             }}>
               <img
-                src={user.profilePicture ? `http://localhost:5000${user.profilePicture}` : 'https://i.pravatar.cc/150?img=12'}
+                src={user.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : 'https://i.pravatar.cc/150?img=12'}
                 alt="User Avatar"
+                style={{ background: 'black' }}
               />
             </IonAvatar>
 
@@ -225,121 +356,6 @@ const Profile: React.FC = () => {
             </IonButton>
           </div>
 
-          {/* Quick Actions */}
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{
-              margin: '0 0 16px 0',
-              fontSize: '1.4em',
-              fontWeight: '600',
-              color: 'var(--ion-text-color)'
-            }}>
-              Quick Actions
-            </h2>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '5px',
-              alignItems: 'center',
-              padding: '0px'
-            }}>
-              <div
-                onClick={() => history.push('/settings')}
-                style={{
-                  width: '75px',
-                  height: '75px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                  transition: 'all 0.2s ease',
-                  margin: '0 auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <IonIcon icon={settings} style={{ fontSize: '22px', color: 'white', marginBottom: '4px' }} />
-                <span style={{ fontSize: '0.65em', textAlign: 'center', lineHeight: '1.1', fontWeight: '600', color: 'white' }}>Settings</span>
-              </div>
-
-              <div
-                onClick={() => history.push('/favorites')}
-                style={{
-                  width: '75px',
-                  height: '75px',
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
-                  transition: 'all 0.2s ease',
-                  margin: '0 auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <IonIcon icon={heart} style={{ fontSize: '22px', color: 'white', marginBottom: '4px' }} />
-                <span style={{ fontSize: '0.65em', textAlign: 'center', lineHeight: '1.1', fontWeight: '600', color: 'white' }}>Favorites</span>
-              </div>
-
-              <div
-                onClick={() => history.push('/reading-history')}
-                style={{
-                  width: '75px',
-                  height: '75px',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                  transition: 'all 0.2s ease',
-                  margin: '0 auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <IonIcon icon={book} style={{ fontSize: '22px', color: 'white', marginBottom: '4px' }} />
-                <span style={{ fontSize: '0.65em', textAlign: 'center', lineHeight: '1.1', fontWeight: '600', color: 'white' }}>Reading</span>
-              </div>
-
-              <div
-                onClick={() => history.push('/watch-history')}
-                style={{
-                  width: '75px',
-                  height: '75px',
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-                  transition: 'all 0.2s ease',
-                  margin: '0 auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <IonIcon icon={play} style={{ fontSize: '22px', color: 'white', marginBottom: '4px' }} />
-                <span style={{ fontSize: '0.65em', textAlign: 'center', lineHeight: '1.1', fontWeight: '600', color: 'white' }}>Watch</span>
-              </div>
-            </div>
-          </div>
 
           {/* Sign Out */}
           <IonButton

@@ -7,7 +7,7 @@ http://ionicframework.com/docs/theming/ */
   --secondary-color: #8b5cf6;
   --accent-color: #f59e0b;
   --background-light: #f8fafc;
-  --background-dark: #1e293b;
+  --background-dark: rgb(45,45,45);
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --border-radius: 12px;

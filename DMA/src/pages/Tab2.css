@@ -27,8 +27,8 @@
   text-overflow: ellipsis;
   line-height: 1.3;
   margin: 0 0 6px 0;
-  font-size: 0.85em;
-  font-weight: 600;
+  font-size: 0.65em;
+  font-weight: 400;
 }
 
 /* Player top area - ensure it doesn't overlap with header */
@@ -48,14 +48,142 @@
   }
 }
 
+/* Sermon thumbnail styling - 16:9 aspect ratio */
+.sermon-thumbnail {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.sermon-thumbnail-container {
+  width: 160px; /* 16:9 aspect ratio for 90px height: (16/9)*90 ≈ 160px */
+  height: 90px;
+  flex-shrink: 0;
+}
+
+/* Video Details Section */
+.video-details-section {
+  padding: 16px;
+  background: var(--ion-background-color);
+}
+
+.video-title-large {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+  color: var(--ion-text-color);
+}
+
+.channel-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.channel-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.channel-avatar {
+  font-size: 40px;
+  color: var(--ion-color-primary);
+  margin-right: 12px;
+}
+
+.channel-name {
+  font-size: 0.8em;
+  font-weight: 600;
+  margin: 0 0 2px 0;
+  color: var(--ion-text-color);
+}
+
+.channel-stats {
+  font-size: 0.75em;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+.channel-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  overflow-x: auto;
+}
+
+.action-button {
+  border-radius: 18px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.description-section {
+  background: var(--ion-item-background);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.description-text {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ion-text-color);
+  font-size: 0.9em;
+}
+
+.comments-section {
+  border-top: 1px solid var(--ion-color-light-shade);
+  padding-top: 16px;
+}
+
+.comments-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--ion-text-color);
+}
+
 /* Responsive Design */
 @media (max-width: 576px) {
   .video-title {
-    font-size: 0.75em;
+    font-size: 0.55em;
     line-height: 1.2;
   }
 
   .player-top {
     margin-top: 56px; /* Adjust for smaller header on mobile */
+  }
+
+  .sermon-thumbnail-container {
+    width: 140px; /* Even larger on mobile */
+    height: 78px; /* Maintain 16:9 ratio */
+  }
+
+  .video-title-large {
+    font-size: 1em;
+  }
+
+  .action-buttons-row {
+    gap: 4px;
+  }
+
+  .action-button {
+    font-size: 0.8em;
+    min-height: 32px;
   }
 }

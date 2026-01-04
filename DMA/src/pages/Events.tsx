@@ -1,40 +1,43 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonButtons, IonBackButton, IonIcon, IonRouterLink, IonButton } from '@ionic/react';
-import { calendar, location, time, people } from 'ionicons/icons';
+import React, { useState, useEffect } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import { calendar, location, time, people, arrowBack } from 'ionicons/icons';
+import { apiService } from '../services/api';
 import './Events.css';
 
 const Events: React.FC = () => {
-  const events = [
-    {
-      id: 1,
-      title: 'Transformation Conference',
-      date: 'Nov 17-23, 2025',
-      time: '9:00 AM - 4:00 PM',
-      location: 'Kyazanga',
-      description: 'A week of Transformation, and knowing who you were born to be in God\'s Kingdom',
-      type: 'Conference',
-      image: 'event.jpg'
-    },
-    {
-      id: 2,
-      title: '20th Anniversary Celebration',
-      date: 'Dec 1-4, 2025',
-      time: '9:00 AM - 6:00 PM',
-      location: 'Zana',
-      description: 'Join us as we celebrate 20 years of existence as Dove Church in Uganda',
-      type: 'Celebration',
-      image: '20th.jpg'
-    },
-    {
-      id: 3,
-      title: 'Sunday Special Service',
-      date: 'Nov 2025',
-      time: '4:00 PM - 7:00 PM',
-      location: 'Zana',
-      description: 'Divine Healing & Restoration',
-      type: 'Service',
-      image: 'Sunday Stream.jpg'
+  const history = useHistory();
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUpcomingEvents();
+  }, []);
+
+  const loadUpcomingEvents = async () => {
+    try {
+      const data = await apiService.getEvents({ published: 'true', limit: 50 });
+      setUpcomingEvents(data.events || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setUpcomingEvents([]);
     }
-  ];
+    setLoading(false);
+  };
+
+  const handleRefresh = async (event: CustomEvent) => {
+    await loadUpcomingEvents();
+    event.detail.complete();
+  };
+
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   const weeklyPrograms = [
     { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '5:00PM - 7:00PM', color: '#ff6b6b' },
@@ -50,14 +53,61 @@ const Events: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/tab1" />
-          </IonButtons>
+          
           <IonTitle className="title-ios">Events</IonTitle>
         </IonToolbar>
       </IonHeader>
 
+      {/* Back Button */}
+      <div
+        onClick={() => history.goBack()}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--ion-safe-area-top) - -5px)',
+          left: 20,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseDown={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(0.8)';
+        }}
+        onMouseUp={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          setTimeout(() => {
+            target.style.transform = 'scale(1)';
+          }, 200);
+        }}
+        onMouseLeave={(e) => {
+          const target = e.currentTarget as HTMLElement;
+          target.style.transform = 'scale(1)';
+        }}
+      >
+        <IonIcon
+          icon={arrowBack}
+          style={{
+            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            fontSize: '20px',
+          }}
+        />
+      </div>
+
       <IonContent fullscreen className="content-ios">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
         <div style={{
           padding: '20px',
           maxWidth: '400px',
@@ -104,64 +154,86 @@ const Events: React.FC = () => {
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {events.map((event) => (
-                <div key={event.id} style={{
+              {upcomingEvents.length > 0 ? upcomingEvents.map((event: any) => (
+                <div key={event._id} style={{
                   backgroundColor: 'rgba(0,0,0,0.05)',
                   borderRadius: '12px',
                   border: '1px solid rgba(0,0,0,0.1)',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onClick={() => history.push(`/event/${event._id}`)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}>
-                  <div style={{
-                    height: '120px',
-                    backgroundImage: `url(/public/${event.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }} />
-                  <div style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <IonIcon icon={calendar} style={{ color: 'var(--ion-color-primary)', fontSize: '1.2em' }} />
-                      <span style={{
+                    {event.imageUrl && (
+                      <div style={{
+                        height: '120px',
+                        backgroundImage: `url(${event.imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }} />
+                    )}
+                    <div style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <IonIcon icon={calendar} style={{ color: 'var(--ion-color-primary)', fontSize: '1.2em' }} />
+                        <span style={{
+                          fontWeight: '600',
+                          backgroundColor: 'var(--ion-color-primary)',
+                          color: 'white',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '0.8em'
+                        }}>
+                          {event.category || 'Event'}
+                        </span>
+                      </div>
+                      <h3 style={{
+                        margin: '0 0 8px 0',
+                        fontSize: '1.1em',
                         fontWeight: '600',
-                        backgroundColor: 'var(--ion-color-primary)',
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        fontSize: '0.8em'
+                        color: 'var(--ion-text-color)'
                       }}>
-                        {event.type}
-                      </span>
+                        {event.title}
+                      </h3>
+                      <p style={{
+                        margin: '0 0 8px 0',
+                        color: 'var(--ion-color-medium)',
+                        fontSize: '0.9em'
+                      }}>
+                        {formatEventDate(event.date)} • {event.location}
+                      </p>
+                      <p style={{
+                        margin: '0',
+                        color: 'var(--ion-color-medium)',
+                        fontSize: '0.9em',
+                        lineHeight: '1.4'
+                      }}>
+                        {event.description}
+                      </p>
                     </div>
-                    <h3 style={{
-                      margin: '0 0 8px 0',
-                      fontSize: '1.1em',
-                      fontWeight: '600',
-                      color: 'var(--ion-text-color)'
-                    }}>
-                      {event.title}
-                    </h3>
-                    <p style={{
-                      margin: '0 0 8px 0',
-                      color: 'var(--ion-color-medium)',
-                      fontSize: '0.9em'
-                    }}>
-                      {event.date} • {event.location}
-                    </p>
-                    <p style={{
-                      margin: '0',
-                      color: 'var(--ion-color-medium)',
-                      fontSize: '0.9em',
-                      lineHeight: '1.4'
-                    }}>
-                      {event.description}
-                    </p>
-                  </div>
                 </div>
-              ))}
+              )) : (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px 20px',
+                  color: 'var(--ion-color-medium)'
+                }}>
+                  <IonIcon icon={calendar} style={{ fontSize: '3em', marginBottom: '16px', opacity: 0.5 }} />
+                  <p>No upcoming events at this time.</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Weekly Programs */}
-          <div style={{ marginBottom: '32px' }}>
+          <div id="weekly-programs" style={{ marginBottom: '32px' }}>
             <h2 style={{
               margin: '0 0 16px 0',
               fontSize: '1.4em',

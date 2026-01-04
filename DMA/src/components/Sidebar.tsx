@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { IonIcon, IonButton } from "@ionic/react";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import {
   homeOutline,
   playCircleOutline,
@@ -17,6 +17,8 @@ import {
   logOutOutline,
 } from "ionicons/icons";
 import { AuthContext } from "../App";
+import { BACKEND_BASE_URL } from "../services/api";
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,7 +28,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
   const history = useHistory();
+  const location = useLocation();
   const { logout } = useContext(AuthContext);
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   const navigateTo = (path: string) => {
     history.push(path);
@@ -162,6 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           height: 58px;
           border-radius: 50%;
           border: 2px solid var(--ion-color-primary);
+          background: black;
         }
 
         .profile-info {
@@ -270,7 +278,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           {user ? (
             <>
               <img
-                src={user.profilePicture ? `http://localhost:5000${user.profilePicture}` : 'https://i.pravatar.cc/150?img=12'}
+                src={user.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : 'https://i.pravatar.cc/150?img=12'}
                 alt="profile"
                 className="profile-avatar"
               />
@@ -296,50 +304,86 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
 
         {/* Navigation List */}
         <div className="nav-list">
-          <div className="nav-item" onClick={() => navigateTo('/profile')}>
-            <IonIcon icon={personCircleOutline} />
-            <span>Profile</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/profile')}
+            style={isActive('/profile') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={personCircleOutline} style={isActive('/profile') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/profile') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Profile</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/downloads')}>
-            <IonIcon icon={cloudDownloadOutline} />
-            <span>Downloads</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/saved')}
+            style={isActive('/saved') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={cloudDownloadOutline} style={isActive('/saved') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/saved') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Saved</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/events')}>
-            <IonIcon icon={calendarOutline} />
-            <span>Events</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/events')}
+            style={isActive('/events') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={calendarOutline} style={isActive('/events') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/events') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Events</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/ministries')}>
-            <IonIcon icon={peopleOutline} />
-            <span>Ministries</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/ministries')}
+            style={isActive('/ministries') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={peopleOutline} style={isActive('/ministries') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/ministries') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Ministries</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/prayer')}>
-            <IonIcon icon={chatbubbleEllipsesOutline} />
-            <span>Prayer Request</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/prayer')}
+            style={isActive('/prayer') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={chatbubbleEllipsesOutline} style={isActive('/prayer') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/prayer') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Prayer Request</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/giving')}>
-            <IonIcon icon={cardOutline} />
-            <span>Giving</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/giving')}
+            style={isActive('/giving') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={cardOutline} style={isActive('/giving') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/giving') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Giving</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/tab5')}>
-            <IonIcon icon={informationCircleOutline} />
-            <span>About & Contact</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/tab5')}
+            style={isActive('/tab5') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={informationCircleOutline} style={isActive('/tab5') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/tab5') ? { color: '#3b82f6', fontWeight: '600' } : {}}>About & Contact</span>
           </div>
 
-          <div className="nav-item" onClick={() => navigateTo('/settings')}>
-            <IonIcon icon={settingsOutline} />
-            <span>Settings</span>
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/settings')}
+            style={isActive('/settings') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={settingsOutline} style={isActive('/settings') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/settings') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Settings</span>
           </div>
 
           {user && user.role === 'admin' && (
-            <div className="nav-item" onClick={() => navigateTo('/admin')} style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6' }}>
-              <IonIcon icon={settingsOutline} style={{ color: '#3b82f6' }} />
-              <span style={{ color: '#3b82f6', fontWeight: '600' }}>Admin Dashboard</span>
+            <div
+              className="nav-item"
+              onClick={() => navigateTo('/admin')}
+              style={isActive('/admin') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+            >
+              <IonIcon icon={settingsOutline} style={isActive('/admin') ? { color: '#3b82f6' } : {}} />
+              <span style={isActive('/admin') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Admin Dashboard</span>
             </div>
           )}
 

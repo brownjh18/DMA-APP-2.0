@@ -5,9 +5,8 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButtons,
-  IonBackButton,
   IonButton,
+  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -24,9 +23,11 @@ import {
   mail,
   lockClosed,
   call,
-  people
+  people,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import apiService from '../services/api';
 
 const AddUser: React.FC = () => {
   const history = useHistory();
@@ -58,9 +59,15 @@ const AddUser: React.FC = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await apiService.adminRegister({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone || undefined,
+        role: formData.role
+      });
+
       setAlertMessage('User added successfully!');
       setShowAlert(true);
 
@@ -68,16 +75,63 @@ const AddUser: React.FC = () => {
       setTimeout(() => {
         history.push('/admin/users');
       }, 1500);
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      setAlertMessage('Failed to create user: ' + (error.message || 'Unknown error'));
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/users" />
-          </IonButtons>
           <IonTitle className="title-ios">Add User</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
@@ -163,7 +217,6 @@ const AddUser: React.FC = () => {
                 onIonChange={(e) => handleInputChange('role', e.detail.value)}
               >
                 <IonSelectOption value="user">User</IonSelectOption>
-                <IonSelectOption value="moderator">Moderator</IonSelectOption>
                 <IonSelectOption value="admin">Admin</IonSelectOption>
               </IonSelect>
             </IonItem>

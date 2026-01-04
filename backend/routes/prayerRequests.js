@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const PrayerRequest = require('../models/PrayerRequest');
-const { authenticateToken, requireModerator } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireModerator } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -32,8 +32,8 @@ router.post('/', [
   }
 });
 
-// Get prayer requests (moderator+)
-router.get('/', authenticateToken, requireModerator, async (req, res) => {
+// Get prayer requests (admin only)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -83,8 +83,8 @@ router.get('/', authenticateToken, requireModerator, async (req, res) => {
   }
 });
 
-// Get single prayer request (moderator+)
-router.get('/:id', authenticateToken, requireModerator, async (req, res) => {
+// Get single prayer request (admin only)
+router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const prayerRequest = await PrayerRequest.findById(req.params.id)
       .populate('assignedTo', 'name')
@@ -101,10 +101,10 @@ router.get('/:id', authenticateToken, requireModerator, async (req, res) => {
   }
 });
 
-// Update prayer request (moderator+)
+// Update prayer request (admin only)
 router.put('/:id', [
   authenticateToken,
-  requireModerator,
+  requireAdmin,
   body('isAnswered').optional().isBoolean(),
   body('response').optional().trim(),
   body('assignedTo').optional().isMongoId().withMessage('Invalid user ID'),
@@ -164,8 +164,8 @@ router.delete('/:id', authenticateToken, requireModerator, async (req, res) => {
   }
 });
 
-// Get prayer request statistics (moderator+)
-router.get('/admin/stats', authenticateToken, requireModerator, async (req, res) => {
+// Get prayer request statistics (admin only)
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const total = await PrayerRequest.countDocuments();
     const answered = await PrayerRequest.countDocuments({ isAnswered: true });

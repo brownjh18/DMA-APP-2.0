@@ -1,11 +1,140 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Sermon = require('../models/Sermon');
-const { authenticateToken, requireModerator } = require('../middleware/auth');
+const User = require('../models/User');
+const { authenticateToken, requireAdmin, requireModerator } = require('../middleware/auth');
+const notificationService = require('../services/notificationService');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+
+// Set ffmpeg and ffprobe paths
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 const router = express.Router();
+
+// Function to get video duration using ffmpeg
+const getVideoDuration = (videoPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .ffprobe((err, data) => {
+        if (err) {
+          console.error('Error getting video metadata:', err);
+          reject(err);
+          return;
+        }
+
+        // Get duration in seconds and format as mm:ss or hh:mm:ss
+        const totalSeconds = Math.floor(data.format.duration || 0);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        let duration = '';
+        if (hours > 0) {
+          duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        resolve(duration);
+      });
+  });
+};
+
+// Function to generate thumbnail from video
+const generateThumbnail = (videoPath) => {
+  return new Promise((resolve, reject) => {
+    const thumbnailDir = path.join(__dirname, '../uploads/videos/thumbnails');
+
+    // Ensure thumbnails directory exists
+    if (!fs.existsSync(thumbnailDir)) {
+      fs.mkdirSync(thumbnailDir, { recursive: true });
+      console.log('Created thumbnails directory:', thumbnailDir);
+    }
+
+    const thumbnailPath = path.join(thumbnailDir, `thumbnail-${Date.now()}.png`);
+    console.log('Generating thumbnail to:', thumbnailPath);
+
+    // First get video duration to determine safe seek time
+    getVideoDuration(videoPath).then((duration) => {
+      // Parse duration (format: "mm:ss" or "h:mm:ss")
+      const durationParts = duration.split(':').map(Number);
+      let totalSeconds = 0;
+
+      if (durationParts.length === 3) {
+        // hh:mm:ss format
+        totalSeconds = durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2];
+      } else {
+        // mm:ss format
+        totalSeconds = durationParts[0] * 60 + durationParts[1];
+      }
+
+      // Seek to 10% of video duration, but at least 1 second and at most 30 seconds
+      const seekTime = Math.min(Math.max(Math.floor(totalSeconds * 0.1), 1), 30);
+      const seekString = `00:00:${seekTime.toString().padStart(2, '0')}`;
+
+      console.log(`Video duration: ${duration} (${totalSeconds}s), seeking to: ${seekString}`);
+
+      ffmpeg(videoPath)
+        .seekInput(seekString) // Seek to safe position
+        .frames(1) // Extract 1 frame
+        .size('200x200') // Square thumbnail for better cover behavior
+        .output(thumbnailPath)
+        .on('start', (commandLine) => {
+          console.log('FFmpeg command: ' + commandLine);
+        })
+        .on('progress', (progress) => {
+          console.log('FFmpeg progress: ' + progress.percent + '% done');
+        })
+        .on('end', () => {
+          console.log('Thumbnail generated successfully:', thumbnailPath);
+          if (fs.existsSync(thumbnailPath)) {
+            console.log('Thumbnail file exists on disk');
+            resolve(`/uploads/videos/thumbnails/${path.basename(thumbnailPath)}`);
+          } else {
+            console.log('Thumbnail file does NOT exist on disk');
+            reject(new Error('Thumbnail file was not created'));
+          }
+        })
+        .on('error', (err) => {
+          console.error('Error generating thumbnail:', err);
+          reject(err);
+        })
+        .run();
+    }).catch((durationError) => {
+      console.warn('Failed to get video duration for thumbnail, using default seek:', durationError.message);
+      // Fallback: try to seek to 1 second if duration check fails
+      ffmpeg(videoPath)
+        .seekInput('00:00:01') // Seek to 1 second as fallback
+        .frames(1) // Extract 1 frame
+        .size('200x200') // Square thumbnail for better cover behavior
+        .output(thumbnailPath)
+        .on('start', (commandLine) => {
+          console.log('FFmpeg fallback command: ' + commandLine);
+        })
+        .on('end', () => {
+          console.log('Thumbnail generated successfully with fallback:', thumbnailPath);
+          if (fs.existsSync(thumbnailPath)) {
+            console.log('Thumbnail file exists on disk');
+            resolve(`/uploads/videos/thumbnails/${path.basename(thumbnailPath)}`);
+          } else {
+            console.log('Thumbnail file does NOT exist on disk');
+            reject(new Error('Thumbnail file was not created'));
+          }
+        })
+        .on('error', (fallbackErr) => {
+          console.error('Error generating thumbnail with fallback:', fallbackErr);
+          reject(fallbackErr);
+        })
+        .run();
+    });
+  });
+};
 
 // Multer configuration for video uploads
 const videoStorage = multer.diskStorage({
@@ -32,7 +161,7 @@ const videoUpload = multer({
   }
 });
 
-// Get all sermons (public)
+// Get all sermons (public, but allow unpublished for admin)
 router.get('/', async (req, res) => {
   try {
     const {
@@ -45,7 +174,26 @@ router.get('/', async (req, res) => {
       published = true
     } = req.query;
 
-    const query = { isPublished: published };
+    // Include documents without type field (backward compatibility) or with type: 'sermon', exclude podcasts
+    const typeFilter = {
+      $and: [
+        { $or: [{ type: { $exists: false } }, { type: 'sermon' }] },
+        { type: { $ne: 'podcast' } }
+      ]
+    };
+
+    // Handle published filter
+    let query;
+    if (published === 'false') {
+      // Show only unpublished sermons
+      query = { ...typeFilter, isPublished: false };
+    } else if (published === 'all') {
+      // Show all sermons (published and unpublished)
+      query = typeFilter;
+    } else {
+      // Default: show only published sermons
+      query = { ...typeFilter, isPublished: true };
+    }
 
     // Add search filters
     if (search) {
@@ -61,6 +209,8 @@ router.get('/', async (req, res) => {
       query.isFeatured = true;
     }
 
+    console.log('Sermons query:', JSON.stringify(query, null, 2));
+
     const sermons = await Sermon.find(query)
       .populate('createdBy', 'name')
       .sort({ date: -1, createdAt: -1 })
@@ -68,6 +218,8 @@ router.get('/', async (req, res) => {
       .skip((page - 1) * limit);
 
     const total = await Sermon.countDocuments(query);
+
+    console.log(`Found ${sermons.length} sermons (total: ${total})`);
 
     res.json({
       sermons,
@@ -89,7 +241,11 @@ router.get('/featured', async (req, res) => {
   try {
     const sermons = await Sermon.find({
       isPublished: true,
-      isFeatured: true
+      isFeatured: true,
+      $and: [
+        { $or: [{ type: { $exists: false } }, { type: 'sermon' }] },
+        { type: { $ne: 'podcast' } }
+      ]
     })
       .populate('createdBy', 'name')
       .sort({ date: -1 })
@@ -124,132 +280,382 @@ router.get('/:id', async (req, res) => {
 });
 
 // Upload video for sermon
-router.post('/upload-video', authenticateToken, requireModerator, videoUpload.single('video'), async (req, res) => {
+router.post('/upload-video', authenticateToken, videoUpload.single('video'), async (req, res) => {
+  console.log('Video upload route called');
   try {
     if (!req.file) {
+      console.log('No video file provided');
       return res.status(400).json({ error: 'No video file provided' });
     }
 
+    console.log('Video file received:', req.file.filename);
     const videoUrl = `/uploads/videos/${req.file.filename}`;
+    const videoPath = path.join(__dirname, '../uploads/videos', req.file.filename);
+    console.log('Video path:', videoPath);
 
+    // Process video to get duration and generate thumbnail
+    let duration = '00:00';
+    let thumbnailUrl = '';
+
+    try {
+      console.log('Getting video duration...');
+      // Get video duration (optional - don't fail if it doesn't work)
+      duration = await getVideoDuration(videoPath);
+      console.log('Video duration:', duration);
+    } catch (durationError) {
+      console.warn('Failed to get video duration, continuing without it:', durationError.message);
+      // Continue with default duration
+    }
+
+    try {
+      console.log('Generating thumbnail...');
+      // Generate thumbnail
+      thumbnailUrl = await generateThumbnail(videoPath);
+      console.log('Thumbnail generated:', thumbnailUrl);
+    } catch (thumbnailError) {
+      console.warn('Failed to generate thumbnail, continuing without it:', thumbnailError.message);
+    }
+
+    console.log('Video upload completed successfully');
     res.json({
       message: 'Video uploaded successfully',
       videoUrl: videoUrl,
+      thumbnailUrl: thumbnailUrl,
+      duration: duration,
       filename: req.file.filename
     });
   } catch (error) {
     console.error('Video upload error:', error);
-    res.status(500).json({ error: 'Server error during video upload' });
+    
+    // Clean up uploaded file if there was an error after upload
+    if (req.file) {
+      const filePath = path.join(__dirname, '../uploads/videos', req.file.filename);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('Cleaned up uploaded file after error:', filePath);
+        }
+      } catch (cleanupError) {
+        console.error('Error cleaning up file:', cleanupError);
+      }
+    }
+    
+    res.status(500).json({ error: 'Server error during video upload', details: error.message });
   }
 });
 
-// Create new sermon (moderator+)
-router.post('/', [
-  authenticateToken,
-  requireModerator,
+// Create new sermon (admin only)
+router.post('/', authenticateToken, requireAdmin, [
   body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
   body('speaker').trim().isLength({ min: 1 }).withMessage('Speaker is required'),
-  body('date').optional().isISO8601().withMessage('Valid date required'),
   body('description').optional().trim(),
   body('scripture').optional().trim(),
-  body('videoUrl').optional().isURL().withMessage('Valid video URL required'),
-  body('audioUrl').optional().isURL().withMessage('Valid audio URL required'),
-  body('youtubeId').optional().trim(),
-  body('thumbnailUrl').optional().isURL().withMessage('Valid thumbnail URL required'),
+  body('date').optional().isISO8601().withMessage('Valid date required'),
   body('duration').optional().trim(),
+  body('videoUrl').optional().trim(),
+  body('audioUrl').optional().trim(),
+  body('youtubeId').optional().trim(),
+  body('thumbnailUrl').optional().trim(),
+  body('tags').optional().isArray().withMessage('Tags must be an array'),
   body('series').optional().trim(),
-  body('tags').optional().isArray(),
-  body('isPublished').optional().isBoolean(),
-  body('isFeatured').optional().isBoolean()
+  body('isPublished').optional().isBoolean().withMessage('isPublished must be a boolean'),
+  body('isFeatured').optional().isBoolean().withMessage('isFeatured must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Check if the user ID is a valid ObjectId
+    let createdBy = null;
+    if (req.user && req.user.id) {
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(req.user.id)) {
+        createdBy = req.user.id;
+      } else {
+        console.warn('Invalid user ID format, setting createdBy to null:', req.user.id);
+      }
     }
 
     const sermonData = {
       ...req.body,
-      createdBy: req.user.id
+      type: 'sermon',
+      createdBy: createdBy
     };
 
-    const sermon = new Sermon(sermonData);
-    await sermon.save();
+    console.log('Creating sermon with data:', sermonData);
 
-    await sermon.populate('createdBy', 'name');
+    try {
+      const sermon = new Sermon(sermonData);
+      await sermon.save();
 
-    res.status(201).json({
-      message: 'Sermon created successfully',
-      sermon
-    });
+      await sermon.populate('createdBy', 'name');
+
+      console.log('Sermon created successfully:', sermon._id);
+
+      // Create notifications for all users about the new sermon
+      try {
+        await notificationService.createContentNotification(
+          'sermon',
+          sermon._id,
+          `New Sermon: ${sermon.title}`,
+          `A new sermon "${sermon.title}" by ${sermon.speaker} is now available.`,
+          {
+            url: `/tab2`, // Navigate to sermons tab
+            speaker: sermon.speaker,
+            date: sermon.date
+          }
+        );
+      } catch (notificationError) {
+        console.error('Error creating sermon notification:', notificationError);
+        // Don't fail the request if notification creation fails
+      }
+
+      res.status(201).json({
+        message: 'Sermon created successfully',
+        sermon
+      });
+    } catch (saveError) {
+      console.error('Sermon save error:', saveError);
+      if (saveError.name === 'ValidationError') {
+        return res.status(400).json({ error: 'Validation error', details: saveError.message });
+      }
+      if (saveError.code === 11000) {
+        return res.status(400).json({ error: 'Duplicate key error', details: saveError.message });
+      }
+      res.status(500).json({ error: 'Server error during save', details: saveError.message });
+    }
   } catch (error) {
     console.error('Sermon creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
-// Update sermon (moderator+)
-router.put('/:id', [
-  authenticateToken,
-  requireModerator,
+// Update sermon (admin only)
+router.put('/:id', authenticateToken, requireAdmin, [
   body('title').optional().trim().isLength({ min: 1 }).withMessage('Title cannot be empty'),
   body('speaker').optional().trim().isLength({ min: 1 }).withMessage('Speaker cannot be empty'),
+  body('description').optional().trim(),
+  body('scripture').optional().trim(),
   body('date').optional().isISO8601().withMessage('Valid date required'),
-  body('videoUrl').optional().isURL().withMessage('Valid video URL required'),
-  body('audioUrl').optional().isURL().withMessage('Valid audio URL required'),
-  body('thumbnailUrl').optional().isURL().withMessage('Valid thumbnail URL required'),
-  body('isPublished').optional().isBoolean(),
-  body('isFeatured').optional().isBoolean()
+  body('duration').optional().trim(),
+  body('videoUrl').optional().trim(),
+  body('audioUrl').optional().trim(),
+  body('youtubeId').optional().trim(),
+  body('thumbnailUrl').optional().trim(),
+  body('tags').optional().isArray().withMessage('Tags must be an array'),
+  body('series').optional().trim(),
+  body('isPublished').optional().isBoolean().withMessage('isPublished must be a boolean'),
+  body('isFeatured').optional().isBoolean().withMessage('isFeatured must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const sermon = await Sermon.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    ).populate('createdBy', 'name');
-
-    if (!sermon) {
+    const oldSermon = await Sermon.findById(req.params.id);
+    if (!oldSermon) {
       return res.status(404).json({ error: 'Sermon not found' });
     }
 
-    res.json({
-      message: 'Sermon updated successfully',
-      sermon
-    });
+    console.log('Updating sermon with data:', req.body);
+
+    try {
+      const sermon = await Sermon.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+      ).populate('createdBy', 'name');
+
+      if (!sermon) {
+        return res.status(404).json({ error: 'Sermon not found' });
+      }
+
+      console.log('Sermon updated successfully:', sermon._id);
+
+      res.json({
+        message: 'Sermon updated successfully',
+        sermon
+      });
+    } catch (updateError) {
+      console.error('Sermon update error:', updateError);
+      if (updateError.name === 'ValidationError') {
+        return res.status(400).json({ error: 'Validation error', details: updateError.message });
+      }
+      if (updateError.code === 11000) {
+        return res.status(400).json({ error: 'Duplicate key error', details: updateError.message });
+      }
+      res.status(500).json({ error: 'Server error during update', details: updateError.message });
+    }
   } catch (error) {
     console.error('Sermon update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
-// Delete sermon (moderator+)
-router.delete('/:id', authenticateToken, requireModerator, async (req, res) => {
+// Delete sermon (admin only)
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    console.log('Attempting to delete sermon:', req.params.id);
+    
     const sermon = await Sermon.findByIdAndDelete(req.params.id);
 
     if (!sermon) {
+      console.log('Sermon not found for deletion:', req.params.id);
       return res.status(404).json({ error: 'Sermon not found' });
     }
+
+    console.log('Sermon deleted successfully:', req.params.id);
 
     res.json({ message: 'Sermon deleted successfully' });
   } catch (error) {
     console.error('Sermon deletion error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// Toggle publish/draft status (moderator+)
+router.patch('/:id/publish', authenticateToken, requireModerator, async (req, res) => {
+  try {
+    const { isPublished } = req.body;
+    
+    console.log(`Toggle publish request for sermon ${req.params.id} to ${isPublished}`);
+    
+    if (typeof isPublished !== 'boolean') {
+      return res.status(400).json({ error: 'isPublished must be a boolean value' });
+    }
+
+    const sermon = await Sermon.findByIdAndUpdate(
+      req.params.id,
+      { isPublished },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name');
+
+    if (!sermon) {
+      console.log(`Sermon not found for publish toggle: ${req.params.id}`);
+      return res.status(404).json({ error: 'Sermon not found' });
+    }
+
+    console.log(`Sermon ${req.params.id} publish status updated to:`, isPublished);
+
+    res.json({
+      message: `Sermon ${isPublished ? 'published' : 'drafted'} successfully`,
+      sermon
+    });
+  } catch (error) {
+    console.error('Sermon publish toggle error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+
+// Save/unsave a sermon
+router.post('/:id/save', authenticateToken, async (req, res) => {
+  try {
+    console.log('Save/unsave sermon request for:', req.params.id);
+    
+    const sermon = await Sermon.findById(req.params.id);
+
+    if (!sermon) {
+      return res.status(404).json({ error: 'Sermon not found' });
+    }
+
+    // Handle demo users - they can't actually save sermons to database
+    if (req.user.id.startsWith('demo-')) {
+      return res.json({
+        message: 'Demo user - sermon save/unsave not persisted',
+        saved: true // Always return true for demo users
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user already saved this sermon
+    const alreadySaved = user.savedSermons.includes(req.params.id);
+
+    if (alreadySaved) {
+      // Unsave: remove from savedSermons
+      user.savedSermons = user.savedSermons.filter(id => id.toString() !== req.params.id);
+    } else {
+      // Save: add to savedSermons
+      user.savedSermons.push(req.params.id);
+    }
+
+    await user.save();
+
+    res.json({
+      message: alreadySaved ? 'Sermon unsaved' : 'Sermon saved',
+      saved: !alreadySaved
+    });
+  } catch (error) {
+    console.error('Save sermon error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Get sermon statistics (admin)
-router.get('/admin/stats', authenticateToken, requireModerator, async (req, res) => {
+// Subscribe/unsubscribe to a channel/ministry
+router.post('/subscribe/:channel', authenticateToken, async (req, res) => {
   try {
-    const totalSermons = await Sermon.countDocuments();
-    const publishedSermons = await Sermon.countDocuments({ isPublished: true });
-    const featuredSermons = await Sermon.countDocuments({ isFeatured: true });
+    // Handle demo users - they can't actually subscribe in database
+    if (req.user.id.startsWith('demo-')) {
+      return res.json({
+        message: 'Demo user - subscription not persisted',
+        subscribed: true // Always return true for demo users
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const channel = req.params.channel;
+    const alreadySubscribed = user.subscriptions.includes(channel);
+
+    if (alreadySubscribed) {
+      // Unsubscribe: remove from subscriptions
+      user.subscriptions = user.subscriptions.filter(sub => sub !== channel);
+    } else {
+      // Subscribe: add to subscriptions
+      user.subscriptions.push(channel);
+    }
+
+    await user.save();
+
+    res.json({
+      message: alreadySubscribed ? 'Unsubscribed successfully' : 'Subscribed successfully',
+      subscribed: !alreadySubscribed
+    });
+  } catch (error) {
+    console.error('Subscribe error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// Get sermon statistics (admin only)
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    // Use the same filtering logic as the main sermons query to exclude podcasts
+    const sermonFilter = {
+      $and: [
+        { $or: [{ type: { $exists: false } }, { type: 'sermon' }] },
+        { type: { $ne: 'podcast' } }
+      ]
+    };
+
+    const totalSermons = await Sermon.countDocuments(sermonFilter);
+    const publishedSermons = await Sermon.countDocuments({ ...sermonFilter, isPublished: true });
+    const featuredSermons = await Sermon.countDocuments({ ...sermonFilter, isFeatured: true });
     const totalViews = await Sermon.aggregate([
+      { $match: sermonFilter },
       { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
     ]);
 
