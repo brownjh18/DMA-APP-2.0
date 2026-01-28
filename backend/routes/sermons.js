@@ -1,9 +1,9 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Sermon = require('../models/Sermon');
 const User = require('../models/User');
 const { authenticateToken, requireAdmin, requireModerator } = require('../middleware/auth');
-const notificationService = require('../services/notificationService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +16,98 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 const router = express.Router();
+
+// YouTube API configuration
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || 'AIzaSyDBYdCJVQ1FpSXPOHd6xFx4eLLuMUBzjw8';
+const YOUTUBE_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+
+// Helper function to extract video ID from URL
+function extractVideoId(url) {
+  if (!url) return null;
+
+  const patterns = [
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?youtu\.be\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/live\/([^&\n?#]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  return null;
+}
+
+// Helper function to convert ISO 8601 duration to readable format
+function parseDuration(isoDuration) {
+  if (!isoDuration) return '00:00';
+
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return '00:00';
+
+  const hours = parseInt(match[1] || '0');
+  const minutes = parseInt(match[2] || '0');
+  const seconds = parseInt(match[3] || '0');
+
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+}
+
+// Helper function to fetch YouTube video details
+async function fetchYouTubeVideoDetails(videoUrl) {
+  try {
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) {
+      console.log('Not a valid YouTube URL:', videoUrl);
+      return null;
+    }
+
+    const response = await fetch(
+      `${YOUTUBE_BASE_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics`
+    );
+
+    if (!response.ok) {
+      console.error('YouTube API error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.items || data.items.length === 0) {
+      console.log('Video not found on YouTube');
+      return null;
+    }
+
+    const video = data.items[0];
+    const snippet = video.snippet;
+    const contentDetails = video.contentDetails;
+    const statistics = video.statistics;
+
+    const isLive = snippet.liveBroadcastContent === 'live';
+
+    return {
+      description: snippet.description || '',
+      duration: isLive ? 'LIVE' : parseDuration(contentDetails.duration),
+      viewCount: statistics.viewCount ? parseInt(statistics.viewCount) : 0,
+      thumbnailUrl: snippet.thumbnails?.maxres?.url ||
+                    snippet.thumbnails?.high?.url ||
+                    snippet.thumbnails?.default?.url,
+      publishedAt: snippet.publishedAt,
+      isLive: isLive
+    };
+  } catch (error) {
+    console.error('Error fetching YouTube video details:', error.message);
+    return null;
+  }
+}
 
 // Function to get video duration using ffmpeg
 const getVideoDuration = (videoPath) => {
@@ -258,6 +350,38 @@ router.get('/featured', async (req, res) => {
   }
 });
 
+// Get saved sermons for the logged-in user (must be before /:id)
+router.get('/saved', authenticateToken, async (req, res) => {
+  try {
+    console.log('GET /api/sermons/saved - Request received for user:', req.user.id);
+    
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, returning empty list for demo users');
+      return res.json({ savedSermons: [] });
+    }
+    
+    const userDoc = await User.findById(req.user.id).populate({
+      path: 'savedSermons',
+      model: Sermon,
+      match: { $and: [{ $or: [{ type: { $exists: false } }, { type: 'sermon' }] }, { type: { $ne: 'podcast' } }] }
+    });
+
+    if (!userDoc) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Filter to only sermons (in case podcasts were also saved)
+    const savedSermons = userDoc.savedSermons.filter(item => item && item.type !== 'podcast');
+
+    console.log(`Returning ${savedSermons.length} saved sermons`);
+    res.json({ savedSermons });
+  } catch (error) {
+    console.error('Get saved sermons error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get single sermon
 router.get('/:id', async (req, res) => {
   try {
@@ -379,11 +503,38 @@ router.post('/', authenticateToken, requireAdmin, [
       }
     }
 
-    const sermonData = {
+    let sermonData = {
       ...req.body,
       type: 'sermon',
       createdBy: createdBy
     };
+
+    // Fetch YouTube video details if videoUrl is provided and duration is missing
+    if (sermonData.videoUrl && (!sermonData.duration || sermonData.duration === '00:00')) {
+      console.log('Fetching YouTube video details for:', sermonData.videoUrl);
+      const youtubeDetails = await fetchYouTubeVideoDetails(sermonData.videoUrl);
+      
+      if (youtubeDetails) {
+        console.log('YouTube video details fetched:', youtubeDetails);
+        // Only update fields that are not already provided
+        if (!sermonData.duration || sermonData.duration === '00:00') {
+          sermonData.duration = youtubeDetails.duration;
+        }
+        if (!sermonData.viewCount || sermonData.viewCount === 0) {
+          sermonData.viewCount = youtubeDetails.viewCount;
+        }
+        if (!sermonData.thumbnailUrl) {
+          sermonData.thumbnailUrl = youtubeDetails.thumbnailUrl;
+        }
+        if (!sermonData.date && youtubeDetails.publishedAt) {
+          sermonData.date = youtubeDetails.publishedAt;
+        }
+        // Save description from YouTube if not provided
+        if (!sermonData.description && youtubeDetails.description) {
+          sermonData.description = youtubeDetails.description;
+        }
+      }
+    }
 
     console.log('Creating sermon with data:', sermonData);
 
@@ -394,24 +545,6 @@ router.post('/', authenticateToken, requireAdmin, [
       await sermon.populate('createdBy', 'name');
 
       console.log('Sermon created successfully:', sermon._id);
-
-      // Create notifications for all users about the new sermon
-      try {
-        await notificationService.createContentNotification(
-          'sermon',
-          sermon._id,
-          `New Sermon: ${sermon.title}`,
-          `A new sermon "${sermon.title}" by ${sermon.speaker} is now available.`,
-          {
-            url: `/tab2`, // Navigate to sermons tab
-            speaker: sermon.speaker,
-            date: sermon.date
-          }
-        );
-      } catch (notificationError) {
-        console.error('Error creating sermon notification:', notificationError);
-        // Don't fail the request if notification creation fails
-      }
 
       res.status(201).json({
         message: 'Sermon created successfully',
@@ -462,12 +595,38 @@ router.put('/:id', authenticateToken, requireAdmin, [
       return res.status(404).json({ error: 'Sermon not found' });
     }
 
-    console.log('Updating sermon with data:', req.body);
+    let updateData = { ...req.body };
+
+    // Fetch YouTube video details if videoUrl is being updated and duration is missing
+    if (updateData.videoUrl && updateData.videoUrl !== oldSermon.videoUrl) {
+      console.log('Video URL changed, fetching YouTube video details for:', updateData.videoUrl);
+      const youtubeDetails = await fetchYouTubeVideoDetails(updateData.videoUrl);
+      
+      if (youtubeDetails) {
+        console.log('YouTube video details fetched:', youtubeDetails);
+        // Only update fields that are not already provided in the request
+        if (!updateData.duration || updateData.duration === '00:00') {
+          updateData.duration = youtubeDetails.duration;
+        }
+        if (!updateData.viewCount || updateData.viewCount === 0) {
+          updateData.viewCount = youtubeDetails.viewCount;
+        }
+        if (!updateData.thumbnailUrl) {
+          updateData.thumbnailUrl = youtubeDetails.thumbnailUrl;
+        }
+        // Update description from YouTube if not provided in the request
+        if (!updateData.description && youtubeDetails.description) {
+          updateData.description = youtubeDetails.description;
+        }
+      }
+    }
+
+    console.log('Updating sermon with data:', updateData);
 
     try {
       const sermon = await Sermon.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        updateData,
         { new: true, runValidators: true }
       ).populate('createdBy', 'name');
 
@@ -558,18 +717,19 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
   try {
     console.log('Save/unsave sermon request for:', req.params.id);
     
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, save not persisted to server');
+      return res.json({ 
+        message: 'Demo user - sermon save/unsave handled locally',
+        saved: true
+      });
+    }
+    
     const sermon = await Sermon.findById(req.params.id);
 
     if (!sermon) {
       return res.status(404).json({ error: 'Sermon not found' });
-    }
-
-    // Handle demo users - they can't actually save sermons to database
-    if (req.user.id.startsWith('demo-')) {
-      return res.json({
-        message: 'Demo user - sermon save/unsave not persisted',
-        saved: true // Always return true for demo users
-      });
     }
 
     const user = await User.findById(req.user.id);
@@ -577,15 +737,16 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if user already saved this sermon
-    const alreadySaved = user.savedSermons.includes(req.params.id);
+    // Check if user already saved this sermon (convert to ObjectId for proper comparison)
+    const sermonId = new mongoose.Types.ObjectId(req.params.id);
+    const alreadySaved = user.savedSermons.some(id => id.equals(sermonId));
 
     if (alreadySaved) {
       // Unsave: remove from savedSermons
       user.savedSermons = user.savedSermons.filter(id => id.toString() !== req.params.id);
     } else {
       // Save: add to savedSermons
-      user.savedSermons.push(req.params.id);
+      user.savedSermons.push(new mongoose.Types.ObjectId(req.params.id));
     }
 
     await user.save();
@@ -603,14 +764,6 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
 // Subscribe/unsubscribe to a channel/ministry
 router.post('/subscribe/:channel', authenticateToken, async (req, res) => {
   try {
-    // Handle demo users - they can't actually subscribe in database
-    if (req.user.id.startsWith('demo-')) {
-      return res.json({
-        message: 'Demo user - subscription not persisted',
-        subscribed: true // Always return true for demo users
-      });
-    }
-
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

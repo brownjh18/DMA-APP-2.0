@@ -18,7 +18,8 @@ import {
   IonRefresherContent,
   IonAlert,
   IonLoading,
-  IonPopover
+  IonPopover,
+  IonActionSheet
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
@@ -38,6 +39,7 @@ import {
 import apiService from '../services/api';
 import { useNetwork } from '../contexts/NetworkContext';
 import { AuthContext } from '../App';
+import './Tab4.css';
 
 const AdminUserManager: React.FC = () => {
   const history = useHistory();
@@ -52,8 +54,7 @@ const AdminUserManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [animatingStat, setAnimatingStat] = useState<string | null>(null);
-  const [showOptionsPopover, setShowOptionsPopover] = useState(false);
-  const [optionsPopoverEvent, setOptionsPopoverEvent] = useState<MouseEvent | undefined>();
+  const [showActionSheet, setShowActionSheet] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -286,8 +287,7 @@ const AdminUserManager: React.FC = () => {
   const handleOptionsClick = (user: any, event: React.MouseEvent) => {
     event.stopPropagation();
     setSelectedUser(user);
-    setOptionsPopoverEvent(event.nativeEvent);
-    setShowOptionsPopover(true);
+    setShowActionSheet(true);
   };
 
   const handleStatClick = (statType: string) => {
@@ -656,8 +656,31 @@ const AdminUserManager: React.FC = () => {
                 height: '48px',
                 borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '--border-radius': '24px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
               <IonIcon icon={add} slot="start" />
@@ -711,9 +734,9 @@ const AdminUserManager: React.FC = () => {
                   fontSize: '0.9em',
                   lineHeight: '1.4'
                 }}>
-                  {loading 
+                  {loading
                     ? 'Please wait while we fetch the user list'
-                    : filterBy === 'all' 
+                    : filterBy === 'all'
                       ? 'No users have been registered yet'
                       : `No users match the current ${filterBy} filter`
                   }
@@ -736,81 +759,89 @@ const AdminUserManager: React.FC = () => {
                 )}
               </div>
             ) : (
-              getSortedAndFilteredUsers().map((user) => (
-                <IonCard key={user._id || user.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
-                  <IonCardContent style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '1.1em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)'
-                        }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
+                {getSortedAndFilteredUsers().map((user) => (
+                  <div
+                    key={user._id || user.id}
+                    className="podcast-item"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: 'var(--ion-background-color)',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      padding: '12px',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      maxWidth: '500px',
+                      position: 'relative'
+                    }}
+                    onClick={() => handleOptionsClick(user, { stopPropagation: () => {} } as any)}
+                  >
+                    <div className="podcast-options-btn">
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOptionsClick(user, e);
+                        }}
+                        style={{
+                          margin: '0',
+                          padding: '0',
+                          minWidth: 'auto',
+                          height: 'auto',
+                          '--color': 'white'
+                        }}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
+                      </IonButton>
+                    </div>
+
+                    <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
+                      <div
+                        className="podcast-thumbnail"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <IonIcon icon={person} style={{ fontSize: '2em', color: 'white' }} />
+                      </div>
+                      <div className={`podcast-badge ${!user.isActive ? 'live' : ''}`}>
+                        {user.role === 'admin' ? 'ADMIN' : 'USER'}
+                      </div>
+                    </div>
+
+                    <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ width: '100%' }}>
+                        <h4 className="podcast-title" style={{ marginBottom: '6px' }}>
                           {user.name}
-                        </h3>
-                        <p style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '0.9em',
-                          color: 'var(--ion-color-medium)'
-                        }}>
+                        </h4>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '0.85em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>
                           {user.email}
                         </p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div className="podcast-meta">
+                          <div className="podcast-meta-item">
                             <IonIcon icon={calendar} />
-                            Joined {new Date(user.createdAt).toLocaleDateString()}
+                            <span>Joined {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                           </div>
                           {user.lastLogin && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <div className="podcast-meta-item">
                               <IonIcon icon={time} />
-                              Last login {new Date(user.lastLogin).toLocaleDateString()}
+                              <span>Last login {new Date(user.lastLogin).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <IonBadge
-                            style={{
-                              backgroundColor: user.role === 'admin' ? '#ef4444' : '#10b981',
-                              color: 'white',
-                              fontWeight: '600',
-                              borderRadius: '8px'
-                            }}
-                          >
-                            {user.role}
-                          </IonBadge>
-                          <IonBadge
-                            style={{
-                              backgroundColor: user.isActive ? '#10b981' : '#ef4444',
-                              color: 'white',
-                              fontWeight: '600',
-                              borderRadius: '8px'
-                            }}
-                          >
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </IonBadge>
-                        </div>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={(e) => handleOptionsClick(user, e)}
-                          style={{
-                            margin: '0',
-                            padding: '4px',
-                            minWidth: '32px',
-                            height: '32px',
-                            '--color': 'var(--ion-color-dark)'
-                          }}
-                        >
-                          <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.4em' }} />
-                        </IonButton>
-                      </div>
                     </div>
-                  </IonCardContent>
-                </IonCard>
-              ))
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
@@ -881,101 +912,47 @@ const AdminUserManager: React.FC = () => {
         ]}
       />
 
-      {/* Options Popover */}
-      <IonPopover
-        isOpen={showOptionsPopover}
-        event={optionsPopoverEvent}
-        onDidDismiss={() => setShowOptionsPopover(false)}
-        side="bottom"
-        alignment="center"
-      >
-        <div style={{
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 100%)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '2px solid white',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          minWidth: '120px',
-          padding: '2px 0'
-        }}>
-          <IonList style={{ background: 'transparent', padding: '0' }}>
-            <IonItem
-              button
-              style={{
-                '--background-hover': 'rgba(255,255,255,0.1)',
-                '--padding-start': '12px',
-                '--inner-padding-end': '12px',
-                minHeight: '40px'
-              }}
-              onClick={() => {
-                if (selectedUser) {
-                  const userId = selectedUser._id || selectedUser.id;
-                  toggleActive(userId);
-                }
-                setShowOptionsPopover(false);
-              }}
-            >
-              <IonIcon
-                icon={selectedUser?.isActive ? closeCircle : checkmarkCircle}
-                slot="start"
-                style={{
-                  fontSize: '1.2em',
-                  color: selectedUser?.isActive ? '#ef4444' : '#10b981'
-                }}
-              />
-              <IonLabel style={{ fontSize: '0.9em' }}>
-                {selectedUser?.isActive ? 'Deactivate' : 'Activate'}
-              </IonLabel>
-            </IonItem>
-            <IonItem
-              button
-              style={{
-                '--background-hover': 'rgba(255,255,255,0.1)',
-                '--padding-start': '12px',
-                '--inner-padding-end': '12px',
-                minHeight: '40px'
-              }}
-              onClick={() => {
-                if (selectedUser) {
-                  openRoleModal(selectedUser);
-                }
-                setShowOptionsPopover(false);
-              }}
-            >
-              <IonIcon
-                icon={create}
-                slot="start"
-                style={{ fontSize: '1.2em', color: 'var(--ion-color-primary)' }}
-              />
-              <IonLabel style={{ fontSize: '0.9em' }}>Change Role</IonLabel>
-            </IonItem>
-            <IonItem
-              button
-              style={{
-                '--background-hover': 'rgba(255,255,255,0.1)',
-                '--padding-start': '12px',
-                '--inner-padding-end': '12px',
-                minHeight: '40px'
-              }}
-              onClick={() => {
-                if (selectedUser) {
-                  const userId = selectedUser._id || selectedUser.id;
-                  deleteUser(userId);
-                }
-                setShowOptionsPopover(false);
-              }}
-            >
-              <IonIcon
-                icon={trash}
-                slot="start"
-                style={{ fontSize: '1.2em', color: '#ef4444' }}
-              />
-              <IonLabel style={{ fontSize: '0.9em' }}>Delete User</IonLabel>
-            </IonItem>
-          </IonList>
-        </div>
-      </IonPopover>
+      <IonActionSheet
+        isOpen={showActionSheet}
+        onDidDismiss={() => setShowActionSheet(false)}
+        header={`Options for "${selectedUser?.name}"`}
+        buttons={[
+          {
+            text: selectedUser?.isActive ? 'Deactivate' : 'Activate',
+            icon: selectedUser?.isActive ? closeCircle : checkmarkCircle,
+            handler: () => {
+              if (selectedUser) {
+                const userId = selectedUser._id || selectedUser.id;
+                toggleActive(userId);
+              }
+            }
+          },
+          {
+            text: 'Change Role',
+            icon: create,
+            handler: () => {
+              if (selectedUser) {
+                openRoleModal(selectedUser);
+              }
+            }
+          },
+          {
+            text: 'Delete User',
+            role: 'destructive',
+            icon: trash,
+            handler: () => {
+              if (selectedUser) {
+                const userId = selectedUser._id || selectedUser.id;
+                deleteUser(userId);
+              }
+            }
+          },
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          }
+        ]}
+      />
 
       <style>{`
         .rounded-alert .alert-wrapper {

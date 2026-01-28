@@ -1,10 +1,43 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Event = require('../models/Event');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const notificationService = require('../services/notificationService');
 
 const router = express.Router();
+
+// Configure multer for video uploads
+const videoStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../uploads/events');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'eventVideo-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const videoUpload = multer({
+  storage: videoStorage,
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    const filetypes = /mp4|mov|avi|mkv|webm/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only video files are allowed!'));
+  }
+});
 
 // Get all events (public)
 router.get('/', async (req, res) => {
@@ -165,25 +198,6 @@ router.post('/', [
     await event.save();
 
     await event.populate('createdBy', 'name');
-
-    // Create notifications for all users about the new event
-    try {
-      await notificationService.createContentNotification(
-        'event',
-        event._id,
-        `New Event: ${event.title}`,
-        `Join us for "${event.title}" on ${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${event.location}.`,
-        {
-          url: `/event/${event._id}`,
-          date: event.date,
-          location: event.location,
-          time: event.time
-        }
-      );
-    } catch (notificationError) {
-      console.error('Error creating event notification:', notificationError);
-      // Don't fail the request if notification creation fails
-    }
 
     res.status(201).json({
       message: 'Event created successfully',
@@ -377,6 +391,25 @@ router.post('/:id/register', [
   } catch (error) {
     console.error('Event registration error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Upload event video (admin only)
+router.post('/upload-video', authenticateToken, requireAdmin, videoUpload.single('videoFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    const videoUrl = `/uploads/events/${req.file.filename}`;
+
+    res.json({
+      message: 'Video uploaded successfully',
+      videoUrl: videoUrl
+    });
+  } catch (error) {
+    console.error('Video upload error:', error);
+    res.status(500).json({ error: 'Failed to upload video' });
   }
 });
 

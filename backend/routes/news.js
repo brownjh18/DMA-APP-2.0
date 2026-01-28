@@ -121,24 +121,6 @@ router.post('/', [
 
     await article.populate('createdBy', 'name');
 
-    // Create notifications for all users about the new news article
-    try {
-      await notificationService.createContentNotification(
-        'news',
-        article._id,
-        `News: ${article.title}`,
-        `New article: "${article.title}". ${article.excerpt || article.content.substring(0, 100)}${article.content.length > 100 ? '...' : ''}`,
-        {
-          url: `/news/${article._id}`,
-          category: article.category,
-          author: article.author
-        }
-      );
-    } catch (notificationError) {
-      console.error('Error creating news notification:', notificationError);
-      // Don't fail the request if notification creation fails
-    }
-
     res.status(201).json({
       message: 'News article created successfully',
       article

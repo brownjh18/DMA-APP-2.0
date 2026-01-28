@@ -24,7 +24,9 @@ import {
   calendar,
   person,
   star,
-  arrowBack
+  arrowBack,
+  image,
+  closeCircle
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
@@ -73,14 +75,20 @@ const EditDevotion: React.FC = () => {
     title: '',
     scripture: '',
     author: '',
-    date: '',
-    status: 'draft',
     featured: false,
     description: '',
     reflection: '',
     prayer: '',
-    category: 'faith-foundation'
+    thumbnailFile: null as File | null,
+    thumbnailUrl: ''
   });
+
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
+
+  // Default thumbnail for devotions when no custom thumbnail is uploaded
+  const DEFAULT_DEVOTION_THUMBNAIL = '/hero-evangelism.jpg';
 
   useEffect(() => {
     // Get devotion data from navigation state
@@ -90,14 +98,14 @@ const EditDevotion: React.FC = () => {
         title: devotion.title || '',
         scripture: devotion.scripture || '',
         author: devotion.author || '',
-        date: devotion.date || '',
-        status: devotion.isPublished ? 'published' : 'draft',
         featured: devotion.isFeatured || false,
         description: devotion.content || '',
         reflection: devotion.reflection || '',
         prayer: devotion.prayer || '',
-        category: devotion.category || 'faith-foundation'
+        thumbnailFile: null,
+        thumbnailUrl: devotion.thumbnailUrl || ''
       });
+      setCurrentThumbnailUrl(devotion.thumbnailUrl || '');
     } else {
       // Fallback: try to load from API if no state data
       loadDevotion();
@@ -111,14 +119,14 @@ const EditDevotion: React.FC = () => {
         title: devotion.title || '',
         scripture: devotion.scripture || '',
         author: devotion.author || '',
-        date: devotion.date || '',
-        status: devotion.isPublished ? 'published' : 'draft',
         featured: devotion.isFeatured || false,
         description: devotion.content || '',
         reflection: devotion.reflection || '',
         prayer: devotion.prayer || '',
-        category: devotion.category || 'faith-foundation'
+        thumbnailFile: null,
+        thumbnailUrl: devotion.thumbnailUrl || ''
       });
+      setCurrentThumbnailUrl(devotion.thumbnailUrl || '');
     } catch (error) {
       // Silently fail - data should come from navigation state
       console.log('API load failed, using navigation state data');
@@ -132,9 +140,43 @@ const EditDevotion: React.FC = () => {
     }));
   };
 
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleThumbnailSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setAlertMessage('File size must be less than 5MB');
+        setShowAlert(true);
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setAlertMessage('Please select a valid image file');
+        setShowAlert(true);
+        return;
+      }
+
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setThumbnailPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview('');
+    setCurrentThumbnailUrl(''); // This will show the default thumbnail
+  };
+
   const handleSave = async () => {
-    if (!formData.title || !formData.scripture || !formData.author || !formData.date) {
-      setAlertMessage('Please fill in all required fields (Title, Scripture, Author, Date)');
+    if (!formData.title || !formData.scripture || !formData.author) {
+      setAlertMessage('Please fill in all required fields (Title, Scripture, Author)');
       setShowAlert(true);
       return;
     }
@@ -142,13 +184,27 @@ const EditDevotion: React.FC = () => {
     setLoading(true);
 
     try {
+      let thumbnailUrl = currentThumbnailUrl;
+
+      // Upload new thumbnail if selected
+      if (thumbnailFile) {
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append('thumbnailFile', thumbnailFile);
+        const response = await fetch('/api/upload/thumbnail', {
+          method: 'POST',
+          body: thumbnailFormData
+        });
+        if (response.ok) {
+          const data = await response.json();
+          thumbnailUrl = data.thumbnailUrl;
+        }
+      }
+
       const devotionData: any = {
         title: formData.title,
         scripture: formData.scripture,
-        date: formData.date,
         author: formData.author,
-        category: formData.category,
-        isPublished: formData.status === 'published',
+        status: 'publish',
         isFeatured: formData.featured
       };
 
@@ -162,6 +218,10 @@ const EditDevotion: React.FC = () => {
 
       if (formData.prayer.trim()) {
         devotionData.prayer = formData.prayer;
+      }
+
+      if (thumbnailUrl) {
+        devotionData.thumbnailUrl = thumbnailUrl;
       }
 
       const response = await apiService.updateDevotion(id, devotionData);
@@ -297,37 +357,6 @@ const EditDevotion: React.FC = () => {
               />
             </IonItem>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Date *</IonLabel>
-              <IonInput
-                type="date"
-                value={formData.date}
-                onIonChange={(e) => handleInputChange('date', e.detail.value!)}
-              />
-            </IonItem>
-
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Category</IonLabel>
-              <IonSelect
-                value={formData.category}
-                onIonChange={(e) => handleInputChange('category', e.detail.value)}
-              >
-                <IonSelectOption value="faith-foundation">Faith Foundation</IonSelectOption>
-                <IonSelectOption value="love-relationships">Love & Relationships</IonSelectOption>
-                <IonSelectOption value="spiritual-growth">Spiritual Growth</IonSelectOption>
-              </IonSelect>
-            </IonItem>
-
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Status</IonLabel>
-              <IonSelect
-                value={formData.status}
-                onIonChange={(e) => handleInputChange('status', e.detail.value)}
-              >
-                <IonSelectOption value="draft">Draft</IonSelectOption>
-                <IonSelectOption value="published">Published</IonSelectOption>
-              </IonSelect>
-            </IonItem>
 
             <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
               <IonLabel position="stacked">Featured</IonLabel>
@@ -371,6 +400,110 @@ const EditDevotion: React.FC = () => {
             </IonItem>
           </div>
 
+          {/* Thumbnail Upload */}
+          <div style={{ marginBottom: '16px' }}>
+            <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+              Devotion Thumbnail
+            </IonLabel>
+
+            <div style={{
+              borderRadius: '12px',
+              overflow: 'hidden',
+              backgroundColor: 'rgba(0,0,0,0.02)'
+            }}>
+              <img
+                src={thumbnailPreview || currentThumbnailUrl || DEFAULT_DEVOTION_THUMBNAIL}
+                alt="Thumbnail preview"
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+              />
+              <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <IonButton
+                  fill="clear"
+                  size="small"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  style={{
+                    borderRadius: '25px',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                    fontWeight: '600',
+                    transition: 'transform 0.2s ease',
+                    minWidth: '80px',
+                    height: '32px'
+                  }}
+                  onMouseDown={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    setTimeout(() => {
+                      target.style.transform = 'scale(1)';
+                    }, 200);
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <IonIcon icon={image} slot="start" />
+                  Change
+                </IonButton>
+                <IonButton
+                  fill="clear"
+                  size="small"
+                  color="danger"
+                  onClick={removeThumbnail}
+                  style={{
+                    borderRadius: '25px',
+                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    transition: 'transform 0.2s ease',
+                    minWidth: '80px',
+                    height: '32px'
+                  }}
+                  onMouseDown={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    setTimeout(() => {
+                      target.style.transform = 'scale(1)';
+                    }, 200);
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <IonIcon icon={closeCircle} slot="start" />
+                  Remove
+                </IonButton>
+              </div>
+            </div>
+            <input
+              ref={thumbnailInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailSelect}
+              style={{ display: 'none' }}
+            />
+          </div>
+
           <IonButton
             expand="block"
             onClick={handleSave}
@@ -379,8 +512,31 @@ const EditDevotion: React.FC = () => {
               height: '48px',
               borderRadius: '24px',
               fontWeight: '600',
-              backgroundColor: 'var(--ion-color-primary)',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '--border-radius': '24px'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.98)';
+              target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
             }}
           >
             <IonIcon icon={save} slot="start" />

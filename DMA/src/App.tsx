@@ -100,13 +100,14 @@ import { PlayerProvider } from './contexts/PlayerContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { DownloadsProvider } from './contexts/DownloadsContext';
-import { NotificationProvider } from './contexts/NotificationContext';
 
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
 import MiniPlayer from './components/MiniPlayer';
+import AudioPlayer from './components/AudioPlayer';
 import FloatingSearchIcon from './components/FloatingSearchIcon';
 import OfflineIndicator from './components/OfflineIndicator';
+import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
 import BottomFadeEffect from './components/BottomFadeEffect';
@@ -117,6 +118,7 @@ import Tab3 from './pages/Tab3';
 import Tab4 from './pages/Tab4';
 import Tab5 from './pages/Tab5';
 import FullDevotion from './pages/FullDevotion';
+import FullNewsArticle from './pages/FullNewsArticle';
 import Profile from './pages/Profile';
 import PrayerRequest from './pages/PrayerRequest';
 import AdminDashboard from './pages/AdminDashboard';
@@ -129,7 +131,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import AuthCallback from './pages/AuthCallback';
 import EditProfile from './pages/EditProfile';
-import Saved from './pages/Saved';
+import MyFavorites from './pages/MyFavorites';
 import AdminSermonManager from './pages/AdminSermonManager';
 import AdminDevotionManager from './pages/AdminDevotionManager';
 import AdminEventManager from './pages/AdminEventManager';
@@ -160,9 +162,9 @@ import AddUser from './pages/AddUser';
 import AddPodcast from './pages/AddPodcast';
 import EditPodcast from './pages/EditPodcast';
 import EditLiveBroadcast from './pages/EditLiveBroadcast';
-import MyFavorites from './pages/MyFavorites';
 import WatchHistory from './pages/WatchHistory';
 import ReadingHistory from './pages/ReadingHistory';
+import Search from './pages/Search';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -197,6 +199,7 @@ import './theme/variables.css';
 setupIonicReact();
 
 const App: React.FC = () => {
+  console.log('🎯 App.tsx: App component rendering');
   const history = useHistory();
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
@@ -300,6 +303,8 @@ const App: React.FC = () => {
             // Update localStorage with fresh user data
             localStorage.setItem('user', JSON.stringify(profileResponse.user));
             console.log('✅ Token verified, user logged in with fresh data:', profileResponse.user.role);
+            // Sync saved items from server to localStorage
+            await syncSavedItems();
           } catch (error: any) {
             console.error('❌ Error during profile fetch:', error);
             // Check if it's an authentication error (401/403)
@@ -351,6 +356,9 @@ const App: React.FC = () => {
       apiService.setToken(response.token);
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
+      
+      // Sync saved items from server to localStorage after login
+      await syncSavedItems();
     } catch (error) {
       throw error;
     }
@@ -375,6 +383,87 @@ const App: React.FC = () => {
   const updateUser = (updatedUser: any) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  // Function to sync saved items from server to localStorage
+  const syncSavedItems = async () => {
+    try {
+      console.log('Syncing saved items from server...');
+      
+      // Fetch saved sermons
+      try {
+        const sermonsResponse = await apiService.getSavedSermons();
+        if (sermonsResponse.savedSermons) {
+          const formattedSermons = sermonsResponse.savedSermons.map((s: any) => ({
+            id: s._id,
+            _id: s._id,
+            title: s.title,
+            speaker: s.speaker,
+            description: s.description,
+            thumbnailUrl: s.thumbnailUrl,
+            videoUrl: s.videoUrl,
+            duration: s.duration,
+            date: s.date,
+            scripture: s.scripture,
+            series: s.series,
+            type: 'sermon'
+          }));
+          localStorage.setItem('savedSermons', JSON.stringify(formattedSermons));
+          console.log(`Synced ${formattedSermons.length} saved sermons`);
+        }
+      } catch (error) {
+        console.error('Error syncing saved sermons:', error);
+      }
+
+      // Fetch saved podcasts
+      try {
+        const podcastsResponse = await apiService.getSavedPodcasts();
+        if (podcastsResponse.savedPodcasts) {
+          const formattedPodcasts = podcastsResponse.savedPodcasts.map((p: any) => ({
+            id: p._id,
+            _id: p._id,
+            title: p.title,
+            speaker: p.speaker,
+            description: p.description,
+            thumbnailUrl: p.thumbnailUrl,
+            audioUrl: p.audioUrl,
+            duration: p.duration,
+            publishedAt: p.publishedAt
+          }));
+          localStorage.setItem('savedPodcasts', JSON.stringify(formattedPodcasts));
+          console.log(`Synced ${formattedPodcasts.length} saved podcasts`);
+        }
+      } catch (error) {
+        console.error('Error syncing saved podcasts:', error);
+      }
+
+      // Fetch saved devotions
+      try {
+        const devotionsResponse = await apiService.getSavedDevotions();
+        if (devotionsResponse.savedDevotions) {
+          const formattedDevotions = devotionsResponse.savedDevotions.map((d: any) => ({
+            id: d._id,
+            _id: d._id,
+            title: d.title,
+            scripture: d.scripture,
+            content: d.content,
+            reflection: d.reflection,
+            prayer: d.prayer,
+            author: d.author,
+            thumbnailUrl: d.thumbnailUrl,
+            publishedAt: d.createdAt || d.date
+          }));
+          localStorage.setItem('savedDevotions', JSON.stringify(formattedDevotions));
+          console.log(`Synced ${formattedDevotions.length} saved devotions`);
+        }
+      } catch (error) {
+        console.error('Error syncing saved devotions:', error);
+      }
+
+      console.log('Saved items sync completed');
+    } catch (error) {
+      console.error('Error syncing saved items:', error);
+    }
   };
 
   // Function to directly set authentication state (used for automatic login after registration)
@@ -403,12 +492,12 @@ const App: React.FC = () => {
     <SettingsProvider>
       <NetworkProvider>
         <DownloadsProvider>
-          <NotificationProvider>
             <AuthContext.Provider value={authValue}>
               <PlayerProvider>
                 <IonApp>
                   <OfflineIndicator />
                   <IonReactRouter>
+                    <AudioPlayer />
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} user={user} />
 
                 <IonRouterOutlet id="main-content">
@@ -427,11 +516,17 @@ const App: React.FC = () => {
                 <Route exact path="/podcast-player">
                   <FullPodcastPlayer />
                 </Route>
+                <Route exact path="/full-podcast-player">
+                  <FullPodcastPlayer />
+                </Route>
                 <Route exact path="/sermon-player">
                   <FullSermonPlayer />
                 </Route>
                 <Route exact path="/full-devotion">
                   <FullDevotion />
+                </Route>
+                <Route exact path="/full-news">
+                  <FullNewsArticle />
                 </Route>
                 <Route exact path="/tab5">
                   <Tab5 />
@@ -472,6 +567,9 @@ const App: React.FC = () => {
                 <Route exact path="/reading-history">
                   <ReadingHistory />
                 </Route>
+                <Route exact path="/search">
+                  <Search />
+                </Route>
                 <ProtectedRoute
                   path="/admin"
                   component={AdminDashboard}
@@ -496,9 +594,6 @@ const App: React.FC = () => {
                 />
                 <Route exact path="/auth/callback">
                   <AuthCallback />
-                </Route>
-                <Route exact path="/saved">
-                  <Saved />
                 </Route>
                 <ProtectedRoute
                   path="/admin/sermons"
@@ -724,15 +819,15 @@ const App: React.FC = () => {
               <BottomNavBar onSidebarToggle={() => setIsSidebarOpen(true)} />
               <MiniPlayer />
               <FloatingSearchIcon />
+              <ProgressOverlay />
               </IonReactRouter>
             </IonApp>
           </PlayerProvider>
         </AuthContext.Provider>
-        </NotificationProvider>
-      </DownloadsProvider>
-    </NetworkProvider>
-  </SettingsProvider>
-  );
+     </DownloadsProvider>
+   </NetworkProvider>
+ </SettingsProvider>
+ );
 };
 
 export default App;

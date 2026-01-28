@@ -293,6 +293,20 @@ router.post('/:id/stop', async (req, res) => {
 
     broadcast.isLive = false;
     broadcast.broadcastEndTime = new Date();
+
+    // Calculate duration from start time to end time
+    if (broadcast.broadcastStartTime) {
+      const startTime = new Date(broadcast.broadcastStartTime).getTime();
+      const endTime = broadcast.broadcastEndTime.getTime();
+      const diffMs = endTime - startTime;
+      if (diffMs > 0) {
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        broadcast.duration = hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
+      }
+    }
+
     await broadcast.save();
 
     res.json({

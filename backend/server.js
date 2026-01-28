@@ -11,6 +11,7 @@ require('dotenv').config();
 
 // Import services
 const liveCache = require('./services/liveCache');
+const Sermon = require('./models/Sermon');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -28,7 +29,6 @@ const contactRoutes = require('./routes/contacts');
 const searchRoutes = require('./routes/search');
 const commentsRoutes = require('./routes/comments');
 const youtubeRoutes = require('./routes/youtube');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -127,14 +127,85 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/dove-mini
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Function to check and update ended live broadcasts
+async function checkAndUpdateEndedBroadcasts() {
+  try {
+    console.log('🔍 Checking for ended live broadcasts...');
+
+    const now = Date.now();
+    const broadcastsToUpdate = await Sermon.find({
+      type: 'live_broadcast',
+      isLive: true,
+      $or: [
+        { broadcastEndTime: { $exists: true } }, // Already has end time
+        { broadcastStartTime: { $lt: new Date(now - 4 * 60 * 60 * 1000) } } // Started more than 4 hours ago
+      ]
+    });
+
+    let updatedCount = 0;
+    for (const broadcast of broadcastsToUpdate) {
+      // Check if it should be considered ended
+      let shouldEnd = false;
+
+      if (broadcast.broadcastEndTime) {
+        shouldEnd = true;
+      } else if (broadcast.broadcastStartTime) {
+        const startTime = new Date(broadcast.broadcastStartTime).getTime();
+        const durationMs = now - startTime;
+        const durationHours = durationMs / (1000 * 60 * 60);
+
+        if (durationHours > 4) {
+          shouldEnd = true;
+        }
+      }
+
+      if (shouldEnd) {
+        broadcast.isLive = false;
+
+        // Set broadcastEndTime if not already set
+        if (!broadcast.broadcastEndTime) {
+          broadcast.broadcastEndTime = new Date();
+        }
+
+        // Calculate duration if not already set
+        if (!broadcast.duration && broadcast.broadcastStartTime) {
+          const startTime = new Date(broadcast.broadcastStartTime).getTime();
+          const endTime = broadcast.broadcastEndTime.getTime();
+          const diffMs = endTime - startTime;
+          if (diffMs > 0) {
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            broadcast.duration = hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
+          }
+        }
+
+        await broadcast.save();
+        updatedCount++;
+        console.log(`✅ Ended broadcast: ${broadcast.title} (${broadcast._id})`);
+      }
+    }
+
+    if (updatedCount > 0) {
+      console.log(`✅ Updated ${updatedCount} ended live broadcasts`);
+    } else {
+      console.log('✅ No ended live broadcasts found');
+    }
+  } catch (error) {
+    console.error('❌ Error checking ended broadcasts:', error);
+  }
+}
+
 // Initialize caches and schedule updates
 console.log('🚀 Initializing caches...');
 liveCache.updateLiveCache(); // Initial live update
+checkAndUpdateEndedBroadcasts(); // Initial check for ended broadcasts
 
-// Schedule cache updates every 30 minutes
+// Schedule cache updates and broadcast checks every 30 minutes
 cron.schedule("*/30 * * * *", async () => {
   console.log('⏰ Running scheduled cache update...');
   await liveCache.updateLiveCache();
+  await checkAndUpdateEndedBroadcasts();
   console.log('✅ Scheduled cache update complete');
 });
 

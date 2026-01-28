@@ -366,13 +366,43 @@ export async function fetchCombinedSermons(maxResults = 30, pageToken?: string, 
         thumbnailUrl = '/default-sermon-thumb.jpg'; // Fallback
       }
 
+      // Determine duration based on live status
+      let duration: string | undefined;
+      if (isLive) {
+        // If currently live, show LIVE
+        duration = 'LIVE';
+      } else {
+        // If not live, use actual duration from sermon
+        // Check if sermon has a valid duration (not 'LIVE' and not empty)
+        if (sermon.duration && sermon.duration !== 'LIVE' && sermon.duration !== '—') {
+          duration = sermon.duration;
+        } else if (sermon.broadcastStartTime && sermon.broadcastEndTime) {
+          // Calculate duration from broadcast start/end times
+          const startTime = new Date(sermon.broadcastStartTime).getTime();
+          const endTime = new Date(sermon.broadcastEndTime).getTime();
+          const diffMs = endTime - startTime;
+          if (diffMs > 0) {
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            duration = hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
+          }
+        } else if (sermon.videoUrl) {
+          // For uploaded videos without duration, leave undefined (will be fetched from video metadata)
+          duration = undefined;
+        } else {
+          // Fallback duration for other cases
+          duration = '45:00';
+        }
+      }
+
       return {
         id: sermon._id, // Always use database _id for database sermons
         title: sermon.title,
         description: sermon.description || `${sermon.speaker} - ${sermon.scripture || ''}`,
         thumbnailUrl: thumbnailUrl,
         publishedAt: sermon.date,
-        duration: sermon.duration || (sermon.videoUrl ? undefined : '45:00'), // Use actual duration for uploaded videos, fallback for others
+        duration: duration,
         viewCount: sermon.viewCount,
         isLive: isLive,
         // Add database sermon metadata

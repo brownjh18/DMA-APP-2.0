@@ -23,31 +23,25 @@ const devotionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  date: {
-    type: Date,
-    required: true
-  },
   author: {
     type: String,
     trim: true
-  },
-  category: {
-    type: String,
-    trim: true,
-    enum: ['faith-foundation', 'love-relationships', 'spiritual-growth'],
-    default: 'faith-foundation'
   },
   tags: [{
     type: String,
     trim: true
   }],
-  isPublished: {
-    type: Boolean,
-    default: true
+  status: {
+    type: String,
+    default: 'publish'
   },
   isFeatured: {
     type: Boolean,
     default: false
+  },
+  thumbnailUrl: {
+    type: String,
+    trim: true
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -71,6 +65,6 @@ devotionSchema.pre('save', function(next) {
 });
 
 // Index for search
-devotionSchema.index({ title: 'text', content: 'text', scripture: 'text', reflection: 'text', category: 'text' });
+devotionSchema.index({ title: 'text', content: 'text', scripture: 'text', reflection: 'text' });
 
 module.exports = mongoose.model('Devotion', devotionSchema);

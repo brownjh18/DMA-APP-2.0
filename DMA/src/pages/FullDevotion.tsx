@@ -1,8 +1,9 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonGrid, IonRow, IonCol } from '@ionic/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { book, heart, flame, play, arrowForward, calendar, time, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { AuthContext } from '../App';
 import './Tab3.css';
 
 interface Devotion {
@@ -13,16 +14,56 @@ interface Devotion {
   reflection: string;
   prayer: string;
   date: string;
-  category: string;
   day: number;
   week: number;
+  thumbnailUrl?: string;
 }
 
 
 const FullDevotion: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
+  const { isLoggedIn } = useContext(AuthContext);
   const [devotion, setDevotion] = useState<Devotion | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Check if devotion is already saved on mount and when devotion changes
+  useEffect(() => {
+    if (!devotion?.id) return;
+    
+    const checkSavedStatus = () => {
+      try {
+        const savedDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
+        const alreadySaved = savedDevotions.some((d: any) => d.id === devotion.id);
+        setIsSaved(alreadySaved);
+      } catch (error) {
+        console.error('Error checking saved status:', error);
+      }
+    };
+    
+    checkSavedStatus();
+    
+    // Listen for storage changes (cross-tab communication)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'savedDevotions') {
+        checkSavedStatus();
+      }
+    };
+    
+    // Listen for savedItemsChanged events from other pages
+    const handleSavedItemsChange = () => {
+      checkSavedStatus();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('savedItemsChanged', handleSavedItemsChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('savedItemsChanged', handleSavedItemsChange);
+    };
+  }, [devotion?.id]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -44,10 +85,10 @@ const FullDevotion: React.FC = () => {
             content: apiDevotion.content,
             reflection: apiDevotion.reflection,
             prayer: apiDevotion.prayer,
-            date: new Date(apiDevotion.date).toISOString().split('T')[0],
-            category: apiDevotion.category,
+            date: new Date(apiDevotion.createdAt).toISOString().split('T')[0],
             day: apiDevotion.day || 1,
-            week: 1
+            week: 1,
+            thumbnailUrl: apiDevotion.thumbnailUrl
           };
           setDevotion(formattedDevotion);
           console.log('Fetched devotion by ID:', formattedDevotion.title);
@@ -72,14 +113,6 @@ const FullDevotion: React.FC = () => {
     day: 'numeric'
   });
 
-  const getCategoryInfo = (category: string) => {
-    const categories: { [key: string]: { name: string; color: string; icon: string } } = {
-      'faith-foundation': { name: 'Faith Foundation', color: '#667eea', icon: 'heart' },
-      'love-relationships': { name: 'Love & Relationships', color: '#ef4444', icon: 'heart' },
-      'spiritual-growth': { name: 'Spiritual Growth', color: '#f59e0b', icon: 'flame' }
-    };
-    return categories[category] || categories['faith-foundation'];
-  };
 
   if (!devotion) {
     return (
@@ -140,8 +173,6 @@ const FullDevotion: React.FC = () => {
     );
   }
 
-  const categoryInfo = getCategoryInfo(devotion.category);
-
   return (
     <IonPage>
       <IonHeader translucent>
@@ -183,87 +214,286 @@ const FullDevotion: React.FC = () => {
               }}
             />
           </div>
-          
+
           <IonTitle className="title-ios">Full Devotion</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="content-ios ios18-style">
+      <IonContent fullscreen className="content-ios ios18-style" style={{ backgroundColor: 'var(--ion-background-color)' }}>
         {/* iOS 18 STYLE HEADER */}
-        <div className="ios18-header">
-          <div className="ios18-header-content">
-            <div className="ios18-category-chip">
-              <IonIcon icon={categoryInfo.icon === 'flame' ? flame : heart} />
-              <span>{categoryInfo.name}</span>
+        <div className="ios18-header" style={{
+          backgroundImage: `url(${devotion.thumbnailUrl ? (devotion.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${devotion.thumbnailUrl}` : devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'relative',
+          minHeight: '150px'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(2px)'
+          }} />
+          <div className="ios18-header-content" style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px' }}>
+            <div className="details" style={{ textAlign: 'center' }}>
+              <h1 className="ios18-title" style={{ color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: '1.5em', margin: 0 }}>{devotion.title}</h1>
+              <div className="ios18-meta" style={{ display: 'flex', justifyContent: 'center', gap: '25px', marginTop: '20px', fontSize: '0.9em' }}>
+                <div className="ios18-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <IonIcon icon={calendar} style={{ color: 'white', fontSize: '1em' }} />
+                  <span style={{ color: 'white' }}>{formatDate(devotion.date)}</span>
+                </div>
+                <div className="ios18-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <IonIcon icon={time} style={{ color: 'white', fontSize: '1em' }} />
+                  <span style={{ color: 'white' }}>5 min read</span>
+                </div>
+              </div>
             </div>
-            <h1 className="ios18-title">{devotion.title}</h1>
-            <div className="ios18-meta">
-              <div className="ios18-meta-item">
-                <IonIcon icon={calendar} />
-                <span>{formatDate(devotion.date)}</span>
-              </div>
-              <div className="ios18-meta-item">
-                <IonIcon icon={time} />
-                <span>5 min read</span>
-              </div>
+            <div className="ios18-action-buttons" style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
+              <button
+                className="ios18-action-btn ios18-save-btn"
+                style={{ 
+                  borderRadius: '50%', 
+                  width: '50px', 
+                  height: '50px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  backgroundColor: isSaved ? 'rgba(255, 100, 100, 0.3)' : 'rgba(255,255,255,0.1)', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  backdropFilter: 'blur(10px)', 
+                  WebkitBackdropFilter: 'blur(10px)', 
+                  cursor: 'pointer' 
+                }}
+                onClick={async () => {
+                  if (!devotion) return;
+                  
+                  if (!isLoggedIn) {
+                    alert('Please sign in to save devotions to your list.');
+                    history.push('/signin');
+                    return;
+                  }
+                  
+                  if (isSaving) return;
+                  
+                  setIsSaving(true);
+                  
+                  try {
+                    // Save to server
+                    const response = await apiService.saveDevotion(devotion.id!);
+                    
+                    // Update localStorage
+                    const savedDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
+                    
+                    if (response.saved) {
+                      // Add to saved devotions
+                      const savedDevotion = {
+                        id: devotion.id,
+                        title: devotion.title,
+                        scripture: devotion.scripture,
+                        content: devotion.content,
+                        reflection: devotion.reflection,
+                        prayer: devotion.prayer,
+                        date: devotion.date,
+                        day: devotion.day,
+                        week: devotion.week,
+                        thumbnailUrl: devotion.thumbnailUrl,
+                        savedAt: new Date().toISOString()
+                      };
+                      // Check if not already in the list
+                      if (!savedDevotions.some((d: any) => d.id === devotion.id)) {
+                        savedDevotions.push(savedDevotion);
+                      }
+                      setIsSaved(true);
+                      alert(`"${devotion.title}" has been saved to your list!`);
+                    } else {
+                      // Remove from saved devotions
+                      const updated = savedDevotions.filter((d: any) => d.id !== devotion.id);
+                      localStorage.setItem('savedDevotions', JSON.stringify(updated));
+                      setIsSaved(false);
+                      alert(`"${devotion.title}" has been removed from your saved list.`);
+                    }
+                    
+                    localStorage.setItem('savedDevotions', JSON.stringify(savedDevotions));
+                    
+                    // Dispatch event to notify other pages
+                    window.dispatchEvent(new Event('savedItemsChanged'));
+                  } catch (error) {
+                    console.error('Error saving devotion:', error);
+                    alert('Failed to save devotion. Please try again.');
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+              >
+                <IonIcon icon={heart} style={{ color: isSaved ? '#ff6b6b' : 'white', fontSize: '1.3em' }} />
+              </button>
+              <button
+                className="ios18-action-btn ios18-share-btn"
+                style={{ borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', cursor: 'pointer' }}
+                onClick={async () => {
+                  if (!devotion) return;
+
+                  const shareData = {
+                    title: devotion.title,
+                    text: devotion.content.substring(0, 100) + '...',
+                    url: `${window.location.origin}/full-devotion?id=${devotion.id}`
+                  };
+
+                  try {
+                    if (navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      // Fallback: copy to clipboard
+                      const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+                      await navigator.clipboard.writeText(textToCopy);
+                      alert('Devotion details copied to clipboard!');
+                    }
+                  } catch (error) {
+                    console.error('Error sharing:', error);
+                    alert('Failed to share devotion. Please try again.');
+                  }
+                }}
+              >
+                <IonIcon icon={arrowForward} style={{ color: 'white', fontSize: '1.3em' }} />
+              </button>
             </div>
           </div>
         </div>
 
         {/* iOS 18 CONTENT CARDS */}
-        <div className="ios18-content">
+        <div className="ios18-content" style={{ backgroundColor: 'var(--ion-background-color)', padding: '20px' }}>
 
           {/* SCRIPTURE CARD */}
-          <div className="ios18-card scripture-card">
-            <div className="ios18-card-header">
-              <div className="ios18-icon-circle scripture-icon">
-                <IonIcon icon={book} />
+          <div style={{
+            backgroundColor: 'transparent',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--ion-color-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IonIcon icon={book} style={{ color: 'white', fontSize: '1.2em' }} />
               </div>
-              <h2 className="ios18-card-title">Scripture</h2>
+              <h2 style={{
+                margin: 0,
+                fontSize: '1em',
+                fontWeight: '600',
+                color: 'var(--ion-text-color)'
+              }}>Scripture</h2>
             </div>
-            <div className="ios18-card-content">
-              <p className="ios18-scripture-text">{devotion.content}</p>
-              <div className="ios18-scripture-ref">
-                <span>{devotion.scripture}</span>
+            <div>
+              <p style={{
+                fontSize: '0.9em',
+                lineHeight: '1.6',
+                color: 'var(--ion-text-color)',
+                marginBottom: '16px'
+              }}>{devotion.content}</p>
+              <div style={{
+                fontStyle: 'italic',
+                color: 'var(--ion-color-primary)',
+                fontWeight: '500',
+                fontSize: '0.8em'
+              }}>
+                {devotion.scripture}
               </div>
             </div>
           </div>
 
           {/* REFLECTION CARD */}
-          <div className="ios18-card reflection-card">
-            <div className="ios18-card-header">
-              <div className="ios18-icon-circle reflection-icon">
-                <IonIcon icon={heart} />
+          <div style={{
+            backgroundColor: 'transparent',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--ion-color-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IonIcon icon={heart} style={{ color: 'white', fontSize: '1.2em' }} />
               </div>
-              <h2 className="ios18-card-title">Reflection</h2>
+              <h2 style={{
+                margin: 0,
+                fontSize: '1em',
+                fontWeight: '600',
+                color: 'var(--ion-text-color)'
+              }}>Reflection</h2>
             </div>
-            <div className="ios18-card-content">
-              <p className="ios18-reflection-text">{devotion.reflection}</p>
+            <div>
+              <p style={{
+                fontSize: '0.9em',
+                lineHeight: '1.6',
+                color: 'var(--ion-text-color)'
+              }}>{devotion.reflection}</p>
             </div>
           </div>
 
           {/* PRAYER CARD */}
-          <div className="ios18-card prayer-card">
-            <div className="ios18-card-header">
-              <div className="ios18-icon-circle prayer-icon">
-                <IonIcon icon={play} />
+          <div style={{
+            backgroundColor: 'transparent',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--ion-color-tertiary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IonIcon icon={play} style={{ color: 'white', fontSize: '1.2em' }} />
               </div>
-              <h2 className="ios18-card-title">Prayer</h2>
+              <h2 style={{
+                margin: 0,
+                fontSize: '1em',
+                fontWeight: '600',
+                color: 'var(--ion-text-color)'
+              }}>Prayer</h2>
             </div>
-            <div className="ios18-card-content">
-              <p className="ios18-prayer-text">{devotion.prayer}</p>
+            <div>
+              <p style={{
+                fontSize: '0.9em',
+                lineHeight: '1.6',
+                color: 'var(--ion-text-color)'
+              }}>{devotion.prayer}</p>
             </div>
-          </div>
-
-          <div className="ios18-action-buttons">
-            <button className="ios18-action-btn ios18-save-btn">
-              <IonIcon icon={heart} />
-              <span>Save</span>
-            </button>
-            <button className="ios18-action-btn ios18-share-btn">
-              <IonIcon icon={arrowForward} />
-              <span>Share</span>
-            </button>
           </div>
 
         </div>

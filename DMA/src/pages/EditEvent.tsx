@@ -24,7 +24,10 @@ import {
   location,
   people,
   informationCircle,
-  arrowBack
+  arrowBack,
+  image,
+  closeCircle,
+  videocam
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
@@ -51,10 +54,20 @@ const EditEvent: React.FC = () => {
     capacity: '',
     organizer: '',
     contactInfo: '',
-    status: 'draft',
-    imageUrl: ''
+    status: 'draft'
   });
-  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string>('');
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string>('');
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Get event data from navigation state
@@ -70,9 +83,10 @@ const EditEvent: React.FC = () => {
         capacity: event.capacity || '',
         organizer: event.organizer || '',
         contactInfo: event.contactInfo || '',
-        status: event.status || 'draft',
-        imageUrl: event.imageUrl || ''
+        status: event.status || 'draft'
       });
+      setCurrentThumbnailUrl(event.imageUrl || '');
+      setCurrentVideoUrl(event.videoUrl || '');
     } else {
       // Fallback: try to load from API if no state data
       loadEvent();
@@ -92,9 +106,10 @@ const EditEvent: React.FC = () => {
         capacity: event.maxAttendees ? event.maxAttendees.toString() : '',
         organizer: event.speaker || '',
         contactInfo: event.contactPhone || '',
-        status: event.isPublished ? 'published' : 'draft',
-        imageUrl: event.imageUrl || ''
+        status: event.isPublished ? 'published' : 'draft'
       });
+      setCurrentThumbnailUrl(event.imageUrl || '');
+      setCurrentVideoUrl(event.videoUrl || '');
     } catch (error) {
       // Silently fail - data should come from navigation state
       console.log('API load failed, using navigation state data');
@@ -108,27 +123,94 @@ const EditEvent: React.FC = () => {
     }));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
 
-    setUploadingImage(true);
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file');
+        return;
+      }
 
-    const formDataUpload = new FormData();
-    formDataUpload.append('thumbnailFile', file);
-
-    try {
-      const data = await apiService.uploadThumbnail(formDataUpload);
-      setFormData(prev => ({
-        ...prev,
-        imageUrl: data.thumbnailUrl
-      }));
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      alert(`Error uploading image: ${error.message || 'Please try again.'}`);
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setThumbnailPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    setUploadingImage(false);
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview('');
+    setCurrentThumbnailUrl('');
+  };
+
+  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert('Video file size must be less than 100MB');
+        return;
+      }
+      if (!file.type.startsWith('video/')) {
+        alert('Please select a valid video file');
+        return;
+      }
+      setVideoFile(file);
+      const url = URL.createObjectURL(file);
+      setVideoPreview(url);
+    }
+  };
+
+  const removeVideo = () => {
+    setVideoFile(null);
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoPreview('');
+    setCurrentVideoUrl('');
+  };
+
+  const uploadThumbnail = async (): Promise<string | null> => {
+    if (!thumbnailFile) return null;
+
+    setUploadingThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.append('thumbnailFile', thumbnailFile);
+      const response = await apiService.uploadThumbnail(formData);
+      return response.thumbnailUrl;
+    } catch (error) {
+      console.error('Error uploading thumbnail:', error);
+      throw error;
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const uploadVideo = async (): Promise<string | null> => {
+    if (!videoFile) return null;
+
+    setUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append('videoFile', videoFile);
+      const response = await apiService.uploadEventVideo(formData);
+      return response.videoUrl;
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      throw error;
+    } finally {
+      setUploadingVideo(false);
+    }
   };
 
   const handleSave = async () => {
@@ -141,6 +223,22 @@ const EditEvent: React.FC = () => {
     setLoading(true);
 
     try {
+      let imageUrl = currentThumbnailUrl;
+
+      // Upload new thumbnail if selected
+      if (thumbnailFile) {
+        try {
+          const uploadedUrl = await uploadThumbnail();
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (error) {
+          alert('Failed to upload thumbnail. Please try again.');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Prepare the data for the API call - include ALL fields to ensure proper updates
       const updateData: any = {
         title: formData.title,
@@ -153,9 +251,34 @@ const EditEvent: React.FC = () => {
         endDate: formData.endDate || null,
         maxAttendees: formData.capacity ? parseInt(formData.capacity) : null,
         speaker: formData.organizer || null,
-        contactPhone: formData.contactInfo || null,
-        imageUrl: formData.imageUrl || null
+        contactPhone: formData.contactInfo || null
       };
+
+      if (imageUrl) {
+        updateData.imageUrl = imageUrl;
+      }
+
+      // Upload new video if selected
+      let videoUrl = currentVideoUrl;
+      if (videoFile) {
+        try {
+          const uploadedVideoUrl = await uploadVideo();
+          if (uploadedVideoUrl) {
+            videoUrl = uploadedVideoUrl;
+          }
+        } catch (error) {
+          alert('Failed to upload video. Please try again.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (videoUrl) {
+        updateData.videoUrl = videoUrl;
+      } else if (!videoFile && currentVideoUrl === '') {
+        // User removed the video, clear it
+        updateData.videoUrl = null;
+      }
 
       console.log('Sending update data to backend:', updateData);
 
@@ -374,26 +497,269 @@ const EditEvent: React.FC = () => {
               />
             </IonItem>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Event Poster/Thumbnail</IonLabel>
+            {/* Thumbnail Upload */}
+            <div style={{ marginBottom: '16px' }}>
+              <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                Event Thumbnail (Optional)
+              </IonLabel>
+
+              {/* Hidden file input - always present */}
               <input
+                ref={thumbnailInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleImageUpload}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }}
-                disabled={uploadingImage}
+                onChange={handleThumbnailSelect}
+                style={{ display: 'none' }}
               />
-              {uploadingImage && <p style={{ fontSize: '0.9em', color: '#666', marginTop: '4px' }}>Uploading image...</p>}
-              {formData.imageUrl && (
-                <div style={{ marginTop: '8px' }}>
+
+              {(thumbnailPreview || currentThumbnailUrl) ? (
+                <div style={{
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(0,0,0,0.02)'
+                }}>
                   <img
-                    src={formData.imageUrl}
-                    alt="Event poster preview"
-                    style={{ maxWidth: '200px', maxHeight: '150px', borderRadius: '8px' }}
+                    src={thumbnailPreview || currentThumbnailUrl}
+                    alt="Thumbnail preview"
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
                   />
+                  <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={image} slot="start" />
+                      Change
+                    </IonButton>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      onClick={removeThumbnail}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                        color: '#ffffff',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={closeCircle} slot="start" />
+                      Remove
+                    </IonButton>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  border: '2px dashed var(--ion-color-medium)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.02)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => thumbnailInputRef.current?.click()}
+                >
+                  <IonIcon icon={image} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                    Click to upload a thumbnail image
+                  </p>
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    style={{ '--border-radius': '6px' }}
+                  >
+                    <IonIcon icon={image} slot="start" />
+                    Choose Image
+                  </IonButton>
                 </div>
               )}
-            </IonItem>
+            </div>
+          </div>
+
+          {/* Video Upload */}
+          <div style={{ marginBottom: '16px' }}>
+            <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+              Event Video (Optional)
+            </IonLabel>
+
+            {/* Hidden file input - always present */}
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              onChange={handleVideoSelect}
+              style={{ display: 'none' }}
+            />
+
+            {(videoPreview || currentVideoUrl) ? (
+              <div style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(0,0,0,0.02)'
+              }}>
+                <video
+                  src={videoPreview || currentVideoUrl}
+                  controls
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                />
+                <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    onClick={() => videoInputRef.current?.click()}
+                    style={{
+                      borderRadius: '25px',
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                      color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                      fontWeight: '600',
+                      transition: 'transform 0.2s ease',
+                      minWidth: '80px',
+                      height: '32px'
+                    }}
+                    onMouseDown={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      target.style.transform = 'scale(0.95)';
+                    }}
+                    onMouseUp={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      setTimeout(() => {
+                        target.style.transform = 'scale(1)';
+                      }, 200);
+                    }}
+                    onMouseLeave={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    <IonIcon icon={videocam} slot="start" />
+                    Change
+                  </IonButton>
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    color="danger"
+                    onClick={removeVideo}
+                    style={{
+                      borderRadius: '25px',
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                      color: '#ffffff',
+                      fontWeight: '600',
+                      transition: 'transform 0.2s ease',
+                      minWidth: '80px',
+                      height: '32px'
+                    }}
+                    onMouseDown={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      target.style.transform = 'scale(0.95)';
+                    }}
+                    onMouseUp={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      setTimeout(() => {
+                        target.style.transform = 'scale(1)';
+                      }, 200);
+                    }}
+                    onMouseLeave={(e) => {
+                      const target = e.currentTarget as HTMLElement;
+                      target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    <IonIcon icon={closeCircle} slot="start" />
+                    Remove
+                  </IonButton>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                border: '2px dashed var(--ion-color-medium)',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                cursor: 'pointer'
+              }}
+              onClick={() => videoInputRef.current?.click()}
+              >
+                <IonIcon icon={videocam} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                  Click to upload a video (max 100MB)
+                </p>
+                <IonButton
+                  fill="outline"
+                  size="small"
+                  style={{ '--border-radius': '6px' }}
+                >
+                  <IonIcon icon={videocam} slot="start" />
+                  Choose Video
+                </IonButton>
+              </div>
+            )}
           </div>
 
           <IonButton
@@ -404,8 +770,31 @@ const EditEvent: React.FC = () => {
               height: '48px',
               borderRadius: '24px',
               fontWeight: '600',
-              backgroundColor: 'var(--ion-color-primary)',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '--border-radius': '24px'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.98)';
+              target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
             }}
           >
             <IonIcon icon={save} slot="start" />

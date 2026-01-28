@@ -547,13 +547,36 @@ const EditProfile: React.FC = () => {
               expand="block"
               type="submit"
               style={{
-                height: '44px',
-                borderRadius: '8px',
+                height: '48px',
+                borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '8px'
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '--border-radius': '24px'
               }}
               disabled={saving}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+              }}
             >
               <IonIcon icon={checkmarkCircle} slot="start" />
               {saving ? 'Saving...' : 'Save Changes'}

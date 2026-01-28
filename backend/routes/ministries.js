@@ -2,7 +2,6 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Ministry = require('../models/Ministry');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const notificationService = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -101,24 +100,6 @@ router.post('/', [
     await ministry.save();
 
     await ministry.populate('createdBy', 'name');
-
-    // Create notifications for all users about the new ministry
-    try {
-      await notificationService.createContentNotification(
-        'ministry',
-        ministry._id,
-        `New Ministry: ${ministry.name}`,
-        `A new ministry "${ministry.name}" has been established. ${ministry.description.substring(0, 100)}${ministry.description.length > 100 ? '...' : ''}`,
-        {
-          url: `/ministry/${ministry._id}`,
-          leader: ministry.leader,
-          category: ministry.category
-        }
-      );
-    } catch (notificationError) {
-      console.error('Error creating ministry notification:', notificationError);
-      // Don't fail the request if notification creation fails
-    }
 
     res.status(201).json({
       message: 'Ministry created successfully',

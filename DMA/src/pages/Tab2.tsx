@@ -1,15 +1,13 @@
 // @ts-nocheck
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonActionSheet } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import VideoPlayer from '../components/VideoPlayer';
 import { fetchCombinedSermons, YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
-import { useNotifications } from '../contexts/NotificationContext';
-import Comments from '../components/Comments';
 
-import { play, eye, share, bookmark, close, ellipsisVertical, personAdd, personCircle } from 'ionicons/icons';
+import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline } from 'ionicons/icons';
 import './Tab2.css';
 
 const toSermon = (video: YouTubeVideo) => ({
@@ -24,6 +22,9 @@ const toSermon = (video: YouTubeVideo) => ({
 
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
+  if (url.startsWith('/uploads')) {
+    return `http://localhost:5000${url}`;
+  }
   return url;
 };
 
@@ -68,26 +69,62 @@ const Tab2: React.FC = () => {
   const [expandedDescription, setExpandedDescription] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [savedSermons, setSavedSermons] = useState<any[]>([]);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [selectedSermonForActionSheet, setSelectedSermonForActionSheet] = useState<any>(null);
   const location = useLocation();
   const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
-  const { addNotification } = useNotifications();
 
   useEffect(() => {
     loadSermons();
+    // Load saved sermons from localStorage
+    const saved = JSON.parse(localStorage.getItem('savedSermons') || '[]');
+    setSavedSermons(saved);
   }, []);
 
-  // Check for videoId parameter and auto-select video
+  // Check for videoId/sermonId parameter and auto-select video
   useEffect(() => {
-    if (!loading && sermons.length > 0) {
+    if (!loading) {
       const urlParams = new URLSearchParams(location.search);
-      const videoId = urlParams.get('videoId');
+      const videoId = urlParams.get('videoId') || urlParams.get('sermonId');
 
       if (videoId) {
-        // Find the video in the loaded sermons
-        const video = [...sermons, lastSermon].find(v => v && v.id === videoId);
+        // First, try to find the video in the loaded sermons
+        let video = [...sermons, lastSermon].find(v => v && v.id === videoId);
+        
         if (video) {
           setCurrentSermon(video);
           setIsPlaying(true);
+        } else {
+          // If not found in loaded sermons, fetch it directly from the database
+          const fetchSermonById = async () => {
+            try {
+              const data = await apiService.getSermon(videoId);
+              const sermon = data.sermon || data;
+              
+              // Format the sermon to match YouTubeVideo interface
+              const formattedSermon = {
+                id: sermon._id || sermon.id,
+                title: sermon.title,
+                description: sermon.description || '',
+                thumbnailUrl: sermon.thumbnailUrl || sermon.thumbnail || '',
+                publishedAt: sermon.date || sermon.createdAt || new Date().toISOString(),
+                duration: sermon.duration || '00:00',
+                viewCount: sermon.viewCount?.toString() || '0',
+                videoUrl: sermon.videoUrl || '',
+                streamUrl: sermon.streamUrl || '',
+                isDatabaseSermon: true,
+                isLive: false
+              };
+              
+              setCurrentSermon(formattedSermon as any);
+              setIsPlaying(true);
+            } catch (error) {
+              console.error('Failed to fetch sermon by ID:', error);
+            }
+          };
+          
+          fetchSermonById();
         }
       }
     }
@@ -116,6 +153,9 @@ const Tab2: React.FC = () => {
     const needsRefresh = sessionStorage.getItem('sermonsNeedRefresh');
     if (needsRefresh === 'true') {
       sessionStorage.removeItem('sermonsNeedRefresh');
+      console.log('🔄 Tab2: Detected sermonsNeedRefresh flag, reloading content');
+      // Clear cache and reload
+      apiService.clearCacheByType('sermons');
       loadSermons();
     }
   }, []);
@@ -217,6 +257,60 @@ const Tab2: React.FC = () => {
       day: 'numeric'
     });
   };
+
+  const isSermonSaved = (sermonId: string) => {
+    return savedSermons.some(sermon => sermon.id === sermonId);
+  };
+
+  const saveSermon = async (sermon: any) => {
+    const sermonToSave = {
+      id: sermon.id,
+      title: sermon.title,
+      speaker: 'Dove Ministries Africa',
+      description: sermon.description || '',
+      scripture: '',
+      date: sermon.publishedAt || new Date().toISOString(),
+      duration: sermon.duration || '',
+      tags: [],
+      thumbnailUrl: sermon.thumbnailUrl || '',
+      savedAt: new Date().toISOString(),
+      videoUrl: sermon.videoUrl || sermon.streamUrl || '',
+      youtubeId: sermon.youtubeId || '',
+      isDatabaseSermon: sermon.isDatabaseSermon || false
+    };
+
+    const updatedSaved = [...savedSermons, sermonToSave];
+    setSavedSermons(updatedSaved);
+    localStorage.setItem('savedSermons', JSON.stringify(updatedSaved));
+
+    // Also save to server for logged-in users
+    try {
+      await apiService.saveSermon(sermon.id);
+      console.log('Sermon saved to server successfully');
+    } catch (error) {
+      console.warn('Failed to save sermon to server (user may not be logged in):', error);
+    }
+    
+    // Dispatch event to notify other pages
+    window.dispatchEvent(new Event('savedItemsChanged'));
+  };
+
+  const unsaveSermon = async (sermonId: string) => {
+    const updatedSaved = savedSermons.filter(sermon => sermon.id !== sermonId);
+    setSavedSermons(updatedSaved);
+    localStorage.setItem('savedSermons', JSON.stringify(updatedSaved));
+    
+    // Dispatch event to notify other pages
+    window.dispatchEvent(new Event('savedItemsChanged'));
+  };
+
+  const toggleSaveSermon = (sermon: any) => {
+    if (isSermonSaved(sermon.id)) {
+      unsaveSermon(sermon.id);
+    } else {
+      saveSermon(sermon);
+    }
+  };
   
   // Helper function to check if a broadcast should be considered ended
   const shouldBeConsideredEnded = (sermon: any) => {
@@ -242,70 +336,6 @@ const Tab2: React.FC = () => {
     return false;
   };
 
-  const handleSave = async (sermon: YouTubeVideo, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent triggering the video play
-
-    try {
-      // Get existing saved sermons
-      const savedSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
-
-      // Check if already saved
-      const isAlreadySaved = savedSermons.some((s: any) => s.id === sermon.id);
-
-      if (isAlreadySaved) {
-        alert(`"${sermon.title}" is already in your saved list.`);
-        return;
-      }
-
-      // Save to backend
-      const response = await apiService.saveSermon(sermon.id);
-
-      // Create saved sermon object for localStorage
-      const savedSermon = {
-        id: sermon.id,
-        title: sermon.title,
-        speaker: 'Dove Ministries Africa',
-        description: sermon.description || '',
-        date: sermon.publishedAt || '',
-        duration: sermon.duration || '',
-        thumbnailUrl: sermon.thumbnailUrl || '',
-        savedAt: new Date().toISOString(),
-        videoUrl: (sermon as any).videoUrl || (sermon as any).streamUrl || '',
-        youtubeId: sermon.id.length === 11 ? sermon.id : '', // YouTube IDs are 11 chars
-        isDatabaseSermon: sermon.id.length > 11 // Assume longer IDs are database sermons
-      };
-
-      // Add to saved sermons
-      savedSermons.push(savedSermon);
-      localStorage.setItem('savedSermons', JSON.stringify(savedSermons));
-
-      // Show success message
-      alert(`"${sermon.title}" has been saved to your list!`);
-
-      // Add notification for saved sermon
-      addNotification({
-        type: 'sermon',
-        title: 'Sermon Saved',
-        message: `"${sermon.title}" has been saved to your library for offline viewing`,
-        data: { sermonId: sermon.id, title: sermon.title }
-      });
-    } catch (error) {
-      console.error('Error saving sermon:', error);
-      alert('Failed to save sermon. Please try again.');
-    }
-  };
-
-
-
-  const handleSubscribe = async () => {
-    try {
-      const response = await apiService.subscribe('Dove Ministries Africa');
-      alert(response.message);
-    } catch (error) {
-      console.error('Error subscribing:', error);
-      alert('Failed to subscribe. Please try again.');
-    }
-  };
 
   return (
     <IonPage>
@@ -462,14 +492,12 @@ const Tab2: React.FC = () => {
                       }}
                     />
                   </div>
-
                   {/* Save Button */}
                   <div
                     className="channel-action-button"
-                    onClick={() => {
-                      if (currentSermon) {
-                        handleSave(currentSermon, { stopPropagation: () => {} } as any);
-                      }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSaveSermon(currentSermon);
                     }}
                     style={{
                       width: 45,
@@ -501,18 +529,21 @@ const Tab2: React.FC = () => {
                     }}
                   >
                     <IonIcon
-                      icon={bookmark}
+                      icon={isSermonSaved(currentSermon.id) ? heart : heartOutline}
                       style={{
-                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        color: isSermonSaved(currentSermon.id) ? '#ef4444' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'),
                         fontSize: '20px',
                       }}
                     />
                   </div>
-
-                  {/* Subscribe Button */}
+                  {/* Close Button */}
                   <div
                     className="channel-action-button"
-                    onClick={handleSubscribe}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSermon(null);
+                      setIsPlaying(false);
+                    }}
                     style={{
                       width: 45,
                       height: 45,
@@ -543,7 +574,7 @@ const Tab2: React.FC = () => {
                     }}
                   >
                     <IonIcon
-                      icon={personAdd}
+                      icon={close}
                       style={{
                         color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
                         fontSize: '20px',
@@ -605,121 +636,317 @@ const Tab2: React.FC = () => {
                   })()}
                 </p>
               </div>
-
-              {/* Comments Section */}
-              {currentSermon && (
-                <Comments
-                  contentId={currentSermon.id}
-                  contentType="sermon"
-                />
-              )}
             </div>
           </div>
           </>
           );
         })()}
 
-        {/* YouTube-style Recent Sermons Grid */}
-        {!loading && (
-          <div style={{ padding: '10px 15px', marginTop: currentSermon ? '20px' : '0' }}>
-            <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1em', fontWeight: '600' }}>
-              Recent Sermons
-            </h3>
+        {/* YouTube-style Main Page Layout */}
+        {!loading && !currentSermon && (
+          <div style={{ padding: '15px' }}>
+            {/* Featured Sermon Section - YouTube Hero Style */}
+            {lastSermon && (
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '1.4em',
+                  fontWeight: '700',
+                  color: 'var(--ion-text-color)'
+                }}>
+                  Featured Sermon
+                </h2>
+                <div
+                  className="featured-sermon"
+                  style={{
+                    backgroundColor: 'var(--ion-background-color)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    position: 'relative'
+                  }}
+                  onClick={async () => {
+                    setCurrentSermon(lastSermon as any);
+                    setIsPlaying(true);
 
-            {lastSermon && !currentSermon && (
-              <div
-                className="video-item"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  margin: '0 auto 15px auto',
-                  backgroundColor: 'var(--ion-background-color)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  border: 'none',
-                  maxWidth: '410px',
-                  position: 'relative'
-                }}
-                onClick={async () => {
-                  setCurrentSermon(lastSermon as any);
-                  setIsPlaying(true);
-
-                  // Increment view count for database sermons
-                  if (lastSermon && (lastSermon as any).isDatabaseSermon) {
-                    try {
-                      await apiService.getSermon(lastSermon.id);
-                    } catch (error) {
-                      console.error('Error incrementing view count:', error);
-                    }
-                  }
-                }}
-              >
-                <div className="sermon-thumbnail-container" style={{ position: 'relative' }}>
-                  <img
-                    src={getThumbnailUrl(lastSermon)}
-                    alt={lastSermon.title}
-                    className="sermon-thumbnail"
-                    onError={(e) => {
-                      // Fallback to default thumbnail if YouTube thumbnail fails to load
-                      const target = e.target as HTMLImageElement;
-                      if (!target.src.includes('/Bible.JPG')) {
-                        target.src = '/Bible.JPG';
+                    // Increment view count for database sermons
+                    if (lastSermon && (lastSermon as any).isDatabaseSermon) {
+                      try {
+                        await apiService.getSermon(lastSermon.id);
+                      } catch (error) {
+                        console.error('Error incrementing view count:', error);
                       }
-                    }}
-                  />
+                    }
+                  }}
+                >
+                  {/* Large Featured Thumbnail */}
                   <div style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '8px',
-                    backgroundColor: lastSermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
-                    color: 'white',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    fontSize: '0.8em',
-                    fontWeight: lastSermon.isLive ? 'bold' : 'normal'
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '16/9',
+                    overflow: 'hidden'
                   }}>
-                    {lastSermon.isLive ? 'LIVE' : (lastSermon.duration || '—')}
-                  </div>
-                </div>
-                <div style={{ flex: '1', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ width: '100%' }}>
-                    <div style={{ marginBottom: '8px' }}>
-                      <h4 className="video-title" style={{ fontSize: '0.95em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                        {lastSermon.title}
-                      </h4>
-                      <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        Dove Ministries Africa
-                      </p>
+                    <img
+                      src={getThumbnailUrl(lastSermon)}
+                      alt={lastSermon.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.src.includes('/Bible.JPG')) {
+                          target.src = '/Bible.JPG';
+                        }
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      backgroundColor: lastSermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.8em',
+                      fontWeight: lastSermon.isLive ? 'bold' : 'normal'
+                    }}>
+                      {lastSermon.isLive ? 'LIVE' : (lastSermon.duration || '—')}
                     </div>
-                    <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                      {formatDate(lastSermon.publishedAt)} • {lastSermon.viewCount} views
+                    {/* Play Button Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <IonIcon icon={play} style={{ fontSize: '24px', color: 'white' }} />
+                    </div>
+                  </div>
+
+                  {/* Featured Sermon Details */}
+                  <div style={{ padding: '16px' }}>
+                    <h3 style={{
+                      fontSize: '1.2em',
+                      fontWeight: '600',
+                      margin: '0 0 8px 0',
+                      lineHeight: '1.3',
+                      color: 'var(--ion-text-color)'
+                    }}>
+                      {lastSermon.title}
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{
+                        fontSize: '0.9em',
+                        color: 'var(--ion-color-medium)',
+                        fontWeight: '500'
+                      }}>
+                        Dove Ministries Africa
+                      </span>
+                    </div>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '0.85em',
+                      color: 'var(--ion-color-medium)',
+                      lineHeight: '1.4'
+                    }}>
+                      {lastSermon.viewCount} views • {formatDate(lastSermon.publishedAt)}
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '410px', margin: '0 auto' }}>
-              {(currentSermon ? [lastSermon, ...sermons].filter(s => s) : sermons).map((sermon) => (
+            {/* Recent Sermons Grid - YouTube Style */}
+            <div>
+              <h3 style={{
+                margin: '0 0 16px 0',
+                fontSize: '1.2em',
+                fontWeight: '600',
+                color: 'var(--ion-text-color)'
+              }}>
+                Recent Sermons
+              </h3>
+
+              {/* YouTube-style Grid Layout */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '16px',
+                maxWidth: '1200px',
+                margin: '0 auto'
+              }}>
+                {sermons.map((sermon) => (
+                  <div
+                    key={sermon.id}
+                    className="video-item"
+                    style={{
+                      backgroundColor: 'var(--ion-background-color)',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      position: 'relative'
+                    }}
+                    onClick={async () => {
+                      console.log('Setting currentSermon:', sermon);
+                      setCurrentSermon(sermon as any);
+                      setIsPlaying(true);
+
+                      // Increment view count for database sermons
+                      if ((sermon as any).isDatabaseSermon) {
+                        try {
+                          await apiService.getSermon(sermon.id);
+                        } catch (error) {
+                          console.error('Error incrementing view count:', error);
+                        }
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    {/* YouTube-style Thumbnail */}
+                    <div style={{
+                      position: 'relative',
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      overflow: 'hidden'
+                    }}>
+                      <img
+                        src={getThumbnailUrl(sermon)}
+                        alt={sermon.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes('/Bible.JPG')) {
+                            target.src = '/Bible.JPG';
+                          }
+                        }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '8px',
+                        right: '8px',
+                        backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '0.75em',
+                        fontWeight: sermon.isLive ? 'bold' : 'normal'
+                      }}>
+                        {sermon.isLive ? 'LIVE' : (sermon.duration || '—')}
+                      </div>
+                    </div>
+
+                    {/* YouTube-style Video Details */}
+                    <div style={{ padding: '12px', position: 'relative' }}>
+                      <h4 style={{
+                        fontSize: '0.95em',
+                        fontWeight: '600',
+                        margin: '0 0 6px 0',
+                        lineHeight: '1.3',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        color: 'var(--ion-text-color)'
+                      }}>
+                        {sermon.title}
+                      </h4>
+                      <p style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8em',
+                        color: 'var(--ion-color-medium)',
+                        fontWeight: '500'
+                      }}>
+                        Dove Ministries Africa
+                      </p>
+                      <p style={{
+                        margin: '0',
+                        fontSize: '0.8em',
+                        color: 'var(--ion-color-medium)'
+                      }}>
+                        {sermon.viewCount} views • {formatDate(sermon.publishedAt)}
+                      </p>
+
+                      {/* Options Button */}
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSermonForActionSheet(sermon);
+                          setShowActionSheet(true);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          margin: '0',
+                          padding: '6px',
+                          minWidth: '32px',
+                          height: '32px',
+                          '--color': 'var(--ion-color-medium)'
+                        }}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
+                      </IonButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* List View for When Sermon is Playing */}
+        {!loading && currentSermon && (
+          <div style={{ padding: '10px 15px', marginTop: '20px' }}>
+            <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1em', fontWeight: '600' }}>
+              More Sermons
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '600px', margin: '0 auto' }}>
+              {(currentSermon ? [lastSermon, ...sermons].filter(s => s && s.id !== currentSermon.id) : sermons).map((sermon) => (
                 <div
                   key={sermon.id}
                   className="video-item"
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
                     backgroundColor: 'var(--ion-background-color)',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     border: 'none',
-                    maxWidth: '410px',
-                    position: 'relative'
+                    padding: '12px',
+                    position: 'relative',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    transition: 'box-shadow 0.2s ease'
                   }}
                   onClick={async () => {
                     console.log('Setting currentSermon:', sermon);
-                    // Directly set currentSermon instead of using setCurrentMedia
                     setCurrentSermon(sermon as any);
                     setIsPlaying(true);
-                    console.log('currentSermon should now be set');
 
                     // Increment view count for database sermons
                     if ((sermon as any).isDatabaseSermon) {
@@ -730,14 +957,32 @@ const Tab2: React.FC = () => {
                       }
                     }
                   }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                  }}
                 >
-                  <div className="sermon-thumbnail-container" style={{ position: 'relative' }}>
+                  {/* YouTube-style Thumbnail */}
+                  <div style={{
+                    position: 'relative',
+                    width: '168px',
+                    aspectRatio: '16/9',
+                    flexShrink: 0,
+                    marginRight: '12px',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}>
                     <img
                       src={getThumbnailUrl(sermon)}
                       alt={sermon.title}
-                      className="sermon-thumbnail"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
                       onError={(e) => {
-                        // Fallback to default thumbnail if YouTube thumbnail fails to load
                         const target = e.target as HTMLImageElement;
                         if (!target.src.includes('/Bible.JPG')) {
                           target.src = '/Bible.JPG';
@@ -746,13 +991,13 @@ const Tab2: React.FC = () => {
                     />
                     <div style={{
                       position: 'absolute',
-                      bottom: '8px',
-                      right: '8px',
+                      bottom: '4px',
+                      right: '4px',
                       backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
                       color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '0.8em',
+                      padding: '2px 4px',
+                      borderRadius: '2px',
+                      fontSize: '0.7em',
                       fontWeight: sermon.isLive ? 'bold' : 'normal'
                     }}>
                       {sermon.isLive ? 'LIVE' : (sermon.duration || '—')}
@@ -760,34 +1005,73 @@ const Tab2: React.FC = () => {
                     {currentSermon && sermon.id === currentSermon.id && (
                     <div style={{
                     position: 'absolute',
-                    top: '8px',
-                    right: '8px',
+                    top: '4px',
+                    right: '4px',
                     backgroundColor: 'rgba(0, 0, 255, 0.9)',
                     color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '0.7em',
+                    padding: '2px 6px',
+                    borderRadius: '2px',
+                    fontSize: '0.6em',
                     fontWeight: 'bold'
                     }}>
                     Playing
                     </div>
                     )}
                   </div>
-                  <div style={{ flex: '1', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <div style={{ width: '100%' }}>
-                      <div style={{ marginBottom: '8px' }}>
-                        <h4 className="video-title" style={{ fontSize: '0.85em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                          {sermon.title}
-                        </h4>
-                        <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          Dove Ministries Africa
-                        </p>
-                      </div>
-                      <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        {formatDate(sermon.publishedAt)} • {sermon.viewCount} views
-                      </p>
-                    </div>
+
+                  {/* YouTube-style Video Details */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <h4 style={{
+                      fontSize: '0.9em',
+                      fontWeight: '600',
+                      margin: '0 0 4px 0',
+                      lineHeight: '1.3',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      color: 'var(--ion-text-color)'
+                    }}>
+                      {sermon.title}
+                    </h4>
+                    <p style={{
+                      margin: '0 0 2px 0',
+                      fontSize: '0.8em',
+                      color: 'var(--ion-color-medium)',
+                      fontWeight: '500'
+                    }}>
+                      Dove Ministries Africa
+                    </p>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '0.8em',
+                      color: 'var(--ion-color-medium)'
+                    }}>
+                      {sermon.viewCount} views • {formatDate(sermon.publishedAt)}
+                    </p>
                   </div>
+
+                  {/* Options Button */}
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedSermonForActionSheet(sermon);
+                      setShowActionSheet(true);
+                    }}
+                    style={{
+                      margin: '0',
+                      padding: '8px',
+                      minWidth: '40px',
+                      height: '40px',
+                      '--color': 'var(--ion-color-medium)',
+                      alignSelf: 'flex-start',
+                      marginTop: '0'
+                    }}
+                  >
+                    <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.4em' }} />
+                  </IonButton>
                 </div>
               ))}
             </div>
@@ -813,6 +1097,57 @@ const Tab2: React.FC = () => {
           </div>
         )}
 
+        {/* Action Sheet for sermon options */}
+        <IonActionSheet
+          isOpen={showActionSheet}
+          onDidDismiss={() => {
+            setShowActionSheet(false);
+            setSelectedSermonForActionSheet(null);
+          }}
+          header={`Options for "${selectedSermonForActionSheet?.title}"`}
+          buttons={[
+            {
+              text: selectedSermonForActionSheet && isSermonSaved(selectedSermonForActionSheet.id) ? 'Unsave' : 'Save',
+              icon: selectedSermonForActionSheet && isSermonSaved(selectedSermonForActionSheet.id) ? heart : heartOutline,
+              handler: () => {
+                if (selectedSermonForActionSheet) {
+                  toggleSaveSermon(selectedSermonForActionSheet);
+                }
+              }
+            },
+            {
+              text: 'Share',
+              icon: share,
+              handler: async () => {
+                if (selectedSermonForActionSheet) {
+                  const shareData = {
+                    title: selectedSermonForActionSheet.title,
+                    text: selectedSermonForActionSheet.description,
+                    url: window.location.href
+                  };
+
+                  try {
+                    if (navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      // Fallback: copy to clipboard
+                      const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+                      await navigator.clipboard.writeText(textToCopy);
+                      alert('Sermon details copied to clipboard!');
+                    }
+                  } catch (error) {
+                    console.error('Error sharing:', error);
+                    alert('Failed to share sermon. Please try again.');
+                  }
+                }
+              }
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel'
+            }
+          ]}
+        />
 
       </IonContent>
     </IonPage>

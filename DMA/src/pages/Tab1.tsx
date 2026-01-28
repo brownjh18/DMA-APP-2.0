@@ -48,7 +48,6 @@ import { fetchCombinedSermons } from '../services/youtubeService';
 import { apiService, BACKEND_BASE_URL, API_BASE_URL } from '../services/api';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { useNotifications } from '../contexts/NotificationContext';
 import './Tab1.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -104,9 +103,10 @@ interface Devotion {
   reflection: string;
   prayer: string;
   date: string;
-  category: string;
   day: number;
   week: number;
+  thumbnailUrl?: string;
+  category?: string;
 }
 
 interface Podcast {
@@ -235,8 +235,6 @@ const Tab1: React.FC = () => {
   const [ministriesLoading, setMinistriesLoading] = useState(false);
   const [devotionsLoading, setDevotionsLoading] = useState(false);
   const { setCurrentMedia, setIsPlaying } = usePlayer();
-  const { showNotification } = useSettings();
-  const { addNotification } = useNotifications();
 
   // Cache timestamps to prevent excessive API calls
   const devotionsCacheTime = useRef<number>(0);
@@ -271,7 +269,21 @@ const Tab1: React.FC = () => {
     if (needsRefresh === 'true') {
       sessionStorage.removeItem('sermonsNeedRefresh');
       console.log('🔄 Tab1: Detected sermonsNeedRefresh flag, reloading content');
+      // Clear cache and reload
+      apiService.clearCacheByType('sermons');
       loadLatestContent();
+    }
+  }, []);
+
+  // Check for podcasts refresh flags from admin operations
+  useEffect(() => {
+    const needsRefresh = sessionStorage.getItem('podcastsNeedRefresh');
+    if (needsRefresh === 'true') {
+      sessionStorage.removeItem('podcastsNeedRefresh');
+      console.log('🔄 Tab1: Detected podcastsNeedRefresh flag, reloading podcasts');
+      // Clear cache and reload
+      apiService.clearCacheByType('podcasts');
+      loadLatestPodcasts(true);
     }
   }, []);
 
@@ -320,7 +332,7 @@ const Tab1: React.FC = () => {
       const data = await apiService.getDevotions({ published: true, limit: 100 }, forceRefresh);
       // Sort devotions chronologically (oldest first) to assign day numbers
       const chronologicalDevotions = [...(data.devotions || [])].sort((a: any, b: any) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
 
       // Create a map of devotion IDs to their chronological day numbers
@@ -329,10 +341,8 @@ const Tab1: React.FC = () => {
         dayNumberMap.set(devotion._id || devotion.id, index + 1);
       });
 
-      // Sort devotions by date (newest first) for display
-      const displayDevotions = [...(data.devotions || [])].sort((a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+      // Devotions are already sorted by createdAt (newest first) from API
+      const displayDevotions = data.devotions || [];
 
       const formattedDevotions: Devotion[] = displayDevotions.map((devotion: any) => ({
         id: devotion._id || devotion.id,
@@ -341,24 +351,15 @@ const Tab1: React.FC = () => {
         content: devotion.content,
         reflection: devotion.reflection,
         prayer: devotion.prayer,
-        date: new Date(devotion.date).toISOString().split('T')[0],
-        category: devotion.category,
+        date: new Date(devotion.createdAt).toISOString().split('T')[0],
         day: dayNumberMap.get(devotion._id || devotion.id) || 1, // Use chronological day number
-        week: 1 // Default week
+        week: 1, // Default week
+        thumbnailUrl: devotion.thumbnailUrl
       }));
       setAllDevotions(formattedDevotions);
       devotionsCacheTime.current = Date.now();
       console.log('Fetched devotions from DB:', formattedDevotions.length);
 
-      // Add notification for new devotions (only if not forcing refresh and we have new data)
-      if (!forceRefresh && formattedDevotions.length > 0) {
-        addNotification({
-          type: 'devotion',
-          title: 'New Devotions Available',
-          message: `${formattedDevotions.length} new devotion${formattedDevotions.length > 1 ? 's' : ''} ${formattedDevotions.length > 1 ? 'have' : 'has'} been published`,
-          data: { count: formattedDevotions.length }
-        });
-      }
     } catch (error) {
       console.error('Error fetching devotions from DB:', error);
       setAllDevotions([]);
@@ -379,21 +380,33 @@ const Tab1: React.FC = () => {
     setLoading(true);
     try {
       const result = await fetchCombinedSermons(10);
-      setLatestVideos(result.videos || []);
+      // Apply safety check to mark old live broadcasts as ended
+      const checkedVideos = (result.videos || []).map((video: any) => {
+        if (shouldBeConsideredEnded(video)) {
+          // Calculate duration if the video has broadcast start/end times
+          let calculatedDuration = video.duration;
+          if (!calculatedDuration || calculatedDuration === 'LIVE' || calculatedDuration === '—') {
+            if (video.broadcastStartTime && video.broadcastEndTime) {
+              calculatedDuration = calculateDuration(video.broadcastStartTime, video.broadcastEndTime);
+            } else if (video.broadcastStartTime) {
+              // If only start time is available, estimate duration (e.g., 1 hour default)
+              calculatedDuration = '1:00:00';
+            } else {
+              calculatedDuration = '00:00';
+            }
+          }
+          return {
+            ...video,
+            isLive: false,
+            duration: calculatedDuration
+          };
+        }
+        return video;
+      });
+      setLatestVideos(checkedVideos);
       setNextPageToken(result.nextPageToken);
       sermonsCacheTime.current = Date.now();
 
-      // Show notification if enabled
-      if (result.videos && result.videos.length > 0) {
-        showNotification('New Content Available', `${result.videos.length} new sermons loaded`);
-        // Add in-app notification for new sermons
-        addNotification({
-          type: 'sermon',
-          title: 'New Sermons Available',
-          message: `${result.videos.length} new sermon${result.videos.length > 1 ? 's' : ''} ${result.videos.length > 1 ? 'have' : 'has'} been published`,
-          data: { count: result.videos.length }
-        });
-      }
     } catch (error) {
       console.error('Error loading latest content:', error);
       setLatestVideos([]); // Ensure empty array on error
@@ -402,12 +415,12 @@ const Tab1: React.FC = () => {
     }
   };
 
-  const loadLatestPodcasts = async () => {
+  const loadLatestPodcasts = async (forceRefresh: boolean = false) => {
     const now = Date.now();
     console.log('Loading latest podcasts - cache age:', now - podcastsCacheTime.current);
 
     // Check cache first
-    if (latestPodcasts.length > 0 && (now - podcastsCacheTime.current) < CACHE_DURATION) {
+    if (!forceRefresh && latestPodcasts.length > 0 && (now - podcastsCacheTime.current) < CACHE_DURATION) {
       console.log('loadLatestPodcasts: Using cached data');
       setPodcastsLoading(false);
       return;
@@ -419,7 +432,7 @@ const Tab1: React.FC = () => {
       // Fetch regular podcasts
       let podcasts: Podcast[] = [];
       try {
-        const data = await apiService.getPodcasts({ page: 1, limit: 3, published: true });
+        const data = await apiService.getPodcasts({ page: 1, limit: 3, published: true }, forceRefresh);
         podcasts = data.podcasts || [];
       } catch (podcastError) {
         console.warn('Failed to fetch podcasts:', podcastError);
@@ -468,10 +481,22 @@ const Tab1: React.FC = () => {
         // Apply safety check to live broadcasts - mark as ended if they should be
         const checkedLiveBroadcasts = formattedLive.map((broadcast: any) => {
           if (shouldBeConsideredEnded(broadcast)) {
+            // Calculate duration if broadcast has broadcast start/end times
+            let calculatedDuration = broadcast.duration;
+            if (!calculatedDuration || calculatedDuration === 'LIVE' || calculatedDuration === '—') {
+              if (broadcast.broadcastStartTime && broadcast.broadcastEndTime) {
+                calculatedDuration = calculateDuration(broadcast.broadcastStartTime, broadcast.broadcastEndTime);
+              } else if (broadcast.broadcastStartTime) {
+                // If only start time is available, estimate duration (e.g., 1 hour default)
+                calculatedDuration = '1:00:00';
+              } else {
+                calculatedDuration = '00:00';
+              }
+            }
             return {
               ...broadcast,
               isLive: false,
-              duration: broadcast.duration || '00:00'
+              duration: calculatedDuration
             };
           }
           return broadcast;
@@ -496,15 +521,7 @@ const Tab1: React.FC = () => {
       podcastsCacheTime.current = Date.now();
       console.log('Podcasts and live broadcasts loaded successfully:', combined.length, 'items');
 
-      // Add notification for new podcasts
-      if (podcasts.length > 0) {
-        addNotification({
-          type: 'podcast',
-          title: 'New Podcasts Available',
-          message: `${podcasts.length} new podcast${podcasts.length > 1 ? 's' : ''} ${podcasts.length > 1 ? 'have' : 'has'} been published`,
-          data: { count: podcasts.length }
-        });
-      }
+      // TODO: Add notification for new podcasts if needed
     } catch (error) {
       console.error('Error loading latest podcasts:', error);
       setLatestPodcasts([]);
@@ -532,15 +549,6 @@ const Tab1: React.FC = () => {
       eventsCacheTime.current = Date.now();
       console.log('Events loaded successfully:', data.events?.length || 0, 'events');
 
-      // Add notification for new events
-      if (data.events && data.events.length > 0) {
-        addNotification({
-          type: 'event',
-          title: 'New Events Available',
-          message: `${data.events.length} new event${data.events.length > 1 ? 's' : ''} ${data.events.length > 1 ? 'have' : 'has'} been scheduled`,
-          data: { count: data.events.length }
-        });
-      }
     } catch (error) {
       console.error('Error loading latest events:', error);
       setLatestEvents([]);
@@ -568,10 +576,7 @@ const Tab1: React.FC = () => {
       ministriesCacheTime.current = Date.now();
       console.log('Ministries loaded successfully:', data.ministries?.length || 0, 'ministries');
 
-      // Show notification if enabled
-      if (data.ministries && data.ministries.length > 0) {
-        showNotification('Ministries Updated', `${data.ministries.length} ministries available`);
-      }
+      // TODO: Show notification if needed
     } catch (error) {
       console.error('Error loading latest ministries:', error);
       setLatestMinistries([]);
@@ -678,7 +683,16 @@ const Tab1: React.FC = () => {
             </div>
 
             <article className="devotion-card" role="article" aria-labelledby="devotion-title">
-              <div className="devotion-media" aria-hidden>
+              <div
+                className="devotion-media"
+                aria-hidden
+                style={{
+                  backgroundImage: `url(${todaysDevotion.thumbnailUrl && todaysDevotion.thumbnailUrl.trim() ? getFullUrl(todaysDevotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
                 {/* subtle background image + blur handled by CSS */}
               </div>
 
@@ -715,7 +729,7 @@ const Tab1: React.FC = () => {
                       className="cta-btn"
                       aria-label="Read full devotion"
                       onClick={() => {
-                        const devotionId = todaysDevotion.id || `${todaysDevotion.category}-${todaysDevotion.day}`;
+                        const devotionId = todaysDevotion.id;
                         console.log('Button clicked, navigating to:', `/full-devotion?id=${devotionId}`);
                         history.push(`/full-devotion?id=${devotionId}`);
                       }}
@@ -797,29 +811,50 @@ const Tab1: React.FC = () => {
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover',
-                          borderRadius: '20px'
+                          borderRadius: '0'
                         }}
                         onError={(e) => {
                           e.currentTarget.src = '/bible.JPG'; // Fallback
                         }}
                         aria-hidden
                       />
-                      {video.isLive && (
+                      {video.isLive ? (
                         <div className="sermon-live-badge" style={{
                           position: 'absolute',
-                          bottom: '8px',
-                          right: '8px'
+                          bottom: '10px',
+                          right: '10px'
                         }}>
                           <IonBadge
                             style={{
                               backgroundColor: '#ef4444',
                               color: 'white',
-                              fontSize: '0.5em',
+                              fontSize: '0.6em',
                               fontWeight: 'bold',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
                               animation: 'pulse 2s infinite'
                             }}
                           >
                             LIVE
+                          </IonBadge>
+                        </div>
+                      ) : video.duration && video.duration !== '—' && video.duration !== 'LIVE' && (
+                        <div className="sermon-duration-badge" style={{
+                          position: 'absolute',
+                          bottom: '10px',
+                          right: '10px'
+                        }}>
+                          <IonBadge
+                            style={{
+                              backgroundColor: 'rgba(0,0,0,0.85)',
+                              color: '#fff',
+                              fontSize: '0.6em',
+                              fontWeight: 'bold',
+                              padding: '4px 8px',
+                              borderRadius: '4px'
+                            }}
+                          >
+                            {video.duration}
                           </IonBadge>
                         </div>
                       )}
@@ -841,9 +876,9 @@ const Tab1: React.FC = () => {
                         </div>
                         <div
                           style={{
-                            width: '52px',
-                            height: '52px',
-                            borderRadius: '26px',
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '22px',
                             background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
                             backdropFilter: 'blur(10px)',
                             border: '1px solid rgba(255,255,255,0.2)',
@@ -853,7 +888,7 @@ const Tab1: React.FC = () => {
                             justifyContent: 'center',
                             flexShrink: 0,
                             cursor: 'pointer',
-                            marginLeft: '8px',
+                            marginRight: '-8px',
                             transition: 'transform 0.2s ease'
                           }}
                           onClick={(e) => {
@@ -866,7 +901,7 @@ const Tab1: React.FC = () => {
                             handleVideoClick(video);
                           }}
                         >
-                          <IonIcon icon={play} style={{ color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000', fontSize: '22px' }} />
+                          <IonIcon icon={play} style={{ color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000', fontSize: '18px' }} />
                         </div>
                       </div>
                     </div>
@@ -911,7 +946,7 @@ const Tab1: React.FC = () => {
                     className="podcast-card"
                     role="article"
                     onClick={() => handlePodcastClick(podcast)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', paddingLeft: '8px' }}
                   >
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                       <div className="podcast-thumb-wrap" style={{ width: '56px', height: '60px', flexShrink: 0, position: 'relative' }}>
@@ -921,30 +956,15 @@ const Tab1: React.FC = () => {
                           className="podcast-thumb"
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                         />
-                        {podcast.isLive && (
-                          <div className="podcast-live-badge">
-                            <IonBadge
-                              style={{
-                                backgroundColor: '#ef4444',
-                                color: 'white',
-                                fontSize: '0.5em',
-                                fontWeight: 'bold',
-                                animation: 'pulse 2s infinite'
-                              }}
-                            >
-                              LIVE
-                            </IonBadge>
-                          </div>
-                        )}
                         <div className="podcast-play-overlay" style={{ width: '28px', height: '28px', borderRadius: '50%' }}>
                           <IonIcon icon={radio} style={{ fontSize: '14px' }} />
                         </div>
                       </div>
                       <div className="podcast-info" style={{ flex: 1 }}>
-                        <h3 className="podcast-title" style={{ fontSize: '13px', margin: '0 0 2px 0' }}>
-                          {podcast.title.length > 40 ? podcast.title.substring(0, 40) + '…' : podcast.title}
+                        <h3 className="podcast-title" style={{ fontSize: '15px', margin: '0 0 2px 0' }}>
+                          {podcast.title.length > 50 ? podcast.title.substring(0, 50) + '…' : podcast.title}
                         </h3>
-                        <p className="podcast-meta" style={{ fontSize: '11px', margin: '0' }}>
+                        <p className="podcast-meta" style={{ fontSize: '13px', margin: '0' }}>
                           {podcast.isLive ? 'Broadcasting now' : formatDate(podcast.publishedAt)}
                           {podcast.duration && ` • ${podcast.duration}`}
                           {podcast.speaker && ` • ${podcast.speaker}`}
@@ -1017,11 +1037,22 @@ const Tab1: React.FC = () => {
                   onClick={() => history.push(`/event/${event._id}`)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <div
-                    className="devotion-media-small"
-                    style={{ backgroundImage: `url(${getFullUrl(event.imageUrl || '')})` }}
-                    aria-hidden
-                  />
+                  <div className="devotion-media-small">
+                    <img
+                      src={getFullUrl(event.imageUrl || '/bible.JPG')}
+                      alt={event.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '20px'
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = '/bible.JPG'; // Fallback
+                      }}
+                      aria-hidden
+                    />
+                  </div>
                   <div className="devotion-content-small">
                     <div className="devotion-top">
                       <div className="devotion-label">
@@ -1081,11 +1112,22 @@ const Tab1: React.FC = () => {
                   onClick={() => history.push(`/ministry/${ministry._id}`)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <div
-                    className="devotion-media-small"
-                    style={{ backgroundImage: `url(${getFullUrl(ministry.imageUrl || '')})` }}
-                    aria-hidden
-                  />
+                  <div className="devotion-media-small" style={{ aspectRatio: '16/9' }}>
+                    <img
+                      src={getFullUrl(ministry.imageUrl || '/bible.JPG')}
+                      alt={ministry.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '20px'
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = '/bible.JPG'; // Fallback
+                      }}
+                      aria-hidden
+                    />
+                  </div>
                   <div className="devotion-content-small">
                     <div className="devotion-top">
                       <div className="devotion-label">

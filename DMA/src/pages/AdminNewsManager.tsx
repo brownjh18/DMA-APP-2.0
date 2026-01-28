@@ -442,8 +442,31 @@ const AdminNewsManager: React.FC = () => {
                 height: '48px',
                 borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '--border-radius': '24px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
               <IonIcon icon={add} slot="start" />

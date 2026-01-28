@@ -21,7 +21,10 @@ import {
   people,
   informationCircle,
   share,
-  heart
+  heart,
+  arrowBack,
+  play,
+  close
 } from 'ionicons/icons';
 import './EventDetail.css';
 
@@ -31,6 +34,7 @@ const EventDetail: React.FC = () => {
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     loadEvent();
@@ -113,8 +117,52 @@ const EventDetail: React.FC = () => {
     return (
       <IonPage>
         <IonHeader translucent>
+          <div
+            onClick={() => history.goBack()}
+            style={{
+              position: 'absolute',
+              top: 'calc(var(--ion-safe-area-top) - -5px)',
+              left: 20,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 999,
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.8)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+            }}
+          >
+            <IonIcon
+              icon={arrowBack}
+              style={{
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontSize: '20px',
+              }}
+            />
+          </div>
           <IonToolbar className="toolbar-ios">
-            
+
             <IonTitle className="title-ios">Event Not Found</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -132,8 +180,52 @@ const EventDetail: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseDown={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(1)';
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
         <IonToolbar className="toolbar-ios">
-          
+
           <IonTitle className="title-ios">Event Details</IonTitle>
           <IonButtons slot="end">
             <IonButton fill="clear">
@@ -145,8 +237,153 @@ const EventDetail: React.FC = () => {
 
       <IonContent fullscreen className="content-ios">
         <div style={{ padding: '20px' }}>
-          {/* Event Image */}
-          {event.imageUrl && (
+          {/* Event Video or Image */}
+          {event.videoUrl ? (
+            showVideo ? (
+              <div style={{
+                width: '100%',
+                height: '250px',
+                backgroundColor: '#000',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                overflow: 'hidden',
+                position: 'relative'
+              }}>
+                <video
+                  src={event.videoUrl}
+                  controls
+                  autoPlay
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain'
+                  }}
+                />
+                <div
+                  onClick={() => setShowVideo(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '18px',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10
+                  }}
+                >
+                  <IonIcon icon={close} style={{ color: '#fff', fontSize: '20px' }} />
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => setShowVideo(true)}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  backgroundImage: `url(${event.imageUrl || event.videoThumbnailUrl || ''})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Play Button Overlay */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowVideo(true);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '40px',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                    target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.18) 100%)';
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'translate(-50%, -50%) scale(1)';
+                    target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)';
+                  }}
+                  onMouseDown={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.transform = 'translate(-50%, -50%) scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    setTimeout(() => {
+                      target.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                    }, 150);
+                  }}
+                >
+                  {/* Frosted glass overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)',
+                    pointerEvents: 'none',
+                    borderRadius: '40px'
+                  }} />
+                  {/* Play triangle icon */}
+                  <IonIcon 
+                    icon={play} 
+                    style={{ 
+                      color: '#fff', 
+                      fontSize: '32px', 
+                      position: 'relative', 
+                      zIndex: 1,
+                      marginLeft: '5px',
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                    }} 
+                  />
+                </div>
+                {/* Tap to play text */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: 'rgba(0,0,0,0.7)',
+                  padding: '6px 16px',
+                  borderRadius: '20px',
+                  color: '#fff',
+                  fontSize: '0.85em',
+                  fontWeight: '600'
+                }}>
+                  Tap to play video
+                </div>
+              </div>
+            )
+          ) : event.imageUrl ? (
             <div style={{
               width: '100%',
               height: '200px',
@@ -156,7 +393,7 @@ const EventDetail: React.FC = () => {
               borderRadius: '12px',
               marginBottom: '20px'
             }} />
-          )}
+          ) : null}
 
           {/* Event Title and Category */}
           <div style={{ marginBottom: '20px' }}>

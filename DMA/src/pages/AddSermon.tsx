@@ -28,7 +28,8 @@ import {
   person,
   time,
   closeCircle,
-  arrowBack
+  arrowBack,
+  image
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
@@ -46,6 +47,7 @@ const AddSermon: React.FC = () => {
   const [hasFetchedDetails, setHasFetchedDetails] = useState(false);
   const [formKey, setFormKey] = useState(Date.now()); // Force re-render key
   const videoInputRef = React.useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
   // Redirect if not logged in or not admin
   useEffect(() => {
@@ -76,7 +78,8 @@ const AddSermon: React.FC = () => {
     videoUrl: '',
     duration: '00:00',
     viewCount: 0,
-    thumbnailUrl: ''
+    thumbnailUrl: '',
+    thumbnailFile: null as File | null
   });
 
   // Ensure form is reset when component mounts
@@ -92,7 +95,8 @@ const AddSermon: React.FC = () => {
       videoUrl: '',
       duration: '00:00',
       viewCount: 0,
-      thumbnailUrl: ''
+      thumbnailUrl: '',
+      thumbnailFile: null
     });
     setFormKey(Date.now()); // Force re-render of form inputs
   }, []);
@@ -113,6 +117,9 @@ const AddSermon: React.FC = () => {
     if (videoInputRef.current) {
       videoInputRef.current.value = '';
     }
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = '';
+    }
   }, [formKey]);
 
   const handleInputChange = (field: string, value: string) => {
@@ -128,6 +135,33 @@ const AddSermon: React.FC = () => {
         [field]: value
       }));
     }
+  };
+
+  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+
+    // Validate file size (5MB limit)
+    if (file && file.size > 5 * 1024 * 1024) {
+      setAlertMessage('Thumbnail file size must be less than 5MB');
+      setShowAlert(true);
+      // Clear the file input
+      event.target.value = '';
+      return;
+    }
+
+    // Validate file type
+    if (file && !file.type.startsWith('image/')) {
+      setAlertMessage('Please select a valid image file');
+      setShowAlert(true);
+      // Clear the file input
+      event.target.value = '';
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      thumbnailFile: file
+    }));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,15 +202,25 @@ const AddSermon: React.FC = () => {
       setAlertMessage('Video details fetched successfully!');
       setShowAlert(true);
     } catch (error) {
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to fetch video details');
+      // Check if it's a configuration error
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch video details';
+      if (errorMessage.includes('API not configured') || errorMessage.includes('YouTube API')) {
+        setAlertMessage('YouTube API is not configured. Please ask the administrator to add a valid YouTube API key in the backend .env file. You can still save the sermon with manual entry.');
+      } else {
+        setAlertMessage(errorMessage || 'Failed to fetch video details. Please enter the details manually.');
+      }
       setShowAlert(true);
+      // Don't set hasFetchedDetails to true, so user can still save but will need to enter details manually
     } finally {
       setFetchingDetails(false);
     }
   };
 
   const handleSave = async () => {
-    if ((formData.videoSource === 'upload' || (formData.videoSource === 'external' && hasFetchedDetails)) && (!formData.title || !formData.speaker)) {
+    // For external videos, allow saving if URL is entered even if fetch failed
+    const canSaveExternalVideo = formData.videoSource === 'external' && formData.videoUrl.trim();
+    
+    if ((formData.videoSource === 'upload' || canSaveExternalVideo) && (!formData.title || !formData.speaker)) {
       setAlertMessage('Please fill in all required fields (Title, Speaker)');
       setShowAlert(true);
       return;
@@ -193,11 +237,6 @@ const AddSermon: React.FC = () => {
       setShowAlert(true);
       return;
     }
-    if (formData.videoSource === 'external' && !hasFetchedDetails) {
-      setAlertMessage('Please wait for video details to load or check the URL');
-      setShowAlert(true);
-      return;
-    }
 
     setLoading(true);
 
@@ -205,6 +244,14 @@ const AddSermon: React.FC = () => {
       let videoUrl = '';
       let thumbnailUrl = '';
       let videoDuration = '00:00';
+
+      // Upload thumbnail if selected
+      if (formData.thumbnailFile) {
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        thumbnailUrl = thumbnailResponse.thumbnailUrl;
+      }
 
       if (formData.videoSource === 'upload') {
         // Upload video file
@@ -231,7 +278,7 @@ const AddSermon: React.FC = () => {
         description: formData.description,
         series: formData.series,
         videoUrl: videoUrl,
-        thumbnailUrl: thumbnailUrl || undefined,
+        thumbnailUrl: thumbnailUrl || formData.thumbnailUrl || undefined,
         duration: videoDuration,
         viewCount: formData.viewCount,
         isPublished: formData.status === 'published'
@@ -311,11 +358,6 @@ const AddSermon: React.FC = () => {
         </div>
         <IonToolbar className="toolbar-ios">
           <IonTitle className="title-ios">Add Sermon</IonTitle>
-          <IonButtons slot="end">
-            <IonButton onClick={handleSave} disabled={loading}>
-              <IonIcon icon={save} />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -405,6 +447,139 @@ const AddSermon: React.FC = () => {
         rows={4}
       />
     </IonItem>
+
+    {/* Thumbnail Upload */}
+    <div style={{ marginBottom: '16px' }}>
+      <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+        Sermon Thumbnail (Optional)
+      </IonLabel>
+
+      <input
+        ref={thumbnailInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleThumbnailChange}
+        style={{ display: 'none' }}
+      />
+      {!formData.thumbnailFile && !formData.thumbnailUrl ? (
+        <div style={{
+          border: '2px dashed var(--ion-color-medium)',
+          borderRadius: '12px',
+          padding: '20px',
+          textAlign: 'center',
+          backgroundColor: 'rgba(0,0,0,0.02)'
+        }}>
+          <IonIcon icon={image} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+          <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+            Upload a thumbnail image for the sermon
+          </p>
+          <IonButton
+            onClick={() => thumbnailInputRef.current?.click()}
+            style={{
+              '--border-radius': '8px'
+            }}
+          >
+            <IonIcon icon={image} slot="start" />
+            Choose Image
+          </IonButton>
+        </div>
+      ) : (
+        <div style={{
+          borderRadius: '12px',
+          overflow: 'hidden',
+          backgroundColor: 'rgba(0,0,0,0.02)'
+        }}>
+          <img
+            src={formData.thumbnailFile ? URL.createObjectURL(formData.thumbnailFile) : formData.thumbnailUrl}
+            alt="Thumbnail preview"
+            style={{
+              width: '100%',
+              height: '200px',
+              objectFit: 'cover',
+              display: 'block'
+            }}
+          />
+          <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <IonButton
+              fill="clear"
+              size="small"
+              onClick={() => thumbnailInputRef.current?.click()}
+              style={{
+                borderRadius: '25px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                fontWeight: '600',
+                transition: 'transform 0.2s ease',
+                minWidth: '80px',
+                height: '32px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.95)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+              }}
+            >
+              <IonIcon icon={image} slot="start" />
+              Change
+            </IonButton>
+            <IonButton
+              fill="clear"
+              size="small"
+              color="danger"
+              onClick={() => {
+                setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }));
+                if (thumbnailInputRef.current) {
+                  thumbnailInputRef.current.value = '';
+                }
+              }}
+              style={{
+                borderRadius: '25px',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                color: '#ffffff',
+                fontWeight: '600',
+                transition: 'transform 0.2s ease',
+                minWidth: '80px',
+                height: '32px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.95)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+              }}
+            >
+              <IonIcon icon={closeCircle} slot="start" />
+              Remove
+            </IonButton>
+          </div>
+        </div>
+      )}
+    </div>
   </>
 )}
             {/* Video File Upload or URL Input */}
@@ -508,8 +683,31 @@ const AddSermon: React.FC = () => {
               height: '48px',
               borderRadius: '24px',
               fontWeight: '600',
-              backgroundColor: 'var(--ion-color-primary)',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '--border-radius': '24px'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.98)';
+              target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
             }}
           >
             <IonIcon icon={save} slot="start" />

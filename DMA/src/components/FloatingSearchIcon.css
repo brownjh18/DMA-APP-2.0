@@ -325,3 +325,320 @@
     color: rgba(255, 255, 255, 0.7) !important;
   }
 }
+
+/* New Transparent Blur Search Modal Design */
+.search-modal-transparent {
+  --backdrop-opacity: 0;
+  --background: transparent;
+  --width: 100vw;
+  --height: 100vh;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  border: none;
+  animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.search-modal-transparent::part(backdrop) {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: transparent;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.search-header-transparent {
+  background: transparent;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: none;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-content-transparent {
+  --background: transparent;
+  background: transparent;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  padding: 24px;
+  overflow-y: auto;
+  height: calc(100vh - 80px); /* Adjust for header */
+}
+
+.search-bar-transparent {
+  background: transparent;
+  border-radius: 20px;
+
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  --border-radius: 20px;
+}
+
+.filter-chips-transparent {
+  background: transparent;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: none;
+}
+
+.filter-chip-transparent {
+  --background: rgba(255, 255, 255, 0.2);
+  --background-activated: rgba(255, 255, 255, 0.3);
+  --color: white;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.filter-chip-transparent.active {
+  --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  --color: white;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.result-card-transparent {
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 6px;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.result-card-transparent:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.result-card-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-card-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.result-card-info {
+  flex: 1;
+}
+
+.result-card-title {
+  color: white;
+  font-size: 0.95em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.result-card-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8em;
+  margin-bottom: 4px;
+}
+
+.result-card-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.result-card-type {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+.loading-spinner-transparent {
+  background: transparent;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: none;
+}
+
+.no-results-transparent {
+  background: transparent;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: none;
+}
+
+.no-results-icon {
+  font-size: 3em;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 16px;
+}
+
+.no-results-title {
+  color: white;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.no-results-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95em;
+}
+
+.close-button-transparent {
+  --color: white;
+  --background: rgba(255, 255, 255, 0.2);
+  --border-radius: 50%;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.close-button-transparent:hover {
+  --background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Light mode support for transparent design */
+@media (prefers-color-scheme: light) {
+  .search-modal-transparent {
+    --background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .search-modal-transparent::part(backdrop) {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    background: transparent;
+  }
+
+  .search-header-transparent {
+    background: transparent;
+    border-bottom: none;
+  }
+
+  .search-content-transparent {
+    --background: transparent;
+    background: transparent;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+
+  .search-bar-transparent {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    --border-radius: 20px;
+  }
+
+  .filter-chips-transparent {
+    background: transparent;
+    border: none;
+  }
+
+  .filter-chip-transparent {
+    --background: rgba(0, 0, 0, 0.05);
+    --background-activated: rgba(0, 0, 0, 0.1);
+    --color: #333;
+  }
+
+  .filter-chip-transparent.active {
+    --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+    --color: white;
+  }
+
+  .result-card-transparent {
+    background: transparent;
+    border: none;
+  }
+
+  .result-card-transparent:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .result-card-title {
+    color: #333;
+    font-size: 0.95em;
+  }
+
+  .result-card-subtitle {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.8em;
+  }
+
+  .result-card-description {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 0.75em;
+  }
+
+  .result-card-type {
+    background: rgba(0, 0, 0, 0.08);
+    color: #333;
+  }
+
+  .loading-spinner-transparent {
+    background: transparent;
+    border: none;
+  }
+
+  .no-results-transparent {
+    background: transparent;
+    border: none;
+  }
+
+  .no-results-icon {
+    color: rgba(0, 0, 0, 0.1);
+  }
+
+  .no-results-title {
+    color: #333;
+  }
+
+  .no-results-text {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .close-button-transparent {
+    --color: #333;
+    --background: rgba(0, 0, 0, 0.1);
+  }
+
+  .close-button-transparent:hover {
+    --background: rgba(0, 0, 0, 0.15);
+  }
+}

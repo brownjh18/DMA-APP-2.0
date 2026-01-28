@@ -338,43 +338,97 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          {/* Edit Profile Button */}
-          <div style={{ marginBottom: '24px' }}>
-            <IonButton
-              expand="block"
-              style={{
-                height: '44px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '8px'
-              }}
-              onClick={() => history.push('/edit-profile')}
-            >
-              <IonIcon icon={person} slot="start" />
-              Edit Profile
-            </IonButton>
-          </div>
+         {/* Action Buttons */}
+         <div style={{
+           display: 'flex',
+           gap: '16px',
+           marginBottom: '24px',
+           flexWrap: 'wrap'
+         }}>
+           <IonButton
+             expand="block"
+             style={{
+               flex: 1,
+               minWidth: '140px',
+               height: '48px',
+               borderRadius: '24px',
+               fontWeight: '600',
+               background: 'rgba(255, 255, 255, 0.1)',
+               backdropFilter: 'blur(30px) saturate(150%)',
+               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+               border: '1px solid rgba(255, 255, 255, 0.3)',
+               boxShadow: '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+               color: '#ffffff',
+               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+               '--border-radius': '24px'
+             }}
+             onClick={() => history.push('/edit-profile')}
+             onMouseDown={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               target.style.transform = 'scale(0.98)';
+               target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+             }}
+             onMouseUp={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               setTimeout(() => {
+                 target.style.transform = 'scale(1)';
+                 target.style.boxShadow = '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+               }, 200);
+             }}
+             onMouseLeave={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               target.style.transform = 'scale(1)';
+               target.style.boxShadow = '0 15px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+             }}
+           >
+             <IonIcon icon={person} slot="start" />
+             Edit Profile
+           </IonButton>
 
-
-          {/* Sign Out */}
-          <IonButton
-            expand="block"
-            color="danger"
-            onClick={() => {
-              logout();
-              // Redirect to home page after logout
-              history.push('/tab1');
-            }}
-            style={{
-              height: '44px',
-              borderRadius: '8px',
-              fontWeight: '600'
-            }}
-          >
-            <IonIcon icon={logOut} slot="start" />
-            Sign Out
-          </IonButton>
+           <IonButton
+             expand="block"
+             onClick={() => {
+               logout();
+               // Redirect to home page after logout
+               history.push('/tab1');
+             }}
+             style={{
+               flex: 1,
+               minWidth: '140px',
+               height: '48px',
+               borderRadius: '24px',
+               fontWeight: '600',
+               background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.6) 50%, rgba(147, 51, 234, 0.4) 100%)',
+               backdropFilter: 'blur(20px) saturate(180%)',
+               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+               border: '1px solid rgba(147, 51, 234, 0.5)',
+               boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+               color: '#ffffff',
+               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+               '--border-radius': '24px'
+             }}
+             onMouseDown={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               target.style.transform = 'scale(0.98)';
+               target.style.boxShadow = '0 4px 16px rgba(147, 51, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+             }}
+             onMouseUp={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               setTimeout(() => {
+                 target.style.transform = 'scale(1)';
+                 target.style.boxShadow = '0 8px 32px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+               }, 200);
+             }}
+             onMouseLeave={(e) => {
+               const target = e.currentTarget as HTMLElement;
+               target.style.transform = 'scale(1)';
+               target.style.boxShadow = '0 8px 32px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+             }}
+           >
+             <IonIcon icon={logOut} slot="start" />
+             Sign Out
+           </IonButton>
+         </div>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>

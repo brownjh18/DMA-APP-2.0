@@ -6,14 +6,13 @@ import {
   IonTitle,
   IonToolbar,
   IonItem,
-  IonLabel,
   IonInput,
   IonButton,
   IonText,
   IonIcon,
   IonLoading
 } from '@ionic/react';
-import { personAdd, mail, lockClosed, person, call, eye, eyeOff, globe, arrowBack } from 'ionicons/icons';
+import { personAdd, mail, lockClosed, person, call, eye, eyeOff, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
 import { AuthContext } from '../App';
@@ -32,11 +31,7 @@ const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const history = useHistory();
-  const { login, setAuthState } = useContext(AuthContext);
-
-  const handleGoogleSignUp = () => {
-    apiService.initiateGoogleAuth();
-  };
+  const { setAuthState } = useContext(AuthContext);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -47,7 +42,6 @@ const SignUp: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -186,51 +180,6 @@ const SignUp: React.FC = () => {
             }}>
               Create your account to get started
             </p>
-          </div>
-
-          {/* Social Login */}
-          <div style={{ marginBottom: '24px' }}>
-            <IonButton
-              expand="block"
-              fill="outline"
-              onClick={handleGoogleSignUp}
-              style={{
-                marginBottom: '12px',
-                height: '44px',
-                border: '1px solid var(--ion-color-step-300)',
-                '--border-radius': '8px'
-              }}
-            >
-              <IonIcon icon={globe} slot="start" />
-              Continue with Google
-            </IonButton>
-          </div>
-
-          {/* Divider */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '20px 0',
-            opacity: 0.6
-          }}>
-            <div style={{
-              flex: 1,
-              height: '1px',
-              background: 'var(--ion-color-step-300)'
-            }} />
-            <span style={{
-              padding: '0 16px',
-              fontSize: '0.9em',
-              color: 'var(--ion-text-color)',
-              fontWeight: '500'
-            }}>
-              or
-            </span>
-            <div style={{
-              flex: 1,
-              height: '1px',
-              background: 'var(--ion-color-step-300)'
-            }} />
           </div>
 
           {/* Error Message */}

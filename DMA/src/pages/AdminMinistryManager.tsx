@@ -16,7 +16,8 @@ import {
   IonBadge,
   IonText,
   IonRefresher,
-  IonRefresherContent
+  IonRefresherContent,
+  IonActionSheet
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
@@ -29,8 +30,10 @@ import {
   eyeOff,
   closeCircle,
   informationCircle,
-  arrowBack
+  arrowBack,
+  ellipsisVertical
 } from 'ionicons/icons';
+import './Tab4.css';
 
 const AdminMinistryManager: React.FC = () => {
   const history = useHistory();
@@ -39,6 +42,8 @@ const AdminMinistryManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [animatingStat, setAnimatingStat] = useState<string | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [selectedMinistry, setSelectedMinistry] = useState<any>(null);
 
   useEffect(() => {
     loadMinistries();
@@ -94,7 +99,8 @@ const AdminMinistryManager: React.FC = () => {
           category: ministry.category,
           endTime: ministry.endTime,
           contactEmail: ministry.contactEmail,
-          contactPhone: ministry.contactPhone
+          contactPhone: ministry.contactPhone,
+          imageUrl: ministry.imageUrl
         }));
         setMinistries(formattedMinistries);
       } else {
@@ -161,6 +167,11 @@ const AdminMinistryManager: React.FC = () => {
 
   const openEditPage = (ministry: any) => {
     history.push(`/admin/ministries/edit/${ministry.id}`, { ministry });
+  };
+
+  const openActionSheet = (ministry: any) => {
+    setSelectedMinistry(ministry);
+    setShowActionSheet(true);
   };
 
   const handleStatClick = (statType: string) => {
@@ -439,8 +450,31 @@ const AdminMinistryManager: React.FC = () => {
                 height: '48px',
                 borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '--border-radius': '24px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
               <IonIcon icon={add} slot="start" />
@@ -459,58 +493,101 @@ const AdminMinistryManager: React.FC = () => {
               {sortBy === 'date' && ' (Sorted by Name)'}
             </h2>
 
-            {getSortedAndFilteredMinistries().map((ministry) => (
-              <IonCard key={ministry.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
-                <IonCardContent style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <h3 style={{ margin: '0', fontSize: '1.1em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-                          {ministry.name}
-                        </h3>
-                        <IonBadge style={{ backgroundColor: ministry.status === 'active' ? '#10b981' : '#6b7280', color: 'white', fontWeight: '600', borderRadius: '8px' }}>
-                          {ministry.status}
-                        </IonBadge>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
+              {getSortedAndFilteredMinistries().map((ministry) => (
+                <div
+                  key={ministry.id}
+                  className="podcast-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: 'var(--ion-background-color)',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    padding: '12px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    maxWidth: '500px',
+                    position: 'relative'
+                  }}
+                  onClick={() => openActionSheet(ministry)}
+                >
+                  <div className="podcast-options-btn">
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openActionSheet(ministry);
+                      }}
+                      style={{
+                        margin: '0',
+                        padding: '0',
+                        minWidth: 'auto',
+                        height: 'auto',
+                        '--color': 'white'
+                      }}
+                    >
+                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
+                    </IonButton>
+                  </div>
+
+                  <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
+                    {ministry.imageUrl ? (
+                      <img
+                        src={ministry.imageUrl.startsWith('/uploads') ? `http://localhost:5000${ministry.imageUrl}` : ministry.imageUrl}
+                        alt={ministry.name}
+                        className="podcast-thumbnail"
+                      />
+                    ) : (
+                      <div
+                        className="podcast-thumbnail"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <IonIcon icon={people} style={{ fontSize: '2em', color: 'white' }} />
                       </div>
-                      <p style={{ margin: '0 0 8px 0', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
-                        {ministry.description}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        <IonIcon icon={person} />
-                        Leader: {ministry.leader}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        <IonIcon icon={people} />
-                        {ministry.members} members • {ministry.meetings}
-                      </div>
-                      {ministry.category && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          <IonIcon icon={informationCircle} />
-                          Category: {ministry.category}
-                        </div>
-                      )}
-                      {ministry.endTime && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          <IonIcon icon={informationCircle} />
-                          End Time: {ministry.endTime}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <IonButton fill="clear" size="small" onClick={() => toggleStatus(ministry.id)} style={{ color: 'var(--ion-color-primary)' }}>
-                        <IonIcon icon={ministry.status === 'active' ? eyeOff : eye} />
-                      </IonButton>
-                      <IonButton fill="clear" size="small" style={{ color: 'var(--ion-color-primary)' }} onClick={() => openEditPage(ministry)}>
-                        <IonIcon icon={create} />
-                      </IonButton>
-                      <IonButton fill="clear" size="small" style={{ color: '#ef4444' }} onClick={() => deleteMinistry(ministry.id)}>
-                        <IonIcon icon={trash} />
-                      </IonButton>
+                    )}
+                    <div className={`podcast-badge ${ministry.status !== 'active' ? 'live' : ''}`}>
+                      {ministry.status === 'active' ? 'MINISTRY' : 'INACTIVE'}
                     </div>
                   </div>
-                </IonCardContent>
-              </IonCard>
-            ))}
+
+                  <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ width: '100%' }}>
+                      <h4 className="podcast-title" style={{ marginBottom: '6px' }}>
+                        {ministry.name}
+                      </h4>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '0.85em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>
+                        {ministry.leader || 'Dove Ministries Africa'}
+                      </p>
+                      <div className="podcast-meta">
+                        <div className="podcast-meta-item">
+                          <IonIcon icon={person} />
+                          <span>Leader: {ministry.leader}</span>
+                        </div>
+                        <div className="podcast-meta-item">
+                          <IonIcon icon={people} />
+                          <span>{ministry.members} members</span>
+                        </div>
+                        {ministry.category && (
+                          <div className="podcast-meta-item">
+                            <IonIcon icon={informationCircle} />
+                            <span>{ministry.category}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
@@ -519,6 +596,46 @@ const AdminMinistryManager: React.FC = () => {
             </IonText>
           </div>
         </div>
+
+        <IonActionSheet
+          isOpen={showActionSheet}
+          onDidDismiss={() => setShowActionSheet(false)}
+          header={`Options for "${selectedMinistry?.name}"`}
+          buttons={[
+            {
+              text: selectedMinistry?.status === 'active' ? 'Deactivate' : 'Activate',
+              icon: selectedMinistry?.status === 'active' ? eyeOff : eye,
+              handler: () => {
+                if (selectedMinistry) {
+                  toggleStatus(selectedMinistry.id);
+                }
+              }
+            },
+            {
+              text: 'Edit',
+              icon: create,
+              handler: () => {
+                if (selectedMinistry) {
+                  openEditPage(selectedMinistry);
+                }
+              }
+            },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              icon: trash,
+              handler: () => {
+                if (selectedMinistry) {
+                  deleteMinistry(selectedMinistry.id);
+                }
+              }
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel'
+            }
+          ]}
+        />
 
       </IonContent>
     </IonPage>

@@ -13,8 +13,9 @@ import {
   informationCircleOutline,
   settingsOutline,
   closeOutline,
-  cloudDownloadOutline,
+  heartOutline,
   logOutOutline,
+  cloudDownloadOutline,
 } from "ionicons/icons";
 import { AuthContext } from "../App";
 import { BACKEND_BASE_URL } from "../services/api";
@@ -306,20 +307,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
         <div className="nav-list">
           <div
             className="nav-item"
-            onClick={() => navigateTo('/profile')}
-            style={isActive('/profile') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+            onClick={() => navigateTo('/favorites')}
+            style={isActive('/favorites') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={personCircleOutline} style={isActive('/profile') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/profile') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Profile</span>
-          </div>
-
-          <div
-            className="nav-item"
-            onClick={() => navigateTo('/saved')}
-            style={isActive('/saved') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
-          >
-            <IonIcon icon={cloudDownloadOutline} style={isActive('/saved') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/saved') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Saved</span>
+            <IonIcon icon={heartOutline} style={isActive('/favorites') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/favorites') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Favorites</span>
           </div>
 
           <div

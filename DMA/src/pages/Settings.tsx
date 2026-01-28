@@ -14,7 +14,6 @@ import {
 
 import {
   moon,
-  notifications,
   language,
   informationCircle,
   settingsSharp,
@@ -27,7 +26,7 @@ import { useHistory } from 'react-router-dom';
 
 const Settings: React.FC = () => {
   const history = useHistory();
-  const { language, darkMode, notificationsEnabled, setLanguage, setDarkMode, setNotificationsEnabled } = useSettings();
+  const { language, darkMode, setLanguage, setDarkMode } = useSettings();
   return (
     <IonPage>
       <IonHeader translucent>
@@ -175,25 +174,6 @@ const Settings: React.FC = () => {
               />
             </IonItem>
 
-            {/* Notifications Toggle */}
-            <IonItem
-              style={{
-                marginBottom: '24px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={notifications} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>Push Notifications</IonLabel>
-              <IonToggle
-                slot="end"
-                checked={notificationsEnabled}
-                onIonChange={(e) => setNotificationsEnabled(e.detail.checked)}
-              />
-            </IonItem>
           </div>
 
 

@@ -50,6 +50,7 @@ const EditLiveBroadcast: React.FC = () => {
     description: '',
     streamUrl: '',
     thumbnailFile: null as File | null,
+    thumbnailUrl: '',
     status: 'draft'
   });
   const [loading, setLoading] = useState(true);
@@ -94,7 +95,8 @@ const EditLiveBroadcast: React.FC = () => {
         description: broadcast.description,
         streamUrl: broadcast.streamUrl || '',
         status: broadcast.status,
-        thumbnailFile: null
+        thumbnailFile: null,
+        thumbnailUrl: broadcast.thumbnailUrl || ''
       });
     } catch (error) {
       console.error('Error loading broadcast data:', error);
@@ -171,13 +173,18 @@ const EditLiveBroadcast: React.FC = () => {
         }
       } else {
         // Use JSON for text-only updates
-        const updateData = {
+        const updateData: any = {
           title: formData.title,
           speaker: formData.speaker,
           description: formData.description,
           streamUrl: formData.streamUrl,
           isPublished: formData.status === 'published'
         };
+
+        // Include thumbnailUrl if changed
+        if (formData.thumbnailUrl !== (originalData?.thumbnailUrl || '')) {
+          updateData.thumbnailUrl = formData.thumbnailUrl;
+        }
 
         const token = localStorage.getItem('token');
         const headers: HeadersInit = {
@@ -384,67 +391,151 @@ const EditLiveBroadcast: React.FC = () => {
                   Media Files
                 </h2>
 
-                <div style={{
-                  border: '2px dashed var(--ion-color-step-300)',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  textAlign: 'center',
-                  marginBottom: '16px',
-                  backgroundColor: 'var(--ion-item-background)',
-                  transition: 'all 0.2s ease'
-                }}>
-                  <IonIcon
-                    icon={image}
-                    style={{
-                      fontSize: '2em',
-                      color: 'var(--ion-color-primary)',
-                      marginBottom: '12px'
-                    }}
-                  />
-                  <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>
-                    Thumbnail Image
-                  </div>
-                  <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)', marginBottom: '16px' }}>
-                    JPG, PNG (Max 5MB)
-                  </div>
-                  {originalData?.thumbnailUrl && (
-                    <div style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '8px',
-                      backgroundImage: `url(${originalData.thumbnailUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      margin: '0 auto 12px auto',
-                      border: '2px solid var(--ion-color-step-300)'
-                    }} />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange('thumbnailFile', e.target.files?.[0] || null)}
-                    style={{ display: 'none' }}
-                    id="thumbnail-file-edit"
-                  />
-                  <IonButton
-                    fill="outline"
-                    onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
-                    style={{ borderRadius: '8px' }}
-                  >
-                    <IonIcon icon={image} slot="start" />
-                    Replace Image
-                  </IonButton>
-                  {formData.thumbnailFile && (
-                    <div style={{
-                      marginTop: '12px',
-                      fontSize: '0.9em',
-                      color: 'var(--ion-color-primary)',
-                      fontWeight: '500'
-                    }}>
-                      ✓ New: {formData.thumbnailFile.name}
+                {formData.thumbnailUrl && !formData.thumbnailFile ? (
+                  <div style={{
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    backgroundColor: 'var(--ion-item-background)',
+                    marginBottom: '16px'
+                  }}>
+                    <img
+                      src={formData.thumbnailUrl}
+                      alt="Current thumbnail"
+                      style={{
+                        width: '100%',
+                        height: '200px',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                    />
+                    <div style={{ padding: '8px', display: 'flex', gap: '8px' }}>
+                      <IonButton
+                        onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
+                        style={{
+                          flex: 1,
+                          '--border-radius': '12px',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '12px'
+                        }}
+                      >
+                        <IonIcon icon={image} slot="start" />
+                        Change
+                      </IonButton>
+                      <IonButton
+                        fill="outline"
+                        onClick={() => setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }))}
+                        style={{
+                          flex: 1,
+                          '--border-radius': '12px',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '12px'
+                        }}
+                      >
+                        Remove
+                      </IonButton>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : formData.thumbnailFile ? (
+                  <div style={{
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    backgroundColor: 'var(--ion-item-background)',
+                    marginBottom: '16px'
+                  }}>
+                    <img
+                      src={URL.createObjectURL(formData.thumbnailFile)}
+                      alt="New thumbnail preview"
+                      style={{
+                        width: '100%',
+                        height: '200px',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                    />
+                    <div style={{ padding: '8px', display: 'flex', gap: '8px' }}>
+                      <IonButton
+                        onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
+                        style={{
+                          flex: 1,
+                          '--border-radius': '12px',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '12px'
+                        }}
+                      >
+                        <IonIcon icon={image} slot="start" />
+                        Change
+                      </IonButton>
+                      <IonButton
+                        fill="outline"
+                        onClick={() => setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }))}
+                        style={{
+                          flex: 1,
+                          '--border-radius': '12px',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '12px'
+                        }}
+                      >
+                        Remove
+                      </IonButton>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    border: '2px dashed var(--ion-color-step-300)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    marginBottom: '16px',
+                    backgroundColor: 'var(--ion-item-background)',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <IonIcon
+                      icon={image}
+                      style={{
+                        fontSize: '2em',
+                        color: 'var(--ion-color-primary)',
+                        marginBottom: '12px'
+                      }}
+                    />
+                    <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>
+                      Thumbnail Image
+                    </div>
+                    <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)', marginBottom: '16px' }}>
+                      JPG, PNG (Max 5MB)
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange('thumbnailFile', e.target.files?.[0] || null)}
+                      style={{ display: 'none' }}
+                      id="thumbnail-file-edit"
+                    />
+                    <IonButton
+                      fill="outline"
+                      onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
+                      style={{ borderRadius: '8px' }}
+                    >
+                      <IonIcon icon={image} slot="start" />
+                      Choose Image
+                    </IonButton>
+                  </div>
+                )}
               </div>
 
               {/* Publishing Options */}

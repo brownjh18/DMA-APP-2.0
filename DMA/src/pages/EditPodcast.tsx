@@ -30,7 +30,8 @@ import {
   image,
   musicalNote,
   time,
-  arrowBack
+  arrowBack,
+  closeCircle
 } from 'ionicons/icons';
 
 interface PodcastData {
@@ -56,8 +57,11 @@ const EditPodcast: React.FC = () => {
     duration: '',
     audioFile: null as File | null,
     thumbnailFile: null as File | null,
+    thumbnailUrl: '',
     status: 'draft'
   });
+
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [originalData, setOriginalData] = useState<PodcastData | null>(null);
@@ -90,7 +94,8 @@ const EditPodcast: React.FC = () => {
         duration: podcast.duration,
         status: podcast.status,
         audioFile: null,
-        thumbnailFile: null
+        thumbnailFile: null,
+        thumbnailUrl: podcast.thumbnailUrl || ''
       });
     } catch (error) {
       console.error('Error loading podcast data:', error);
@@ -113,6 +118,18 @@ const EditPodcast: React.FC = () => {
       ...prev,
       [field]: file
     }));
+
+    if (field === 'thumbnailFile') {
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setThumbnailPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setThumbnailPreview('');
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -152,7 +169,7 @@ const EditPodcast: React.FC = () => {
         history.push('/admin/radio');
       } else {
         // Use JSON for text-only updates
-        const updateData = {
+        const updateData: any = {
           title: formData.title,
           speaker: formData.speaker,
           description: formData.description,
@@ -160,6 +177,11 @@ const EditPodcast: React.FC = () => {
           duration: formData.duration,
           status: formData.status
         };
+
+        // Include thumbnailUrl if changed
+        if (formData.thumbnailUrl !== (originalData?.thumbnailUrl || '')) {
+          updateData.thumbnailUrl = formData.thumbnailUrl;
+        }
 
         const response = await fetch(`${API_BASE_URL}/podcasts/${id}`, {
           method: 'PUT',
@@ -240,9 +262,7 @@ const EditPodcast: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-
-          {/* Header */}
+        <div style={{ padding: '20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <IonIcon
               icon={radio}
@@ -270,296 +290,306 @@ const EditPodcast: React.FC = () => {
             </p>
           </div>
 
-          {/* Form */}
-          <IonCard style={{ borderRadius: '16px', marginBottom: '20px' }}>
-            <IonCardContent style={{ padding: '24px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Podcast Title *</IonLabel>
+              <IonInput
+                value={formData.title}
+                onIonChange={(e) => handleInputChange('title', e.detail.value)}
+                placeholder="Enter podcast title"
+              />
+            </IonItem>
 
-              {/* Basic Information */}
-              <div style={{ marginBottom: '32px' }}>
-                <h2 style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <IonIcon icon={radio} />
-                  Basic Information
-                </h2>
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Speaker/Presenter *</IonLabel>
+              <IonInput
+                value={formData.speaker}
+                onIonChange={(e) => handleInputChange('speaker', e.detail.value)}
+                placeholder="Enter speaker name"
+              />
+            </IonItem>
 
-                <IonItem style={{ marginBottom: '16px', borderRadius: '8px' }}>
-                  <IonLabel position="stacked" style={{ fontWeight: '600' }}>
-                    Podcast Title *
-                  </IonLabel>
-                  <IonInput
-                    value={formData.title}
-                    onIonChange={(e) => handleInputChange('title', e.detail.value)}
-                    placeholder="Enter podcast title"
-                    style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
-                  />
-                </IonItem>
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Category</IonLabel>
+              <IonSelect
+                value={formData.category}
+                onIonChange={(e) => handleInputChange('category', e.detail.value)}
+                placeholder="Select category"
+              >
+                <IonSelectOption value="faith">Faith & Belief</IonSelectOption>
+                <IonSelectOption value="prayer">Prayer & Worship</IonSelectOption>
+                <IonSelectOption value="teaching">Bible Teaching</IonSelectOption>
+                <IonSelectOption value="testimony">Testimonies</IonSelectOption>
+                <IonSelectOption value="youth">Youth Ministry</IonSelectOption>
+                <IonSelectOption value="family">Family & Relationships</IonSelectOption>
+                <IonSelectOption value="other">Other</IonSelectOption>
+              </IonSelect>
+            </IonItem>
 
-                <IonItem style={{ marginBottom: '16px', borderRadius: '8px' }}>
-                  <IonLabel position="stacked" style={{ fontWeight: '600' }}>
-                    Speaker/Presenter *
-                  </IonLabel>
-                  <IonInput
-                    value={formData.speaker}
-                    onIonChange={(e) => handleInputChange('speaker', e.detail.value)}
-                    placeholder="Enter speaker name"
-                    style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
-                  />
-                </IonItem>
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Duration</IonLabel>
+              <IonInput
+                value={formData.duration}
+                onIonChange={(e) => handleInputChange('duration', e.detail.value)}
+                placeholder="Enter duration (e.g., 30:00)"
+              />
+            </IonItem>
 
-                <IonItem style={{ marginBottom: '16px', borderRadius: '8px' }}>
-                  <IonLabel position="stacked" style={{ fontWeight: '600' }}>
-                    Category
-                  </IonLabel>
-                  <IonSelect
-                    value={formData.category}
-                    onIonChange={(e) => handleInputChange('category', e.detail.value)}
-                    placeholder="Select category"
-                    style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
-                  >
-                    <IonSelectOption value="faith">Faith & Belief</IonSelectOption>
-                    <IonSelectOption value="prayer">Prayer & Worship</IonSelectOption>
-                    <IonSelectOption value="teaching">Bible Teaching</IonSelectOption>
-                    <IonSelectOption value="testimony">Testimonies</IonSelectOption>
-                    <IonSelectOption value="youth">Youth Ministry</IonSelectOption>
-                    <IonSelectOption value="family">Family & Relationships</IonSelectOption>
-                    <IonSelectOption value="other">Other</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Status</IonLabel>
+              <IonSelect
+                value={formData.status}
+                onIonChange={(e) => handleInputChange('status', e.detail.value)}
+              >
+                <IonSelectOption value="draft">Draft</IonSelectOption>
+                <IonSelectOption value="published">Published</IonSelectOption>
+                <IonSelectOption value="scheduled">Scheduled</IonSelectOption>
+              </IonSelect>
+            </IonItem>
 
+            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
+              <IonLabel position="stacked">Podcast Description</IonLabel>
+              <IonTextarea
+                value={formData.description}
+                onIonChange={(e) => handleInputChange('description', e.detail.value)}
+                placeholder="Describe the podcast content"
+                rows={4}
+              />
+            </IonItem>
 
-                <IonItem style={{ borderRadius: '8px' }}>
-                  <IonLabel position="stacked" style={{ fontWeight: '600' }}>
-                    Description
-                  </IonLabel>
-                  <IonTextarea
-                    value={formData.description}
-                    onIonChange={(e) => handleInputChange('description', e.detail.value)}
-                    placeholder="Enter podcast description"
-                    rows={4}
-                    style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
-                  />
-                </IonItem>
-              </div>
-
-              {/* Media Files */}
-              <div style={{ marginBottom: '32px' }}>
-                <h2 style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <IonIcon icon={musicalNote} />
-                  Media Files
-                </h2>
-
-                <IonGrid>
-                  <IonRow>
-                    <IonCol size="12" sizeMd="6">
-                      <div style={{
-                        border: '2px dashed var(--ion-color-step-300)',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        textAlign: 'center',
-                        marginBottom: '16px',
-                        backgroundColor: 'var(--ion-item-background)',
-                        transition: 'all 0.2s ease'
-                      }}>
-                        <IonIcon
-                          icon={musicalNote}
-                          style={{
-                            fontSize: '2em',
-                            color: 'var(--ion-color-primary)',
-                            marginBottom: '12px'
-                          }}
-                        />
-                        <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>
-                          Audio File
-                        </div>
-                        <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)', marginBottom: '16px' }}>
-                          MP3, WAV, or M4A (Max 100MB)
-                        </div>
-                        {originalData?.audioUrl && (
-                          <div style={{
-                            fontSize: '0.8em',
-                            color: 'var(--ion-color-success)',
-                            marginBottom: '12px',
-                            fontWeight: '500'
-                          }}>
-                            ✓ Current audio file exists
-                          </div>
-                        )}
-                        <input
-                          type="file"
-                          accept="audio/*"
-                          onChange={(e) => handleFileChange('audioFile', e.target.files?.[0] || null)}
-                          style={{ display: 'none' }}
-                          id="audio-file-edit"
-                        />
-                        <IonButton
-                          fill="outline"
-                          onClick={() => document.getElementById('audio-file-edit')?.click()}
-                          style={{ borderRadius: '8px' }}
-                        >
-                          <IonIcon icon={musicalNote} slot="start" />
-                          Replace Audio
-                        </IonButton>
-                        {formData.audioFile && (
-                          <div style={{
-                            marginTop: '12px',
-                            fontSize: '0.9em',
-                            color: 'var(--ion-color-primary)',
-                            fontWeight: '500'
-                          }}>
-                            ✓ New: {formData.audioFile.name}
-                          </div>
-                        )}
-                      </div>
-                    </IonCol>
-
-                    <IonCol size="12" sizeMd="6">
-                      <div style={{
-                        border: '2px dashed var(--ion-color-step-300)',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        textAlign: 'center',
-                        marginBottom: '16px',
-                        backgroundColor: 'var(--ion-item-background)',
-                        transition: 'all 0.2s ease'
-                      }}>
-                        <IonIcon
-                          icon={image}
-                          style={{
-                            fontSize: '2em',
-                            color: 'var(--ion-color-primary)',
-                            marginBottom: '12px'
-                          }}
-                        />
-                        <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>
-                          Thumbnail Image
-                        </div>
-                        <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)', marginBottom: '16px' }}>
-                          JPG, PNG (Max 5MB)
-                        </div>
-                        {originalData?.thumbnailUrl && (
-                          <div style={{
-                            width: '60px',
-                            height: '60px',
-                            borderRadius: '8px',
-                            backgroundImage: `url(${originalData.thumbnailUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            margin: '0 auto 12px auto',
-                            border: '2px solid var(--ion-color-step-300)'
-                          }} />
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleFileChange('thumbnailFile', e.target.files?.[0] || null)}
-                          style={{ display: 'none' }}
-                          id="thumbnail-file-edit"
-                        />
-                        <IonButton
-                          fill="outline"
-                          onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
-                          style={{ borderRadius: '8px' }}
-                        >
-                          <IonIcon icon={image} slot="start" />
-                          Replace Image
-                        </IonButton>
-                        {formData.thumbnailFile && (
-                          <div style={{
-                            marginTop: '12px',
-                            fontSize: '0.9em',
-                            color: 'var(--ion-color-primary)',
-                            fontWeight: '500'
-                          }}>
-                            ✓ New: {formData.thumbnailFile.name}
-                          </div>
-                        )}
-                      </div>
-                    </IonCol>
-                  </IonRow>
-                </IonGrid>
-              </div>
-
-              {/* Publishing Options */}
-              <div>
-                <h2 style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <IonIcon icon={save} />
-                  Publishing Options
-                </h2>
-
-                <IonItem style={{ borderRadius: '8px' }}>
-                  <IonLabel position="stacked" style={{ fontWeight: '600' }}>
-                    Status
-                  </IonLabel>
-                  <IonSelect
-                    value={formData.status}
-                    onIonChange={(e) => handleInputChange('status', e.detail.value)}
-                    style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
-                  >
-                    <IonSelectOption value="draft">Draft (Save as draft)</IonSelectOption>
-                    <IonSelectOption value="published">Published (Make live immediately)</IonSelectOption>
-                    <IonSelectOption value="scheduled">Scheduled (Publish later)</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-              </div>
-
-            </IonCardContent>
-          </IonCard>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
-            <IonButton
-              expand="block"
-              fill="outline"
-              onClick={() => history.push('/admin/radio')}
-              style={{
-                flex: 1,
-                height: '48px',
-                borderRadius: '24px',
-                fontWeight: '600'
+            {/* Audio File Upload */}
+            <div style={{ marginBottom: '16px' }}>
+              <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                Audio File
+              </IonLabel>
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => handleFileChange('audioFile', e.target.files?.[0] || null)}
+                style={{ display: 'none' }}
+                id="audio-file-edit"
+              />
+              <div style={{
+                border: '2px dashed var(--ion-color-medium)',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                cursor: 'pointer'
               }}
-            >
-              Cancel
-            </IonButton>
-            <IonButton
-              expand="block"
-              onClick={handleSubmit}
-              disabled={saving}
-              style={{
-                flex: 1,
-                height: '48px',
-                borderRadius: '24px',
-                fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)'
-              }}
-            >
-              <IonIcon icon={save} slot="start" />
-              {saving ? 'Updating...' : 'Update Podcast'}
-            </IonButton>
+              onClick={() => document.getElementById('audio-file-edit')?.click()}
+              >
+                <IonIcon icon={musicalNote} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                  Click to replace audio file (MP3, WAV, M4A - Max 100MB)
+                </p>
+                <IonButton fill="outline" size="small" style={{ '--border-radius': '6px' }}>
+                  <IonIcon icon={musicalNote} slot="start" />
+                  Replace Audio File
+                </IonButton>
+                {originalData?.audioUrl && (
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '0.8em',
+                    color: 'var(--ion-color-success)',
+                    fontWeight: '500'
+                  }}>
+                    ✓ Current audio file exists
+                  </div>
+                )}
+                {formData.audioFile && (
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '0.9em',
+                    color: 'var(--ion-color-primary)',
+                    fontWeight: '500'
+                  }}>
+                    ✓ New: {formData.audioFile.name}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Thumbnail Upload */}
+            <div style={{ marginBottom: '16px' }}>
+              <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                Podcast Thumbnail (Optional)
+              </IonLabel>
+
+              {/* Hidden file input - always present */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange('thumbnailFile', e.target.files?.[0] || null)}
+                style={{ display: 'none' }}
+                id="thumbnail-file-edit"
+              />
+
+              {(thumbnailPreview || formData.thumbnailUrl) ? (
+                <div style={{
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(0,0,0,0.02)'
+                }}>
+                  <img
+                    src={thumbnailPreview || formData.thumbnailUrl}
+                    alt="Thumbnail preview"
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                  <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={image} slot="start" />
+                      Change
+                    </IonButton>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }));
+                        setThumbnailPreview('');
+                      }}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                        color: '#ffffff',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={closeCircle} slot="start" />
+                      Remove
+                    </IonButton>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  border: '2px dashed var(--ion-color-medium)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.02)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => document.getElementById('thumbnail-file-edit')?.click()}
+                >
+                  <IonIcon icon={image} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                    Click to upload a thumbnail image
+                  </p>
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    style={{ '--border-radius': '6px' }}
+                  >
+                    <IonIcon icon={image} slot="start" />
+                    Choose Image
+                  </IonButton>
+                </div>
+              )}
+            </div>
           </div>
 
+          <IonButton
+            expand="block"
+            onClick={handleSubmit}
+            disabled={saving}
+            style={{
+              height: '48px',
+              borderRadius: '24px',
+              fontWeight: '600',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '--border-radius': '24px'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.98)';
+              target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            <IonIcon icon={save} slot="start" />
+            {saving ? 'Updating...' : 'Update Podcast'}
+          </IonButton>
+
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
+              Dove Ministries Africa - Podcast Management
+            </IonText>
+          </div>
         </div>
       </IonContent>
     </IonPage>

@@ -73,16 +73,7 @@ passport.use(new GoogleStrategy({
         profilePicture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
         role: 'user',
         isActive: true,
-        lastLogin: new Date(),
-        notificationPreferences: {
-          sermons: true,
-          podcasts: true,
-          liveBroadcasts: true,
-          events: true,
-          ministries: true,
-          devotions: true,
-          saved: true
-        }
+        lastLogin: new Date()
       });
 
       await newUser.save();
@@ -136,16 +127,7 @@ router.post('/signup', [
         email,
         password,
         phone,
-        role: 'user',
-        notificationPreferences: {
-          sermons: true,
-          podcasts: true,
-          liveBroadcasts: true,
-          events: true,
-          ministries: true,
-          devotions: true,
-          saved: true
-        }
+        role: 'user'
       });
       await user.save();
 
@@ -213,16 +195,7 @@ router.post('/register', [
       name,
       email,
       password,
-      role,
-      notificationPreferences: {
-        sermons: true,
-        podcasts: true,
-        liveBroadcasts: true,
-        events: true,
-        ministries: true,
-        devotions: true,
-        saved: true
-      }
+      role
     });
     await user.save();
 

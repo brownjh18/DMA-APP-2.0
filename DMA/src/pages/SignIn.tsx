@@ -5,19 +5,15 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonCard,
-  IonCardContent,
   IonItem,
-  IonLabel,
   IonInput,
   IonButton,
   IonText,
   IonIcon,
   IonLoading
 } from '@ionic/react';
-import { logIn, personCircle, mail, lockClosed, globe, eye, eyeOff, arrowBack } from 'ionicons/icons';
+import { logIn, personCircle, mail, lockClosed, eye, eyeOff, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import apiService from '../services/api';
 import { AuthContext } from '../App';
 
 const SignIn: React.FC = () => {
@@ -31,7 +27,6 @@ const SignIn: React.FC = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-
 
     setLoading(true);
     setError('');
@@ -52,10 +47,6 @@ const SignIn: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSignIn = () => {
-    apiService.initiateGoogleAuth();
   };
 
   return (
@@ -143,51 +134,6 @@ const SignIn: React.FC = () => {
             }}>
               Welcome back to Dove Ministries
             </p>
-          </div>
-
-          {/* Social Login */}
-          <div style={{ marginBottom: '24px' }}>
-            <IonButton
-              expand="block"
-              fill="outline"
-              onClick={handleGoogleSignIn}
-              style={{
-                marginBottom: '12px',
-                height: '44px',
-                border: '1px solid var(--ion-color-step-300)',
-                '--border-radius': '8px'
-              }}
-            >
-              <IonIcon icon={globe} slot="start" />
-              Continue with Google
-            </IonButton>
-          </div>
-
-          {/* Divider */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '20px 0',
-            opacity: 0.6
-          }}>
-            <div style={{
-              flex: 1,
-              height: '1px',
-              background: 'var(--ion-color-step-300)'
-            }} />
-            <span style={{
-              padding: '0 16px',
-              fontSize: '0.9em',
-              color: 'var(--ion-text-color)',
-              fontWeight: '500'
-            }}>
-              or
-            </span>
-            <div style={{
-              flex: 1,
-              height: '1px',
-              background: 'var(--ion-color-step-300)'
-            }} />
           </div>
 
           {/* Error Message */}
@@ -314,33 +260,6 @@ const SignIn: React.FC = () => {
             </IonText>
           </div>
 
-          {/* Demo Credentials */}
-          <div style={{
-            marginTop: '24px',
-            padding: '16px',
-            backgroundColor: 'var(--ion-color-light)',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <h4 style={{
-              margin: '0 0 8px 0',
-              fontSize: '0.9em',
-              fontWeight: '600',
-              color: 'var(--ion-color-primary)'
-            }}>
-              Demo Account
-            </h4>
-            <p style={{
-              margin: '0',
-              fontSize: '0.8em',
-              color: 'var(--ion-text-color)',
-              opacity: 0.7,
-              lineHeight: '1.4'
-            }}>
-              Email: admin@doveministriesafrica.org<br/>
-              Password: admin123
-            </p>
-          </div>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>

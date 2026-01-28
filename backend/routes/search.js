@@ -3,6 +3,7 @@ const Sermon = require('../models/Sermon');
 const Event = require('../models/Event');
 const Devotion = require('../models/Devotion');
 const Ministry = require('../models/Ministry');
+const News = require('../models/News');
 
 const router = express.Router();
 
@@ -10,8 +11,10 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { q: query, limit = 20 } = req.query;
+    console.log('🔍 Search request:', { query, limit });
 
-    if (!query || query.trim().length < 2) {
+    if (!query || query.trim().length < 1) {
+      console.log('❌ Search query too short or empty');
       return res.json({
         results: [],
         total: 0,
@@ -19,32 +22,55 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const searchQuery = { $text: { $search: query.trim() } };
+    const searchRegex = new RegExp(query.trim(), 'i'); // Case-insensitive regex for partial matches
+    const searchQuery = {
+      $or: [
+        { title: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } },
+        { speaker: { $regex: searchRegex } },
+        { content: { $regex: searchRegex } },
+        { verse: { $regex: searchRegex } },
+        { name: { $regex: searchRegex } },
+        { leader: { $regex: searchRegex } },
+        { category: { $regex: searchRegex } },
+        { excerpt: { $regex: searchRegex } },
+        { author: { $regex: searchRegex } },
+        { location: { $regex: searchRegex } }
+      ]
+    };
     const publishedFilter = { isPublished: true };
+    console.log('🔍 Search query object:', searchQuery);
 
     // Search across all collections
-    const [sermons, podcasts, events, devotions, ministries] = await Promise.all([
+    const [sermons, podcasts, events, devotions, ministries, news] = await Promise.all([
       Sermon.find({ ...searchQuery, ...publishedFilter, type: { $ne: 'podcast' } })
         .select('title speaker description thumbnailUrl date')
-        .sort({ score: { $meta: 'textScore' } })
         .limit(5),
       Sermon.find({ ...searchQuery, ...publishedFilter, type: 'podcast' })
         .select('title speaker description thumbnailUrl date')
-        .sort({ score: { $meta: 'textScore' } })
         .limit(5),
       Event.find({ ...searchQuery, ...publishedFilter })
-        .select('title description date location category')
-        .sort({ score: { $meta: 'textScore' } })
+        .select('title description date location category imageUrl')
         .limit(5),
       Devotion.find({ ...searchQuery, ...publishedFilter })
         .select('title content verse date')
-        .sort({ score: { $meta: 'textScore' } })
         .limit(5),
       Ministry.find({ ...searchQuery, isActive: true })
-        .select('name description leader category')
-        .sort({ score: { $meta: 'textScore' } })
+        .select('name description leader category imageUrl')
+        .limit(5),
+      News.find({ ...searchQuery, ...publishedFilter })
+        .select('title excerpt content author category publishDate imageUrl')
         .limit(5)
     ]);
+
+    console.log('📊 Search results counts:', {
+      sermons: sermons.length,
+      podcasts: podcasts.length,
+      events: events.length,
+      devotions: devotions.length,
+      ministries: ministries.length,
+      news: news.length
+    });
 
     // Format results with type and navigation info
     const results = [
@@ -76,8 +102,9 @@ router.get('/', async (req, res) => {
         title: item.title,
         subtitle: item.location,
         description: item.description?.substring(0, 100) + (item.description?.length > 100 ? '...' : ''),
+        image: item.imageUrl,
         date: item.date,
-        url: `/events/${item._id}`,
+        url: `/event/${item._id}`,
         score: item._doc.score || 0
       })),
       ...devotions.map(item => ({
@@ -87,7 +114,7 @@ router.get('/', async (req, res) => {
         subtitle: item.verse,
         description: item.content?.substring(0, 100) + (item.content?.length > 100 ? '...' : ''),
         date: item.date,
-        url: `/tab3?devotionId=${item._id}`,
+        url: `/full-devotion?id=${item._id}`,
         score: item._doc.score || 0
       })),
       ...ministries.map(item => ({
@@ -96,15 +123,33 @@ router.get('/', async (req, res) => {
         title: item.name,
         subtitle: item.leader || item.category,
         description: item.description?.substring(0, 100) + (item.description?.length > 100 ? '...' : ''),
-        url: `/ministries/${item._id}`,
+        image: item.imageUrl,
+        url: `/ministry/${item._id}`,
+        score: item._doc.score || 0
+      })),
+      ...news.map(item => ({
+        id: item._id,
+        type: 'news',
+        title: item.title,
+        subtitle: item.author || item.category,
+        description: (item.excerpt || item.content)?.substring(0, 100) + ((item.excerpt || item.content)?.length > 100 ? '...' : ''),
+        image: item.imageUrl,
+        date: item.publishDate,
+        url: `/full-news?newsId=${item._id}`,
         score: item._doc.score || 0
       }))
     ];
 
-    // Sort by relevance score and limit total results
+    // Sort by date (newest first) and limit total results
     const sortedResults = results
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
       .slice(0, parseInt(limit));
+
+    console.log('✅ Search completed:', {
+      query: query.trim(),
+      totalResults: sortedResults.length,
+      results: sortedResults.map(r => ({ type: r.type, title: r.title, score: r.score }))
+    });
 
     res.json({
       results: sortedResults,
@@ -113,8 +158,9 @@ router.get('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    console.error('❌ Search error:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ error: 'Search failed', details: error.message });
   }
 });
 

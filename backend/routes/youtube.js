@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // YouTube API configuration
-const API_KEY = process.env.YOUTUBE_API_KEY || 'AIzaSyAe9r1CdXxjR8uJoEB1cd7gqqOKmcdiyjA';
+const API_KEY = process.env.YOUTUBE_API_KEY || 'AIzaSyDBYdCJVQ1FpSXPOHd6xFx4eLLuMUBzjw8';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
 // Helper function to extract video ID from URL

@@ -1,8 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import { menu, homeOutline, playCircleOutline, bookOutline, add, radio } from 'ionicons/icons';
+import { menu, homeOutline, playCircleOutline, bookOutline, add, radio, personCircleOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
+import { BACKEND_BASE_URL } from '../services/api';
 
 interface BottomNavBarProps {
   onSidebarToggle: () => void;
@@ -11,7 +12,7 @@ interface BottomNavBarProps {
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
   const history = useHistory();
   const location = useLocation();
-  const { isAdmin } = useContext(AuthContext);
+  const { isAdmin, user } = useContext(AuthContext);
   const [shineContainer, setShineContainer] = useState<string | null>(null);
 
   // Determine active based on current path
@@ -21,6 +22,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
       case '/tab2': return 'sermons';
       case '/tab4': return 'radio';
       case '/tab3': return 'devotions';
+      case '/profile': return 'profile';
       default: return 'home';
     }
   };
@@ -55,6 +57,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
     { name: 'sermons', label: 'Sermons', icon: playCircleOutline, path: '/tab2', action: 'nav' },
     { name: 'radio', label: 'Radio', icon: radio, path: '/tab4', action: 'nav' },
     { name: 'devotions', label: 'Devotions', icon: bookOutline, path: '/tab3', action: 'nav' },
+    { name: 'profile', label: 'Profile', icon: personCircleOutline, path: '/profile', action: 'nav' },
   ];
 
   const getCurrentLabel = () => {
@@ -196,16 +199,31 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
                   : '2px solid transparent',
                 transition: 'all 0.3s ease',
               }}>
-                <IonIcon
-                  icon={item.icon}
-                  style={{
-                    fontSize: window.innerWidth <= 576 ? '22px' : '24px',
-                    color: isActive 
-                      ? '#667eea' 
-                      : theme.text,
-                    transition: 'all 0.3s ease',
-                  }}
-                />
+                {item.name === 'profile' && user?.profilePicture ? (
+                  <img
+                    src={`${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}`}
+                    alt="Profile"
+                    style={{
+                      width: window.innerWidth <= 576 ? '28px' : '32px',
+                      height: window.innerWidth <= 576 ? '28px' : '32px',
+                      borderRadius: '50%',
+                      border: isActive ? '2px solid #667eea' : '2px solid transparent',
+                      objectFit: 'cover',
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                ) : (
+                  <IonIcon
+                    icon={item.icon}
+                    style={{
+                      fontSize: window.innerWidth <= 576 ? '22px' : '24px',
+                      color: isActive
+                        ? '#667eea'
+                        : theme.text,
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                )}
               </div>
             </div>
           );

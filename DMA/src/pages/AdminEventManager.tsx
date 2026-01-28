@@ -18,7 +18,8 @@ import {
   IonBadge,
   IonText,
   IonRefresher,
-  IonRefresherContent
+  IonRefresherContent,
+  IonActionSheet
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import apiService from '../services/api';
@@ -32,8 +33,10 @@ import {
   time,
   eye,
   eyeOff,
-  arrowBack
+  arrowBack,
+  ellipsisVertical
 } from 'ionicons/icons';
+import './Tab4.css';
 
 const AdminEventManager: React.FC = () => {
   const history = useHistory();
@@ -44,6 +47,8 @@ const AdminEventManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [animatingStat, setAnimatingStat] = useState<string | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   useEffect(() => {
     loadEvents();
@@ -131,6 +136,11 @@ const AdminEventManager: React.FC = () => {
 
   const openEditPage = (event: any) => {
     history.push(`/admin/events/edit/${event.id}`, { event });
+  };
+
+  const openActionSheet = (event: any) => {
+    setSelectedEvent(event);
+    setShowActionSheet(true);
   };
 
   const handleStatClick = (statType: string) => {
@@ -440,8 +450,31 @@ const AdminEventManager: React.FC = () => {
                 height: '48px',
                 borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '--border-radius': '24px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
               <IonIcon icon={add} slot="start" />
@@ -468,99 +501,99 @@ const AdminEventManager: React.FC = () => {
               {sortBy === 'date' && ' (Sorted by Date)'}
             </h2>
 
-            {getSortedAndFilteredEvents().map((event) => (
-              <IonCard key={event.id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
-                <IonCardContent style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      {event.imageUrl && (
-                        <div style={{ marginBottom: '12px' }}>
-                          <img
-                            src={event.imageUrl}
-                            alt={event.title}
-                            style={{
-                              width: '100%',
-                              maxHeight: '120px',
-                              objectFit: 'cover',
-                              borderRadius: '8px'
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <h3 style={{
-                          margin: '0',
-                          fontSize: '1.1em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)'
-                        }}>
-                          {event.title}
-                        </h3>
-                        <IonBadge
-                          style={{
-                            backgroundColor: event.status === 'published' ? '#10b981' : '#f59e0b',
-                            color: 'white',
-                            fontWeight: '600',
-                            borderRadius: '8px'
-                          }}
-                        >
-                          {event.status}
-                        </IonBadge>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
+              {getSortedAndFilteredEvents().map((event) => (
+                <div
+                  key={event.id}
+                  className="podcast-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: 'var(--ion-background-color)',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    padding: '12px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    maxWidth: '500px',
+                    position: 'relative'
+                  }}
+                  onClick={() => openActionSheet(event)}
+                >
+                  <div className="podcast-options-btn">
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openActionSheet(event);
+                      }}
+                      style={{
+                        margin: '0',
+                        padding: '0',
+                        minWidth: 'auto',
+                        height: 'auto',
+                        '--color': 'white'
+                      }}
+                    >
+                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
+                    </IonButton>
+                  </div>
+
+                  <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
+                    {event.imageUrl ? (
+                      <img
+                        src={event.imageUrl.startsWith('/uploads') ? `http://localhost:5000${event.imageUrl}` : event.imageUrl}
+                        alt={event.title}
+                        className="podcast-thumbnail"
+                      />
+                    ) : (
+                      <div
+                        className="podcast-thumbnail"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <IonIcon icon={calendar} style={{ fontSize: '2em', color: 'white' }} />
                       </div>
-                      <p style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '0.9em',
-                        color: 'var(--ion-color-medium)'
-                      }}>
-                        {event.description}
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} />
-                          {event.date} at {event.time}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={location} />
-                          {event.location}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={people} />
-                          {event.attendees}/{event.capacity} attendees
-                        </div>
-                      </div>
+                    )}
+                    <div className={`podcast-badge ${event.status !== 'published' ? 'live' : ''}`}>
+                      {event.status === 'published' ? 'EVENT' : 'DRAFT'}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={() => toggleStatus(event.id)}
-                          style={{ color: 'var(--ion-color-primary)' }}
-                        >
-                          <IonIcon icon={event.status === 'published' ? eyeOff : eye} />
-                        </IonButton>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          onClick={() => openEditPage(event)}
-                          style={{ color: 'var(--ion-color-primary)' }}
-                        >
-                          <IonIcon icon={create} />
-                        </IonButton>
-                        <IonButton
-                          fill="clear"
-                          size="small"
-                          style={{ color: '#ef4444' }}
-                          onClick={() => deleteEvent(event.id)}
-                        >
-                          <IonIcon icon={trash} />
-                        </IonButton>
+                  </div>
+
+                  <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ width: '100%' }}>
+                      <h4 className="podcast-title" style={{ marginBottom: '6px' }}>
+                        {event.title}
+                      </h4>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '0.85em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>
+                        {event.organizer || 'Dove Ministries Africa'}
+                      </p>
+                      <div className="podcast-meta">
+                        <div className="podcast-meta-item">
+                          <IonIcon icon={calendar} />
+                          <span>{new Date(event.date + ' ' + event.time).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+                        <div className="podcast-meta-item">
+                          <IonIcon icon={location} />
+                          <span>{event.location}</span>
+                        </div>
+                        <div className="podcast-meta-item">
+                          <IonIcon icon={people} />
+                          <span>{event.attendees}/{event.capacity} attendees</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </IonCardContent>
-              </IonCard>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Footer */}
@@ -574,6 +607,46 @@ const AdminEventManager: React.FC = () => {
             </IonText>
           </div>
         </div>
+
+        <IonActionSheet
+          isOpen={showActionSheet}
+          onDidDismiss={() => setShowActionSheet(false)}
+          header={`Options for "${selectedEvent?.title}"`}
+          buttons={[
+            {
+              text: selectedEvent?.status === 'published' ? 'Unpublish' : 'Publish',
+              icon: selectedEvent?.status === 'published' ? eyeOff : eye,
+              handler: () => {
+                if (selectedEvent) {
+                  toggleStatus(selectedEvent.id);
+                }
+              }
+            },
+            {
+              text: 'Edit',
+              icon: create,
+              handler: () => {
+                if (selectedEvent) {
+                  openEditPage(selectedEvent);
+                }
+              }
+            },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              icon: trash,
+              handler: () => {
+                if (selectedEvent) {
+                  deleteEvent(selectedEvent.id);
+                }
+              }
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel'
+            }
+          ]}
+        />
 
       </IonContent>
     </IonPage>

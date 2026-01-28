@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'DMA',
   webDir: 'dist',
   server: {
-    // Enable Android live reload for emulator development
-    url: 'http://10.0.2.2:5173', // Android emulator localhost
+    // Enable Android live reload for USB device development
+    url: 'http://localhost:5173', // Localhost for adb reverse
     cleartext: true
   },
   plugins: {

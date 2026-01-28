@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { IonIcon, IonFab, IonFabButton, IonInput, IonButton, IonList, IonItem, IonLabel, IonBadge, IonPopover } from '@ionic/react';
-import { search, close, home, playCircle, book, calendar, people, heart, wallet, download, bookmark, time, documentText, person, settings, informationCircle, radio, notifications as notificationsIcon } from 'ionicons/icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { IonIcon, IonBadge, IonPopover, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonText, IonChip, IonSpinner, IonSearchbar } from '@ionic/react';
+import { search, radio, playCircle, calendar, book, people, newspaper, informationCircle, arrowBack, close } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useNotifications, NotificationItem } from '../contexts/NotificationContext';
-import apiService from '../services/api';
-import NotificationPopover from './NotificationPopover';
-// import { searchContent, getSearchSuggestions, SearchResult } from '../services/searchService';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import './FloatingSearchIcon.css';
 
 interface SearchResult {
   id: string;
-  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry';
+  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry' | 'news';
   title: string;
   subtitle?: string;
   description?: string;
@@ -23,59 +20,18 @@ interface SearchResult {
 }
 
 const FloatingSearchIcon: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [liveStreams, setLiveStreams] = useState<YouTubeVideo[]>([]);
   const [liveBroadcasts, setLiveBroadcasts] = useState<any[]>([]);
   const [isCheckingLive, setIsCheckingLive] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationEvent, setNotificationEvent] = useState<MouseEvent | undefined>();
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const history = useHistory();
   const location = useLocation();
   const { setCurrentMedia, setIsPlaying, setCurrentSermon, isPlaying, currentSermon, currentMedia } = usePlayer();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification, clearAllNotifications } = useNotifications();
-
-  // App-specific suggestions that map to actual pages and content
-  const appSuggestions = [
-    { text: 'Home', route: '/tab1', description: 'Main dashboard and daily devotion' },
-    { text: 'Sermons', route: '/tab2', description: 'Watch and listen to sermons' },
-    { text: 'Devotions', route: '/tab3', description: 'Daily devotionals and readings' },
-    { text: 'Events', route: '/events', description: 'Upcoming church events and programs' },
-    { text: 'Ministries', route: '/ministries', description: 'Church ministries and departments' },
-    { text: 'Prayer Requests', route: '/prayer', description: 'Submit and view prayer requests' },
-    { text: 'Giving', route: '/giving', description: 'Online giving and donations' },
-    { text: 'Saved', route: '/saved', description: 'Saved sermons and content' },
-    { text: 'My Favorites', route: '/favorites', description: 'Your saved favorite content' },
-    { text: 'Watch History', route: '/watch-history', description: 'Recently watched sermons' },
-    { text: 'Reading History', route: '/reading-history', description: 'Recently read devotions' },
-    { text: 'Profile', route: '/profile', description: 'Your account and preferences' },
-    { text: 'Settings', route: '/settings', description: 'App settings and preferences' },
-    { text: 'About DMA', route: '/tab5', description: 'About Dove Ministries Africa' }
-  ];
-
-  // Extract just the text for filtering
-  const allSuggestions = appSuggestions.map(item => item.text);
-
-  useEffect(() => {
-    // Show app-specific suggestions
-    if (searchQuery.trim().length === 0) {
-      // Show popular/default suggestions when no query
-      setSuggestions(['Home', 'Sermons', 'Devotions', 'Events', 'Ministries']);
-      setShowSuggestions(true);
-    } else {
-      const filtered = allSuggestions.filter(suggestion =>
-        suggestion.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5); // Limit to 5 suggestions
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-    }
-  }, [searchQuery]);
-
 
   // Check for live broadcasts and YouTube live streams periodically with rate limiting and caching
   useEffect(() => {
@@ -162,84 +118,95 @@ const FloatingSearchIcon: React.FC = () => {
     };
   }, []);
 
-  const performSearch = async (query: string) => {
+  // Debounced search function
+  const performSearch = useCallback(async (query: string, filter: string = 'all') => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setHasSearched(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      let searchResults: SearchResult[] = [];
+      const response = await apiService.search(query.trim());
+      let results = response.results || [];
 
-      if (query.trim()) {
-        // Call backend search API
-        const response = await apiService.search(query.trim());
-        searchResults = response.results || [];
-      } else {
-        // If no query, show app pages as results
-        searchResults = appSuggestions.map((page, index) => ({
-          id: `page-${index}`,
-          type: 'sermon' as const,
-          title: page.text,
-          subtitle: 'App Page',
-          description: page.description,
-          url: page.route,
-          score: 1
-        }));
+      // Apply filter if not 'all'
+      if (filter !== 'all') {
+        results = results.filter((result: SearchResult) => result.type === filter);
       }
 
-      setSearchResults(searchResults);
-      setShowResults(true);
-      setShowSuggestions(false);
-      setIsLoading(false);
-
+      setSearchResults(results);
+      setHasSearched(true);
     } catch (error) {
       console.error('Search failed:', error);
       setSearchResults([]);
-      setShowResults(true);
-      setShowSuggestions(false);
+      setHasSearched(true);
+    } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setHasSearched(false);
+      return;
+    }
+
+    const debounceDelay = searchQuery.trim().length <= 2 ? 50 : 150; // Faster for short queries
+    const debounceTimer = setTimeout(() => {
+      performSearch(searchQuery, selectedFilter);
+    }, debounceDelay);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, selectedFilter, performSearch]);
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
+
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter);
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'sermon': return playCircle;
+      case 'podcast': return radio;
+      case 'event': return calendar;
+      case 'devotion': return book;
+      case 'ministry': return people;
+      case 'news': return newspaper;
+      default: return search;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'sermon': return 'primary';
+      case 'podcast': return 'secondary';
+      case 'event': return 'tertiary';
+      case 'devotion': return 'success';
+      case 'ministry': return 'warning';
+      case 'news': return 'danger';
+      default: return 'medium';
+    }
+  };
+
+  const filters = [
+    { value: 'all', label: 'All' },
+    { value: 'sermon', label: 'Sermons' },
+    { value: 'podcast', label: 'Podcasts' },
+    { value: 'event', label: 'Events' },
+    { value: 'devotion', label: 'Devotions' },
+    { value: 'ministry', label: 'Ministries' },
+    { value: 'news', label: 'News' }
+  ];
 
   const handleSearchClick = () => {
-    if (isExpanded) {
-      // If expanded, perform search
-      performSearch(searchQuery);
-    } else {
-      // Expand the search bar
-      setIsExpanded(true);
-    }
-  };
-
-  const handleClose = () => {
-    setIsExpanded(false);
-    setSearchQuery('');
-    setShowSuggestions(false);
-    setShowResults(false);
-    setSearchResults([]);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      performSearch(searchQuery);
-    } else if (e.key === 'Escape') {
-      handleClose();
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    // Find the corresponding app page and navigate directly
-    const appPage = appSuggestions.find(item => item.text === suggestion);
-    if (appPage) {
-      history.push(appPage.route);
-      handleClose();
-    } else {
-      // Fallback to search if not found
-      setSearchQuery(suggestion);
-      performSearch(suggestion);
-    }
-  };
-
-  const handleBackToSuggestions = () => {
-    setShowResults(false);
-    setShowSuggestions(true);
+    setShowSearchModal(true);
   };
 
   const handleLiveBroadcastClick = () => {
@@ -280,31 +247,12 @@ const FloatingSearchIcon: React.FC = () => {
     }
   };
 
-  const handleNotificationClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    setNotificationEvent(event.nativeEvent);
-    setShowNotifications(true);
-  };
-
-  const handleNotificationSelect = (notification: NotificationItem) => {
-    // Mark notification as read
-    if (!notification.read) {
-      markAsRead(notification.id);
-    }
-
-    // Navigate to the notification's data URL if available
-    if (notification.data?.url) {
-      history.push(notification.data.url);
-    }
-    setShowNotifications(false);
-  };
 
   return (
     <>
-      {isExpanded && <div className="search-backdrop" onClick={handleClose}></div>}
-      <div className={`floating-search-container ${isExpanded ? 'expanded' : ''}`}>
+      <div className="floating-search-container">
         {/* Live Broadcast Button - only show when there's an active live broadcast or YouTube live stream, and not on the go live page */}
-        {(liveBroadcasts.length > 0 || liveStreams.length > 0) && !isExpanded && location.pathname !== '/admin/live' && (
+        {(liveBroadcasts.length > 0 || liveStreams.length > 0) && location.pathname !== '/admin/live' && (
           <div
             className={`floating-live-button ${(liveBroadcasts.length > 0 || liveStreams.length > 0) ? 'blinking' : ''}`}
             onClick={handleLiveBroadcastClick}
@@ -348,380 +296,230 @@ const FloatingSearchIcon: React.FC = () => {
           </div>
         )}
 
-        {isExpanded ? (
-          <div className="search-container">
-            <div className="expanded-search-bar">
-              <IonInput
-                value={searchQuery}
-                placeholder="Search..."
-                onIonChange={(e) => setSearchQuery(e.detail.value!)}
-                onKeyPress={handleKeyPress}
-                autofocus
-                className="search-input"
-              />
-              <IonButton fill="clear" onClick={handleSearchClick} className="search-submit-btn">
-                <IonIcon icon={search} />
-              </IonButton>
-              <IonButton fill="clear" onClick={handleClose} className="search-close-btn">
-                <IonIcon icon={close} />
-              </IonButton>
-            </div>
-            {showSuggestions && (
-              <div className="search-suggestions">
-                <div className="suggestions-header">
-                  <span className="suggestions-title">Quick Access</span>
-                </div>
-                <IonList className="suggestions-list">
-                  {suggestions.map((suggestion, index) => {
-                    const appPage = appSuggestions.find(item => item.text === suggestion);
-                    return (
-                      <IonItem
-                        key={index}
-                        button
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="suggestion-item"
-                      >
-                        <IonIcon
-                          icon={
-                            suggestion === 'Home' ? home :
-                            suggestion === 'Sermons' ? playCircle :
-                            suggestion === 'Devotions' ? book :
-                            suggestion === 'Events' ? calendar :
-                            suggestion === 'Ministries' ? people :
-                            suggestion === 'Prayer Requests' ? heart :
-                            suggestion === 'Giving' ? wallet :
-                            suggestion === 'Saved' ? download :
-                            suggestion === 'My Favorites' ? bookmark :
-                            suggestion === 'Watch History' ? time :
-                            suggestion === 'Reading History' ? documentText :
-                            suggestion === 'Profile' ? person :
-                            suggestion === 'Settings' ? settings :
-                            suggestion === 'About DMA' ? informationCircle :
-                            search
-                          }
-                          slot="start"
-                          className="suggestion-icon"
-                        />
-                        <IonLabel>
-                          <h3>{suggestion}</h3>
-                          <p>{appPage?.description}</p>
-                        </IonLabel>
-                      </IonItem>
-                    );
-                  })}
-                </IonList>
-              </div>
-            )}
-
-            {showResults && (
-              <div className="search-results">
-                <div className="results-header">
-                  <IonButton fill="clear" onClick={handleBackToSuggestions} className="back-btn">
-                    <IonIcon icon="arrow-back" />
-                  </IonButton>
-                  <span className="results-title">
-                    {searchQuery.trim() ? `Search Results for "${searchQuery}"` : 'All App Pages'}
-                  </span>
-                </div>
-                <IonList className="results-list">
-                  {isLoading ? (
-                    <IonItem className="loading-item">
-                      <IonLabel>Searching...</IonLabel>
-                    </IonItem>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((result, index) => (
-                      <IonItem
-                        key={result.id || index}
-                        button
-                        onClick={() => {
-                          // Navigate to the result's URL
-                          history.push(result.url);
-                          handleClose();
-                        }}
-                        className="result-item"
-                      >
-                        <IonIcon
-                          icon={
-                            result.type === 'sermon' ? 'play-circle' :
-                            result.type === 'podcast' ? radio :
-                            result.type === 'event' ? 'calendar' :
-                            result.type === 'devotion' ? 'book' :
-                            result.type === 'ministry' ? 'people' :
-                            'search'
-                          }
-                          slot="start"
-                          className="result-icon"
-                        />
-                        <IonLabel>
-                          <h3>{result.title}</h3>
-                          <p>{result.subtitle || result.type}</p>
-                          {result.description && <p className="result-description">{result.description}</p>}
-                        </IonLabel>
-                      </IonItem>
-                    ))
-                  ) : (
-                    <IonItem className="no-results">
-                      <IonLabel>No results found for "{searchQuery}"</IonLabel>
-                    </IonItem>
-                  )}
-                </IonList>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Notification Button */}
-            <div
-              className="floating-notification-button"
-              onClick={handleNotificationClick}
-              style={{
-                position: 'absolute',
-                top: 'calc(var(--ion-safe-area-top) - 0px)',
-                right: (liveBroadcasts.length > 0 || liveStreams.length > 0) ? 160 : 95, // Adjust position when live button is active
-                width: 45,
-                height: 45,
-                borderRadius: 25,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 999,
-              }}
-            >
-              <IonIcon
-                icon={notificationsIcon}
-                style={{
-                  color: 'var(--ion-text-color)',
-                  fontSize: '24px',
-                }}
-              />
-              {unreadCount > 0 && (
-                <IonBadge
-                  color="danger"
-                  style={{
-                    position: 'absolute',
-                    top: '5px',
-                    right: '5px',
-                    minWidth: '16px',
-                    height: '16px',
-                    fontSize: '10px',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid var(--ion-background-color)',
-                  }}
-                >
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </IonBadge>
-              )}
-            </div>
-
-            {/* Search Button */}
-            <div
-              className="floating-search-button"
-              onClick={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                target.style.transform = 'scale(0.8)';
-                setTimeout(() => {
-                  target.style.transform = 'scale(1)';
-                }, 200);
-                handleSearchClick();
-              }}
-              style={{
-                position: 'absolute',
-                top: 'calc(var(--ion-safe-area-top) - 18px)',
-                right: 20,
-                width: 45,
-                height: 45,
-                borderRadius: 25,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 999,
-                transition: 'transform 0.2s ease'
-              }}
-            >
-              <IonIcon
-                icon={search}
-                style={{
-                  color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                  fontSize: '20px',
-                }}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Notification Popover */}
-        <IonPopover
-          isOpen={showNotifications}
-          event={notificationEvent}
-          onDidDismiss={() => setShowNotifications(false)}
-          side="bottom"
-          alignment="center"
-          style={{ '--offset-y': '8px' }}
-        >
-          <div style={{
+        {/* Search Button */}
+        <div
+          className="floating-search-button"
+          onClick={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+              target.style.transform = 'scale(1)';
+            }, 200);
+            handleSearchClick();
+          }}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - 18px)',
+            right: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            minWidth: '120px',
-            maxWidth: '280px',
-            padding: '2px 0',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            position: 'relative'
-          }}>
-            {/* Frosted glass overlay */}
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
-              pointerEvents: 'none',
-              borderRadius: '16px'
-            }} />
-            <div style={{
-              padding: '8px 12px',
-              borderBottom: '1px solid rgba(255,255,255,0.2)',
-              background: 'rgba(13, 128, 163, 0.1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '0.95em',
-                fontWeight: '600',
-                color: 'white'
-              }}>
-                Notifications
-              </h3>
-              {unreadCount > 0 && (
-                <IonButton
-                  fill="clear"
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markAllAsRead();
-                  }}
-                  style={{
-                    '--color': 'white',
-                    '--padding-start': '6px',
-                    '--padding-end': '6px',
-                    '--padding-top': '2px',
-                    '--padding-bottom': '2px',
-                    fontSize: '0.75em',
-                    fontWeight: '500',
-                    height: '24px',
-                    minHeight: '24px'
-                  }}
-                >
-                  Mark All Read
-                </IonButton>
-              )}
-            </div>
-            <IonList style={{ background: 'transparent', padding: '0', position: 'relative', zIndex: 1 }}>
-              {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <IonItem
-                    key={notification.id}
-                    button
-                    onClick={() => handleNotificationSelect(notification)}
-                    style={{
-                      '--background-hover': 'rgba(255,255,255,0.1)',
-                      '--padding-start': '8px',
-                      '--inner-padding-end': '8px',
-                      minHeight: '48px',
-                      opacity: notification.read ? 0.7 : 1
-                    }}
-                  >
-                    <IonIcon
-                      icon={
-                        notification.type === 'sermon' ? playCircle :
-                        notification.type === 'event' ? calendar :
-                        notification.type === 'devotion' ? book :
-                        notification.type === 'podcast' ? radio :
-                        notification.type === 'ministry' ? people :
-                        notification.type === 'news' ? 'newspaper' :
-                        informationCircle
-                      }
-                      slot="start"
-                      style={{
-                        fontSize: '1em',
-                        color: notification.read ? 'var(--ion-color-medium)' : 'var(--ion-color-primary)',
-                        marginRight: '6px'
-                      }}
-                    />
-                    <IonLabel style={{ flex: 1 }}>
-                      <h3 style={{
-                        fontSize: '0.8em',
-                        fontWeight: '600',
-                        margin: '0 0 2px 0',
-                        color: notification.read ? 'var(--ion-color-medium)' : 'var(--ion-text-color)'
-                      }}>
-                        {notification.title}
-                      </h3>
-                      <p style={{
-                        fontSize: '0.75em',
-                        margin: '0',
-                        color: 'var(--ion-color-medium)',
-                        lineHeight: '1.2'
-                      }}>
-                        {notification.message}
-                      </p>
-                      <p style={{
-                        fontSize: '0.65em',
-                        margin: '2px 0 0 0',
-                        color: 'var(--ion-color-medium)',
-                        opacity: 0.8
-                      }}>
-                        {notification.timestamp.toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </IonLabel>
-                    {!notification.read && (
-                      <div style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '3px',
-                        backgroundColor: 'var(--ion-color-primary)',
-                        flexShrink: 0
-                      }} />
-                    )}
-                  </IonItem>
-                ))
-              ) : (
-                <IonItem style={{ '--background-hover': 'transparent', '--padding-start': '8px', '--inner-padding-end': '8px', minHeight: '40px' }}>
-                  <IonLabel>
-                    <h3 style={{ fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                      No notifications
-                    </h3>
-                    <p style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)' }}>
-                      You're all caught up!
-                    </p>
-                  </IonLabel>
-                </IonItem>
-              )}
-            </IonList>
-          </div>
-        </IonPopover>
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Frosted glass overlay */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
+            pointerEvents: 'none',
+            borderRadius: '25px'
+          }} />
+          <IonIcon
+            icon={search}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
       </div>
+
+
+      {/* Search Modal - New Transparent Blur Design */}
+      <IonModal
+        isOpen={showSearchModal}
+        onDidDismiss={() => setShowSearchModal(false)}
+        className="search-modal-transparent"
+      >
+        <IonHeader className="search-header-transparent">
+          <IonToolbar style={{ '--background': 'transparent' }}>
+            <IonButton
+              fill="clear"
+              slot="start"
+              onClick={() => setShowSearchModal(false)}
+              className="close-button-transparent"
+            >
+              <IonIcon icon={close} />
+            </IonButton>
+            <IonTitle style={{ color: 'var(--ion-text-color)' }}>Search</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonContent className="search-content-transparent">
+          <div style={{ padding: '0 16px' }}>
+            {/* Search Bar */}
+            <div className="search-bar-transparent">
+              <IonSearchbar
+                value={searchQuery}
+                onIonInput={(e: any) => handleSearchChange(e.detail.value!)}
+                onIonClear={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setHasSearched(false);
+                }}
+                placeholder="Search sermons, events, devotions..."
+                showClearButton="always"
+                style={{ '--background': 'transparent', '--color': 'var(--ion-text-color)', '--placeholder-color': 'rgba(var(--ion-text-color-rgb), 0.7)' }}
+              />
+            </div>
+
+            {/* Filter Chips */}
+            <div className="filter-chips-transparent">
+              <IonText style={{ fontSize: '0.9em', marginBottom: '8px', display: 'block', color: 'var(--ion-text-color)' }}>
+                Filter by:
+              </IonText>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {filters.map((filter) => (
+                  <IonChip
+                    key={filter.value}
+                    className={`filter-chip-transparent ${selectedFilter === filter.value ? 'active' : ''}`}
+                    onClick={() => handleFilterChange(filter.value)}
+                  >
+                    <IonLabel>{filter.label}</IonLabel>
+                  </IonChip>
+                ))}
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="loading-spinner-transparent">
+                <IonSpinner name="crescent" color="primary" />
+                <IonText style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
+                  Searching...
+                </IonText>
+              </div>
+            )}
+
+            {/* Search Results */}
+            {!isLoading && hasSearched && (
+              <>
+                {searchResults.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <IonText style={{ fontSize: '0.9em', marginBottom: '16px', display: 'block', color: 'var(--ion-text-color)' }}>
+                      {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
+                    </IonText>
+
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={`${result.type}-${result.id}-${index}`}
+                        className="result-card-transparent"
+                        onClick={() => {
+                          setShowSearchModal(false);
+                          history.push(result.url);
+                        }}
+                      >
+                        <div className="result-card-content">
+                          {/* Thumbnail */}
+                          {result.image ? (
+                            <img
+                              src={result.image.startsWith('/uploads') ? `${BACKEND_BASE_URL}${result.image}` : result.image}
+                              alt={result.title}
+                              className="result-card-thumbnail"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/bible.JPG';
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="result-card-thumbnail"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'rgba(var(--ion-text-color-rgb), 0.1)'
+                              }}
+                            >
+                              <IonIcon
+                                icon={getTypeIcon(result.type)}
+                                style={{ fontSize: '24px', color: 'var(--ion-text-color)' }}
+                              />
+                            </div>
+                          )}
+
+                          {/* Content */}
+                          <div className="result-card-info">
+                            <div className="result-card-title">{result.title}</div>
+                            <div className="result-card-subtitle">
+                              {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+                            </div>
+                            {result.description && (
+                              <div className="result-card-description">
+                                {result.description}
+                              </div>
+                            )}
+                            {result.date && (
+                              <div style={{ color: 'rgba(var(--ion-text-color-rgb), 0.6)', fontSize: '0.8em', marginTop: '4px' }}>
+                                {new Date(result.date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Type Badge */}
+                          <div className="result-card-type">
+                            {result.type}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-results-transparent">
+                    <IonIcon
+                      icon={search}
+                      size="large"
+                      className="no-results-icon"
+                      style={{ marginBottom: '16px' }}
+                    />
+                    <div className="no-results-title">No results found</div>
+                    <div className="no-results-text">Try different keywords or check your spelling</div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Initial State */}
+            {!hasSearched && !isLoading && (
+              <div className="no-results-transparent">
+                <IonIcon
+                  icon={search}
+                  size="large"
+                  className="no-results-icon"
+                  style={{ marginBottom: '16px' }}
+                />
+                <div className="no-results-title">Search Content</div>
+                <div className="no-results-text">Find sermons, events, devotions, and more</div>
+              </div>
+            )}
+          </div>
+        </IonContent>
+      </IonModal>
     </>
   );
 };

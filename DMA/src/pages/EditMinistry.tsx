@@ -80,6 +80,7 @@ const EditMinistry: React.FC = () => {
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Get ministry data from navigation state
@@ -143,6 +144,7 @@ const EditMinistry: React.FC = () => {
   const removeThumbnail = () => {
     setThumbnailFile(null);
     setThumbnailPreview('');
+    setCurrentThumbnailUrl('');
   };
 
   const uploadThumbnail = async (): Promise<string | null> => {
@@ -456,9 +458,17 @@ const EditMinistry: React.FC = () => {
                 Ministry Thumbnail (Optional)
               </IonLabel>
 
+              {/* Hidden file input - always present */}
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailSelect}
+                style={{ display: 'none' }}
+              />
+
               {(thumbnailPreview || currentThumbnailUrl) ? (
                 <div style={{
-                  position: 'relative',
                   borderRadius: '12px',
                   overflow: 'hidden',
                   backgroundColor: 'rgba(0,0,0,0.02)'
@@ -473,20 +483,79 @@ const EditMinistry: React.FC = () => {
                       display: 'block'
                     }}
                   />
-                  <IonButton
-                    fill="clear"
-                    size="small"
-                    onClick={removeThumbnail}
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      backgroundColor: 'rgba(0,0,0,0.5)',
-                      color: 'white'
-                    }}
-                  >
-                    <IonIcon icon={closeCircle} />
-                  </IonButton>
+                  <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={image} slot="start" />
+                      Change
+                    </IonButton>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      onClick={removeThumbnail}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                        color: '#ffffff',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={closeCircle} slot="start" />
+                      Remove
+                    </IonButton>
+                  </div>
                 </div>
               ) : (
                 <div style={{
@@ -494,26 +563,23 @@ const EditMinistry: React.FC = () => {
                   borderRadius: '12px',
                   padding: '20px',
                   textAlign: 'center',
-                  backgroundColor: 'rgba(0,0,0,0.02)'
-                }}>
+                  backgroundColor: 'rgba(0,0,0,0.02)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => thumbnailInputRef.current?.click()}
+                >
                   <IonIcon icon={image} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
                   <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
                     Click to upload a thumbnail image
                   </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleThumbnailSelect}
-                    style={{
-                      display: 'block',
-                      margin: '0 auto',
-                      padding: '8px',
-                      border: '1px solid var(--ion-color-light-shade)',
-                      borderRadius: '8px',
-                      backgroundColor: 'var(--ion-color-light)',
-                      cursor: 'pointer'
-                    }}
-                  />
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    style={{ '--border-radius': '6px' }}
+                  >
+                    <IonIcon icon={image} slot="start" />
+                    Choose Image
+                  </IonButton>
                 </div>
               )}
             </div>

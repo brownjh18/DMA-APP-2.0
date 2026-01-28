@@ -122,7 +122,7 @@ const AdminDevotionManager: React.FC = () => {
     const devotion = devotions.find(d => d._id === id);
     if (!devotion) return;
 
-    const newStatus = devotion.isPublished ? false : true;
+    const newStatus = devotion.status === 'publish' ? 'draft' : 'publish';
 
     try {
       const token = localStorage.getItem('token');
@@ -132,13 +132,13 @@ const AdminDevotionManager: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ isPublished: newStatus })
+        body: JSON.stringify({ status: newStatus })
       });
 
       if (response.ok) {
         setDevotions(devotions.map(devotion =>
           devotion._id === id
-            ? { ...devotion, isPublished: newStatus }
+            ? { ...devotion, status: newStatus }
             : devotion
         ));
         // Set refresh flag for main pages
@@ -220,8 +220,8 @@ const AdminDevotionManager: React.FC = () => {
           handler: () => toggleFeatured(devotion._id)
         },
         {
-          text: devotion.isPublished ? 'Unpublish' : 'Publish',
-          icon: devotion.isPublished ? eyeOff : eye,
+          text: devotion.status === 'publish' ? 'Unpublish' : 'Publish',
+          icon: devotion.status === 'publish' ? eyeOff : eye,
           handler: () => toggleStatus(devotion._id)
         },
         {
@@ -257,7 +257,7 @@ const AdminDevotionManager: React.FC = () => {
     // Apply filter
     let filtered = devotions;
     if (filterBy === 'published') {
-      filtered = devotions.filter(d => d.isPublished === true);
+      filtered = devotions.filter(d => d.status === 'publish');
     } else if (filterBy === 'featured') {
       filtered = devotions.filter(d => d.isFeatured === true);
     }
@@ -485,7 +485,7 @@ const AdminDevotionManager: React.FC = () => {
                   zIndex: 1,
                   animation: animatingStat === 'published' ? 'bounce 0.6s ease-out' : 'none'
                 }}>
-                  {devotions.filter(d => d.isPublished).length}
+                  {devotions.filter(d => d.status === 'publish').length}
                 </div>
               </div>
               <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Published</div>
@@ -553,8 +553,31 @@ const AdminDevotionManager: React.FC = () => {
                 height: '48px',
                 borderRadius: '24px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '--border-radius': '24px'
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(0.98)';
+                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseUp={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                setTimeout(() => {
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                }, 200);
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
               <IonIcon icon={add} slot="start" />
@@ -582,88 +605,175 @@ const AdminDevotionManager: React.FC = () => {
               {sortBy === 'date' && ' (Sorted by Date)'}
             </h2>
 
-            {getSortedAndFilteredDevotions().map((devotion) => (
-              <IonCard key={devotion._id} style={{ margin: '0 0 12px 0', borderRadius: '12px' }}>
-                <IonCardContent style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <h3 style={{
-                          margin: '0',
-                          fontSize: '1.1em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)'
-                        }}>
-                          {devotion.title}
-                        </h3>
-                        {devotion.featured && (
-                          <IonIcon icon={star} style={{ color: '#f59e0b', fontSize: '1.2em' }} />
-                        )}
-                      </div>
-                      <p style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '0.9em',
-                        color: 'var(--ion-color-primary)',
-                        fontWeight: '500'
+            {getSortedAndFilteredDevotions().length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {getSortedAndFilteredDevotions().map(d => (
+                  <div
+                    key={d._id}
+                    style={{
+                      backgroundColor: 'transparent',
+                      borderRadius: '16px',
+                      border: '1px solid var(--ion-card-border-color, rgba(0,0,0,0.1))',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                    onClick={() => showOptions(d)}
+                  >
+                    <div style={{ padding: '10px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      {/* Thumbnail on the left */}
+                      <div style={{
+                        width: '90px',
+                        height: '140px',
+                        borderRadius: '12px 0 0 12px',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        position: 'relative'
                       }}>
-                        {devotion.scripture}
-                      </p>
-                      <p style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '0.9em',
-                        color: 'var(--ion-color-medium)'
-                      }}>
-                        {devotion.author}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} />
-                          {new Date(devotion.date).toISOString().split('T')[0]}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={eye} />
-                          {devotion.views}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                        <IonBadge
+                        <img
+                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
+                          alt="Devotion thumbnail"
                           style={{
-                            backgroundColor: devotion.isPublished ? '#10b981' : '#f59e0b',
-                            color: 'white',
-                            fontWeight: '600',
-                            borderRadius: '8px'
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
                           }}
-                        >
-                          {devotion.isPublished ? 'published' : 'draft'}
-                        </IonBadge>
-                        {devotion.isFeatured && (
-                          <IonBadge
-                            style={{
-                              backgroundColor: '#f59e0b',
-                              color: 'white',
-                              fontWeight: '600',
-                              borderRadius: '8px'
-                            }}
-                          >
-                            Featured
-                          </IonBadge>
+                          onError={(e) => {
+                            e.currentTarget.src = '/hero-evangelism.jpg';
+                          }}
+                        />
+                        {/* Status Badges */}
+                        {d.status === 'publish' && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '8px',
+                            background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.65em',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            backdropFilter: 'blur(8px)'
+                          }}>
+                            Published
+                          </div>
                         )}
                       </div>
-                      <IonButton
-                        fill="clear"
-                        size="small"
-                        onClick={() => showOptions(devotion)}
-                        style={{ color: 'var(--ion-color-medium)' }}
-                      >
-                        <IonIcon icon={ellipsisHorizontal} />
-                      </IonButton>
+
+                      {/* Details on the right */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '70px' }}>
+                        {/* Header with date */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{
+                              margin: '0 0 4px 0',
+                              fontSize: '0.95em',
+                              fontWeight: '600',
+                              color: 'var(--ion-text-color)',
+                              lineHeight: '1.3'
+                            }}>
+                              {d.title}
+                            </h3>
+                            <p style={{
+                              margin: '0',
+                              fontSize: '0.75em',
+                              color: 'var(--ion-color-primary)',
+                              fontWeight: '500'
+                            }}>
+                              {d.scripture}
+                            </p>
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            {d.isFeatured && (
+                              <div style={{
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                color: 'white',
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                backdropFilter: 'blur(8px)'
+                              }}>
+                                <IonIcon icon={star} style={{ fontSize: '0.7em', color: 'white' }} />
+                              </div>
+                            )}
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              color: 'var(--ion-color-medium)',
+                              fontSize: '0.7em'
+                            }}>
+                              <IonIcon icon={calendar} />
+                              <span>{new Date(d.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{
+                          margin: '0',
+                          color: 'var(--ion-color-medium)',
+                          fontSize: '0.8em',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {d.content}
+                        </div>
+
+                        {/* Reflection */}
+                        <div style={{
+                          margin: '0',
+                          color: 'var(--ion-color-primary)',
+                          fontSize: '0.75em',
+                          fontStyle: 'italic',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          opacity: 0.9
+                        }}>
+                          {d.reflection}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </IonCardContent>
-              </IonCard>
-            ))}
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                padding: '40px 20px',
+                color: 'var(--ion-color-medium)'
+              }}>
+                <IonIcon icon={book} style={{ fontSize: '3em', marginBottom: '16px', opacity: 0.5 }} />
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--ion-text-color)' }}>No devotions found</h3>
+                <p style={{ margin: 0, fontSize: '0.9em' }}>No devotions available for this category.</p>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

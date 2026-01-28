@@ -1,9 +1,10 @@
 const express = require('express');
 console.log('🎵 Podcasts routes module loaded');
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Sermon = require('../models/Sermon');
+const User = require('../models/User');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const notificationService = require('../services/notificationService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -114,7 +115,7 @@ router.get('/', async (req, res) => {
 
     // Allow unpublished podcasts if explicitly requested (for admin use)
     if (published !== 'false') {
-      query.isPublished = published;
+      query.isPublished = true;
     }
 
     // Add search filters
@@ -169,20 +170,19 @@ router.get('/saved', authenticateToken, async (req, res) => {
   try {
     console.log('GET /api/podcasts/saved - Request received');
 
-    const user = req.user;
-
-    if (user.id === 'demo-admin-id') {
-      console.log('GET /api/podcasts/saved - Demo user detected, returning empty list');
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, returning empty list for demo users');
       return res.json({ savedPodcasts: [] });
     }
 
-    const userDoc = await User.findById(user.id).populate('savedPodcasts');
+    const userDoc = await User.findById(req.user.id).populate({ path: 'savedPodcasts', model: Sermon });
     if (!userDoc) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Filter to only podcasts (in case sermons were also saved)
-    const savedPodcasts = userDoc.savedPodcasts.filter(item => item.type === 'podcast');
+    const savedPodcasts = userDoc.savedPodcasts.filter(item => item && item.type === 'podcast');
 
     const formattedSavedPodcasts = savedPodcasts.map(podcast => ({
       id: podcast._id,
@@ -328,24 +328,6 @@ router.post('/', upload.any(), async (req, res) => {
     await podcast.save();
     console.log('POST /api/podcasts - Podcast saved successfully with ID:', podcast._id);
 
-    // Create notifications for all users about the new podcast
-    try {
-      await notificationService.createContentNotification(
-        'podcast',
-        podcast._id,
-        `New Podcast: ${podcast.title}`,
-        `A new podcast "${podcast.title}" by ${podcast.speaker} is now available for listening.`,
-        {
-          url: `/podcast-player?id=${podcast._id}`,
-          speaker: podcast.speaker,
-          duration: podcast.duration
-        }
-      );
-    } catch (notificationError) {
-      console.error('Error creating podcast notification:', notificationError);
-      // Don't fail the request if notification creation fails
-    }
-
     // Skip populate if createdBy is null
     if (podcast.createdBy) {
       await podcast.populate('createdBy', 'name');
@@ -483,36 +465,51 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
   try {
     console.log('POST /api/podcasts/:id/save - Request received');
     
-    const user = req.user;
-    const podcastId = req.params.id;
-
-    if (user.id === 'demo-admin-id') {
-      console.log('POST /api/podcasts/:id/save - Demo user detected, returning demo message');
-      return res.json({ message: 'Demo user - podcast save/unsave not persisted' });
+    // Validate ID
+    if (!req.params.id || req.params.id === 'undefined' || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.error('Invalid podcast ID:', req.params.id);
+      return res.status(400).json({ error: 'Invalid podcast ID' });
     }
-
-    const userDoc = await User.findById(user.id);
+    
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, save not persisted to server');
+      return res.json({ 
+        message: 'Demo user - podcast save handled locally',
+        saved: true
+      });
+    }
+    
+    const userDoc = await User.findById(req.user.id);
     if (!userDoc) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Check if podcast exists
-    const podcast = await Sermon.findOne({ _id: podcastId, type: 'podcast' });
+    const podcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' });
     if (!podcast) {
       return res.status(404).json({ error: 'Podcast not found' });
     }
 
-    // Check if already saved
-    if (userDoc.savedPodcasts.includes(podcastId)) {
-      return res.json({ message: 'Podcast already saved' });
-    }
+    // Check if already saved (convert to ObjectId for proper comparison)
+    const podcastId = new mongoose.Types.ObjectId(req.params.id);
+    const alreadySaved = userDoc.savedPodcasts.some(id => id.equals(podcastId));
 
-    // Add to saved podcasts
-    userDoc.savedPodcasts.push(podcastId);
+    if (alreadySaved) {
+      // Unsave: remove from savedPodcasts
+      userDoc.savedPodcasts = userDoc.savedPodcasts.filter(id => !id.equals(podcastId));
+    } else {
+      // Save: add to savedPodcasts
+      userDoc.savedPodcasts.push(podcastId);
+    }
+    
     await userDoc.save();
 
-    console.log('POST /api/podcasts/:id/save - Podcast saved successfully');
-    res.json({ message: 'Podcast saved successfully' });
+    console.log('POST /api/podcasts/:id/save - Podcast save/unsave completed');
+    res.json({ 
+      message: alreadySaved ? 'Podcast unsaved' : 'Podcast saved',
+      saved: !alreadySaved
+    });
   } catch (error) {
     console.error('Podcast save error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -524,26 +521,28 @@ router.post('/:id/unsave', authenticateToken, async (req, res) => {
   try {
     console.log('POST /api/podcasts/:id/unsave - Request received');
     
-    const user = req.user;
-    const podcastId = req.params.id;
-
-    if (user.id === 'demo-admin-id') {
-      console.log('POST /api/podcasts/:id/unsave - Demo user detected, returning demo message');
-      return res.json({ message: 'Demo user - podcast save/unsave not persisted' });
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, unsave not persisted to server');
+      return res.json({ 
+        message: 'Demo user - podcast unsave handled locally',
+        saved: false
+      });
     }
-
-    const userDoc = await User.findById(user.id);
+    
+    const userDoc = await User.findById(req.user.id);
     if (!userDoc) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if podcast is saved
-    if (!userDoc.savedPodcasts.includes(podcastId)) {
+    // Check if podcast is saved (convert to ObjectId for proper comparison)
+    const podcastId = new mongoose.Types.ObjectId(req.params.id);
+    if (!userDoc.savedPodcasts.some(id => id.equals(podcastId))) {
       return res.json({ message: 'Podcast not in saved list' });
     }
 
     // Remove from saved podcasts
-    userDoc.savedPodcasts = userDoc.savedPodcasts.filter(id => id.toString() !== podcastId);
+    userDoc.savedPodcasts = userDoc.savedPodcasts.filter(id => !id.equals(podcastId));
     await userDoc.save();
 
     console.log('POST /api/podcasts/:id/unsave - Podcast unsaved successfully');

@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { isPodcast } from '../utils/mediaUtils';
 
+// Custom event for skip operations
+const SKIP_FORWARD_EVENT = 'skip-forward';
+const SKIP_BACKWARD_EVENT = 'skip-backward';
+
+
 export interface Sermon {
   id: string;
   title: string;
@@ -42,6 +47,9 @@ interface PlayerContextType {
   // New: save and restore playback position
   savePlaybackPosition: (time: number) => void;
   getPlaybackPosition: () => number;
+  // Skip forward/backward
+  skipForward: () => void;
+  skipBackward: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -85,6 +93,16 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return 0;
   };
 
+  const skipForward = () => {
+    console.log('Context: skipForward called');
+    window.dispatchEvent(new CustomEvent(SKIP_FORWARD_EVENT));
+  };
+
+  const skipBackward = () => {
+    console.log('Context: skipBackward called');
+    window.dispatchEvent(new CustomEvent(SKIP_BACKWARD_EVENT));
+  };
+
   return (
     <PlayerContext.Provider value={{
       currentMedia,
@@ -99,7 +117,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       currentTime,
       setCurrentTime,
       savePlaybackPosition,
-      getPlaybackPosition
+      getPlaybackPosition,
+      skipForward,
+      skipBackward
     }}>
       {children}
     </PlayerContext.Provider>

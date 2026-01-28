@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Devotion = require('../models/Devotion');
 const User = require('../models/User');
@@ -24,10 +25,20 @@ router.get('/', async (req, res) => {
       query = {};
     } else if (published === 'false') {
       // Show only drafts
-      query = { isPublished: false };
+      query = {
+        $or: [
+          { status: { $ne: 'publish' } },
+          { status: { $exists: false }, isPublished: false }
+        ]
+      };
     } else if (published === 'true' || published === undefined) {
       // Default: show only published devotions
-      query = { isPublished: true };
+      query = {
+        $or: [
+          { status: 'publish' },
+          { status: { $exists: false }, isPublished: { $ne: false } }
+        ]
+      };
     }
 
     if (search) {
@@ -69,16 +80,47 @@ router.get('/', async (req, res) => {
 router.get('/featured', async (req, res) => {
   try {
     const devotions = await Devotion.find({
-      isPublished: true,
+      $or: [
+        { status: 'publish' },
+        { status: { $exists: false }, isPublished: { $ne: false } }
+      ],
       isFeatured: true
     })
       .populate('createdBy', 'name')
-      .sort({ date: -1 })
+      .sort({ createdAt: -1 })
       .limit(5);
 
     res.json({ devotions });
   } catch (error) {
     console.error('Featured devotions fetch error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get saved devotions for the logged-in user (must be before /:id)
+router.get('/saved', authenticateToken, async (req, res) => {
+  try {
+    console.log('GET /api/devotions/saved - Request received for user:', req.user.id);
+    
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, returning empty list for demo users');
+      return res.json({ savedDevotions: [] });
+    }
+    
+    const userDoc = await User.findById(req.user.id).populate({
+      path: 'savedDevotions',
+      model: Devotion
+    });
+
+    if (!userDoc) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log(`Returning ${userDoc.savedDevotions.length} saved devotions`);
+    res.json({ savedDevotions: userDoc.savedDevotions });
+  } catch (error) {
+    console.error('Get saved devotions error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -109,12 +151,11 @@ router.post('/', [
   body('content').trim().isLength({ min: 1 }).withMessage('Content is required'),
   body('reflection').trim().isLength({ min: 1 }).withMessage('Reflection is required'),
   body('prayer').trim().isLength({ min: 1 }).withMessage('Prayer is required'),
-  body('date').isISO8601().withMessage('Valid date required'),
   body('author').optional().trim(),
-  body('category').optional().isIn(['faith-foundation', 'love-relationships', 'spiritual-growth']),
   body('tags').optional().isArray(),
-  body('isPublished').optional().isBoolean(),
-  body('isFeatured').optional().isBoolean()
+  body('status').optional().isString(),
+  body('isFeatured').optional().isBoolean(),
+  body('thumbnailUrl').optional().isString()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -151,24 +192,6 @@ router.post('/', [
 
     await devotion.populate('createdBy', 'name');
 
-    // Create notifications for all users about the new devotion
-    try {
-      await notificationService.createContentNotification(
-        'devotion',
-        devotion._id,
-        `New Devotion: ${devotion.title}`,
-        `A new daily devotion "${devotion.title}" is now available for reading.`,
-        {
-          url: `/full-devotion?id=${devotion._id}`,
-          scripture: devotion.scripture,
-          date: devotion.date
-        }
-      );
-    } catch (notificationError) {
-      console.error('Error creating devotion notification:', notificationError);
-      // Don't fail the request if notification creation fails
-    }
-
     res.status(201).json({
       message: 'Devotion created successfully',
       devotion
@@ -188,10 +211,9 @@ router.put('/:id', [
   body('content').optional().trim().isLength({ min: 1 }).withMessage('Content cannot be empty'),
   body('reflection').optional().trim().isLength({ min: 1 }).withMessage('Reflection cannot be empty'),
   body('prayer').optional().trim().isLength({ min: 1 }).withMessage('Prayer cannot be empty'),
-  body('date').optional().isISO8601().withMessage('Valid date required'),
-  body('category').optional().isIn(['faith-foundation', 'love-relationships', 'spiritual-growth']),
-  body('isPublished').optional().isBoolean(),
-  body('isFeatured').optional().isBoolean()
+  body('status').optional().isString(),
+  body('isFeatured').optional().isBoolean(),
+  body('thumbnailUrl').optional().isString()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -239,6 +261,55 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ message: 'Devotion deleted successfully' });
   } catch (error) {
     console.error('Devotion deletion error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Save/unsave a devotion
+router.post('/:id/save', authenticateToken, async (req, res) => {
+  try {
+    console.log('POST /api/devotions/:id/save - Request received for devotion:', req.params.id);
+    
+    // Handle demo users - they use localStorage, not server-side storage
+    if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, save not persisted to server');
+      return res.json({ 
+        message: 'Demo user - devotion save/unsave handled locally',
+        saved: true
+      });
+    }
+    
+    const devotion = await Devotion.findById(req.params.id);
+
+    if (!devotion) {
+      return res.status(404).json({ error: 'Devotion not found' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user already saved this devotion (convert to ObjectId for proper comparison)
+    const devotionId = new mongoose.Types.ObjectId(req.params.id);
+    const alreadySaved = user.savedDevotions.some(id => id.equals(devotionId));
+
+    if (alreadySaved) {
+      // Unsave: remove from savedDevotions
+      user.savedDevotions = user.savedDevotions.filter(id => id.toString() !== req.params.id);
+    } else {
+      // Save: add to savedDevotions
+      user.savedDevotions.push(req.params.id);
+    }
+
+    await user.save();
+
+    res.json({
+      message: alreadySaved ? 'Devotion unsaved' : 'Devotion saved',
+      saved: !alreadySaved
+    });
+  } catch (error) {
+    console.error('Save devotion error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

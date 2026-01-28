@@ -43,15 +43,6 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date
   },
-  notificationPreferences: {
-    sermons: { type: Boolean, default: true },
-    podcasts: { type: Boolean, default: true },
-    liveBroadcasts: { type: Boolean, default: true },
-    events: { type: Boolean, default: true },
-    ministries: { type: Boolean, default: true },
-    devotions: { type: Boolean, default: true },
-    saved: { type: Boolean, default: true }
-  },
   subscriptions: [{
     type: String, // Could be ministry/channel names or IDs
     trim: true
@@ -63,6 +54,10 @@ const userSchema = new mongoose.Schema({
   savedPodcasts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Podcast'
+  }],
+  savedDevotions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Devotion'
   }],
   createdAt: {
     type: Date,

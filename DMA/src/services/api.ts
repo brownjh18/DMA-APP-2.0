@@ -1,6 +1,6 @@
 // API Service for connecting frontend to backend
 import { Capacitor } from '@capacitor/core';
-const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://192.168.100.43:5000/api' : (import.meta.env.VITE_API_URL || '/api');
+const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://192.168.100.43:5000/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
 export { API_BASE_URL };
 
 // Base URL for direct backend access (for images, etc.)
@@ -15,8 +15,8 @@ const getBackendBaseUrl = () => {
     // Remove '/api' suffix to get base URL
     return apiUrl.replace(/\/api$/, '');
   }
-  // For localhost development, use relative URLs so Vite proxy handles them
-  return '';
+  // For localhost development, use direct backend URL
+  return 'http://localhost:5000';
 };
 
 export const BACKEND_BASE_URL = getBackendBaseUrl();
@@ -26,6 +26,36 @@ class ApiService {
   private logoutCallback: (() => void) | null = null;
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+  // Clear all API cache
+  clearAllCache() {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('api_cache_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      console.log('All API cache cleared');
+    } catch (error) {
+      console.error('Error clearing all cache:', error);
+    }
+  }
+
+  // Clear cache for specific endpoint type
+  clearCacheByType(endpointType: 'sermons' | 'podcasts' | 'devotions') {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('api_cache_') && key.includes(endpointType)) {
+          localStorage.removeItem(key);
+          console.log(`Cleared cache for ${endpointType}:`, key);
+        }
+      });
+    } catch (error) {
+      console.error(`Error clearing ${endpointType} cache:`, error);
+    }
+  }
 
   setToken(token: string) {
     this.token = token;
@@ -317,24 +347,33 @@ class ApiService {
   }
 
   async createSermon(sermonData: any) {
-    return this.request('/sermons', {
+    const result = await this.request('/sermons', {
       method: 'POST',
       body: JSON.stringify(sermonData),
     });
+    // Clear sermons cache after creating a new sermon
+    this.clearCacheByType('sermons');
+    return result;
   }
 
   async updateSermon(id: string, sermonData: any) {
-    return this.request(`/sermons/${id}`, {
+    const result = await this.request(`/sermons/${id}`, {
       method: 'PUT',
       body: JSON.stringify(sermonData),
     });
+    // Clear sermons cache after updating a sermon
+    this.clearCacheByType('sermons');
+    return result;
   }
 
   async deleteSermon(id: string) {
     try {
-      return await this.request(`/sermons/${id}`, {
+      const result = await this.request(`/sermons/${id}`, {
         method: 'DELETE',
       });
+      // Clear sermons cache after deleting a sermon
+      this.clearCacheByType('sermons');
+      return result;
     } catch (error: any) {
       // Provide more specific error messages
       if (error.message?.includes('404') || error.message?.includes('Sermon not found')) {
@@ -345,10 +384,13 @@ class ApiService {
   }
 
   async toggleSermonPublishStatus(id: string, isPublished: boolean) {
-    return this.request(`/sermons/${id}/publish`, {
+    const result = await this.request(`/sermons/${id}/publish`, {
       method: 'PATCH',
       body: JSON.stringify({ isPublished }),
     });
+    // Clear sermons cache after toggling publish status
+    this.clearCacheByType('sermons');
+    return result;
   }
 
   async getSermonStats() {
@@ -378,13 +420,20 @@ class ApiService {
   }
 
   async saveSermon(id: string) {
-    return this.request(`/sermons/${id}/save`, {
+    console.log('💾 API: saveSermon called for id:', id);
+    const result = await this.request(`/sermons/${id}/save`, {
       method: 'POST',
     });
+    // Dispatch event to notify other pages (like MyFavorites) to refresh
+    if (typeof window !== 'undefined') {
+      console.log('📢 API: Dispatching savedItemsChanged event for sermon');
+      window.dispatchEvent(new Event('savedItemsChanged'));
+    }
+    return result;
   }
 
-  async getSavedSermons() {
-    return this.request('/sermons/saved');
+  async getSavedSermons(forceRefresh: boolean = false) {
+    return this.request('/sermons/saved', {}, 0, forceRefresh);
   }
 
   async subscribe(channel: string) {
@@ -404,23 +453,49 @@ class ApiService {
   }
 
   async createDevotion(devotionData: any) {
-    return this.request('/devotions', {
+    const result = await this.request('/devotions', {
       method: 'POST',
       body: JSON.stringify(devotionData),
     });
+    // Clear devotions cache after creating a new devotion
+    this.clearCacheByType('devotions');
+    return result;
   }
 
   async updateDevotion(id: string, devotionData: any) {
-    return this.request(`/devotions/${id}`, {
+    const result = await this.request(`/devotions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(devotionData),
     });
+    // Clear devotions cache after updating a devotion
+    this.clearCacheByType('devotions');
+    return result;
   }
 
   async deleteDevotion(id: string) {
-    return this.request(`/devotions/${id}`, {
+    const result = await this.request(`/devotions/${id}`, {
       method: 'DELETE',
     });
+    // Clear devotions cache after deleting a devotion
+    this.clearCacheByType('devotions');
+    return result;
+  }
+
+  async getSavedDevotions(forceRefresh: boolean = false) {
+    return this.request('/devotions/saved', {}, 0, forceRefresh);
+  }
+
+  async saveDevotion(id: string) {
+    console.log('💾 API: saveDevotion called for id:', id);
+    const result = await this.request(`/devotions/${id}/save`, {
+      method: 'POST',
+    });
+    // Dispatch event to notify other pages (like MyFavorites) to refresh
+    if (typeof window !== 'undefined') {
+      console.log('📢 API: Dispatching savedItemsChanged event for devotion');
+      window.dispatchEvent(new Event('savedItemsChanged'));
+    }
+    return result;
   }
 
   // Events
@@ -563,9 +638,9 @@ class ApiService {
   }
 
   // Podcasts
-  async getPodcasts(params: any = {}) {
+  async getPodcasts(params: any = {}, forceRefresh: boolean = false) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/podcasts?${queryString}`);
+    return this.request(`/podcasts?${queryString}`, {}, 0, forceRefresh);
   }
 
   async getPodcast(id: string) {
@@ -591,7 +666,10 @@ class ApiService {
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    // Clear podcasts cache after creating a new podcast
+    this.clearCacheByType('podcasts');
+    return result;
   }
 
   async updatePodcast(id: string, formData: FormData) {
@@ -613,29 +691,47 @@ class ApiService {
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    // Clear podcasts cache after updating a podcast
+    this.clearCacheByType('podcasts');
+    return result;
   }
 
   async deletePodcast(id: string) {
-    return this.request(`/podcasts/${id}`, {
+    const result = await this.request(`/podcasts/${id}`, {
       method: 'DELETE',
     });
+    // Clear podcasts cache after deleting a podcast
+    this.clearCacheByType('podcasts');
+    return result;
   }
 
   async savePodcast(id: string) {
-    return this.request(`/podcasts/${id}/save`, {
+    console.log('💾 API: savePodcast called for id:', id);
+    const result = await this.request(`/podcasts/${id}/save`, {
       method: 'POST',
     });
+    // Dispatch event to notify other pages (like MyFavorites) to refresh
+    if (typeof window !== 'undefined') {
+      console.log('📢 API: Dispatching savedItemsChanged event for podcast');
+      window.dispatchEvent(new Event('savedItemsChanged'));
+    }
+    return result;
   }
 
   async unsavePodcast(id: string) {
-    return this.request(`/podcasts/${id}/unsave`, {
+    const result = await this.request(`/podcasts/${id}/unsave`, {
       method: 'POST',
     });
+    // Dispatch event to notify other pages (like MyFavorites) to refresh
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('savedItemsChanged'));
+    }
+    return result;
   }
 
-  async getSavedPodcasts() {
-    return this.request('/podcasts/saved');
+  async getSavedPodcasts(forceRefresh: boolean = false) {
+    return this.request('/podcasts/saved', {}, 0, forceRefresh);
   }
 
   // Live Broadcasts
@@ -757,6 +853,33 @@ class ApiService {
     }
   }
 
+  // Upload event video
+  async uploadEventVideo(formData: FormData) {
+    const url = `${API_BASE_URL}/events/upload-video`;
+    const headers: Record<string, string> = {};
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Network error' }));
+        throw new Error(error.error || `HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
   // Comments
   async getComments(contentId: string, params: any = {}, forceRefresh: boolean = false) {
     const queryString = new URLSearchParams(params).toString();
@@ -772,29 +895,6 @@ class ApiService {
 
   async deleteComment(commentId: string) {
     return this.request(`/comments/${commentId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Notifications
-  async getNotifications() {
-    return this.request('/notifications');
-  }
-
-  async markNotificationAsRead(notificationId: string) {
-    return this.request(`/notifications/${notificationId}/read`, {
-      method: 'PUT',
-    });
-  }
-
-  async markAllNotificationsAsRead() {
-    return this.request('/notifications/read-all', {
-      method: 'PUT',
-    });
-  }
-
-  async deleteNotification(notificationId: string) {
-    return this.request(`/notifications/${notificationId}`, {
       method: 'DELETE',
     });
   }

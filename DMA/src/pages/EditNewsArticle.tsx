@@ -21,7 +21,9 @@ import {
   text,
   calendar,
   person,
-  arrowBack
+  arrowBack,
+  image,
+  closeCircle
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
@@ -45,6 +47,12 @@ const EditNewsArticle: React.FC = () => {
     date: ''
   });
 
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     // Get news data from navigation state
     const news = (location.state as any)?.news;
@@ -55,6 +63,7 @@ const EditNewsArticle: React.FC = () => {
         author: news.author || '',
         date: news.date || ''
       });
+      setCurrentThumbnailUrl(news.imageUrl || '');
     } else {
       // Fallback: try to load from API if no state data
       loadNews();
@@ -70,6 +79,7 @@ const EditNewsArticle: React.FC = () => {
         author: news.author || '',
         date: news.date || ''
       });
+      setCurrentThumbnailUrl(news.imageUrl || '');
     } catch (error) {
       // Silently fail - data should come from navigation state
       console.log('API load failed, using navigation state data');
@@ -83,6 +93,55 @@ const EditNewsArticle: React.FC = () => {
     }));
   };
 
+  const handleThumbnailSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setAlertMessage('File size must be less than 5MB');
+        setShowAlert(true);
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setAlertMessage('Please select a valid image file');
+        setShowAlert(true);
+        return;
+      }
+
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setThumbnailPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview('');
+    setCurrentThumbnailUrl('');
+  };
+
+  const uploadThumbnail = async (): Promise<string | null> => {
+    if (!thumbnailFile) return null;
+
+    setUploadingThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.append('thumbnailFile', thumbnailFile);
+      const response = await apiService.uploadThumbnail(formData);
+      return response.thumbnailUrl;
+    } catch (error) {
+      console.error('Error uploading thumbnail:', error);
+      throw error;
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!formData.title || !formData.author || !formData.date) {
       setAlertMessage('Please fill in all required fields (Title, Author, Date)');
@@ -93,34 +152,63 @@ const EditNewsArticle: React.FC = () => {
     setLoading(true);
 
     try {
-      // For mock data, we'll simulate a successful update
-      // In a real app, this would call the API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      let imageUrl = currentThumbnailUrl;
 
-      // Store the updated news data in localStorage for AdminNewsManager to pick up
-      const updatedNews = {
-        ...(location.state as any)?.news,
+      // Upload new thumbnail if selected
+      if (thumbnailFile) {
+        try {
+          const uploadedUrl = await uploadThumbnail();
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (error) {
+          setAlertMessage('Failed to upload thumbnail. Please try again.');
+          setShowAlert(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const token = localStorage.getItem('token');
+      const updateData: any = {
         title: formData.title,
         excerpt: formData.excerpt,
-        author: formData.author,
-        date: formData.date
+        author: formData.author
       };
 
-      localStorage.setItem('updatedNews', JSON.stringify(updatedNews));
+      if (imageUrl) {
+        updateData.imageUrl = imageUrl;
+      }
 
-      setLoading(false);
-      setAlertMessage('News article updated successfully!');
-      setShowAlert(true);
+      const response = await fetch(`/api/news/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
 
-      // Navigate back after success
-      setTimeout(() => {
-        history.push('/admin/news');
-      }, 1500);
+      if (response.ok) {
+        setAlertMessage('News article updated successfully!');
+        setShowAlert(true);
+
+        // Navigate back after success
+        setTimeout(() => {
+          history.push('/admin/news');
+        }, 1500);
+      } else {
+        const error = await response.json();
+        setAlertMessage(error.error || 'Failed to update news article');
+        setShowAlert(true);
+      }
     } catch (error) {
-      setLoading(false);
-      setAlertMessage('Failed to update news article');
+      console.error('Error updating news article:', error);
+      setAlertMessage('Failed to update news article. Please try again.');
       setShowAlert(true);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -241,6 +329,133 @@ const EditNewsArticle: React.FC = () => {
                 rows={4}
               />
             </IonItem>
+
+            {/* Thumbnail Upload */}
+            <div style={{ marginBottom: '16px' }}>
+              <IonLabel style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                Article Thumbnail (Optional)
+              </IonLabel>
+
+              {(thumbnailPreview || currentThumbnailUrl) ? (
+                <div style={{
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(0,0,0,0.02)'
+                }}>
+                  <img
+                    src={thumbnailPreview || currentThumbnailUrl}
+                    alt="Thumbnail preview"
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                  <div style={{ padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={image} slot="start" />
+                      Change
+                    </IonButton>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      onClick={removeThumbnail}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 50%, rgba(239, 68, 68, 0.08) 100%)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(239, 68, 68, 0.1)',
+                        color: '#ffffff',
+                        fontWeight: '600',
+                        transition: 'transform 0.2s ease',
+                        minWidth: '80px',
+                        height: '32px'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        setTimeout(() => {
+                          target.style.transform = 'scale(1)';
+                        }, 200);
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon icon={closeCircle} slot="start" />
+                      Remove
+                    </IonButton>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  border: '2px dashed var(--ion-color-medium)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.02)'
+                }}>
+                  <IonIcon icon={image} style={{ fontSize: '2em', color: 'var(--ion-color-medium)', marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 12px 0', color: 'var(--ion-color-medium)', fontSize: '0.9em' }}>
+                    Click to upload a thumbnail image
+                  </p>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailSelect}
+                    style={{
+                      display: 'block',
+                      margin: '0 auto',
+                      padding: '8px',
+                      border: '1px solid var(--ion-color-light-shade)',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--ion-color-light)',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <IonButton
@@ -251,8 +466,31 @@ const EditNewsArticle: React.FC = () => {
               height: '48px',
               borderRadius: '24px',
               fontWeight: '600',
-              backgroundColor: 'var(--ion-color-primary)',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '--border-radius': '24px'
+            }}
+            onMouseDown={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(0.98)';
+              target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseUp={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              setTimeout(() => {
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              }, 200);
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
             }}
           >
             <IonIcon icon={save} slot="start" />
@@ -266,7 +504,7 @@ const EditNewsArticle: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Updating news article..." />
+        <IonLoading isOpen={loading || uploadingThumbnail} message={uploadingThumbnail ? "Uploading thumbnail..." : "Updating news article..."} />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
