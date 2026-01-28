@@ -14,6 +14,28 @@ http://ionicframework.com/docs/theming/ */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tablet-max-width: 1200px;
+}
+
+/* Tablet Max Width Container - Limits content width on tablet and larger screens */
+.tablet-max-width-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 7px;
+}
+
+@media (min-width: 768px) {
+  .tablet-max-width-container {
+    max-width: var(--tablet-max-width);
+    padding: 0 7px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tablet-max-width-container {
+    max-width: var(--tablet-max-width);
+    padding: 0 7px;
+  }
 }
 
 /* Modern Sidebar Styling */
@@ -240,6 +262,12 @@ ion-content[fullscreen] {
     --background-light: var(--background-dark);
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
+  }
+
+  /* Tablet Max Width Container - Dark Mode */
+  .tablet-max-width-container {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
   }
 
   .menu-content {

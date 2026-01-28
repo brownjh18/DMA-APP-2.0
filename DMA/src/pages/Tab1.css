@@ -19,7 +19,7 @@
 
 /* Sections */
 .section-padding {
-  padding: 16px;
+  padding: 16px 7px;
 }
 .sermons-section {
   padding-bottom: 0px;
@@ -952,7 +952,7 @@
 
 /* Podcasts section wrapper */
 .podcasts-section-wrapper {
-  padding: 0px;
+  padding: 0px 7px;
   max-width: 600px;
   margin: 0 auto;
   padding-top: 0px;
@@ -962,7 +962,7 @@
 @media (min-width: 768px) {
   .podcasts-section-wrapper {
     max-width: none;
-    padding: 16px;
+    padding: 16px 7px;
   }
 
   .podcasts-row {
@@ -979,6 +979,29 @@
     flex: none;
     width: 100%;
     padding: 12px;
+  }
+
+  /* Tablet Max Width Container for sections */
+  .section-padding {
+    max-width: var(--tablet-max-width, 1200px);
+    margin: 0 auto;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  /* Programs section */
+  .programs-section .section-padding {
+    max-width: var(--tablet-max-width, 1200px);
+    margin: 0 auto;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  /* About section */
+  .about-section {
+    max-width: var(--tablet-max-width, 1200px);
+    margin: 0 auto;
+    padding: 20px 7px;
   }
 }
 

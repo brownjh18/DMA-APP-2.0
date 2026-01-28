@@ -132,71 +132,6 @@
   white-space: nowrap;
 }
 
-/* YouTube-style Main Layout */
-.main-layout {
-  display: flex;
-  min-height: 100%;
-}
-
-/* YouTube-style Sidebar */
-.sidebar {
-  width: 72px;
-  background: var(--ion-background-color);
-  border-right: 1px solid var(--ion-color-light-shade);
-  padding: 12px 0;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.sidebar-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 8px;
-  margin: 4px 8px;
-  border-radius: 12px;
-  text-decoration: none;
-  color: var(--ion-text-color);
-  transition: background-color 0.2s ease;
-  cursor: pointer;
-}
-
-.sidebar-item:hover {
-  background: var(--ion-color-light-tint);
-}
-
-.sidebar-item.active {
-  background: var(--ion-color-primary-tint);
-  color: var(--ion-color-primary);
-}
-
-.sidebar-icon {
-  font-size: 24px;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-label {
-  font-size: 10px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.2;
-}
-
-/* Main Content Area */
-.main-content {
-  flex: 1;
-  padding: 16px 24px;
-  max-width: calc(100% - 72px);
-  overflow-x: hidden;
-}
-
 .description-section {
   background: var(--ion-item-background);
   border-radius: 12px;
@@ -225,12 +160,13 @@
 
 /* YouTube-like Tablet Layout */
 @media (min-width: 768px) and (max-width: 1024px) {
-  /* Main grid container for sermons */
+  /* Main grid container for sermons with max-width */
   .sermons-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 20px !important;
-    max-width: 100% !important;
+    max-width: var(--tablet-max-width, 1200px) !important;
+    margin: 0 auto !important;
     padding: 16px !important;
   }
 

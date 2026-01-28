@@ -675,6 +675,9 @@ const Tab1: React.FC = () => {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
+        
+        {/* Main content wrapper with max-width for tablet view */}
+        <div className="tablet-max-width-container">
         {/* FOR YOU - DEVOTION */}
         {todaysDevotion && (
           <section className="section-padding">
@@ -1218,6 +1221,8 @@ const Tab1: React.FC = () => {
             </IonRouterLink>
           </div>
         </div>
+        </div>
+        {/* End of tablet-max-width-container */}
       </IonContent>
     </IonPage>
   );
