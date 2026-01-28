@@ -229,6 +229,7 @@ const Tab1: React.FC = () => {
   const [latestPodcasts, setLatestPodcasts] = useState<Podcast[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
   const [maxPodcasts, setMaxPodcasts] = useState(3);
+  const [podcastsToFetch, setPodcastsToFetch] = useState(6);
   const [latestEvents, setLatestEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [latestMinistries, setLatestMinistries] = useState<any[]>([]);
@@ -300,7 +301,9 @@ const Tab1: React.FC = () => {
   // Set max podcasts based on screen size
   useEffect(() => {
     const updateMaxPodcasts = () => {
-      setMaxPodcasts(window.innerWidth >= 768 ? 6 : 3);
+      const isTablet = window.innerWidth >= 768;
+      setMaxPodcasts(isTablet ? 6 : 3);
+      setPodcastsToFetch(isTablet ? 10 : 3); // Fetch more for tablet
     };
 
     updateMaxPodcasts();
@@ -432,7 +435,7 @@ const Tab1: React.FC = () => {
       // Fetch regular podcasts
       let podcasts: Podcast[] = [];
       try {
-        const data = await apiService.getPodcasts({ page: 1, limit: 3, published: true }, forceRefresh);
+        const data = await apiService.getPodcasts({ page: 1, limit: podcastsToFetch, published: true }, forceRefresh);
         podcasts = data.podcasts || [];
       } catch (podcastError) {
         console.warn('Failed to fetch podcasts:', podcastError);
