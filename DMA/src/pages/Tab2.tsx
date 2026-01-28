@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonActionSheet } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonActionSheet, IonRouterLink } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import VideoPlayer from '../components/VideoPlayer';
@@ -7,8 +7,18 @@ import { fetchCombinedSermons, YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 
-import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline } from 'ionicons/icons';
+import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline, home, list, radio, heartCircle, book, informationCircle } from 'ionicons/icons';
 import './Tab2.css';
+
+// Sidebar navigation items
+const sidebarItems = [
+  { icon: home, label: 'Home', path: '/tab1' },
+  { icon: list, label: 'Sermons', path: '/tab2', active: true },
+  { icon: radio, label: 'Podcasts', path: '/tab4' },
+  { icon: heartCircle, label: 'My Favorites', path: '/my-favorites' },
+  { icon: book, label: 'Devotions', path: '/full-devotion' },
+  { icon: informationCircle, label: 'About DMA', path: '/tab5' },
+];
 
 const toSermon = (video: YouTubeVideo) => ({
   id: video.id,
@@ -644,7 +654,25 @@ const Tab2: React.FC = () => {
 
         {/* YouTube-style Main Page Layout */}
         {!loading && !currentSermon && (
-          <div style={{ padding: '15px' }}>
+          <div className="main-layout">
+            {/* YouTube-style Sidebar */}
+            <aside className="sidebar">
+              {sidebarItems.map((item, index) => (
+                <IonRouterLink
+                  key={index}
+                  routerLink={item.path}
+                  className={`sidebar-item ${item.active ? 'active' : ''}`}
+                >
+                  <div className="sidebar-icon">
+                    <IonIcon icon={item.icon} />
+                  </div>
+                  <span className="sidebar-label">{item.label}</span>
+                </IonRouterLink>
+              ))}
+            </aside>
+
+            {/* Main Content */}
+            <main className="main-content">
             {/* Featured Sermon Section - YouTube Hero Style */}
             {lastSermon && (
               <div style={{ marginBottom: '24px' }}>
@@ -916,7 +944,7 @@ const Tab2: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </main>
           </div>
         )}
 
