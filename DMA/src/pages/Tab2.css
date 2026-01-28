@@ -158,6 +158,88 @@
   color: var(--ion-text-color);
 }
 
+/* YouTube-like Tablet Layout */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Main grid container for sermons */
+  .sermons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+  }
+
+  /* Video card styling for tablet */
+  .video-item {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Thumbnail container */
+  .video-thumbnail {
+    aspect-ratio: 16/9 !important;
+    width: 100% !important;
+  }
+
+  /* Video details padding */
+  .video-details {
+    padding: 12px !important;
+  }
+
+  /* Video title */
+  .video-title {
+    font-size: 0.9em !important;
+    -webkit-line-clamp: 2 !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Channel info */
+  .channel-name {
+    font-size: 0.8em !important;
+  }
+
+  /* Stats (views, date) */
+  .video-stats {
+    font-size: 0.75em !important;
+  }
+
+  /* Featured sermon section */
+  .featured-sermon {
+    margin-bottom: 24px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Section headers */
+  .section-header {
+    font-size: 1.2em !important;
+    margin-bottom: 16px !important;
+  }
+}
+
+/* Desktop Layout */
+@media (min-width: 1025px) {
+  .sermons-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+  }
+
+  .video-item {
+    border-radius: 12px !important;
+  }
+
+  .featured-sermon {
+    margin-bottom: 32px !important;
+    border-radius: 12px !important;
+    max-width: 1000px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 576px) {
   .video-title {

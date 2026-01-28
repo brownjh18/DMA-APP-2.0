@@ -648,7 +648,7 @@ const Tab2: React.FC = () => {
             {/* Featured Sermon Section - YouTube Hero Style */}
             {lastSermon && (
               <div style={{ marginBottom: '24px' }}>
-                <h2 style={{
+                <h2 className="section-header" style={{
                   margin: '0 0 16px 0',
                   fontSize: '1.4em',
                   fontWeight: '700',
@@ -779,11 +779,11 @@ const Tab2: React.FC = () => {
               </h3>
 
               {/* YouTube-style Grid Layout */}
-              <div style={{
+              <div className="sermons-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                 gap: '16px',
-                maxWidth: '1200px',
+                maxWidth: '100%',
                 margin: '0 auto'
               }}>
                 {sermons.map((sermon) => (
