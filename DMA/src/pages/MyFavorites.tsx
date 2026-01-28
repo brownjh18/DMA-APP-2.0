@@ -34,7 +34,8 @@ import {
   play,
   eye,
   share,
-  arrowBack
+  arrowBack,
+  heartOutline
 } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { useHistory } from 'react-router-dom';
@@ -879,53 +880,72 @@ const Saved: React.FC = () => {
                 })
               )}
               {activeTab === 'devotions' && (
-                // Devotions List
-                (currentContent as SavedDevotion[]).map((devotion) => (
+                // Devotions List - Tab3 Style
+                (currentContent as SavedDevotion[]).map((d) => (
                   <div
-                    key={devotion.id}
-                    className="devotion-card"
+                    key={d.id}
                     style={{
-                      backgroundColor: 'var(--ion-background-color)',
-                      borderRadius: '8px',
+                      backgroundColor: 'transparent',
+                      borderRadius: '16px',
+                      border: '1px solid var(--ion-card-border-color, rgba(0,0,0,0.1))',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                       overflow: 'hidden',
                       cursor: 'pointer',
-                      border: 'none',
-                      maxWidth: '600px'
+                      transition: 'all 0.2s ease-in-out',
+                      maxWidth: '600px',
+                      margin: '0 auto'
                     }}
-                    onClick={() => history.push(`/full-devotion?id=${devotion.id}`)}
+                    onClick={() => history.push(`/full-devotion?id=${d.id}`)}
                   >
-                    <div style={{ position: 'relative' }}>
-                      <img
-                        src={getFullUrl(devotion.thumbnailUrl || '/hero-evangelism.jpg')}
-                        alt={devotion.title}
-                        style={{
-                          width: '100%',
-                          height: '120px',
-                          objectFit: 'cover'
-                        }}
-                      />
+                    <div style={{ padding: '10px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      {/* Thumbnail on the left */}
                       <div style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '8px',
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.8em'
+                        width: '90px',
+                        height: '140px',
+                        borderRadius: '12px 0 0 12px',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}>
-                        Day {devotion.day}
+                        <img
+                          src={getFullUrl(d.thumbnailUrl || '/hero-evangelism.jpg')}
+                          alt="Devotion thumbnail"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.src = '/hero-evangelism.jpg';
+                          }}
+                        />
                       </div>
-                    </div>
-                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <div style={{ flex: 1, marginRight: '8px' }}>
-                            <h4 className="devotion-title" style={{ fontSize: '0.95em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                              {devotion.title}
-                            </h4>
-                            <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                              {formatDate(devotion.date)}
+
+                      {/* Details on the right */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minHeight: '70px' }}>
+                        {/* Header with title */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{
+                              margin: '0 0 4px 0',
+                              fontSize: '0.95em',
+                              fontWeight: '600',
+                              color: 'var(--ion-text-color)',
+                              lineHeight: '1.3'
+                            }}>
+                              {d.title}
+                            </h3>
+                            <p style={{
+                              margin: '0',
+                              fontSize: '0.75em',
+                              color: 'var(--ion-color-primary)',
+                              fontWeight: '500'
+                            }}>
+                              {d.scripture}
                             </p>
                           </div>
                           <IonButton
@@ -933,25 +953,51 @@ const Saved: React.FC = () => {
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              removeSavedDevotion(devotion.id);
+                              removeSavedDevotion(d.id);
                             }}
                             style={{
                               margin: '0',
-                              padding: '6px',
-                              minWidth: '44px',
-                              height: '44px',
+                              padding: '4px',
+                              minWidth: '36px',
+                              height: '36px',
                               '--color': '#ef4444',
-                              '--padding-start': '6px',
-                              '--padding-end': '6px',
-                              alignSelf: 'flex-start'
                             }}
                           >
-                            <IonIcon icon={trash} style={{ fontSize: '1.8em' }} />
+                            <IonIcon icon={trash} style={{ fontSize: '1.2em' }} />
                           </IonButton>
                         </div>
-                        <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          {devotion.content.substring(0, 80)}...
-                        </p>
+
+                        {/* Content */}
+                        <div style={{
+                          margin: '0',
+                          color: 'var(--ion-color-medium)',
+                          fontSize: '0.8em',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {d.content}
+                        </div>
+
+                        <div style={{ marginTop: '2px' }}></div>
+
+                        {/* Reflection */}
+                        <div style={{
+                          margin: '0',
+                          color: 'var(--ion-color-primary)',
+                          fontSize: '0.75em',
+                          fontStyle: 'italic',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          opacity: 0.9
+                        }}>
+                          {d.reflection}
+                        </div>
                       </div>
                     </div>
                   </div>
