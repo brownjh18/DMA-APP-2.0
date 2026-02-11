@@ -1,0 +1,9 @@
+{
+  "env": {
+    "VITE_API_URL": "https://dove-church-backend.onrender.com",
+    "VITE_BACKEND_URL": "https://dove-church-backend.onrender.com"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}
