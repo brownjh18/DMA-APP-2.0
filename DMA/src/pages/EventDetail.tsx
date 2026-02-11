@@ -26,7 +26,16 @@ import {
   play,
   close
 } from 'ionicons/icons';
+import { BACKEND_BASE_URL } from '../services/api';
 import './EventDetail.css';
+
+// Helper function to convert relative URLs to full backend URLs
+const getFullUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url;
+};
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -285,7 +294,7 @@ const EventDetail: React.FC = () => {
                 style={{
                   width: '100%',
                   height: '200px',
-                  backgroundImage: `url(${event.imageUrl || event.videoThumbnailUrl || ''})`,
+                  backgroundImage: `url(${getFullUrl(event.imageUrl || event.videoThumbnailUrl || '')})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   borderRadius: '12px',
@@ -387,7 +396,7 @@ const EventDetail: React.FC = () => {
             <div style={{
               width: '100%',
               height: '200px',
-              backgroundImage: `url(${event.imageUrl})`,
+              backgroundImage: `url(${getFullUrl(event.imageUrl)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               borderRadius: '12px',

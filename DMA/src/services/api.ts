@@ -1,22 +1,24 @@
 // API Service for connecting frontend to backend
 import { Capacitor } from '@capacitor/core';
-const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://192.168.100.43:5000/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+// Use VITE_API_URL for both web and native (production), fallback to localhost for dev
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+console.log('🔗 API Base URL:', API_BASE_URL);
 export { API_BASE_URL };
 
 // Base URL for direct backend access (for images, etc.)
 const getBackendBaseUrl = () => {
-  // For Capacitor apps, use the PC's IP
-  if (Capacitor.isNativePlatform()) {
-    return 'http://192.168.100.43:5000';
-  }
-  // If VITE_API_URL is set (for network/mobile testing), use it
+  // For Capacitor apps, use VITE_API_URL if set (production), otherwise localhost
   if (import.meta.env.VITE_API_URL) {
     const apiUrl = import.meta.env.VITE_API_URL;
     // Remove '/api' suffix to get base URL
-    return apiUrl.replace(/\/api$/, '');
+    const url = apiUrl.replace(/\/api$/, '');
+    console.log('🔗 Backend Base URL:', url);
+    return url;
   }
   // For localhost development, use direct backend URL
-  return 'http://localhost:5000';
+  const url = 'http://localhost:5000';
+  console.log('🔗 Backend Base URL (localhost):', url);
+  return url;
 };
 
 export const BACKEND_BASE_URL = getBackendBaseUrl();
@@ -136,6 +138,7 @@ class ApiService {
     }
 
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('🌐 API Request URL:', url);
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -185,6 +188,7 @@ class ApiService {
 
       return data;
     } catch (error: any) {
+      console.error('❌ API Error for', url, ':', error.message);
       // Handle network errors with exponential backoff
       // Don't retry authentication endpoints as they represent invalid credentials, not network issues
       if (retryCount < maxRetries && (error.name === 'TypeError' || error.message?.includes('Network error')) && !this.isAuthEndpoint(endpoint)) {
@@ -284,7 +288,7 @@ class ApiService {
 
   // Google OAuth
   initiateGoogleAuth() {
-    const backendUrl = Capacitor.isNativePlatform() ? 'http://192.168.100.43:5000' : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
     const googleAuthUrl = `${backendUrl}/api/auth/google`;
     window.location.href = googleAuthUrl;
   }

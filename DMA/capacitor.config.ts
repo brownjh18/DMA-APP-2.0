@@ -5,9 +5,7 @@ const config: CapacitorConfig = {
   appName: 'DMA',
   webDir: 'dist',
   server: {
-    // Enable Android live reload for USB device development
-    url: 'http://localhost:5173', // Localhost for adb reverse
-    cleartext: true
+    // Android URL removed for production - app will load from bundled web assets
   },
   plugins: {
     SplashScreen: {

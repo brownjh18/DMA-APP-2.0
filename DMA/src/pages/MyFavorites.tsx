@@ -61,6 +61,9 @@ addIcons({
 
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
   return url;
 };
 

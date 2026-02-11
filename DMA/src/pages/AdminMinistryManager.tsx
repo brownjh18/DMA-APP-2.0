@@ -34,6 +34,7 @@ import {
   ellipsisVertical
 } from 'ionicons/icons';
 import './Tab4.css';
+import { BACKEND_BASE_URL } from '../services/api';
 
 const AdminMinistryManager: React.FC = () => {
   const history = useHistory();
@@ -537,7 +538,7 @@ const AdminMinistryManager: React.FC = () => {
                   <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
                     {ministry.imageUrl ? (
                       <img
-                        src={ministry.imageUrl.startsWith('/uploads') ? `http://localhost:5000${ministry.imageUrl}` : ministry.imageUrl}
+                        src={ministry.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${ministry.imageUrl}` : ministry.imageUrl}
                         alt={ministry.name}
                         className="podcast-thumbnail"
                       />

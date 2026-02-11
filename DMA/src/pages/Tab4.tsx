@@ -66,8 +66,12 @@ const Tab4: React.FC = () => {
 
   // Helper function to convert relative URLs to full backend URLs
   const getFullUrl = (url: string) => {
+    if (!url) return '';
     if (url.startsWith('/uploads')) {
-      return `http://localhost:5000${url}`;
+      return `${BACKEND_BASE_URL}${url}`;
+    }
+    if (url.startsWith('http')) {
+      return url;
     }
     return url;
   };
@@ -128,7 +132,7 @@ const Tab4: React.FC = () => {
 
       // Load live broadcasts first
       try {
-        const liveResponse = await fetch('/api/live-broadcasts?type=live_broadcast&status=live&limit=5');
+        const liveResponse = await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts?type=live_broadcast&status=live&limit=5`);
         if (liveResponse.ok) {
           const liveData = await liveResponse.json();
           const formattedLiveBroadcasts = liveData.broadcasts.map((broadcast: any) => ({
@@ -155,7 +159,7 @@ const Tab4: React.FC = () => {
       // Load all live broadcasts and filter for stopped ones that are published
       let stoppedLiveBroadcasts = [];
       try {
-        const allLiveResponse = await fetch('/api/live-broadcasts?type=live_broadcast&limit=50');
+        const allLiveResponse = await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts?type=live_broadcast&limit=50`);
         if (allLiveResponse.ok) {
           const allLiveData = await allLiveResponse.json();
           // Filter for broadcasts that are not currently live and are published
@@ -214,7 +218,7 @@ const Tab4: React.FC = () => {
       }
 
       const page = loadMore ? Math.ceil(podcasts.length / 10) + 1 : 1;
-      const response = await fetch(`/api/podcasts?page=${page}&limit=10`);
+      const response = await fetch(`${BACKEND_BASE_URL}/api/podcasts?page=${page}&limit=10`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch podcasts');

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="800" height="450" fill="#2d1b69"/>
+  <circle cx="400" cy="180" r="60" fill="none" stroke="#f0c040" stroke-width="3"/>
+  <path d="M380 180 L400 160 L420 180 L400 200 Z" fill="#f0c040"/>
+  <text x="400" y="290" text-anchor="middle" fill="#f0c040" font-family="serif" font-size="28" font-weight="bold">Dove Ministries Africa</text>
+  <text x="400" y="325" text-anchor="middle" fill="#c0a030" font-family="serif" font-size="18">Spreading the Gospel</text>
+</svg>

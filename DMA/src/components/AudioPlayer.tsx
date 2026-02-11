@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
+import { BACKEND_BASE_URL } from '../services/api';
+
+// Helper to resolve relative upload URLs to full backend URLs
+const resolveUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url;
+};
 
 const SKIP_SECONDS = 10;
 const AudioPlayer: React.FC = () => {
@@ -41,7 +50,7 @@ const AudioPlayer: React.FC = () => {
       needsReloadRef.current = false;
 
       if (audioRef.current) {
-        audioRef.current.src = currentMedia.audioUrl;
+        audioRef.current.src = resolveUrl(currentMedia.audioUrl);
         audioRef.current.load();
         console.log('AudioPlayer: Audio source set and loaded');
       }

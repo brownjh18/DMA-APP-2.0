@@ -22,7 +22,7 @@ import {
   IonActionSheet
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
-import apiService from '../services/api';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
   add,
   create,
@@ -545,7 +545,7 @@ const AdminEventManager: React.FC = () => {
                   <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
                     {event.imageUrl ? (
                       <img
-                        src={event.imageUrl.startsWith('/uploads') ? `http://localhost:5000${event.imageUrl}` : event.imageUrl}
+                        src={event.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${event.imageUrl}` : event.imageUrl}
                         alt={event.title}
                         className="podcast-thumbnail"
                       />

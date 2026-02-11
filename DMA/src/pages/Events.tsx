@@ -2,8 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { calendar, location, time, people, arrowBack } from 'ionicons/icons';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 import './Events.css';
+
+// Helper function to convert relative URLs to full backend URLs
+const getFullUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url;
+};
 
 const Events: React.FC = () => {
   const history = useHistory();
@@ -175,7 +183,7 @@ const Events: React.FC = () => {
                     {event.imageUrl && (
                       <div style={{
                         height: '120px',
-                        backgroundImage: `url(${event.imageUrl})`,
+                        backgroundImage: `url(${getFullUrl(event.imageUrl)})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                       }} />

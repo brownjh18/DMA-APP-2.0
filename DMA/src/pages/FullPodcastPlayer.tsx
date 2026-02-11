@@ -15,7 +15,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
 import { Capacitor } from '@capacitor/core';
 import { AuthContext } from '../App';
-import apiService from '../services/api';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
   play,
   pause,
@@ -41,6 +41,9 @@ import {
 
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
   return url;
 };
 

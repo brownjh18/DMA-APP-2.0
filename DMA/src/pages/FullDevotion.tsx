@@ -2,7 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardC
 import { useState, useEffect, useContext } from 'react';
 import { book, heart, flame, play, arrowForward, calendar, time, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
 import './Tab3.css';
 
@@ -222,7 +222,7 @@ const FullDevotion: React.FC = () => {
       <IonContent fullscreen className="content-ios ios18-style" style={{ backgroundColor: 'var(--ion-background-color)' }}>
         {/* iOS 18 STYLE HEADER */}
         <div className="ios18-header" style={{
-          backgroundImage: `url(${devotion.thumbnailUrl ? (devotion.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${devotion.thumbnailUrl}` : devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
+          backgroundImage: `url(${devotion.thumbnailUrl ? (devotion.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${devotion.thumbnailUrl}` : devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

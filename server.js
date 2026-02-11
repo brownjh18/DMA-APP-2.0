@@ -36,6 +36,11 @@ const searchRoutes = require('./routes/search');
 const commentsRoutes = require('./routes/comments');
 const youtubeRoutes = require('./routes/youtube');
 const app = express();
+
+// Treat routes with and without trailing slashes as the same
+app.set('strict routing', false);
+app.set('case sensitive routing', false);
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -75,7 +80,7 @@ const corsOptions = {
   origin: process.env.CORS_ORIGIN || true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
 };
 
 app.use(cors(corsOptions));

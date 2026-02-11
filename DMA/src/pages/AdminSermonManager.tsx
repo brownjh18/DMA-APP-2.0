@@ -41,7 +41,7 @@ import {
   musicalNote,
   time
 } from 'ionicons/icons';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 import './Tab4.css';
 
 const AdminSermonManager: React.FC = () => {
@@ -694,7 +694,7 @@ const AdminSermonManager: React.FC = () => {
                   <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
                     {sermon.thumbnailUrl ? (
                       <img
-                        src={sermon.thumbnailUrl.startsWith('/uploads') ? `http://localhost:5000${sermon.thumbnailUrl}` : sermon.thumbnailUrl}
+                        src={sermon.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${sermon.thumbnailUrl}` : sermon.thumbnailUrl}
                         alt={sermon.title}
                         className="podcast-thumbnail"
                       />

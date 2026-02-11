@@ -195,7 +195,7 @@ const Tab3: React.FC = () => {
                 className="devotion-media"
                 aria-hidden
                 style={{
-                  backgroundImage: `url(${todaysDevotion.thumbnailUrl && todaysDevotion.thumbnailUrl.trim() ? (todaysDevotion.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${todaysDevotion.thumbnailUrl}` : todaysDevotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
+                  backgroundImage: `url(${todaysDevotion.thumbnailUrl && todaysDevotion.thumbnailUrl.trim() ? (todaysDevotion.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${todaysDevotion.thumbnailUrl}` : todaysDevotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat'
@@ -298,7 +298,7 @@ const Tab3: React.FC = () => {
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}>
                         <img
-                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
+                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
                           alt="Devotion thumbnail"
                           style={{
                             width: '100%',

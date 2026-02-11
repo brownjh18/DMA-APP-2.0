@@ -2,10 +2,7 @@
 	"appId": "io.dove.ministries.africa",
 	"appName": "DMA",
 	"webDir": "dist",
-	"server": {
-		"url": "http://localhost:5173",
-		"cleartext": true
-	},
+	"server": {},
 	"plugins": {
 		"SplashScreen": {
 			"launchShowDuration": 3000,

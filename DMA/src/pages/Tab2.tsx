@@ -24,7 +24,7 @@ const toSermon = (video: YouTubeVideo) => ({
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
   if (url.startsWith('/uploads')) {
-    return `http://localhost:5000${url}`;
+    return `${BACKEND_BASE_URL}${url}`;
   }
   return url;
 };

@@ -2,7 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon } from '@
 import { useState, useEffect } from 'react';
 import { newspaper, arrowBack, calendar, person, eye } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 
 interface NewsArticle {
   id?: string;
@@ -231,7 +231,7 @@ const FullNewsArticle: React.FC = () => {
           <div style={{
             width: '100%',
             height: '250px',
-            backgroundImage: `url(${article.imageUrl.startsWith('/uploads') ? `http://localhost:5000${article.imageUrl}` : article.imageUrl})`,
+            backgroundImage: `url(${article.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${article.imageUrl}` : article.imageUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

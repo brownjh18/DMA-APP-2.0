@@ -2,7 +2,16 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonCard,
 import { useParams, useHistory } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, location, informationCircle, arrowBack, calendar, time } from 'ionicons/icons';
+import { BACKEND_BASE_URL } from '../services/api';
 import './MinistryDetail.css';
+
+// Helper function to convert relative URLs to full backend URLs
+const getFullUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url;
+};
 
 const MinistryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -265,7 +274,7 @@ const MinistryDetail: React.FC = () => {
             <div style={{
               width: '100%',
               height: '200px',
-              backgroundImage: `url(${ministry.imageUrl})`,
+              backgroundImage: `url(${getFullUrl(ministry.imageUrl)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               borderRadius: '12px',

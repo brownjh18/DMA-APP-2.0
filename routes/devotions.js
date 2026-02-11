@@ -7,6 +7,8 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
+console.log('📝 Devotions route module loaded');
+
 // Get all devotions (public)
 router.get('/', async (req, res) => {
   try {
@@ -158,27 +160,35 @@ router.post('/', [
   body('thumbnailUrl').optional().isString()
 ], async (req, res) => {
   try {
+    console.log('POST /api/devotions - Request received');
+    console.log('User from token:', req.user);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     // Handle demo users
     let createdBy;
     if (req.user.id.startsWith('demo-')) {
+      console.log('Demo user detected, looking for admin user');
       // For demo users, find or create the admin user
-      let adminUser = await User.findOne({ email: process.env.ADMIN_EMAIL });
+      let adminUser = await User.findOne({ email: process.env.ADMIN_EMAIL || 'admin@dove.org' });
+      console.log('Admin user found:', adminUser);
       if (!adminUser) {
+        console.log('Creating new admin user for demo');
         adminUser = new User({
           name: 'Admin User',
-          email: process.env.ADMIN_EMAIL,
-          password: process.env.ADMIN_PASSWORD,
+          email: process.env.ADMIN_EMAIL || 'admin@dove.org',
+          password: process.env.ADMIN_PASSWORD || 'admin123',
           role: 'admin'
         });
         await adminUser.save();
       }
       createdBy = adminUser._id;
     } else {
+      console.log('Regular user, using their ID:', req.user.id);
       createdBy = req.user.id;
     }
 
@@ -187,6 +197,8 @@ router.post('/', [
       createdBy: createdBy
     };
 
+    console.log('Creating devotion with data:', devotionData);
+    
     const devotion = new Devotion(devotionData);
     await devotion.save();
 
@@ -202,7 +214,7 @@ router.post('/', [
     });
   } catch (error) {
     console.error('Devotion creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 

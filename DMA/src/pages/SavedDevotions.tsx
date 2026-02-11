@@ -2,6 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardC
 import { useState, useEffect } from 'react';
 import { book, heart, flame, play, arrowForward, calendar, time, arrowBack, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { BACKEND_BASE_URL } from '../services/api';
 
 interface SavedDevotion {
   id: string;
@@ -90,7 +91,7 @@ const SavedDevotions: React.FC = () => {
 
   const getFullUrl = (url: string) => {
     if (url.startsWith('/uploads/')) {
-      return `http://localhost:5000${url}`;
+      return `${BACKEND_BASE_URL}${url}`;
     }
     return url;
   };

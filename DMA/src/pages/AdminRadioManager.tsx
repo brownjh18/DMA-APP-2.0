@@ -40,7 +40,7 @@ import {
   calendar
 } from 'ionicons/icons';
 import './Tab4.css';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 
 const AdminRadioManager: React.FC = () => {
   const history = useHistory();
@@ -739,7 +739,7 @@ const AdminRadioManager: React.FC = () => {
                   <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
                     {broadcast.thumbnailUrl ? (
                       <img
-                        src={broadcast.thumbnailUrl.startsWith('/uploads') ? `http://localhost:5000${broadcast.thumbnailUrl}` : broadcast.thumbnailUrl}
+                        src={broadcast.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${broadcast.thumbnailUrl}` : broadcast.thumbnailUrl}
                         alt={broadcast.title}
                         className="podcast-thumbnail"
                       />

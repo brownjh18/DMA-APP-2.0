@@ -15,6 +15,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
 import VideoPlayer from '../components/VideoPlayer';
 import { Capacitor } from '@capacitor/core';
+import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
   play,
   pause,
@@ -33,7 +34,9 @@ import {
 
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
-  // Since /uploads is now proxied in vite.config.ts, we can use relative URLs
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
   return url;
 };
 
@@ -114,7 +117,7 @@ const FullSermonPlayer: React.FC = () => {
       if (!sermon) return;
 
       try {
-        const response = await fetch('/api/sermons?page=1&limit=10');
+        const response = await fetch(`${BACKEND_BASE_URL}/api/sermons?page=1&limit=10`);
         if (response.ok) {
           const data = await response.json();
           // Filter out the current sermon and take up to 5 for the queue

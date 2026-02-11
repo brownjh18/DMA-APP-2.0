@@ -1,9 +1,14 @@
 {
   "env": {
-    "VITE_API_URL": "https://dove-church-backend.onrender.com",
+    "VITE_API_URL": "https://dove-church-backend.onrender.com/api",
     "VITE_BACKEND_URL": "https://dove-church-backend.onrender.com"
   },
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://dove-church-backend.onrender.com/api/$1" },
+    { "source": "/uploads/(.*)", "destination": "https://dove-church-backend.onrender.com/uploads/$1" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
 }

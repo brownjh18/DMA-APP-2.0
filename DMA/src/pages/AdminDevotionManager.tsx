@@ -40,6 +40,7 @@ import {
   arrowBack
 } from 'ionicons/icons';
 import { useSocket } from '../contexts/SocketContext';
+import { BACKEND_BASE_URL } from '../services/api';
 
 const AdminDevotionManager: React.FC = () => {
   const history = useHistory();
@@ -677,7 +678,7 @@ const AdminDevotionManager: React.FC = () => {
                         position: 'relative'
                       }}>
                         <img
-                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `http://localhost:5000${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
+                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
                           alt="Devotion thumbnail"
                           style={{
                             width: '100%',
