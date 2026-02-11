@@ -10,6 +10,15 @@ import { play, pause, playBack, playForward, close } from 'ionicons/icons';
 import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
 import { useHistory, useLocation } from 'react-router-dom';
+import { BACKEND_BASE_URL } from '../services/api';
+
+// Helper function to resolve thumbnail URLs to full backend URLs
+const resolveThumbnailUrl = (url: string) => {
+  if (url && url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url;
+};
 
 // Helper function to parse duration string like "5:30" or "1:05:30" to seconds
 const parseDurationToSeconds = (duration: string): number => {
@@ -148,7 +157,7 @@ const MiniPlayer: React.FC = () => {
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            backgroundImage: `url(${podcast.thumbnailUrl})`,
+            backgroundImage: `url(${resolveThumbnailUrl(podcast.thumbnailUrl)})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             flexShrink: 0,

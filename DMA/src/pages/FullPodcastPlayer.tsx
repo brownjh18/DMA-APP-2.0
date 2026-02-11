@@ -116,7 +116,7 @@ const FullPodcastPlayer: React.FC = () => {
       if (podcastId) {
         try {
           setLoading(true);
-          const response = await fetch(`/api/podcasts/${podcastId}`);
+          const response = await fetch(`${BACKEND_BASE_URL}/api/podcasts/${podcastId}`);
           if (response.ok) {
             const data = await response.json();
             const podcastData = data.podcast || data;
@@ -184,7 +184,7 @@ const FullPodcastPlayer: React.FC = () => {
       if (!podcast) return;
 
       try {
-        const response = await fetch('/api/podcasts?page=1&limit=50');
+        const response = await fetch(`${BACKEND_BASE_URL}/api/podcasts?page=1&limit=50`);
         if (response.ok) {
           const data = await response.json();
           const queueItems = data.podcasts
@@ -235,7 +235,7 @@ const FullPodcastPlayer: React.FC = () => {
       if (!podcast?.id) return;
 
       try {
-        const response = await fetch(`/api/comments/${podcast.id}?_t=${Date.now()}`);
+        const response = await fetch(`${BACKEND_BASE_URL}/api/comments/${podcast.id}?_t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           setComments(data.comments || []);
@@ -360,7 +360,7 @@ const FullPodcastPlayer: React.FC = () => {
 
     setIsSubmittingComment(true);
     try {
-      const response = await fetch('/api/comments', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

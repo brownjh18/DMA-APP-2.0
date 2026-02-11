@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonText, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { call, mail, location, time, people, heart, book, radio, calendar, cash, chatbubble, camera, informationCircle, chevronBack, arrowBack } from 'ionicons/icons';
-import './Tab5.css';
+import { BACKEND_BASE_URL } from '../services/api';
 
 const Tab5: React.FC = () => {
   const [contactInfo, setContactInfo] = useState<any>(null);
@@ -18,7 +18,7 @@ const Tab5: React.FC = () => {
 
   const loadContactInfo = async () => {
     try {
-      const response = await fetch('/api/contacts');
+      const response = await fetch(`${BACKEND_BASE_URL}/api/contacts`);
       if (response.ok) {
         const data = await response.json();
         console.log('Contact data loaded:', data);

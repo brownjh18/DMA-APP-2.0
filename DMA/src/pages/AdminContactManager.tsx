@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { arrowBack, camera, trash, personAdd, locationOutline, callOutline, mailOutline, timeOutline, saveOutline } from 'ionicons/icons';
 import {
   IonContent,
   IonHeader,
@@ -22,19 +23,7 @@ import {
   IonRow,
   IonCol
 } from '@ionic/react';
-import {
-  create,
-  save,
-  informationCircle,
-  call,
-  mail,
-  location,
-  time,
-  camera,
-  trash,
-  personAdd,
-  arrowBack
-} from 'ionicons/icons';
+import { BACKEND_BASE_URL } from '../services/api';
 
 const AdminContactManager: React.FC = () => {
   const history = useHistory();
@@ -69,7 +58,7 @@ const AdminContactManager: React.FC = () => {
   const loadContactInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/contacts/admin', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/contacts/admin`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +114,7 @@ const AdminContactManager: React.FC = () => {
 
       if (contactId) {
         // Update existing
-        response = await fetch(`/api/contacts/${contactId}`, {
+        response = await fetch(`${BACKEND_BASE_URL}/api/contacts/${contactId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -135,7 +124,7 @@ const AdminContactManager: React.FC = () => {
         });
       } else {
         // Create new
-        response = await fetch('/api/contacts', {
+        response = await fetch(`${BACKEND_BASE_URL}/api/contacts`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -182,7 +171,7 @@ const AdminContactManager: React.FC = () => {
       const formData = new FormData();
       formData.append('thumbnailFile', file);
 
-      const response = await fetch('/api/upload/thumbnail', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/upload/thumbnail`, {
         method: 'POST',
         body: formData
       });
@@ -464,22 +453,22 @@ const AdminContactManager: React.FC = () => {
                 <h3 style={{ margin: '0 0 16px 0', color: 'var(--ion-text-color)' }}>{contactInfo.churchName}</h3>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <IonIcon icon={location} style={{ color: 'var(--ion-color-primary)' }} />
+                  <IonIcon icon={locationOutline} style={{ color: 'var(--ion-color-primary)' }} />
                   <span style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>{contactInfo.address}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <IonIcon icon={call} style={{ color: 'var(--ion-color-primary)' }} />
+                  <IonIcon icon={callOutline} style={{ color: 'var(--ion-color-primary)' }} />
                   <span style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>{contactInfo.phone}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <IonIcon icon={mail} style={{ color: 'var(--ion-color-primary)' }} />
+                  <IonIcon icon={mailOutline} style={{ color: 'var(--ion-color-primary)' }} />
                   <span style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>{contactInfo.email}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <IonIcon icon={time} style={{ color: 'var(--ion-color-primary)' }} />
+                  <IonIcon icon={timeOutline} style={{ color: 'var(--ion-color-primary)' }} />
                   <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)', whiteSpace: 'pre-line' }}>
                     {contactInfo.serviceTimes}
                   </div>
@@ -558,7 +547,7 @@ const AdminContactManager: React.FC = () => {
                   target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
                 }}
               >
-                <IonIcon icon={save} slot="start" />
+                <IonIcon icon={saveOutline} slot="start" />
                 Save Changes
               </IonButton>
             </div>
