@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { play, eye, share, heart, heartOutline, radio, pause, ellipsisVertical, time, musicalNote, calendar } from 'ionicons/icons';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 
 import './Tab4.css';
 
@@ -61,6 +62,7 @@ const Tab4: React.FC = () => {
   const [selectedPodcast, setSelectedPodcast] = useState<Podcast | null>(null);
   const history = useHistory();
   const { currentMedia, setCurrentMedia, setIsPlaying } = usePlayer();
+  const { onPodcastCreated, onPodcastUpdated, onPodcastDeleted } = useSocket() || {};
 
   // Helper function to convert relative URLs to full backend URLs
   const getFullUrl = (url: string) => {
@@ -85,6 +87,37 @@ const Tab4: React.FC = () => {
       loadContent(true); // Force refresh
     }
   }, []);
+
+  // Socket.io event listeners for real-time updates
+  useEffect(() => {
+    if (!onPodcastCreated || !onPodcastUpdated || !onPodcastDeleted) return;
+
+    const handlePodcastCreated = (data: any) => {
+      console.log('📡 Tab4: New podcast created:', data);
+      apiService.clearCacheByType('podcasts');
+      loadContent(true);
+    };
+
+    const handlePodcastUpdated = (data: any) => {
+      console.log('📡 Tab4: Podcast updated:', data);
+      apiService.clearCacheByType('podcasts');
+      loadContent(true);
+    };
+
+    const handlePodcastDeleted = (data: any) => {
+      console.log('📡 Tab4: Podcast deleted:', data);
+      apiService.clearCacheByType('podcasts');
+      loadContent(true);
+    };
+
+    onPodcastCreated(handlePodcastCreated);
+    onPodcastUpdated(handlePodcastUpdated);
+    onPodcastDeleted(handlePodcastDeleted);
+
+    return () => {
+      // Cleanup is handled by the context
+    };
+  }, [onPodcastCreated, onPodcastUpdated, onPodcastDeleted]);
 
   const loadContent = async (forceRefresh: boolean = false) => {
     console.log('loadContent called');

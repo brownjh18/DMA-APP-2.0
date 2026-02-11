@@ -100,6 +100,7 @@ import { PlayerProvider } from './contexts/PlayerContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { DownloadsProvider } from './contexts/DownloadsContext';
+import { SocketProvider } from './contexts/SocketContext';
 
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
@@ -492,6 +493,7 @@ const App: React.FC = () => {
     <SettingsProvider>
       <NetworkProvider>
         <DownloadsProvider>
+          <SocketProvider>
             <AuthContext.Provider value={authValue}>
               <PlayerProvider>
                 <IonApp>
@@ -824,6 +826,7 @@ const App: React.FC = () => {
             </IonApp>
           </PlayerProvider>
         </AuthContext.Provider>
+        </SocketProvider>
      </DownloadsProvider>
    </NetworkProvider>
  </SettingsProvider>

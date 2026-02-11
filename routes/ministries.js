@@ -101,6 +101,10 @@ router.post('/', [
 
     await ministry.populate('createdBy', 'name');
 
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('ministry:created', { ministry });
+
     res.status(201).json({
       message: 'Ministry created successfully',
       ministry
@@ -151,6 +155,10 @@ router.put('/:id', [
       message: 'Ministry updated successfully',
       ministry
     });
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('ministry:updated', { ministry });
   } catch (error) {
     console.error('Ministry update error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -167,6 +175,10 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     res.json({ message: 'Ministry deleted successfully' });
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('ministry:deleted', { id: req.params.id });
   } catch (error) {
     console.error('Ministry deletion error:', error);
     res.status(500).json({ error: 'Server error' });

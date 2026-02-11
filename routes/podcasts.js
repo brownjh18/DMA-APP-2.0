@@ -349,6 +349,11 @@ router.post('/', upload.any(), async (req, res) => {
     };
 
     console.log('POST /api/podcasts - Sending success response');
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('podcast:created', { podcast: formattedPodcast });
+
     res.status(201).json({
       message: 'Podcast created successfully',
       podcast: formattedPodcast
@@ -454,6 +459,10 @@ router.put('/:id', (req, res, next) => {
       message: 'Podcast updated successfully',
       podcast: formattedPodcast
     });
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('podcast:updated', { podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast update error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -563,6 +572,10 @@ router.delete('/:id', async (req, res) => {
     }
 
     res.json({ message: 'Podcast deleted successfully' });
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('podcast:deleted', { id: req.params.id });
   } catch (error) {
     console.error('Podcast deletion error:', error);
     res.status(500).json({ error: 'Server error' });

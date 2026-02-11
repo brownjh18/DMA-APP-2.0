@@ -1,0 +1,1 @@
+npm run build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && adb install android/app/build/outputs/apk/debug/app-debug.apk

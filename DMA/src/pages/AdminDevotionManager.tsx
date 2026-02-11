@@ -39,6 +39,7 @@ import {
   ellipsisHorizontal,
   arrowBack
 } from 'ionicons/icons';
+import { useSocket } from '../contexts/SocketContext';
 
 const AdminDevotionManager: React.FC = () => {
   const history = useHistory();
@@ -49,6 +50,9 @@ const AdminDevotionManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [animatingStat, setAnimatingStat] = useState<string | null>(null);
+  
+  // Socket.io real-time updates
+  const { isConnected, onDevotionCreated, onDevotionUpdated, onDevotionDeleted } = useSocket();
 
   // Helper function to clear API cache for devotions
   const clearDevotionsCache = () => {
@@ -80,7 +84,47 @@ const AdminDevotionManager: React.FC = () => {
 
   useEffect(() => {
     loadDevotions();
-  }, []);
+  
+    // Set up real-time Socket.io listeners
+    if (isConnected) {
+      console.log('🔌 AdminDevotionManager: Setting up Socket.io listeners');
+      
+      // Listen for new devotions created by any admin
+      onDevotionCreated((data: any) => {
+        console.log('📥 Received devotion:created event:', data);
+        if (data.devotion) {
+          setDevotions(prev => [data.devotion, ...prev]);
+          // Clear cache and trigger refresh on other pages
+          clearDevotionsCache();
+          sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        }
+      });
+
+      // Listen for devotion updates
+      onDevotionUpdated((data: any) => {
+        console.log('📥 Received devotion:updated event:', data);
+        if (data.devotion) {
+          setDevotions(prev => 
+            prev.map(d => d._id === data.devotion._id ? data.devotion : d)
+          );
+          // Clear cache and trigger refresh on other pages
+          clearDevotionsCache();
+          sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        }
+      });
+
+      // Listen for devotion deletions
+      onDevotionDeleted((data: any) => {
+        console.log('📥 Received devotion:deleted event:', data);
+        if (data.id) {
+          setDevotions(prev => prev.filter(d => d._id !== data.id));
+          // Clear cache and trigger refresh on other pages
+          clearDevotionsCache();
+          sessionStorage.setItem('devotionsNeedRefresh', 'true');
+        }
+      });
+    }
+  }, [isConnected]);
 
   // Reload devotions when page becomes active (e.g., when returning from Add/Edit pages)
   useIonViewWillEnter(() => {

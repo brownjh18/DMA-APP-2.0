@@ -6,6 +6,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import { fetchCombinedSermons, YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 
 import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline } from 'ionicons/icons';
 import './Tab2.css';
@@ -74,6 +75,7 @@ const Tab2: React.FC = () => {
   const [selectedSermonForActionSheet, setSelectedSermonForActionSheet] = useState<any>(null);
   const location = useLocation();
   const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
+  const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
 
   useEffect(() => {
     loadSermons();
@@ -167,6 +169,37 @@ const Tab2: React.FC = () => {
       setLoading(false);
     }
   }, [loading, isLoadingMore, sermons.length]);
+
+  // Socket.io event listeners for real-time updates
+  useEffect(() => {
+    if (!onSermonCreated || !onSermonUpdated || !onSermonDeleted) return;
+
+    const handleSermonCreated = (data: any) => {
+      console.log('📡 Tab2: New sermon created:', data);
+      apiService.clearCacheByType('sermons');
+      loadSermons();
+    };
+
+    const handleSermonUpdated = (data: any) => {
+      console.log('📡 Tab2: Sermon updated:', data);
+      apiService.clearCacheByType('sermons');
+      loadSermons();
+    };
+
+    const handleSermonDeleted = (data: any) => {
+      console.log('📡 Tab2: Sermon deleted:', data);
+      apiService.clearCacheByType('sermons');
+      loadSermons();
+    };
+
+    onSermonCreated(handleSermonCreated);
+    onSermonUpdated(handleSermonUpdated);
+    onSermonDeleted(handleSermonDeleted);
+
+    return () => {
+      // Cleanup is handled by the context
+    };
+  }, [onSermonCreated, onSermonUpdated, onSermonDeleted]);
 
 
   // Cleanup on component unmount

@@ -7,6 +7,8 @@ const path = require('path');
 const multer = require('multer');
 const cron = require('node-cron');
 const passport = require('passport');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 // Import services
@@ -34,7 +36,27 @@ const searchRoutes = require('./routes/search');
 const commentsRoutes = require('./routes/comments');
 const youtubeRoutes = require('./routes/youtube');
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true
+  }
+});
 const PORT = process.env.PORT || 5000;
+
+// Make io accessible to routes
+app.set('io', io);
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -350,10 +372,11 @@ app.get('*', (req, res) => {
 
 // Start server with graceful shutdown
 const startServer = () => {
-  app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
+    console.log(`🔌 Socket.io enabled for real-time updates`);
     
     // Display network access info in development
     if (process.env.NODE_ENV !== 'production') {

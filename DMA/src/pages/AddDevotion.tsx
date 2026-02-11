@@ -183,9 +183,22 @@ const AddDevotion: React.FC = () => {
           history.push('/admin/devotions');
         }, 1500);
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.log('API Error Response:', errorData);
-        setAlertMessage(errorData.error || `Failed to add devotion (${response.status})`);
+        let errorMessage = `Failed to add devotion (${response.status})`;
+        try {
+          const errorData = await response.json();
+          console.log('API Error Response:', errorData);
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.errors && Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.map((e: any) => e.msg || e.message).join(', ');
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorMessage = `Server error (${response.status})`;
+        }
+        setAlertMessage(errorMessage);
         setShowAlert(true);
         setLoading(false);
       }

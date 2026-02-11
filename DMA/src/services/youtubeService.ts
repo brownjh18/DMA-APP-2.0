@@ -31,6 +31,8 @@ export interface Sermon {
   isPublished: boolean;
   isFeatured: boolean;
   isLive?: boolean;
+  broadcastStartTime?: string;
+  broadcastEndTime?: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

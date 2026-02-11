@@ -590,6 +590,10 @@ router.post('/', authenticateToken, requireAdmin, [
 
       console.log('Sermon created successfully:', sermon._id);
 
+      // Emit real-time event to all connected clients
+      const io = req.app.get('io');
+      io.emit('sermon:created', { sermon });
+
       res.status(201).json({
         message: 'Sermon created successfully',
         sermon
@@ -680,6 +684,10 @@ router.put('/:id', authenticateToken, requireAdmin, [
 
       console.log('Sermon updated successfully:', sermon._id);
 
+      // Emit real-time event to all connected clients
+      const io = req.app.get('io');
+      io.emit('sermon:updated', { sermon });
+
       res.json({
         message: 'Sermon updated successfully',
         sermon
@@ -713,6 +721,10 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     console.log('Sermon deleted successfully:', req.params.id);
+
+    // Emit real-time event to all connected clients
+    const io = req.app.get('io');
+    io.emit('sermon:deleted', { id: req.params.id });
 
     res.json({ message: 'Sermon deleted successfully' });
   } catch (error) {

@@ -1,0 +1,7 @@
+{
+  "name": "videoStreamer",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

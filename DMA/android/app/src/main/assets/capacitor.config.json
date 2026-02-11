@@ -1,8 +1,9 @@
 {
 	"appId": "io.dove.ministries.africa",
-	"appName": "Dove Church",
+	"appName": "DMA",
 	"webDir": "dist",
 	"server": {
+		"url": "http://localhost:5173",
 		"cleartext": true
 	},
 	"plugins": {

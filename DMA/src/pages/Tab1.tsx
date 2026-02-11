@@ -48,6 +48,7 @@ import { fetchCombinedSermons } from '../services/youtubeService';
 import { apiService, BACKEND_BASE_URL, API_BASE_URL } from '../services/api';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { useSocket } from '../contexts/SocketContext';
 import './Tab1.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -236,6 +237,9 @@ const Tab1: React.FC = () => {
   const [devotionsLoading, setDevotionsLoading] = useState(false);
   const { setCurrentMedia, setIsPlaying } = usePlayer();
 
+  // Socket.io real-time updates
+  const { isConnected, onDevotionCreated, onDevotionUpdated, onDevotionDeleted, onEventCreated, onEventUpdated, onEventDeleted, onMinistryCreated, onMinistryUpdated, onMinistryDeleted, onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket();
+
   // Cache timestamps to prevent excessive API calls
   const devotionsCacheTime = useRef<number>(0);
   const sermonsCacheTime = useRef<number>(0);
@@ -296,6 +300,90 @@ const Tab1: React.FC = () => {
       loadDevotions(true); // Force refresh, bypass cache
     }
   }, []);
+
+  // Socket.io real-time updates for devotions
+  useEffect(() => {
+    if (isConnected) {
+      console.log('🔌 Tab1: Setting up Socket.io listeners for devotions');
+      
+      // Listen for new devotions created by any admin
+      onDevotionCreated((data: any) => {
+        console.log('📥 Tab1: Received devotion:created event:', data);
+        if (data.devotion) {
+          loadDevotions(true); // Force refresh to show new devotion
+        }
+      });
+
+      // Listen for devotion updates
+      onDevotionUpdated((data: any) => {
+        console.log('📥 Tab1: Received devotion:updated event:', data);
+        loadDevotions(true); // Force refresh
+      });
+
+      // Listen for devotion deletions
+      onDevotionDeleted((data: any) => {
+        console.log('📥 Tab1: Received devotion:deleted event:', data);
+        loadDevotions(true); // Force refresh
+      });
+      
+      // Listen for new events
+      onEventCreated((data: any) => {
+        console.log('📥 Tab1: Received event:created event:', data);
+        loadLatestEvents();
+      });
+
+      // Listen for event updates
+      onEventUpdated((data: any) => {
+        console.log('📥 Tab1: Received event:updated event:', data);
+        loadLatestEvents();
+      });
+
+      // Listen for event deletions
+      onEventDeleted((data: any) => {
+        console.log('📥 Tab1: Received event:deleted event:', data);
+        loadLatestEvents();
+      });
+      
+      // Listen for new ministries
+      onMinistryCreated((data: any) => {
+        console.log('📥 Tab1: Received ministry:created event:', data);
+        loadLatestMinistries();
+      });
+
+      // Listen for ministry updates
+      onMinistryUpdated((data: any) => {
+        console.log('📥 Tab1: Received ministry:updated event:', data);
+        loadLatestMinistries();
+      });
+
+      // Listen for ministry deletions
+      onMinistryDeleted((data: any) => {
+        console.log('📥 Tab1: Received ministry:deleted event:', data);
+        loadLatestMinistries();
+      });
+      
+      // Listen for new sermons
+      onSermonCreated((data: any) => {
+        console.log('📥 Tab1: Received sermon:created event:', data);
+        apiService.clearCacheByType('sermons');
+        loadLatestContent();
+      });
+
+      // Listen for sermon updates
+      onSermonUpdated((data: any) => {
+        console.log('📥 Tab1: Received sermon:updated event:', data);
+        apiService.clearCacheByType('sermons');
+        loadLatestContent();
+      });
+
+      // Listen for sermon deletions
+      onSermonDeleted((data: any) => {
+        console.log('📥 Tab1: Received sermon:deleted event:', data);
+        apiService.clearCacheByType('sermons');
+        loadLatestContent();
+      });
+    }
+  }, [isConnected]);
 
   // Set max podcasts based on screen size
   useEffect(() => {
