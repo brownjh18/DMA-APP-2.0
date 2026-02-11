@@ -328,6 +328,14 @@ const Saved: React.FC = () => {
     setShowAlert(true);
   };
 
+  const unsaveSermon = async (sermonId: string) => {
+    try {
+      await apiService.saveSermon(sermonId); // Toggle endpoint removes if already saved
+    } catch (error) {
+      console.warn('Failed to unsave sermon from server:', error);
+    }
+  };
+
   const removeSavedPodcast = async (podcastId: string) => {
     // Validate podcast ID
     if (!podcastId || podcastId === 'undefined') {
@@ -346,7 +354,7 @@ const Saved: React.FC = () => {
     
     // Also remove from server
     try {
-      await apiService.savePodcast(podcastId); // Toggle endpoint will remove it
+      await apiService.unsavePodcast(podcastId);
     } catch (error) {
       console.warn('Failed to remove podcast from server:', error);
     }
@@ -376,6 +384,14 @@ const Saved: React.FC = () => {
     
     setAlertMessage('Devotion removed from favorites');
     setShowAlert(true);
+  };
+
+  const unsaveDevotion = async (devotionId: string) => {
+    try {
+      await apiService.saveDevotion(devotionId); // Toggle endpoint removes if already saved
+    } catch (error) {
+      console.warn('Failed to unsave devotion from server:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
