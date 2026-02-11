@@ -1,5 +1,93 @@
 import { Redirect, Route, useLocation, useHistory } from 'react-router-dom';
 
+// Page title map
+const PAGE_TITLES: Record<string, string> = {
+  '/tab1': 'Home',
+  '/tab2': 'Sermons',
+  '/tab3': 'Devotions',
+  '/tab4': 'Podcasts',
+  '/tab5': 'Events',
+  '/profile': 'Profile',
+  '/settings': 'Settings',
+  '/favorites': 'My Favorites',
+  '/prayer': 'Prayer Requests',
+  '/events': 'Events',
+  '/giving': 'Giving',
+  '/ministries': 'Ministries',
+  '/search': 'Search',
+  '/watch-history': 'Watch History',
+  '/reading-history': 'Reading History',
+  '/admin': 'Admin Dashboard',
+};
+
+// Hook to update document title based on route
+const usePageTitle = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Find matching title
+    let title = 'Dove Church';
+    
+    // Check for exact match first
+    if (PAGE_TITLES[location.pathname]) {
+      title = `Dove Church - ${PAGE_TITLES[location.pathname]}`;
+    } else {
+      // Check for dynamic routes
+      if (location.pathname.startsWith('/ministry/')) {
+        title = 'Dove Church - Ministry';
+      } else if (location.pathname.startsWith('/event/')) {
+        title = 'Dove Church - Event';
+      } else if (location.pathname.startsWith('/admin/sermons/edit/')) {
+        title = 'Dove Church - Edit Sermon';
+      } else if (location.pathname.startsWith('/admin/devotions/edit/')) {
+        title = 'Dove Church - Edit Devotion';
+      } else if (location.pathname.startsWith('/admin/events/edit/')) {
+        title = 'Dove Church - Edit Event';
+      } else if (location.pathname.startsWith('/admin/ministries/edit/')) {
+        title = 'Dove Church - Edit Ministry';
+      } else if (location.pathname.startsWith('/admin/news/edit/')) {
+        title = 'Dove Church - Edit News';
+      } else if (location.pathname.startsWith('/admin/giving/edit/')) {
+        title = 'Dove Church - Edit Donation';
+      } else if (location.pathname.startsWith('/admin/sermons/add')) {
+        title = 'Dove Church - Add Sermon';
+      } else if (location.pathname.startsWith('/admin/devotions/add')) {
+        title = 'Dove Church - Add Devotion';
+      } else if (location.pathname.startsWith('/admin/events/add')) {
+        title = 'Dove Church - Add Event';
+      } else if (location.pathname.startsWith('/admin/ministries/add')) {
+        title = 'Dove Church - Add Ministry';
+      } else if (location.pathname.startsWith('/admin/news/add')) {
+        title = 'Dove Church - Add News';
+      } else if (location.pathname.startsWith('/admin/giving/add')) {
+        title = 'Dove Church - Add Donation';
+      } else if (location.pathname.startsWith('/admin/users/add')) {
+        title = 'Dove Church - Add User';
+      } else if (location.pathname.startsWith('/admin/radio/add')) {
+        title = 'Dove Church - Add Podcast';
+      } else if (location.pathname.startsWith('/admin/radio/edit/')) {
+        title = 'Dove Church - Edit Podcast';
+      } else if (location.pathname.startsWith('/admin/live/edit/')) {
+        title = 'Dove Church - Edit Broadcast';
+      } else if (location.pathname.includes('/full-devotion')) {
+        title = 'Dove Church - Devotion';
+      } else if (location.pathname.includes('/full-news')) {
+        title = 'Dove Church - News';
+      } else if (location.pathname.includes('/podcast-player')) {
+        title = 'Dove Church - Podcast Player';
+      } else if (location.pathname.includes('/sermon-player')) {
+        title = 'Dove Church - Sermon Player';
+      } else if (location.pathname.includes('/edit-profile')) {
+        title = 'Dove Church - Edit Profile';
+      } else if (location.pathname.includes('/auth/callback')) {
+        title = 'Dove Church - Authentication';
+      }
+    }
+    
+    document.title = title;
+  }, [location.pathname]);
+};
+
 // Route Redirect Component - preserves current location on initial load
 const RootRedirect: React.FC<{ isAuthChecking: boolean }> = ({ isAuthChecking }) => {
   const location = useLocation();
@@ -208,6 +296,9 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [authCheckTrigger, setAuthCheckTrigger] = useState<number>(0);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  
+  // Initialize dynamic page title
+  usePageTitle();
 
   useEffect(() => {
     // Set status bar to not overlay the webview (only on native platforms)
