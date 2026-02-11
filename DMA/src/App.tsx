@@ -23,8 +23,16 @@ const PAGE_TITLES: Record<string, string> = {
 // Hook to update document title based on route
 const usePageTitle = () => {
   const location = useLocation();
+  const [isReady, setIsReady] = useState(false);
   
   useEffect(() => {
+    // Mark as ready after mount to ensure router context is available
+    setIsReady(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isReady || !location) return;
+    
     // Find matching title
     let title = 'Dove Church';
     
@@ -85,7 +93,7 @@ const usePageTitle = () => {
     }
     
     document.title = title;
-  }, [location.pathname]);
+  }, [location.pathname, isReady]);
 };
 
 // Route Redirect Component - preserves current location on initial load
