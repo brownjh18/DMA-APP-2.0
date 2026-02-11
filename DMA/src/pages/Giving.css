@@ -1,0 +1,94 @@
+/* Dark mode support for Giving page */
+@media (prefers-color-scheme: dark) {
+  /* Header section */
+  .giving-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .giving-title {
+    color: #f1f5f9 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .giving-subtitle {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* Giving options */
+  .giving-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .card-title {
+    color: #f1f5f9 !important;
+  }
+
+  .card-description {
+    color: #94a3b8 !important;
+  }
+
+  /* Amount buttons */
+  .amount-button {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #f1f5f9 !important;
+  }
+
+  .amount-button.selected {
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* Custom amount input */
+  .custom-input {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #f1f5f9 !important;
+  }
+
+  .custom-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Donate button */
+  .donate-button {
+    background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Giving history */
+  .history-card {
+    background: #000000 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .history-item {
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .history-text {
+    color: #f1f5f9 !important;
+  }
+
+  .history-meta {
+    color: #94a3b8 !important;
+  }
+
+  /* Impact section */
+  .impact-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .impact-title {
+    color: #f1f5f9 !important;
+  }
+
+  .impact-text {
+    color: #94a3b8 !important;
+  }
+}

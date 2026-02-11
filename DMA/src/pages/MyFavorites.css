@@ -1,0 +1,57 @@
+/* Dark mode support for My Favorites page */
+@media (prefers-color-scheme: dark) {
+  /* Header section */
+  .favorites-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .favorites-title {
+    color: #f1f5f9 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .favorites-subtitle {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* Category selector */
+  .category-selector {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .category-title {
+    color: #f1f5f9 !important;
+  }
+
+  /* Favorite items */
+  .favorite-item {
+    background: #000000 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .favorite-title {
+    color: #f1f5f9 !important;
+  }
+
+  .favorite-speaker, .favorite-scripture, .favorite-meta {
+    color: #94a3b8 !important;
+  }
+
+  /* Empty state */
+  .empty-state {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .empty-title {
+    color: #f1f5f9 !important;
+  }
+
+  .empty-text {
+    color: #94a3b8 !important;
+  }
+}

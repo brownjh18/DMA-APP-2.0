@@ -1,0 +1,85 @@
+/* Dark mode support for Events page */
+@media (prefers-color-scheme: dark) {
+  /* Section headers */
+  .section-header {
+    color: #f1f5f9 !important;
+  }
+
+  /* Event cards */
+  .event-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .event-card:hover {
+    box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+  }
+
+  /* Event card content */
+  .event-title {
+    color: #f1f5f9 !important;
+  }
+
+  .event-meta {
+    color: #94a3b8 !important;
+  }
+
+  .event-description {
+    color: #64748b !important;
+  }
+
+  /* Event badge */
+  .event-badge {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* Weekly schedule card */
+  .schedule-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .schedule-title {
+    color: #f1f5f9 !important;
+  }
+
+  .schedule-item h3 {
+    color: #f1f5f9 !important;
+  }
+
+  .schedule-item p {
+    color: #94a3b8 !important;
+  }
+
+  /* Host event card */
+  .host-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .host-title {
+    color: #f1f5f9 !important;
+  }
+
+  .host-text {
+    color: #94a3b8 !important;
+  }
+
+  .contact-info {
+    color: #64748b !important;
+  }
+
+  /* Decorative elements */
+  .decorative-bg {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+  }
+
+  .decorative-circle {
+    background: rgba(255,255,255,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+  }
+}

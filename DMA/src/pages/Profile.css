@@ -1,0 +1,200 @@
+/* Dark mode support for Profile page */
+@media (prefers-color-scheme: dark) {
+  /* Profile header card */
+  .profile-header {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .profile-name {
+    color: #f1f5f9 !important;
+  }
+
+  .profile-member-since {
+    color: #94a3b8 !important;
+  }
+
+  .profile-badge {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Personal information card */
+  .personal-info-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .personal-info-title {
+    color: #f1f5f9 !important;
+  }
+
+  .info-item {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .info-label {
+    color: #94a3b8 !important;
+  }
+
+  .info-value {
+    color: #f1f5f9 !important;
+  }
+
+  /* Activity summary card */
+  .activity-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .activity-title {
+    color: #f1f5f9 !important;
+  }
+
+  /* Favorite ministries card */
+  .favorites-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .favorites-title {
+    color: #f1f5f9 !important;
+  }
+
+  .ministry-item {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .ministry-name {
+    color: #f1f5f9 !important;
+  }
+
+  /* Quick actions card */
+  .actions-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .actions-title {
+    color: #f1f5f9 !important;
+  }
+
+  .action-item {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .action-item:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .action-icon-bg {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .action-text {
+    color: #f1f5f9 !important;
+  }
+
+  /* Sign out card */
+  .signout-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .signout-button {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+ .profile-header {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .profile-name {
+   font-size: 20px;
+ }
+
+ .profile-member-since {
+   font-size: 14px;
+ }
+
+ .personal-info-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .personal-info-title {
+   font-size: 16px;
+ }
+
+ .info-item {
+   padding: 12px;
+ }
+
+ .info-label {
+   font-size: 14px;
+ }
+
+ .info-value {
+   font-size: 14px;
+ }
+
+ .activity-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .activity-title {
+   font-size: 16px;
+ }
+
+ .favorites-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .favorites-title {
+   font-size: 16px;
+ }
+
+ .ministry-item {
+   padding: 12px;
+ }
+
+ .ministry-name {
+   font-size: 14px;
+ }
+
+ .actions-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+
+ .actions-title {
+   font-size: 16px;
+ }
+
+ .action-item {
+   padding: 12px;
+ }
+
+ .action-text {
+   font-size: 14px;
+ }
+
+ .signout-card {
+   margin: 8px 16px;
+   padding: 16px;
+ }
+}

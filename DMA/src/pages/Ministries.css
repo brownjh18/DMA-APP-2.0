@@ -1,0 +1,113 @@
+/* Dark mode support for Ministries page */
+@media (prefers-color-scheme: dark) {
+  /* Introduction card */
+  .intro-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .intro-text {
+    color: #94a3b8 !important;
+  }
+
+  .verse-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .verse-text {
+    color: #f1f5f9 !important;
+  }
+
+  .verse-reference {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  /* Ministry cards */
+  .ministry-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .ministry-card:hover {
+    box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+  }
+
+  /* Decorative background */
+  .decorative-bg {
+    background: rgba(255,255,255,0.05) !important;
+  }
+
+  /* Ministry content */
+  .ministry-title {
+    color: #f1f5f9 !important;
+  }
+
+  .ministry-leader {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .ministry-description {
+    color: #94a3b8 !important;
+  }
+
+  .ministry-activity-title {
+    color: #64748b !important;
+  }
+
+  .activity-tag {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .activity-tag-more {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    color: #94a3b8 !important;
+  }
+
+  /* Learn more button */
+  .learn-more-btn {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* Get involved card */
+  .involved-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .involved-icon-bg {
+    background-color: rgba(255,255,255,0.2) !important;
+  }
+
+  .involved-title {
+    color: #f1f5f9 !important;
+  }
+
+  .involved-text {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  .contact-info {
+    background: rgba(255,255,255,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+  }
+
+  .contact-info-title {
+    color: #f1f5f9 !important;
+  }
+
+  .contact-info-text {
+    color: rgba(255,255,255,0.9) !important;
+  }
+
+  /* Decorative elements */
+  .decorative-circle {
+    background: rgba(255,255,255,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+  }
+}

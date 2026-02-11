@@ -1,0 +1,73 @@
+/* Dark mode support for Prayer Request page */
+@media (prefers-color-scheme: dark) {
+  /* Header section */
+  .prayer-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  }
+
+  .prayer-title {
+    color: #f1f5f9 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .prayer-subtitle {
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* Form cards */
+  .form-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .form-title {
+    color: #f1f5f9 !important;
+  }
+
+  .form-input {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #f1f5f9 !important;
+  }
+
+  .form-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Submit button */
+  .submit-button {
+    background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Prayer list */
+  .prayer-item {
+    background: #000000 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .prayer-text {
+    color: #f1f5f9 !important;
+  }
+
+  .prayer-meta {
+    color: #94a3b8 !important;
+  }
+
+  /* Guidelines */
+  .guidelines-card {
+    background: #000000 !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+  }
+
+  .guidelines-title {
+    color: #f1f5f9 !important;
+  }
+
+  .guidelines-text {
+    color: #94a3b8 !important;
+  }
+}
