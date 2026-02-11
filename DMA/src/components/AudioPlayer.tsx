@@ -5,8 +5,18 @@ import { BACKEND_BASE_URL } from '../services/api';
 
 // Helper to resolve relative upload URLs to full backend URLs
 const resolveUrl = (url: string) => {
-  if (url && url.startsWith('/uploads/')) {
+  if (!url || url.trim() === '') {
+    console.warn('AudioPlayer: Empty audio URL detected');
+    return null;
+  }
+  if (url.startsWith('/uploads/')) {
     return `${BACKEND_BASE_URL}${url}`;
+  }
+  if (url.startsWith('/uploads')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  if (url.startsWith('http')) {
+    return url;
   }
   return url;
 };
@@ -50,9 +60,14 @@ const AudioPlayer: React.FC = () => {
       needsReloadRef.current = false;
 
       if (audioRef.current) {
-        audioRef.current.src = resolveUrl(currentMedia.audioUrl);
-        audioRef.current.load();
-        console.log('AudioPlayer: Audio source set and loaded');
+        const audioUrl = resolveUrl(currentMedia.audioUrl);
+        if (audioUrl) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.load();
+          console.log('AudioPlayer: Audio source set and loaded');
+        } else {
+          console.error('AudioPlayer: Could not resolve audio URL for', currentMedia.audioUrl);
+        }
       }
     }
   }, [currentMedia]);

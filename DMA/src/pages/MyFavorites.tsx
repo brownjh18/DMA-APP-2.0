@@ -61,7 +61,19 @@ addIcons({
 
 // Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
-  if (url && url.startsWith('/uploads/')) {
+  if (!url || url.trim() === '') {
+    return '/bible.JPG'; // Default fallback
+  }
+  if (url.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  if (url.startsWith('/uploads')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  if (url.startsWith('http')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
     return `${BACKEND_BASE_URL}${url}`;
   }
   return url;
@@ -195,7 +207,23 @@ const Saved: React.FC = () => {
     console.log('🔄 loadSavedContent called with forceRefresh:', forceRefresh);
     setLoading(true);
     try {
-      // First, try to fetch saved items from server
+      // First, get localStorage data as base (for demo users and offline support)
+      const localSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
+      const localPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
+      const localDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
+      
+      console.log('📋 LocalStorage data loaded:', {
+        sermons: localSermons.length,
+        podcasts: localPodcasts.length,
+        devotions: localDevotions.length
+      });
+      
+      // Set local data immediately for instant UI
+      setSavedSermons(localSermons);
+      setSavedPodcasts(localPodcasts);
+      setSavedDevotions(localDevotions);
+      
+      // Then try to fetch from server and merge
       let serverSermons: any[] = [];
       let serverPodcasts: any[] = [];
       let serverDevotions: any[] = [];
@@ -235,7 +263,6 @@ const Saved: React.FC = () => {
         
         if (podcastsRes.savedPodcasts) {
           serverPodcasts = podcastsRes.savedPodcasts.map((p: any) => {
-            // Handle both _id and id fields for compatibility
             const podcastId = p._id || p.id;
             if (!podcastId) {
               console.warn('Podcast missing ID:', p);
@@ -273,32 +300,50 @@ const Saved: React.FC = () => {
           }));
         }
         
-        console.log('💾 Saving to localStorage and updating state:', {
-          sermons: serverSermons.length,
-          podcasts: serverPodcasts.length,
-          devotions: serverDevotions.length
+        // Merge server data with localStorage data (server takes priority for sync)
+        // Create maps for easy merging
+        const sermonMap = new Map(serverSermons.map((s: any) => [s.id, s]));
+        localSermons.forEach((s: any) => {
+          if (!sermonMap.has(s.id)) {
+            sermonMap.set(s.id, s);
+          }
+        });
+        const mergedSermons = Array.from(sermonMap.values());
+        
+        const podcastMap = new Map(serverPodcasts.map((p: any) => [p.id, p]));
+        localPodcasts.forEach((p: any) => {
+          if (!podcastMap.has(p.id)) {
+            podcastMap.set(p.id, p);
+          }
+        });
+        const mergedPodcasts = Array.from(podcastMap.values());
+        
+        const devotionMap = new Map(serverDevotions.map((d: any) => [d.id, d]));
+        localDevotions.forEach((d: any) => {
+          if (!devotionMap.has(d.id)) {
+            devotionMap.set(d.id, d);
+          }
+        });
+        const mergedDevotions = Array.from(devotionMap.values());
+        
+        console.log('💾 Merged data:', {
+          sermons: mergedSermons.length,
+          podcasts: mergedPodcasts.length,
+          devotions: mergedDevotions.length
         });
         
-        // Save server data to localStorage
-        localStorage.setItem('savedSermons', JSON.stringify(serverSermons));
-        localStorage.setItem('savedPodcasts', JSON.stringify(serverPodcasts));
-        localStorage.setItem('savedDevotions', JSON.stringify(serverDevotions));
+        // Save merged data to localStorage
+        localStorage.setItem('savedSermons', JSON.stringify(mergedSermons));
+        localStorage.setItem('savedPodcasts', JSON.stringify(mergedPodcasts));
+        localStorage.setItem('savedDevotions', JSON.stringify(mergedDevotions));
         
-        setSavedSermons(serverSermons);
-        setSavedPodcasts(serverPodcasts);
-        setSavedDevotions(serverDevotions);
-        console.log('✅ State updated successfully');
+        setSavedSermons(mergedSermons);
+        setSavedPodcasts(mergedPodcasts);
+        setSavedDevotions(mergedDevotions);
+        console.log('✅ State updated successfully with merged data');
       } catch (serverError) {
-        console.error('Error fetching from server:', serverError);
-        
-        // Fallback to localStorage
-        const localSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
-        const localPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
-        const localDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
-        
-        setSavedSermons(localSermons);
-        setSavedPodcasts(localPodcasts);
-        setSavedDevotions(localDevotions);
+        console.warn('Server fetch failed, using localStorage data:', serverError);
+        // Keep the localStorage data that was already set
       }
     } catch (error) {
       console.error('Error loading saved content:', error);

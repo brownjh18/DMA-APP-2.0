@@ -66,12 +66,17 @@ const Tab4: React.FC = () => {
 
   // Helper function to convert relative URLs to full backend URLs
   const getFullUrl = (url: string) => {
-    if (!url) return '';
+    if (!url || url.trim() === '') {
+      return '/bible.JPG'; // Default fallback
+    }
     if (url.startsWith('/uploads')) {
       return `${BACKEND_BASE_URL}${url}`;
     }
     if (url.startsWith('http')) {
       return url;
+    }
+    if (url.startsWith('/')) {
+      return `${BACKEND_BASE_URL}${url}`;
     }
     return url;
   };
