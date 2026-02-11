@@ -14,10 +14,19 @@ import { BACKEND_BASE_URL } from '../services/api';
 
 // Helper function to resolve thumbnail URLs to full backend URLs
 const resolveThumbnailUrl = (url: string) => {
-  if (url && url.startsWith('/uploads/')) {
+  if (!url || url.trim() === '') {
+    return '/bible.JPG'; // Default fallback
+  }
+  if (url.startsWith('/uploads/') || url.startsWith('/uploads')) {
     return `${BACKEND_BASE_URL}${url}`;
   }
-  return url;
+  if (url.startsWith('http')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${BACKEND_BASE_URL}${url}`;
+  }
+  return url || '/bible.JPG';
 };
 
 // Helper function to parse duration string like "5:30" or "1:05:30" to seconds

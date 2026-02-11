@@ -9,16 +9,27 @@ const resolveUrl = (url: string) => {
     console.warn('AudioPlayer: Empty audio URL detected');
     return null;
   }
-  if (url.startsWith('/uploads/')) {
-    return `${BACKEND_BASE_URL}${url}`;
-  }
-  if (url.startsWith('/uploads')) {
-    return `${BACKEND_BASE_URL}${url}`;
+  console.log('AudioPlayer: Resolving URL:', url);
+  
+  if (url.startsWith('/uploads/') || url.startsWith('/uploads')) {
+    const resolved = `${BACKEND_BASE_URL}${url}`;
+    console.log('AudioPlayer: Resolved to:', resolved);
+    return resolved;
   }
   if (url.startsWith('http')) {
+    console.log('AudioPlayer: Using full URL:', url);
     return url;
   }
-  return url;
+  if (url.startsWith('/')) {
+    const resolved = `${BACKEND_BASE_URL}${url}`;
+    console.log('AudioPlayer: Resolved to:', resolved);
+    return resolved;
+  }
+  
+  // Try treating it as a relative path
+  const resolved = `${BACKEND_BASE_URL}/${url}`;
+  console.log('AudioPlayer: Resolved relative to:', resolved);
+  return resolved;
 };
 
 const SKIP_SECONDS = 10;

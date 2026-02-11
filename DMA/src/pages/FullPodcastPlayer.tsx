@@ -44,10 +44,7 @@ const getFullUrl = (url: string) => {
   if (!url || url.trim() === '') {
     return '/bible.JPG'; // Default fallback
   }
-  if (url.startsWith('/uploads/')) {
-    return `${BACKEND_BASE_URL}${url}`;
-  }
-  if (url.startsWith('/uploads')) {
+  if (url.startsWith('/uploads/') || url.startsWith('/uploads')) {
     return `${BACKEND_BASE_URL}${url}`;
   }
   if (url.startsWith('http')) {
@@ -56,7 +53,7 @@ const getFullUrl = (url: string) => {
   if (url.startsWith('/')) {
     return `${BACKEND_BASE_URL}${url}`;
   }
-  return url;
+  return `${BACKEND_BASE_URL}/${url}`;
 };
 
 interface Podcast {

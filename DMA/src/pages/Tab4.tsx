@@ -78,7 +78,8 @@ const Tab4: React.FC = () => {
     if (url.startsWith('/')) {
       return `${BACKEND_BASE_URL}${url}`;
     }
-    return url;
+    // For non-http, non-/ URLs, prepend BACKEND_BASE_URL
+    return `${BACKEND_BASE_URL}/${url}`;
   };
 
   useEffect(() => {
@@ -140,6 +141,7 @@ const Tab4: React.FC = () => {
         const liveResponse = await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts?type=live_broadcast&status=live&limit=5`);
         if (liveResponse.ok) {
           const liveData = await liveResponse.json();
+          console.log('Tab4: Live broadcasts data:', JSON.stringify(liveData.broadcasts?.slice(0, 1), null, 2));
           const formattedLiveBroadcasts = liveData.broadcasts.map((broadcast: any) => ({
             id: broadcast.id,
             title: broadcast.title,
@@ -160,6 +162,8 @@ const Tab4: React.FC = () => {
 
       // Load podcasts - only show published ones
       const podcastData = await apiService.getPodcasts({ published: true, page: 1, limit: 20 }, forceRefresh);
+      
+      console.log('📻 Podcast data received:', JSON.stringify(podcastData.podcasts?.slice(0, 2), null, 2));
 
       // Load all live broadcasts and filter for stopped ones that are published
       let stoppedLiveBroadcasts = [];
@@ -191,6 +195,14 @@ const Tab4: React.FC = () => {
 
       // Combine podcasts and stopped live broadcasts
       const allContent = [...podcastData.podcasts, ...stoppedLiveBroadcasts];
+      
+      console.log('Tab4: First podcast data sample:', allContent[0] ? {
+        id: allContent[0].id,
+        title: allContent[0].title,
+        thumbnailUrl: allContent[0].thumbnailUrl,
+        audioUrl: allContent[0].audioUrl,
+        duration: allContent[0].duration
+      } : 'No content');
 
       if (allContent.length > 0) {
         // Sort by published date (newest first)
@@ -315,6 +327,7 @@ const Tab4: React.FC = () => {
   };
 
   const handlePodcastClick = (podcast: Podcast) => {
+    console.log('Tab4: Podcast clicked - title:', podcast.title, 'audioUrl:', podcast.audioUrl);
     setCurrentMedia(podcast);
     setIsPlaying(true);
     history.push('/podcast-player');
@@ -421,6 +434,11 @@ const Tab4: React.FC = () => {
                       src={getFullUrl(broadcast.thumbnailUrl)}
                       alt={broadcast.title}
                       className="podcast-thumbnail"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        console.warn('Tab4: Live broadcast image failed to load, using fallback');
+                        target.src = '/bible.JPG';
+                      }}
                     />
                     <div className="podcast-play-overlay">
                       <IonIcon icon={radio} />
@@ -539,9 +557,11 @@ const Tab4: React.FC = () => {
                     }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      if (!target.src.includes('/bible.JPG')) {
-                        target.src = '/bible.JPG';
-                      }
+                      console.warn('Tab4: Image failed to load, using fallback');
+                      target.src = '/bible.JPG';
+                    }}
+                    onLoad={() => {
+                      console.log('Tab4: Image loaded successfully for:', podcast.title);
                     }}
                   />
                   <div style={{
