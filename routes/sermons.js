@@ -447,6 +447,28 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
         // Generate thumbnail URL using Cloudinary video thumbnail API
         thumbnailUrl = cloudStorage.getVideoThumbnailUrl(publicId);
         console.log('Cloudinary thumbnail URL:', thumbnailUrl);
+        
+        // Fetch video duration from Cloudinary API
+        try {
+          const cloudinary = require('cloudinary').v2;
+          const result = await cloudinary.api.resource(publicId, { resource_type: 'video' });
+          if (result && result.duration) {
+            // Cloudinary returns duration in seconds
+            const totalSeconds = Math.floor(result.duration);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            if (hours > 0) {
+              duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+              duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            console.log('Cloudinary video duration:', duration);
+          }
+        } catch (durationError) {
+          console.warn('Failed to get video duration from Cloudinary:', durationError.message);
+        }
       }
     } else {
       // Local storage
