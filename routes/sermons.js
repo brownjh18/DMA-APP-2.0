@@ -444,14 +444,8 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
       // Cloudinary can generate thumbnails from video URLs directly
       const publicId = cloudStorage.extractPublicId(videoUrl);
       if (publicId) {
-        // Generate thumbnail URL using Cloudinary transformation
-        thumbnailUrl = cloudStorage.getFileUrl(publicId, {
-          resource_type: 'video',
-          transformation: [
-            { width: 400, height: 400, crop: 'fill', gravity: 'auto' },
-            { format: 'jpg' }
-          ]
-        });
+        // Generate thumbnail URL using Cloudinary video thumbnail API
+        thumbnailUrl = cloudStorage.getVideoThumbnailUrl(publicId);
         console.log('Cloudinary thumbnail URL:', thumbnailUrl);
       }
     } else {

@@ -155,10 +155,34 @@ const deleteFile = async (publicId) => {
  * Get file URL from Cloudinary
  * @param {string} publicId - Cloudinary public ID
  * @param {object} options - Transformation options
- * @returns {string} File URL
+ * @returns {string} File URL with HTTPS
  */
 const getFileUrl = (publicId, options = {}) => {
-  return cloudinary.url(publicId, options);
+  const url = cloudinary.url(publicId, options);
+  // Ensure URL uses HTTPS
+  return url.replace(/^http:\/\//, 'https://');
+};
+
+/**
+ * Get video thumbnail URL from Cloudinary
+ * @param {string} publicId - Cloudinary public ID (video public ID)
+ * @param {object} options - Transformation options
+ * @returns {string} Video thumbnail URL with HTTPS
+ */
+const getVideoThumbnailUrl = (publicId, options = {}) => {
+  // For video thumbnails, we need to use the video public ID with image transformations
+  const defaultOptions = {
+    resource_type: 'video',
+    format: 'jpg',
+    transformation: [
+      { width: 400, height: 400, crop: 'fill', gravity: 'auto' }
+    ],
+    ...options
+  };
+  
+  const url = cloudinary.url(publicId, defaultOptions);
+  // Ensure URL uses HTTPS
+  return url.replace(/^http:\/\//, 'https://');
 };
 
 /**
@@ -235,5 +259,6 @@ module.exports = {
   deleteFile,
   deleteFiles,
   getFileUrl,
+  getVideoThumbnailUrl,
   extractPublicId
 };
