@@ -49,7 +49,6 @@ const Events: React.FC = () => {
 
   const weeklyPrograms = [
     { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '5:00PM - 7:00PM', color: '#ff6b6b' },
-    { day: 'Tue', program: 'New Believers Class', time: '4:00PM - 5:00PM', color: '#4ecdc4' },
     { day: 'Wed', program: 'Intercessions & Bible Study', time: '8:00AM - 8:00PM', color: '#45b7d1' },
     { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24' },
     { day: 'Fri', program: "Eagle's Friday Prayer Service", time: '6:00PM - 8:00PM', color: '#f0932b' },

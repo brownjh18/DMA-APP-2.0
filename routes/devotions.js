@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Devotion = require('../models/Devotion');
 const User = require('../models/User');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const cloudStorage = require('../services/cloudStorage');
 
 const router = express.Router();
 
@@ -273,11 +274,27 @@ router.put('/:id', [
 // Delete devotion (admin only)
 router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const devotion = await Devotion.findByIdAndDelete(req.params.id);
+    const devotion = await Devotion.findById(req.params.id);
 
     if (!devotion) {
       return res.status(404).json({ error: 'Devotion not found' });
     }
+
+    // Delete files from Cloudinary if configured
+    if (cloudStorage.isConfigured()) {
+      const filesToDelete = [];
+      if (devotion.thumbnailUrl && devotion.thumbnailUrl.includes('cloudinary.com')) {
+        filesToDelete.push(devotion.thumbnailUrl);
+      }
+      
+      if (filesToDelete.length > 0) {
+        console.log('Deleting', filesToDelete.length, 'file(s) from Cloudinary...');
+        await cloudStorage.deleteFiles(filesToDelete);
+      }
+    }
+
+    // Delete the devotion from database
+    await Devotion.findByIdAndDelete(req.params.id);
 
     // Emit real-time event to all connected clients
     const io = req.app.get('io');

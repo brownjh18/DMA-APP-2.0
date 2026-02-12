@@ -713,12 +713,34 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     console.log('Attempting to delete sermon:', req.params.id);
     
-    const sermon = await Sermon.findByIdAndDelete(req.params.id);
+    const sermon = await Sermon.findById(req.params.id);
 
     if (!sermon) {
       console.log('Sermon not found for deletion:', req.params.id);
       return res.status(404).json({ error: 'Sermon not found' });
     }
+
+    // Delete files from Cloudinary if configured
+    if (isCloudStorage) {
+      const filesToDelete = [];
+      if (sermon.videoUrl && sermon.videoUrl.includes('cloudinary.com')) {
+        filesToDelete.push(sermon.videoUrl);
+      }
+      if (sermon.thumbnailUrl && sermon.thumbnailUrl.includes('cloudinary.com')) {
+        filesToDelete.push(sermon.thumbnailUrl);
+      }
+      if (sermon.audioUrl && sermon.audioUrl.includes('cloudinary.com')) {
+        filesToDelete.push(sermon.audioUrl);
+      }
+      
+      if (filesToDelete.length > 0) {
+        console.log('Deleting', filesToDelete.length, 'file(s) from Cloudinary...');
+        await cloudStorage.deleteFiles(filesToDelete);
+      }
+    }
+
+    // Delete the sermon from database
+    await Sermon.findByIdAndDelete(req.params.id);
 
     console.log('Sermon deleted successfully:', req.params.id);
 

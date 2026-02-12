@@ -447,10 +447,34 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
 // Delete podcast
 router.delete('/:id', async (req, res) => {
   try {
-    const podcast = await Sermon.findByIdAndDelete(req.params.id);
-    if (!podcast) return res.status(404).json({ error: 'Podcast not found' });
+    const podcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' });
+    
+    if (!podcast) {
+      return res.status(404).json({ error: 'Podcast not found' });
+    }
+
+    // Delete files from Cloudinary if configured
+    if (isCloudStorageConfigured) {
+      const filesToDelete = [];
+      if (podcast.audioUrl && podcast.audioUrl.includes('cloudinary.com')) {
+        filesToDelete.push(podcast.audioUrl);
+      }
+      if (podcast.thumbnailUrl && podcast.thumbnailUrl.includes('cloudinary.com')) {
+        filesToDelete.push(podcast.thumbnailUrl);
+      }
+      
+      if (filesToDelete.length > 0) {
+        console.log('Deleting', filesToDelete.length, 'file(s) from Cloudinary...');
+        await cloudStorage.deleteFiles(filesToDelete);
+      }
+    }
+
+    // Delete the podcast from database
+    await Sermon.findByIdAndDelete(req.params.id);
+
     const io = req.app.get('io');
     io.emit('podcast:deleted', { id: req.params.id });
+    
     res.json({ message: 'Podcast deleted successfully' });
   } catch (error) {
     console.error('Podcast deletion error:', error);

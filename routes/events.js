@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Event = require('../models/Event');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const cloudStorage = require('../services/cloudStorage');
 
 const router = express.Router();
 
@@ -346,11 +347,30 @@ router.put('/:id', [
 // Delete event (admin only)
 router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const event = await Event.findById(req.params.id);
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
+
+    // Delete files from Cloudinary if configured
+    if (cloudStorage.isConfigured()) {
+      const filesToDelete = [];
+      if (event.videoUrl && event.videoUrl.includes('cloudinary.com')) {
+        filesToDelete.push(event.videoUrl);
+      }
+      if (event.imageUrl && event.imageUrl.includes('cloudinary.com')) {
+        filesToDelete.push(event.imageUrl);
+      }
+      
+      if (filesToDelete.length > 0) {
+        console.log('Deleting', filesToDelete.length, 'file(s) from Cloudinary...');
+        await cloudStorage.deleteFiles(filesToDelete);
+      }
+    }
+
+    // Delete the event from database
+    await Event.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Event deleted successfully' });
 

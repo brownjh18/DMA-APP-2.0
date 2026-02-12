@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Ministry = require('../models/Ministry');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const cloudStorage = require('../services/cloudStorage');
 
 const router = express.Router();
 
@@ -168,11 +169,27 @@ router.put('/:id', [
 // Delete ministry (admin only)
 router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const ministry = await Ministry.findByIdAndDelete(req.params.id);
+    const ministry = await Ministry.findById(req.params.id);
 
     if (!ministry) {
       return res.status(404).json({ error: 'Ministry not found' });
     }
+
+    // Delete files from Cloudinary if configured
+    if (cloudStorage.isConfigured()) {
+      const filesToDelete = [];
+      if (ministry.imageUrl && ministry.imageUrl.includes('cloudinary.com')) {
+        filesToDelete.push(ministry.imageUrl);
+      }
+      
+      if (filesToDelete.length > 0) {
+        console.log('Deleting', filesToDelete.length, 'file(s) from Cloudinary...');
+        await cloudStorage.deleteFiles(filesToDelete);
+      }
+    }
+
+    // Delete the ministry from database
+    await Ministry.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Ministry deleted successfully' });
 

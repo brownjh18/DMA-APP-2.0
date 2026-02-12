@@ -161,6 +161,68 @@ const getFileUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, options);
 };
 
+/**
+ * Extract public ID from Cloudinary URL
+ * @param {string} url - Cloudinary URL
+ * @returns {string|null} Public ID or null if not a Cloudinary URL
+ */
+const extractPublicId = (url) => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return null;
+  }
+
+  try {
+    // Extract public ID from Cloudinary URL
+    // Format: https://res.cloudinary.com/<cloud_name>/<resource_type>/upload/v<version>/<folder>/<filename>
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/');
+    
+    // Find "upload" in the path and take everything after it
+    const uploadIndex = pathParts.findIndex(part => part === 'upload');
+    if (uploadIndex === -1) return null;
+
+    // Skip "upload", "v<version>" and join the rest
+    const publicIdParts = pathParts.slice(uploadIndex + 2);
+    const publicId = publicIdParts.join('/').replace(/\.[^/.]+$/, ''); // Remove extension
+    
+    return publicId;
+  } catch (error) {
+    console.error('Error extracting public ID:', error);
+    return null;
+  }
+};
+
+/**
+ * Delete multiple files from Cloudinary
+ * @param {string[]} urls - Array of Cloudinary URLs
+ * @returns {Promise<void>}
+ */
+const deleteFiles = async (urls) => {
+  if (!isConfigured()) {
+    return;
+  }
+
+  const deletePromises = urls.map(async (url) => {
+    if (!url || !url.includes('cloudinary.com')) {
+      return null;
+    }
+    const publicId = extractPublicId(url);
+    if (publicId) {
+      try {
+        const result = await cloudinary.uploader.destroy(publicId);
+        console.log(`☁️ Deleted from Cloudinary: ${publicId}`);
+        return result;
+      } catch (error) {
+        console.error(`☁️ Failed to delete from Cloudinary: ${publicId}`, error.message);
+        return null;
+      }
+    }
+    return null;
+  });
+
+  await Promise.all(deletePromises);
+};
+
 module.exports = {
   cloudinary,
   isConfigured,
@@ -171,5 +233,7 @@ module.exports = {
   uploadProfile,
   uploadFile,
   deleteFile,
-  getFileUrl
+  deleteFiles,
+  getFileUrl,
+  extractPublicId
 };

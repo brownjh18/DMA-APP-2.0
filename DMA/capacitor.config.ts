@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.dove.ministries.africa',
-  appName: 'DMA',
+  appName: 'Dove Church',
   webDir: 'dist',
   server: {
     // Android URL removed for production - app will load from bundled web assets
