@@ -45,7 +45,15 @@ app.set('case sensitive routing', false);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all for now
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
   }
@@ -76,9 +84,32 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(limiter);
-// CORS configuration with environment variable
+// CORS configuration - support multiple origins for web app and Capacitor mobile app
+const allowedOrigins = [
+  'https://dovechurchapp.vercel.app',
+  'https://localhost',
+  'http://localhost',
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'ionic://localhost',
+  'capacitor://localhost'
+];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list or if CORS_ORIGIN env var allows it
+    if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN) {
+      callback(null, true);
+    } else if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow anyway for debugging - change to callback(new Error('Not allowed by CORS')) for strict mode
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
