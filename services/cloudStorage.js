@@ -171,11 +171,12 @@ const getFileUrl = (publicId, options = {}) => {
  */
 const getVideoThumbnailUrl = (publicId, options = {}) => {
   // For video thumbnails, we need to use the video public ID with image transformations
+  // 16:9 aspect ratio for proper cover behavior
   const defaultOptions = {
     resource_type: 'video',
     format: 'jpg',
     transformation: [
-      { width: 400, height: 400, crop: 'fill', gravity: 'auto' }
+      { width: 640, height: 360, crop: 'fill', gravity: 'auto' }
     ],
     ...options
   };

@@ -179,7 +179,7 @@ const generateThumbnail = (videoPath) => {
       ffmpeg(videoPath)
         .seekInput(seekString) // Seek to safe position
         .frames(1) // Extract 1 frame
-        .size('200x200') // Square thumbnail for better cover behavior
+        .size('640x360') // 16:9 aspect ratio for cover behavior
         .output(thumbnailPath)
         .on('start', (commandLine) => {
           console.log('FFmpeg command: ' + commandLine);
@@ -208,7 +208,7 @@ const generateThumbnail = (videoPath) => {
       ffmpeg(videoPath)
         .seekInput('00:00:01') // Seek to 1 second as fallback
         .frames(1) // Extract 1 frame
-        .size('200x200') // Square thumbnail for better cover behavior
+        .size('640x360') // 16:9 aspect ratio for cover behavior
         .output(thumbnailPath)
         .on('start', (commandLine) => {
           console.log('FFmpeg fallback command: ' + commandLine);
@@ -464,10 +464,12 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
             } else {
               duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
-            console.log('Cloudinary video duration:', duration);
+            console.log('✅ Cloudinary video duration fetched:', duration, '(', totalSeconds, 'seconds)');
+          } else {
+            console.warn('⚠️ No duration in Cloudinary response for:', publicId);
           }
         } catch (durationError) {
-          console.warn('Failed to get video duration from Cloudinary:', durationError.message);
+          console.error('❌ Failed to get video duration from Cloudinary:', durationError.message);
         }
       }
     } else {
