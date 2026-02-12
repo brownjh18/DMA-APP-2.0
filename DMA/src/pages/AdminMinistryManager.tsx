@@ -541,6 +541,21 @@ const AdminMinistryManager: React.FC = () => {
                         src={ministry.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${ministry.imageUrl}` : ministry.imageUrl}
                         alt={ministry.name}
                         className="podcast-thumbnail"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset['triedFallback']) {
+                            target.dataset['triedFallback'] = 'true';
+                            target.src = '/dove.png';
+                          } else {
+                            target.style.display = 'none';
+                            // Show fallback div instead
+                            target.parentElement!.innerHTML = `
+                              <div class="podcast-thumbnail" style="background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary)); display: flex; align-items: center; justify-content: center;">
+                                <ion-icon icon="people" style="font-size: 2em; color: white;"></ion-icon>
+                              </div>
+                            `;
+                          }
+                        }}
                       />
                     ) : (
                       <div

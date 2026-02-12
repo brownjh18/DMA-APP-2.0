@@ -87,6 +87,17 @@ const Ministries: React.FC = () => {
     return imageMap[category] || 'hero-default.jpg';
   };
 
+  // Helper function to get ministry image with fallbacks
+  const getMinistryImage = (imageUrl?: string, category?: string): string => {
+    if (!imageUrl || !imageUrl.trim()) {
+      return getImageForCategory(category || '');
+    }
+    if (imageUrl.startsWith('/uploads/')) {
+      return `${BACKEND_BASE_URL}${imageUrl}`;
+    }
+    return imageUrl;
+  };
+
   // Keep hardcoded ministries as fallback
   const hardcodedMinistries = [
     {
@@ -273,12 +284,33 @@ const Ministries: React.FC = () => {
                   border: '1px solid rgba(0,0,0,0.1)',
                   overflow: 'hidden'
                 }}>
-                  <div style={{
-                    height: '120px',
-                    backgroundImage: `url(${getFullUrl(ministry.image)})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }} />
+                  <div style={{ height: '120px', position: 'relative', overflow: 'hidden' }}>
+                    <img
+                      src={getMinistryImage(ministry.image, ministry.category)}
+                      alt={ministry.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const cat = ministry.category || '';
+                        // Try category-specific fallback first
+                        const categoryFallbacks: { [key: string]: string } = {
+                          'married-couples': '/dove.png',
+                          'youth': '/dove.png',
+                          'children': '/dove.png',
+                          'evangelism': '/dove.png',
+                          'intercessions': '/dove.png',
+                          'worship': '/dove.png'
+                        };
+                        if (!target.dataset['triedFallback']) {
+                          target.dataset['triedFallback'] = 'true';
+                          target.src = categoryFallbacks[cat] || '/dove.png';
+                        } else {
+                          // Use SVG placeholder as final fallback
+                          target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120" viewBox="0 0 300 120"><rect fill="%23f5f5f5" width="300" height="120"/><text x="150" y="60" text-anchor="middle" dy=".3em" fill="%23999" font-size="14">Ministry Image</text></svg>');
+                        }
+                      }}
+                    />
+                  </div>
                   <div style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                       <IonIcon icon={ministry.icon} style={{ color: 'var(--ion-color-primary)', fontSize: '1.2em' }} />

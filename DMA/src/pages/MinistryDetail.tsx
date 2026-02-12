@@ -274,12 +274,25 @@ const MinistryDetail: React.FC = () => {
             <div style={{
               width: '100%',
               height: '200px',
-              backgroundImage: `url(${getFullUrl(ministry.imageUrl)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               borderRadius: '12px',
-              marginBottom: '20px'
-            }} />
+              marginBottom: '20px',
+              overflow: 'hidden'
+            }}>
+              <img
+                src={getFullUrl(ministry.imageUrl)}
+                alt={ministry.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.dataset['triedDove']) {
+                    target.dataset['triedDove'] = 'true';
+                    target.src = '/dove.png';
+                  } else {
+                    target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect fill="%23f5f5f5" width="400" height="200"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23999" font-size="16">Ministry Image</text></svg>');
+                  }
+                }}
+              />
+            </div>
           )}
 
           {/* Ministry Title and Category */}

@@ -59,10 +59,26 @@ const getFullUrl = (url: string) => {
   return url;
 };
 
-// Helper function to get devotion thumbnail with default fallback
+// Helper function to get ministry image with multiple fallbacks
+const getMinistryImage = (imageUrl?: string): string => {
+  if (!imageUrl || !imageUrl.trim()) {
+    return '/dove.png'; // Primary fallback
+  }
+  // Handle Cloudinary URLs
+  if (imageUrl.includes('cloudinary.com')) {
+    return imageUrl;
+  }
+  // Handle local uploads
+  if (imageUrl.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${imageUrl}`;
+  }
+  return imageUrl;
+};
+
+// Helper function to get devotion thumbnail with default fallback and multiple fallbacks
 const getDevotionThumbnail = (thumbnailUrl?: string): string => {
   if (!thumbnailUrl || !thumbnailUrl.trim()) {
-    return '/hero-evangelism.jpg';
+    return '/dove.png'; // Primary fallback
   }
   if (thumbnailUrl.startsWith('/uploads/')) {
     return `${BACKEND_BASE_URL}${thumbnailUrl}`;
@@ -802,7 +818,15 @@ const Tab1: React.FC = () => {
                     left: 0
                   }}
                   onError={(e) => {
-                    e.currentTarget.src = '/hero-evangelism.jpg';
+                    const target = e.currentTarget;
+                    // Try dove.png first
+                    if (!target.dataset['triedDove']) {
+                      target.dataset['triedDove'] = 'true';
+                      target.src = '/dove.png';
+                    } else {
+                      // Use SVG placeholder as final fallback
+                      target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect fill="%23f5f5f5" width="400" height="200"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23999" font-size="16">Daily Devotion</text></svg>');
+                    }
                   }}
                 />
                 {/* subtle overlay handled by CSS */}
@@ -1226,7 +1250,7 @@ const Tab1: React.FC = () => {
                 >
                   <div className="devotion-media-small" style={{ aspectRatio: '16/9' }}>
                     <img
-                      src={getFullUrl(ministry.imageUrl || '/bible.JPG')}
+                      src={getMinistryImage(ministry.imageUrl)}
                       alt={ministry.name}
                       style={{
                         width: '100%',
@@ -1235,7 +1259,15 @@ const Tab1: React.FC = () => {
                         borderRadius: '20px'
                       }}
                       onError={(e) => {
-                        e.currentTarget.src = '/bible.JPG'; // Fallback
+                        const target = e.currentTarget;
+                        // First fallback: try dove.png
+                        if (!target.dataset['triedDove']) {
+                          target.dataset['triedDove'] = 'true';
+                          target.src = '/dove.png';
+                        } else {
+                          // Second fallback: use data URL for a solid color placeholder
+                          target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23f5f5f5" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999" font-size="12">Ministry</text></svg>');
+                        }
                       }}
                       aria-hidden
                     />

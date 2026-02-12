@@ -18,10 +18,10 @@ interface Devotion {
   thumbnailUrl?: string;
 }
 
-// Helper function to get devotion thumbnail with default fallback
+// Helper function to get devotion thumbnail with multiple fallbacks
 const getDevotionThumbnail = (thumbnailUrl?: string): string => {
   if (!thumbnailUrl || !thumbnailUrl.trim()) {
-    return '/hero-evangelism.jpg';
+    return '/dove.png'; // Primary fallback
   }
   if (thumbnailUrl.startsWith('/uploads/')) {
     return `${BACKEND_BASE_URL}${thumbnailUrl}`;
@@ -223,7 +223,15 @@ const Tab3: React.FC = () => {
                     left: 0
                   }}
                   onError={(e) => {
-                    e.currentTarget.src = '/hero-evangelism.jpg';
+                    const target = e.currentTarget;
+                    // Try dove.png first
+                    if (!target.dataset['triedDove']) {
+                      target.dataset['triedDove'] = 'true';
+                      target.src = '/dove.png';
+                    } else {
+                      // Use SVG placeholder as final fallback
+                      target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect fill="%23f5f5f5" width="400" height="200"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23999" font-size="16">Daily Devotion</text></svg>');
+                    }
                   }}
                 />
                 {/* subtle overlay handled by CSS */}
@@ -331,7 +339,15 @@ const Tab3: React.FC = () => {
                             objectFit: 'cover'
                           }}
                           onError={(e) => {
-                            e.currentTarget.src = '/hero-evangelism.jpg';
+                            const target = e.currentTarget;
+                            // Try dove.png first
+                            if (!target.dataset['triedDove']) {
+                              target.dataset['triedDove'] = 'true';
+                              target.src = '/dove.png';
+                            } else {
+                              // Use SVG placeholder as final fallback
+                              target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="90" height="140" viewBox="0 0 90 140"><rect fill="%23f5f5f5" width="90" height="140"/><text x="45" y="70" text-anchor="middle" dy=".3em" fill="%23999" font-size="10">Devotion</text></svg>');
+                            }
                           }}
                         />
                       </div>
