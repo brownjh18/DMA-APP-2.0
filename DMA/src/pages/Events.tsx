@@ -48,11 +48,11 @@ const Events: React.FC = () => {
   };
 
   const weeklyPrograms = [
-    { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '5:00PM - 7:00PM', color: '#ff6b6b' },
-    { day: 'Wed', program: 'Intercessions & Bible Study', time: '8:00AM - 8:00PM', color: '#45b7d1' },
+    { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ff6b6b' },
+    { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#45b7d1' },
     { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24' },
-    { day: 'Fri', program: "Eagle's Friday Prayer Service", time: '6:00PM - 8:00PM', color: '#f0932b' },
-    { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 9:00PM', color: '#eb4d4b' },
+    { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#f0932b' },
+    { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#eb4d4b' },
     { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#6c5ce7' },
   ];
 
