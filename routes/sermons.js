@@ -435,7 +435,7 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
     let duration = '00:00';
     
 // Helper function to get video duration from Cloudinary with polling
-async function getCloudinaryDuration(publicId, maxRetries = 5, delayMs = 1000) {
+async function getCloudinaryDuration(publicId, maxRetries = 15, delayMs = 2000) {
   const cloudinary = require('cloudinary').v2;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
