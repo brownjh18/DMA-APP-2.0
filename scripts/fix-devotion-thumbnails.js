@@ -2,7 +2,7 @@
  * Script to fix invalid thumbnail URLs for devotions
  * Run this to clear broken thumbnail URLs so the default is shown
  * 
- * Usage: node scripts/fix-devotion-thumbnails.js
+ * Usage: node backend/scripts/fix-devotion-thumbnails.js
  */
 
 require('dotenv').config();
