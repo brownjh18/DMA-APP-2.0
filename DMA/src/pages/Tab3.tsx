@@ -207,9 +207,10 @@ const Tab3: React.FC = () => {
                 className="devotion-media"
                 aria-hidden
                 style={{
-                  backgroundImage: 'none',
+                  backgroundImage: 'none', // Override the hardcoded CSS background
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  zIndex: 1 // Ensure this is above any parent backgrounds
                 }}
               >
                 <img
@@ -221,7 +222,8 @@ const Tab3: React.FC = () => {
                     objectFit: 'cover',
                     position: 'absolute',
                     top: 0,
-                    left: 0
+                    left: 0,
+                    zIndex: 2 // Higher than the parent's background
                   }}
                   onError={(e) => {
                     const target = e.currentTarget;
