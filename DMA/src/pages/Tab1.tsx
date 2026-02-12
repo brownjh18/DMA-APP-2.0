@@ -810,12 +810,7 @@ const Tab1: React.FC = () => {
 
               <div className="devotion-content">
                 <div className="devotion-top">
-                  <div className="devotion-label">
-                    <IonIcon icon={book} />
-                    <span>Daily Devotion</span>
-                  </div>
-
-                  <div className="devotion-date" aria-hidden>
+                  <div className="devotion-date-frosted" aria-hidden>
                     <IonIcon icon={time} />
                     <span>{formatDate(todaysDevotion.date)}</span>
                   </div>
@@ -824,7 +819,7 @@ const Tab1: React.FC = () => {
                 <div id="devotion-title" className="devotion-verse">
                   <h3>{todaysDevotion.title}</h3>
                   <p className="verse-text">"{todaysDevotion.content}"</p>
-                  <p className="verse-text" style={{ fontSize: '0.9em', opacity: 0.8, marginTop: '8px' }}>
+                  <p className="verse-text scripture-ref" style={{ fontSize: '0.9em', marginTop: '8px' }}>
                     {todaysDevotion.scripture}
                   </p>
                 </div>
@@ -835,10 +830,8 @@ const Tab1: React.FC = () => {
                   </p>
 
                   <div className="devotion-cta">
-                    <IonButton
-                      fill="outline"
-                      size="default"
-                      className="cta-btn"
+                    <button
+                      className="frosted-read-btn"
                       aria-label="Read full devotion"
                       onClick={() => {
                         const devotionId = todaysDevotion.id;
@@ -846,9 +839,8 @@ const Tab1: React.FC = () => {
                         history.push(`/full-devotion?id=${devotionId}`);
                       }}
                     >
-                      Read Full Devotion
-                      <IonIcon icon={book} slot="end" />
-                    </IonButton>
+                      <IonIcon icon={book} />
+                    </button>
                   </div>
                 </div>
               </div>

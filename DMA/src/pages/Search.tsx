@@ -190,7 +190,20 @@ const Search: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent className="search-page-content">
+        <style>{`
+          .search-page-content {
+            --ion-background-color: #ffffff;
+          }
+          
+          @media (prefers-color-scheme: dark) {
+            .search-page-content {
+              --ion-background-color: rgba(0, 0, 0, 0.95);
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
+            }
+          }
+        `}</style>
         <div style={{ padding: '16px' }}>
           {/* Search Bar */}
           <IonSearchbar

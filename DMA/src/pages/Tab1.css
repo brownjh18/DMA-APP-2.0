@@ -104,26 +104,62 @@
 /* top row */
 .devotion-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 8px;
 }
-.devotion-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 14px;
-}
-.devotion-label ion-icon { font-size: 18px; }
-.devotion-date {
-  background: rgba(255, 255, 255, 0.911);
-  padding: 6px 10px;
+
+/* Frosted glass date badge */
+.devotion-date-frosted {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 8px 14px;
   border-radius: 20px;
   font-size: 13px;
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.devotion-date-frosted ion-icon {
+  font-size: 14px;
+}
+
+/* Frosted glass read button */
+.frosted-read-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.frosted-read-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.frosted-read-btn:active {
+  transform: scale(0.95);
+}
+
+.frosted-read-btn ion-icon {
+  font-size: 24px;
+  color: white;
 }
 
 /* verse */
@@ -745,8 +781,20 @@
     color: #f1f5f9;
   }
 
-  .devotion-date {
-    background: rgba(255, 255, 255, 0.08);
+  .devotion-date-frosted {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .frosted-read-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+  }
+
+  .frosted-read-btn ion-icon {
+    color: white;
   }
 
   /* Small devotion/sermon cards - Dark mode */
