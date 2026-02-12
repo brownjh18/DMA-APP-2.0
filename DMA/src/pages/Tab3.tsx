@@ -262,10 +262,7 @@ const Tab3: React.FC = () => {
         )}
 
         <div style={{
-          padding: '20px',
-          maxWidth: '500px',
-          margin: '0 auto',
-          paddingTop: '20px'
+          padding: '20px'
         }}>
 
 
