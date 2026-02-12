@@ -42,6 +42,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Determine video type and source
   const isLocalVideo = url && url.startsWith('/uploads/');
   const isYouTube = url && (url.includes('youtube.com') || url.includes('youtu.be'));
+  const isCloudinary = url && url.includes('cloudinary.com');
+  const isDirectVideo = url && (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov'));
+  const isEmbeddableExternal = isCloudinary || isDirectVideo;
   const isExternal = !isLocalVideo && (isYouTube || url?.includes('http'));
 
 
@@ -290,8 +293,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             onPause={onPause}
             fullScreen={fullScreen}
           />
+        ) : isEmbeddableExternal ? (
+          // HTML5 video for Cloudinary and other embeddable external videos
+          <video
+            ref={videoRef}
+            key={`external-${url}`}
+            src={url}
+            poster={thumbnailUrl}
+            controls
+            muted
+            crossOrigin="anonymous"
+            style={{
+              ...playerStyle,
+              objectFit: 'contain'
+            }}
+            onPlay={onPlay}
+            onPause={onPause}
+            onLoadStart={() => console.log('External video loading:', url)}
+            onLoadedData={handleLoadedData}
+            onTimeUpdate={handleTimeUpdate}
+            onCanPlay={() => { setIsLoading(false); if (playing) videoRef.current?.play(); }}
+            onError={(e) => {
+              console.error('External video error:', e);
+              setIsLoading(false);
+              setError('Failed to load video');
+              setShowFallback(true);
+            }}
+          />
         ) : (
-          // Fallback for non-YouTube external videos
+          // Fallback for non-embeddable external videos
           <div style={{
             ...playerStyle,
             display: 'flex',
