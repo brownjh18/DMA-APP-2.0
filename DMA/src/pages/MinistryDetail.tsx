@@ -2,7 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonCard,
 import { useParams, useHistory } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, location, informationCircle, arrowBack, calendar, time } from 'ionicons/icons';
-import { BACKEND_BASE_URL } from '../services/api';
+import { BACKEND_BASE_URL, apiService } from '../services/api';
 import './MinistryDetail.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -27,9 +27,8 @@ const MinistryDetail: React.FC = () => {
   const fetchMinistry = async () => {
     try {
       console.log('Fetching ministry by id:', id);
-      const response = await fetch(`/api/ministries/${id}`);
-      if (response.ok) {
-        const foundMinistry = await response.json();
+      const foundMinistry = await apiService.getMinistry(id);
+      if (foundMinistry && foundMinistry.ministry) {
         console.log('Found ministry:', foundMinistry);
         // Transform to match frontend structure
         const transformedMinistry = {
@@ -53,7 +52,7 @@ const MinistryDetail: React.FC = () => {
         };
         setMinistry(transformedMinistry);
       } else {
-        console.error('Failed to fetch ministry:', response.status);
+        console.error('Failed to fetch ministry: No data returned');
       }
     } catch (error) {
       console.error('Error fetching ministry:', error);

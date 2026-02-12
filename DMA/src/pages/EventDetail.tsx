@@ -26,7 +26,7 @@ import {
   play,
   close
 } from 'ionicons/icons';
-import { BACKEND_BASE_URL } from '../services/api';
+import { BACKEND_BASE_URL, apiService } from '../services/api';
 import './EventDetail.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -51,9 +51,8 @@ const EventDetail: React.FC = () => {
 
   const loadEvent = async () => {
     try {
-      const response = await fetch(`/api/events/${id}`);
-      if (response.ok) {
-        const data = await response.json();
+      const data = await apiService.getEvent(id);
+      if (data && data.event) {
         setEvent(data.event);
       } else {
         console.error('Failed to load event');
