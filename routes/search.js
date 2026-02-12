@@ -38,7 +38,16 @@ router.get('/', async (req, res) => {
         { location: { $regex: searchRegex } }
       ]
     };
+    
+    // Published filter - devotions use 'status' field, not 'isPublished'
     const publishedFilter = { isPublished: true };
+    const devotionPublishedFilter = {
+      $or: [
+        { status: 'publish' },
+        { status: { $exists: false }, isPublished: { $ne: false } }
+      ]
+    };
+    
     console.log('🔍 Search query object:', searchQuery);
 
     // Search across all collections
@@ -52,9 +61,9 @@ router.get('/', async (req, res) => {
       Event.find({ ...searchQuery, ...publishedFilter })
         .select('title description date location category imageUrl')
         .limit(5),
-      Devotion.find({ ...searchQuery, ...publishedFilter })
-        .select('title content verse date')
-        .limit(5),
+      Devotion.find({ ...searchQuery, ...devotionPublishedFilter })
+        .select('title content verse date thumbnailUrl')
+        .limit(10),
       Ministry.find({ ...searchQuery, isActive: true })
         .select('name description leader category imageUrl')
         .limit(5),
@@ -113,6 +122,7 @@ router.get('/', async (req, res) => {
         title: item.title,
         subtitle: item.verse,
         description: item.content?.substring(0, 100) + (item.content?.length > 100 ? '...' : ''),
+        image: item.thumbnailUrl,
         date: item.date,
         url: `/full-devotion?id=${item._id}`,
         score: item._doc.score || 0
