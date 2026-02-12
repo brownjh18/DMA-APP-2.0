@@ -21,39 +21,12 @@ ffmpeg.setFfprobePath(ffprobePath);
 const isCloudStorageConfigured = cloudStorage.isConfigured();
 console.log('☁️ Cloud Storage configured for podcasts:', isCloudStorageConfigured);
 
-// Get Cloudinary upload functions
-const { uploadAudio, uploadThumbnail } = cloudStorage;
-
-// Multer configuration for local storage (fallback)
-const localStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let uploadPath = path.join(__dirname, '../uploads');
-    if (file.fieldname === 'audioFile') {
-      uploadPath = path.join(uploadPath, 'podcasts');
-    } else if (file.fieldname === 'thumbnailFile') {
-      uploadPath = path.join(uploadPath, 'thumbnails');
-    }
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    if (file.fieldname === 'thumbnailFile') {
-      cb(null, 'thumbnail-' + uniqueSuffix + path.extname(file.originalname));
-    } else {
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-  }
-});
-
-// Upload middleware - uses Cloudinary if configured, else local
+// Multer configuration - use memory storage when Cloudinary is configured
 const upload = multer({
-  storage: isCloudStorageConfigured ? undefined : localStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'audioFile' || file.fieldname === 'thumbnailFile') {
+    if (file.fieldname === 'audioFile' || file.fieldname === 'thumbnailFile' || file.fieldname === 'audio' || file.fieldname === 'thumbnail') {
       cb(null, true);
     } else {
       cb(null, true);
@@ -61,46 +34,70 @@ const upload = multer({
   }
 });
 
-// Helper function to upload file to Cloudinary or local
-async function uploadFileToStorage(file, fieldName) {
-  if (isCloudStorageConfigured && file) {
-    console.log(`☁️ Uploading ${fieldName} to Cloudinary...`);
-    try {
-      let result;
-      if (fieldName === 'audioFile') {
-        result = await cloudStorage.uploadFile(file.path, {
-          resource_type: 'video',
-          folder: 'dove-ministries/podcasts'
-        });
-      } else {
-        result = await cloudStorage.uploadFile(file.path, {
-          resource_type: 'image',
-          folder: 'dove-ministries/thumbnails'
-        });
-      }
-      console.log(`☁️ ${fieldName} uploaded to Cloudinary:`, result.secure_url);
-      return result.secure_url;
-    } catch (error) {
-      console.error(`☁️ Cloudinary upload failed for ${fieldName}:`, error);
-      // Fallback to local URL
-      return `/uploads/${fieldName === 'audioFile' ? 'podcasts' : 'thumbnails'}/${file.filename}`;
+// Helper function to upload buffer to Cloudinary
+async function uploadBufferToCloudinary(buffer, fieldName, mimeType) {
+  // Create a temp file path for the upload
+  const tempPath = path.join(__dirname, '../uploads/temp');
+  if (!fs.existsSync(tempPath)) {
+    fs.mkdirSync(tempPath, { recursive: true });
+  }
+  
+  const ext = path.extname(mimeType || '.file') || '.file';
+  const tempFile = path.join(tempPath, `${fieldName}-${Date.now()}${ext}`);
+  
+  // Write buffer to temp file
+  fs.writeFileSync(tempFile, buffer);
+  
+  try {
+    let result;
+    if (fieldName.includes('audio')) {
+      result = await cloudStorage.uploadFile(tempFile, {
+        resource_type: 'video',
+        folder: 'dove-ministries/podcasts'
+      });
+    } else {
+      result = await cloudStorage.uploadFile(tempFile, {
+        resource_type: 'image',
+        folder: 'dove-ministries/thumbnails',
+        transformation: [{ width: 800, height: 600, crop: 'fill' }]
+      });
     }
-  } else {
-    // Local storage
-    return `/uploads/${fieldName === 'audioFile' ? 'podcasts' : 'thumbnails'}/${file.filename}`;
+    
+    // Clean up temp file
+    try { fs.unlinkSync(tempFile); } catch (e) {}
+    
+    return result.secure_url;
+  } catch (error) {
+    // Clean up temp file
+    try { fs.unlinkSync(tempFile); } catch (e) {}
+    throw error;
   }
 }
 
-// Function to get audio duration using ffmpeg
-const getAudioDuration = (audioPath) => {
+// Function to get audio duration from buffer
+const getAudioDurationFromBuffer = (buffer, mimeType) => {
   return new Promise((resolve, reject) => {
-    ffmpeg(audioPath)
+    const tempPath = path.join(__dirname, '../uploads/temp');
+    if (!fs.existsSync(tempPath)) {
+      fs.mkdirSync(tempPath, { recursive: true });
+    }
+    
+    const ext = mimeType ? mimeType.split('/')[1] : 'mp3';
+    const tempFile = path.join(tempPath, `audio-${Date.now()}.${ext}`);
+    
+    fs.writeFileSync(tempFile, buffer);
+    
+    ffmpeg(tempFile)
       .ffprobe((err, data) => {
+        // Clean up temp file
+        try { fs.unlinkSync(tempFile); } catch (e) {}
+        
         if (err) {
           console.error('Error getting audio metadata:', err);
           reject(err);
           return;
         }
+        
         const totalSeconds = Math.floor(data.format.duration || 0);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -135,17 +132,11 @@ router.get('/', async (req, res) => {
     const total = await Sermon.countDocuments(query);
 
     const formattedPodcasts = podcasts.map(podcast => ({
-      id: podcast._id,
-      title: podcast.title,
-      speaker: podcast.speaker,
-      description: podcast.description,
-      thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
-      publishedAt: podcast.date.toISOString(),
-      duration: podcast.duration || '00:00',
-      viewCount: podcast.viewCount.toString(),
-      audioUrl: podcast.audioUrl,
-      status: podcast.isPublished ? 'published' : 'draft',
-      listens: podcast.viewCount,
+      id: podcast._id, title: podcast.title, speaker: podcast.speaker,
+      description: podcast.description, thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
+      publishedAt: podcast.date.toISOString(), duration: podcast.duration || '00:00',
+      viewCount: podcast.viewCount.toString(), audioUrl: podcast.audioUrl,
+      status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount,
       broadcastStartTime: podcast.broadcastStartTime ? podcast.broadcastStartTime.toISOString() : null
     }));
 
@@ -223,47 +214,76 @@ router.post('/', upload.any(), async (req, res) => {
     let audioUrl = req.body.audioUrl || '';
     let thumbnailUrl = req.body.thumbnailUrl || '/bible.JPG';
     let duration = req.body.duration || '00:00';
-    let tempFiles = []; // Track temp files for cleanup
 
     if (req.files && req.files.length > 0) {
-      const audioFile = req.files.find(file => file.fieldname === 'audioFile');
+      // Handle audio file
+      const audioFile = req.files.find(file => 
+        file.fieldname === 'audioFile' || file.fieldname === 'audio'
+      );
+      
       if (audioFile) {
-        tempFiles.push(audioFile.path);
+        console.log('☁️ Processing audio file:', audioFile.fieldname, 'size:', audioFile.size);
+        
         if (isCloudStorageConfigured) {
-          // Upload to Cloudinary
-          const result = await cloudStorage.uploadFile(audioFile.path, {
-            resource_type: 'video',
-            folder: 'dove-ministries/podcasts'
-          });
-          audioUrl = result.secure_url;
-          console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+          // Upload to Cloudinary from memory buffer
+          try {
+            audioUrl = await uploadBufferToCloudinary(audioFile.buffer, 'audio', audioFile.mimetype);
+            console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+          } catch (cloudError) {
+            console.error('☁️ Cloudinary upload failed, using local storage:', cloudError.message);
+            // Fallback to local storage
+            audioUrl = `/uploads/podcasts/${audioFile.filename}`;
+          }
         } else {
+          // Save to local storage
+          const uploadPath = path.join(__dirname, '../uploads/podcasts');
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          const localPath = path.join(uploadPath, audioFile.filename);
+          fs.writeFileSync(localPath, audioFile.buffer);
           audioUrl = `/uploads/podcasts/${audioFile.filename}`;
         }
+
+        // Get duration from buffer
         try {
-          duration = await getAudioDuration(audioFile.path);
+          duration = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype);
+          console.log('☁️ Audio duration:', duration);
         } catch (durationError) {
-          console.warn('Could not get audio duration:', durationError);
+          console.warn('Could not get audio duration:', durationError.message);
           duration = '00:00';
         }
       }
 
-      const thumbnailFile = req.files.find(file => file.fieldname === 'thumbnailFile');
+      // Handle thumbnail file
+      const thumbnailFile = req.files.find(file => 
+        file.fieldname === 'thumbnailFile' || file.fieldname === 'thumbnail'
+      );
+      
       if (thumbnailFile) {
-        tempFiles.push(thumbnailFile.path);
+        console.log('☁️ Processing thumbnail file:', thumbnailFile.fieldname, 'size:', thumbnailFile.size);
+        
         if (isCloudStorageConfigured) {
-          const result = await cloudStorage.uploadFile(thumbnailFile.path, {
-            resource_type: 'image',
-            folder: 'dove-ministries/thumbnails',
-            transformation: [{ width: 800, height: 600, crop: 'fill' }]
-          });
-          thumbnailUrl = result.secure_url;
-          console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+          try {
+            thumbnailUrl = await uploadBufferToCloudinary(thumbnailFile.buffer, 'thumbnail', thumbnailFile.mimetype);
+            console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+          } catch (cloudError) {
+            console.error('☁️ Cloudinary thumbnail upload failed:', cloudError.message);
+            thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+          }
         } else {
+          const uploadPath = path.join(__dirname, '../uploads/thumbnails');
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          const localPath = path.join(uploadPath, thumbnailFile.filename);
+          fs.writeFileSync(localPath, thumbnailFile.buffer);
           thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
         }
       }
     }
+
+    console.log('POST /api/podcasts - Creating with audioUrl:', audioUrl, 'thumbnailUrl:', thumbnailUrl);
 
     const podcastData = {
       title: req.body.title, speaker: req.body.speaker, description: req.body.description,
@@ -275,11 +295,6 @@ router.post('/', upload.any(), async (req, res) => {
     const podcast = new Sermon(podcastData);
     await podcast.save();
     console.log('POST /api/podcasts - Podcast saved successfully with ID:', podcast._id);
-
-    // Cleanup temp files
-    for (const tempFile of tempFiles) {
-      try { fs.unlinkSync(tempFile); } catch (e) {}
-    }
 
     const formattedPodcast = {
       id: podcast._id, title: podcast.title, speaker: podcast.speaker,
@@ -294,7 +309,7 @@ router.post('/', upload.any(), async (req, res) => {
     res.status(201).json({ message: 'Podcast created successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 
@@ -319,44 +334,58 @@ router.put('/:id', (req, res, next) => {
     let audioUrl = existingPodcast.audioUrl || '';
     let thumbnailUrl = existingPodcast.thumbnailUrl || '/bible.JPG';
     let duration = req.body.duration || existingPodcast.duration || '00:00';
-    let tempFiles = [];
 
     if (req.files && req.files.length > 0) {
-      const audioFile = req.files.find(file => file.fieldname === 'audioFile');
+      const audioFile = req.files.find(file => 
+        file.fieldname === 'audioFile' || file.fieldname === 'audio'
+      );
+      
       if (audioFile) {
-        tempFiles.push(audioFile.path);
         if (isCloudStorageConfigured) {
-          const result = await cloudStorage.uploadFile(audioFile.path, {
-            resource_type: 'video',
-            folder: 'dove-ministries/podcasts'
-          });
-          audioUrl = result.secure_url;
-          console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+          try {
+            audioUrl = await uploadBufferToCloudinary(audioFile.buffer, 'audio', audioFile.mimetype);
+            console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+          } catch (cloudError) {
+            console.error('☁️ Cloudinary upload failed:', cloudError.message);
+            audioUrl = `/uploads/podcasts/${audioFile.filename}`;
+          }
         } else {
+          const uploadPath = path.join(__dirname, '../uploads/podcasts');
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          const localPath = path.join(uploadPath, audioFile.filename);
+          fs.writeFileSync(localPath, audioFile.buffer);
           audioUrl = `/uploads/podcasts/${audioFile.filename}`;
         }
-        try { duration = await getAudioDuration(audioFile.path); } catch (e) { duration = '00:00'; }
+
+        try { duration = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype); } 
+        catch (e) { duration = '00:00'; }
       }
 
-      const thumbnailFile = req.files.find(file => file.fieldname === 'thumbnailFile');
+      const thumbnailFile = req.files.find(file => 
+        file.fieldname === 'thumbnailFile' || file.fieldname === 'thumbnail'
+      );
+      
       if (thumbnailFile) {
-        tempFiles.push(thumbnailFile.path);
         if (isCloudStorageConfigured) {
-          const result = await cloudStorage.uploadFile(thumbnailFile.path, {
-            resource_type: 'image',
-            folder: 'dove-ministries/thumbnails',
-            transformation: [{ width: 800, height: 600, crop: 'fill' }]
-          });
-          thumbnailUrl = result.secure_url;
-          console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+          try {
+            thumbnailUrl = await uploadBufferToCloudinary(thumbnailFile.buffer, 'thumbnail', thumbnailFile.mimetype);
+            console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+          } catch (cloudError) {
+            console.error('☁️ Cloudinary thumbnail upload failed:', cloudError.message);
+            thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+          }
         } else {
+          const uploadPath = path.join(__dirname, '../uploads/thumbnails');
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          const localPath = path.join(uploadPath, thumbnailFile.filename);
+          fs.writeFileSync(localPath, thumbnailFile.buffer);
           thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
         }
       }
-    }
-
-    for (const tempFile of tempFiles) {
-      try { fs.unlinkSync(tempFile); } catch (e) {}
     }
 
     const updateData = {
@@ -381,7 +410,7 @@ router.put('/:id', (req, res, next) => {
     res.json({ message: 'Podcast updated successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 
