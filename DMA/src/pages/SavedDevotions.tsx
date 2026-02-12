@@ -163,7 +163,7 @@ const SavedDevotions: React.FC = () => {
                   {/* Header with thumbnail */}
                   <div
                     style={{
-                      backgroundImage: `url(${devotion.thumbnailUrl ? getFullUrl(devotion.thumbnailUrl) : '/dove.png'})`,
+                      backgroundImage: `url(${devotion.thumbnailUrl ? getFullUrl(devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat',
@@ -172,9 +172,9 @@ const SavedDevotions: React.FC = () => {
                     }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLElement;
-                      if (!target.dataset['triedDove']) {
-                        target.dataset['triedDove'] = 'true';
-                        target.style.backgroundImage = `url('/dove.png')`;
+                      if (!target.dataset['triedHero']) {
+                        target.dataset['triedHero'] = 'true';
+                        target.style.backgroundImage = `url('/hero-evangelism.jpg')`;
                       } else {
                         target.style.backgroundImage = `url('data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="150" viewBox="0 0 400 150"><rect fill="%23f5f5f5" width="400" height="150"/><text x="200" y="75" text-anchor="middle" dy=".3em" fill="%23999" font-size="14">Devotion</text></svg>')}`;
                       }

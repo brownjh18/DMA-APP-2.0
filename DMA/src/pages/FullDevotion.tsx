@@ -22,7 +22,7 @@ interface Devotion {
 // Helper function to get thumbnail URL with multiple fallbacks
 const getDevotionThumbnailUrl = (thumbnailUrl?: string): string => {
   if (!thumbnailUrl || !thumbnailUrl.trim()) {
-    return '/dove.png'; // Primary fallback
+    return '/hero-evangelism.jpg'; // Primary fallback for devotions
   }
   // Handle local uploads
   if (thumbnailUrl.startsWith('/uploads/')) {
@@ -254,10 +254,10 @@ const FullDevotion: React.FC = () => {
             }}
             onError={(e) => {
               const target = e.currentTarget;
-              // Try dove.png first
-              if (!target.dataset['triedDove']) {
-                target.dataset['triedDove'] = 'true';
-                target.src = '/dove.png';
+              // Try hero-evangelism.jpg first as devotion-specific fallback
+              if (!target.dataset['triedHero']) {
+                target.dataset['triedHero'] = 'true';
+                target.src = '/hero-evangelism.jpg';
               } else {
                 // Use SVG placeholder as final fallback
                 target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect fill="%231a1a2e" width="400" height="200"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23ffffff" font-size="16">Daily Devotion</text></svg>');

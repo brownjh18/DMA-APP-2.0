@@ -678,7 +678,7 @@ const AdminDevotionManager: React.FC = () => {
                         position: 'relative'
                       }}>
                         <img
-                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/dove.png'}
+                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
                           alt="Devotion thumbnail"
                           style={{
                             width: '100%',
@@ -687,9 +687,9 @@ const AdminDevotionManager: React.FC = () => {
                           }}
                           onError={(e) => {
                             const target = e.currentTarget;
-                            if (!target.dataset['triedDove']) {
-                              target.dataset['triedDove'] = 'true';
-                              target.src = '/dove.png';
+                            if (!target.dataset['triedHero']) {
+                              target.dataset['triedHero'] = 'true';
+                              target.src = '/hero-evangelism.jpg';
                             } else {
                               target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="90" height="140" viewBox="0 0 90 140"><rect fill="%23f5f5f5" width="90" height="140"/><text x="45" y="70" text-anchor="middle" dy=".3em" fill="%23999" font-size="10">Devotion</text></svg>');
                             }

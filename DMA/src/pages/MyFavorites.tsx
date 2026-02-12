@@ -960,7 +960,7 @@ const Saved: React.FC = () => {
                   >
                     <div style={{ position: 'relative' }}>
                       <img
-                        src={getFullUrl(devotion.thumbnailUrl || '/dove.png')}
+                        src={getFullUrl(devotion.thumbnailUrl || '/hero-evangelism.jpg')}
                         alt={devotion.title}
                         style={{
                           width: '100%',
@@ -969,9 +969,9 @@ const Saved: React.FC = () => {
                         }}
                         onError={(e) => {
                           const target = e.currentTarget;
-                          if (!target.dataset['triedDove']) {
-                            target.dataset['triedDove'] = 'true';
-                            target.src = '/dove.png';
+                          if (!target.dataset['triedHero']) {
+                            target.dataset['triedHero'] = 'true';
+                            target.src = '/hero-evangelism.jpg';
                           } else {
                             target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120"><rect fill="%23f5f5f5" width="400" height="120"/><text x="200" y="60" text-anchor="middle" dy=".3em" fill="%23999" font-size="14">Devotion</text></svg>');
                           }
