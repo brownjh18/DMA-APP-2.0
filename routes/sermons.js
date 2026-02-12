@@ -434,31 +434,25 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
     let thumbnailUrl = '';
     let duration = '00:00';
     
-    if (isCloudStorage && req.file.path) {
-      // Cloudinary upload
-      console.log('Uploading to Cloudinary...');
-      const cloudResult = await cloudStorage.uploadFile(req.file.path, {
-        resource_type: 'video',
-        folder: 'dove-ministries/sermons'
-      });
-      
-      videoUrl = cloudResult.secure_url;
+    if (isCloudStorage) {
+      // Video already uploaded to Cloudinary by multer-storage-cloudinary
+      // req.file.path contains the Cloudinary URL
+      videoUrl = req.file.path;
       console.log('Cloudinary video URL:', videoUrl);
       
-      // Generate thumbnail from cloud video using Cloudinary
-      try {
-        const thumbnailResult = await cloudStorage.uploadFile(req.file.path, {
+      // Generate thumbnail URL using Cloudinary transformation
+      // Cloudinary can generate thumbnails from video URLs directly
+      const publicId = cloudStorage.extractPublicId(videoUrl);
+      if (publicId) {
+        // Generate thumbnail URL using Cloudinary transformation
+        thumbnailUrl = cloudinary.url(publicId, {
           resource_type: 'video',
-          folder: 'dove-ministries/thumbnails',
           transformation: [
             { width: 400, height: 400, crop: 'fill', gravity: 'auto' },
             { format: 'jpg' }
           ]
         });
-        thumbnailUrl = thumbnailResult.secure_url;
         console.log('Cloudinary thumbnail URL:', thumbnailUrl);
-      } catch (thumbError) {
-        console.warn('Failed to generate thumbnail:', thumbError.message);
       }
     } else {
       // Local storage
