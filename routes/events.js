@@ -9,36 +9,47 @@ const cloudStorage = require('../services/cloudStorage');
 
 const router = express.Router();
 
-// Configure multer for video uploads
-const videoStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads/events');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'eventVideo-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Check if Cloudinary is configured
+const isCloudStorage = cloudStorage.isConfigured();
 
-const videoUpload = multer({
-  storage: videoStorage,
-  limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    const filetypes = /mp4|mov|avi|mkv|webm/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    if (mimetype && extname) {
-      return cb(null, true);
+// Configure multer for video uploads - use Cloudinary if configured
+let videoUpload;
+if (isCloudStorage) {
+  console.log('☁️ Using Cloudinary for event video uploads');
+  videoUpload = cloudStorage.uploadVideo;
+} else {
+  console.log('💾 Using local storage for event video uploads');
+  // Local storage configuration
+  const videoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = path.join(__dirname, '../uploads/events');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'eventVideo-' + uniqueSuffix + path.extname(file.originalname));
     }
-    cb(new Error('Only video files are allowed!'));
-  }
-});
+  });
+
+  videoUpload = multer({
+    storage: videoStorage,
+    limits: {
+      fileSize: 100 * 1024 * 1024 // 100MB limit
+    },
+    fileFilter: function (req, file, cb) {
+      const filetypes = /mp4|mov|avi|mkv|webm/;
+      const mimetype = filetypes.test(file.mimetype);
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      if (mimetype && extname) {
+        return cb(null, true);
+      }
+      cb(new Error('Only video files are allowed!'));
+    }
+  });
+}
 
 // Get all events (public)
 router.get('/', async (req, res) => {
@@ -433,7 +444,16 @@ router.post('/upload-video', authenticateToken, requireAdmin, videoUpload.single
       return res.status(400).json({ error: 'No video file uploaded' });
     }
 
-    const videoUrl = `/uploads/events/${req.file.filename}`;
+    let videoUrl = '';
+
+    if (isCloudStorage) {
+      // Cloudinary upload
+      console.log('Event video uploaded to Cloudinary:', req.file.path);
+      videoUrl = req.file.path; // CloudinaryStorage sets the Cloudinary URL in req.file.path
+    } else {
+      // Local storage
+      videoUrl = `/uploads/events/${req.file.filename}`;
+    }
 
     res.json({
       message: 'Video uploaded successfully',
