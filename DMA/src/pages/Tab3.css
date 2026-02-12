@@ -598,6 +598,47 @@
 
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
+  /* Today's Devotion card - ensure text visibility */
+  .devotion-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .devotion-media {
+    filter: brightness(0.35) contrast(0.85);
+  }
+
+  .devotion-content {
+    color: #f1f5f9;
+  }
+
+  .devotion-label {
+    color: #f1f5f9;
+  }
+
+  .devotion-date {
+    background: rgba(30, 41, 59, 0.9);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .devotion-verse h3 {
+    color: #ffffff;
+  }
+
+  .verse-text {
+    color: #e2e8f0;
+  }
+
+  .devotion-summary {
+    color: #cbd5e1;
+  }
+
+  .cta-btn {
+    --color: #ffffff;
+    --border-color: rgba(255, 255, 255, 0.4);
+  }
+
   .devotion-card-enhanced {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
     border: 1px solid rgba(255, 255, 255, 0.08);
