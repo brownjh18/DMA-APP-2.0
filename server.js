@@ -18,6 +18,7 @@ const Sermon = require('./models/Sermon');
 
 // Check if Cloudinary is configured
 const isCloudStorage = cloudStorage.isConfigured();
+console.log('☁️ Cloud Storage Status:', cloudStorage.getConfigStatus());
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -309,6 +310,7 @@ app.post('/api/upload/thumbnail', (req, res) => {
       }
 
       console.log('Thumbnail file received:', req.file.originalname);
+      console.log('☁️ Cloud storage configured:', isCloudStorage);
       
       let thumbnailUrl = '';
       
