@@ -298,14 +298,15 @@ const Tab3: React.FC = () => {
                   >
                     <div style={{ padding: '10px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                       {/* Thumbnail on the left */}
-                      <div style={{
-                        width: '90px',
-                        height: '140px',
-                        borderRadius: '12px 0 0 12px',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}>
+                       <div style={{
+                         width: '90px',
+                         height: '140px',
+                         borderRadius: '12px 0 0 12px',
+                         overflow: 'hidden',
+                         flexShrink: 0,
+                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                         position: 'relative'
+                       }}>
                         <img
                           src={getDevotionThumbnail(d.thumbnailUrl)}
                           alt="Devotion thumbnail"
@@ -329,7 +330,7 @@ const Tab3: React.FC = () => {
                       </div>
 
                       {/* Details on the right */}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minHeight: '70px' }}>
+                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '70px' }}>
                         {/* Header with date */}
                         <div style={{
                           display: 'flex',
