@@ -59,6 +59,17 @@ const getFullUrl = (url: string) => {
   return url;
 };
 
+// Helper function to get devotion thumbnail with default fallback
+const getDevotionThumbnail = (thumbnailUrl?: string): string => {
+  if (!thumbnailUrl || !thumbnailUrl.trim()) {
+    return '/hero-evangelism.jpg';
+  }
+  if (thumbnailUrl.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${thumbnailUrl}`;
+  }
+  return thumbnailUrl;
+};
+
 // Helper function to calculate duration between start and end times
 const calculateDuration = (startTime: string, endTime: string) => {
   if (!startTime || !endTime) return '—';
@@ -774,13 +785,27 @@ const Tab1: React.FC = () => {
                 className="devotion-media"
                 aria-hidden
                 style={{
-                  backgroundImage: `url(${todaysDevotion.thumbnailUrl && todaysDevotion.thumbnailUrl.trim() ? getFullUrl(todaysDevotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
+                  backgroundImage: 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
               >
-                {/* subtle background image + blur handled by CSS */}
+                <img
+                  src={getDevotionThumbnail(todaysDevotion.thumbnailUrl)}
+                  alt="Devotion header"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src = '/hero-evangelism.jpg';
+                  }}
+                />
+                {/* subtle overlay handled by CSS */}
               </div>
 
               <div className="devotion-content">

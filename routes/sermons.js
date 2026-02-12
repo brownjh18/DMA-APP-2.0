@@ -435,15 +435,35 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
     let duration = '00:00';
     
 // Helper function to get video duration from Cloudinary with polling
-async function getCloudinaryDuration(publicId, maxRetries = 15, delayMs = 2000) {
+// Cloudinary videos need time to process - longer videos take longer
+async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs = 2000) {
   const cloudinary = require('cloudinary').v2;
+  let currentDelay = initialDelayMs;
+  
+  console.log(`🎬 Starting Cloudinary duration polling for: ${publicId}`);
+  console.log(`   Max retries: ${maxRetries}, Initial delay: ${initialDelayMs}ms`);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetching duration (attempt ${attempt}/${maxRetries}) for: ${publicId}`);
+      console.log(`📊 Fetching duration (attempt ${attempt}/${maxRetries})...`);
       const result = await cloudinary.api.resource(publicId, { resource_type: 'video' });
       
-      if (result && result.duration) {
+      if (result) {
+        // Check if video is still processing (no duration yet)
+        if (result.duration === null || result.duration === undefined) {
+          console.log(`⏳ Video still processing (attempt ${attempt}/${maxRetries})`);
+          console.log(`   Video info: format=${result.format}, bytes=${result.bytes}`);
+          
+          if (attempt < maxRetries) {
+            // Exponential backoff: increase delay up to 10 seconds max
+            currentDelay = Math.min(currentDelay * 1.5, 10000);
+            console.log(`   Waiting ${currentDelay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, currentDelay));
+          }
+          continue;
+        }
+        
+        // Duration is available
         const totalSeconds = Math.floor(result.duration);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -455,24 +475,31 @@ async function getCloudinaryDuration(publicId, maxRetries = 15, delayMs = 2000) 
         } else {
           duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
-        console.log('✅ Cloudinary video duration fetched:', duration, '(', totalSeconds, 'seconds)');
+        
+        console.log(`✅ Cloudinary video ready! Duration: ${duration} (${totalSeconds}s)`);
+        console.log(`   Format: ${result.format}, Size: ${(result.bytes / 1024 / 1024).toFixed(2)}MB`);
         return duration;
       } else {
-        console.warn(`⚠️ Attempt ${attempt}: No duration yet, video might be processing...`);
-        if (attempt < maxRetries) {
-          console.log(`⏳ Waiting ${delayMs}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
+        console.warn(`⚠️ Attempt ${attempt}: No result from Cloudinary`);
       }
     } catch (error) {
       console.error(`❌ Attempt ${attempt} failed:`, error.message);
+      
+      // Check if it's a resource not found error
+      if (error.error && error.error.code === 'resource_not_found') {
+        console.error(`   Video not found on Cloudinary: ${publicId}`);
+        return '00:00';
+      }
+      
       if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        currentDelay = Math.min(currentDelay * 1.5, 10000);
+        await new Promise(resolve => setTimeout(resolve, currentDelay));
       }
     }
   }
   
-  console.error('❌ Failed to get video duration after', maxRetries, 'attempts');
+  console.error(`❌ Failed to get video duration after ${maxRetries} attempts`);
+  console.error(`   The video may still be processing on Cloudinary`);
   return '00:00';
 }
 
@@ -949,6 +976,64 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
   } catch (error) {
     console.error('Sermon stats error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Refresh sermon duration from Cloudinary (admin only)
+// Use this if the sermon was created before video processing completed
+router.post('/:id/refresh-duration', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const sermon = await Sermon.findById(req.params.id);
+    
+    if (!sermon) {
+      return res.status(404).json({ error: 'Sermon not found' });
+    }
+
+    // Check if this is a Cloudinary video
+    if (!sermon.videoUrl || !sermon.videoUrl.includes('cloudinary.com')) {
+      return res.status(400).json({ error: 'Not a Cloudinary video' });
+    }
+
+    console.log(`Refreshing duration for sermon: ${sermon._id}`);
+    console.log(`Video URL: ${sermon.videoUrl}`);
+
+    // Extract public ID from Cloudinary URL
+    let publicId = cloudStorage.extractPublicId(sermon.videoUrl);
+    
+    if (!publicId) {
+      const match = sermon.videoUrl.match(/\/v\d+\/(.+)$/);
+      if (match && match[1]) {
+        publicId = match[1];
+      }
+    }
+
+    if (!publicId) {
+      return res.status(400).json({ error: 'Could not extract Cloudinary public ID' });
+    }
+
+    console.log(`Extracted public ID: ${publicId}`);
+
+    // Fetch fresh duration from Cloudinary
+    const freshDuration = await getCloudinaryDuration(publicId);
+    
+    console.log(`Fresh duration from Cloudinary: ${freshDuration}`);
+
+    // Update sermon with new duration
+    const oldDuration = sermon.duration;
+    sermon.duration = freshDuration;
+    await sermon.save();
+
+    console.log(`Duration updated: ${oldDuration} -> ${freshDuration}`);
+
+    res.json({
+      message: 'Duration refreshed successfully',
+      sermon,
+      previousDuration: oldDuration,
+      newDuration: freshDuration
+    });
+  } catch (error) {
+    console.error('Error refreshing sermon duration:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

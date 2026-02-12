@@ -19,6 +19,18 @@ interface Devotion {
   thumbnailUrl?: string;
 }
 
+// Helper function to get thumbnail URL with fallback
+const getDevotionThumbnailUrl = (thumbnailUrl?: string): string => {
+  if (!thumbnailUrl || !thumbnailUrl.trim()) {
+    return '/hero-evangelism.jpg';
+  }
+  // Handle local uploads
+  if (thumbnailUrl.startsWith('/uploads/')) {
+    return `${BACKEND_BASE_URL}${thumbnailUrl}`;
+  }
+  return thumbnailUrl;
+};
+
 
 const FullDevotion: React.FC = () => {
   const history = useHistory();
@@ -222,13 +234,28 @@ const FullDevotion: React.FC = () => {
       <IonContent fullscreen className="content-ios ios18-style" style={{ backgroundColor: 'var(--ion-background-color)' }}>
         {/* iOS 18 STYLE HEADER */}
         <div className="ios18-header" style={{
-          backgroundImage: `url(${devotion.thumbnailUrl ? (devotion.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${devotion.thumbnailUrl}` : devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
+          backgroundImage: 'none',
+          backgroundColor: '#1a1a2e',
           position: 'relative',
-          minHeight: '150px'
+          minHeight: '150px',
+          overflow: 'hidden'
         }}>
+          <img
+            src={getDevotionThumbnailUrl(devotion.thumbnailUrl)}
+            alt="Devotion header"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 0
+            }}
+            onError={(e) => {
+              e.currentTarget.src = '/hero-evangelism.jpg';
+            }}
+          />
           <div style={{
             position: 'absolute',
             top: 0,
@@ -236,7 +263,8 @@ const FullDevotion: React.FC = () => {
             right: 0,
             bottom: 0,
             backgroundColor: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(2px)'
+            backdropFilter: 'blur(2px)',
+            zIndex: 1
           }} />
           <div className="ios18-header-content" style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px' }}>
             <div className="details" style={{ textAlign: 'center' }}>
