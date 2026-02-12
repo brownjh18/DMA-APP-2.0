@@ -85,8 +85,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ extended: true, limit: '500mb', parameterLimit: 1000000 }));
 
 // Passport middleware
 app.use(passport.initialize());
@@ -105,7 +105,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for videos
+    fileSize: 500 * 1024 * 1024, // 500MB limit for videos
   },
   fileFilter: (req, file, cb) => {
     // Accept video files
