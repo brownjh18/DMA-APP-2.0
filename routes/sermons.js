@@ -442,7 +442,20 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
       
       // Generate thumbnail URL using Cloudinary transformation
       // Cloudinary can generate thumbnails from video URLs directly
-      const publicId = cloudStorage.extractPublicId(videoUrl);
+      let publicId = cloudStorage.extractPublicId(videoUrl);
+      console.log('Extracted public ID:', publicId);
+      
+      // If extraction failed, try to construct public ID manually
+      if (!publicId) {
+        console.log('Extraction failed, trying manual construction...');
+        // Try to extract from the URL pattern: /v<version>/<publicId>
+        const match = videoUrl.match(/\/v\d+\/(.+)$/);
+        if (match && match[1]) {
+          publicId = match[1];
+          console.log('Manually extracted public ID:', publicId);
+        }
+      }
+      
       if (publicId) {
         // Generate thumbnail URL using Cloudinary video thumbnail API
         thumbnailUrl = cloudStorage.getVideoThumbnailUrl(publicId);
@@ -451,7 +464,10 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
         // Fetch video duration from Cloudinary API
         try {
           const cloudinary = require('cloudinary').v2;
+          console.log('Fetching duration from Cloudinary API for:', publicId);
           const result = await cloudinary.api.resource(publicId, { resource_type: 'video' });
+          console.log('Cloudinary API result:', JSON.stringify(result, null, 2));
+          
           if (result && result.duration) {
             // Cloudinary returns duration in seconds
             const totalSeconds = Math.floor(result.duration);
@@ -466,11 +482,14 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
             }
             console.log('✅ Cloudinary video duration fetched:', duration, '(', totalSeconds, 'seconds)');
           } else {
-            console.warn('⚠️ No duration in Cloudinary response for:', publicId);
+            console.warn('⚠️ No duration in Cloudinary response. Video might still be processing.');
+            console.warn('⚠️ Result fields:', Object.keys(result || {}));
           }
         } catch (durationError) {
           console.error('❌ Failed to get video duration from Cloudinary:', durationError.message);
         }
+      } else {
+        console.error('❌ Could not extract public ID from Cloudinary URL:', videoUrl);
       }
     } else {
       // Local storage
