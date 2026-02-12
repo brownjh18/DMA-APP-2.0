@@ -11,42 +11,21 @@ const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+const cloudStorage = require('../services/cloudStorage');
 
 // Set ffmpeg and ffprobe paths
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
-// Function to get audio duration using ffmpeg
-const getAudioDuration = (audioPath) => {
-  return new Promise((resolve, reject) => {
-    ffmpeg(audioPath)
-      .ffprobe((err, data) => {
-        if (err) {
-          console.error('Error getting audio metadata:', err);
-          reject(err);
-          return;
-        }
+// Check Cloudinary configuration
+const isCloudStorageConfigured = cloudStorage.isConfigured();
+console.log('☁️ Cloud Storage configured for podcasts:', isCloudStorageConfigured);
 
-        // Get duration in seconds and format as mm:ss or hh:mm:ss
-        const totalSeconds = Math.floor(data.format.duration || 0);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+// Get Cloudinary upload functions
+const { uploadAudio, uploadThumbnail } = cloudStorage;
 
-        let duration = '';
-        if (hours > 0) {
-          duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        } else {
-          duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        resolve(duration);
-      });
-  });
-};
-
-// Multer configuration for podcast uploads
-const storage = multer.diskStorage({
+// Multer configuration for local storage (fallback)
+const localStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     let uploadPath = path.join(__dirname, '../uploads');
     if (file.fieldname === 'audioFile') {
@@ -54,12 +33,9 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'thumbnailFile') {
       uploadPath = path.join(uploadPath, 'thumbnails');
     }
-
-    // Ensure directory exists
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
-
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
@@ -72,69 +48,92 @@ const storage = multer.diskStorage({
   }
 });
 
+// Upload middleware - uses Cloudinary if configured, else local
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit
-  },
+  storage: isCloudStorageConfigured ? undefined : localStorage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'audioFile') {
-      if (file.mimetype.startsWith('audio/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only audio files are allowed!'), false);
-      }
-    } else if (file.fieldname === 'thumbnailFile') {
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only image files are allowed!'), false);
-      }
+    if (file.fieldname === 'audioFile' || file.fieldname === 'thumbnailFile') {
+      cb(null, true);
     } else {
-      // Allow other fields (like title, description) to pass through
       cb(null, true);
     }
   }
 });
 
+// Helper function to upload file to Cloudinary or local
+async function uploadFileToStorage(file, fieldName) {
+  if (isCloudStorageConfigured && file) {
+    console.log(`☁️ Uploading ${fieldName} to Cloudinary...`);
+    try {
+      let result;
+      if (fieldName === 'audioFile') {
+        result = await cloudStorage.uploadFile(file.path, {
+          resource_type: 'video',
+          folder: 'dove-ministries/podcasts'
+        });
+      } else {
+        result = await cloudStorage.uploadFile(file.path, {
+          resource_type: 'image',
+          folder: 'dove-ministries/thumbnails'
+        });
+      }
+      console.log(`☁️ ${fieldName} uploaded to Cloudinary:`, result.secure_url);
+      return result.secure_url;
+    } catch (error) {
+      console.error(`☁️ Cloudinary upload failed for ${fieldName}:`, error);
+      // Fallback to local URL
+      return `/uploads/${fieldName === 'audioFile' ? 'podcasts' : 'thumbnails'}/${file.filename}`;
+    }
+  } else {
+    // Local storage
+    return `/uploads/${fieldName === 'audioFile' ? 'podcasts' : 'thumbnails'}/${file.filename}`;
+  }
+}
+
+// Function to get audio duration using ffmpeg
+const getAudioDuration = (audioPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(audioPath)
+      .ffprobe((err, data) => {
+        if (err) {
+          console.error('Error getting audio metadata:', err);
+          reject(err);
+          return;
+        }
+        const totalSeconds = Math.floor(data.format.duration || 0);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        let duration = '';
+        if (hours > 0) {
+          duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        resolve(duration);
+      });
+  });
+};
+
 const router = express.Router();
 
-// Get all podcasts (sermons with audio)
+// Get all podcasts
 router.get('/', async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      speaker,
-      published = true
-    } = req.query;
-
-    // Filter for podcasts
+    const { page = 1, limit = 10, search, speaker, published = true } = req.query;
     const query = { type: 'podcast' };
-
-    // Allow unpublished podcasts if explicitly requested (for admin use)
-    if (published !== 'false') {
-      query.isPublished = true;
-    }
-
-    // Add search filters
-    if (search) {
-      query.$text = { $search: search };
-    }
-    if (speaker) {
-      query.speaker = new RegExp(speaker, 'i');
-    }
+    if (published !== 'false') query.isPublished = true;
+    if (search) query.$text = { $search: search };
+    if (speaker) query.speaker = new RegExp(speaker, 'i');
 
     const podcasts = await Sermon.find(query)
       .populate({ path: 'createdBy', select: 'name' })
       .sort({ date: -1, createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
-
     const total = await Sermon.countDocuments(query);
 
-    // Transform to podcast format
     const formattedPodcasts = podcasts.map(podcast => ({
       id: podcast._id,
       title: podcast.title,
@@ -150,15 +149,7 @@ router.get('/', async (req, res) => {
       broadcastStartTime: podcast.broadcastStartTime ? podcast.broadcastStartTime.toISOString() : null
     }));
 
-    res.json({
-      podcasts: formattedPodcasts,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    res.json({ podcasts: formattedPodcasts, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('Podcasts fetch error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -168,37 +159,19 @@ router.get('/', async (req, res) => {
 // Get saved podcasts
 router.get('/saved', authenticateToken, async (req, res) => {
   try {
-    console.log('GET /api/podcasts/saved - Request received');
-
-    // Handle demo users - they use localStorage, not server-side storage
     if (req.user.id.startsWith('demo-')) {
-      console.log('Demo user detected, returning empty list for demo users');
       return res.json({ savedPodcasts: [] });
     }
-
     const userDoc = await User.findById(req.user.id).populate({ path: 'savedPodcasts', model: Sermon });
-    if (!userDoc) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Filter to only podcasts (in case sermons were also saved)
+    if (!userDoc) return res.status(404).json({ error: 'User not found' });
     const savedPodcasts = userDoc.savedPodcasts.filter(item => item && item.type === 'podcast');
-
     const formattedSavedPodcasts = savedPodcasts.map(podcast => ({
-      id: podcast._id,
-      title: podcast.title,
-      speaker: podcast.speaker,
-      description: podcast.description,
-      thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
-      publishedAt: podcast.date.toISOString(),
-      duration: podcast.duration || '00:00',
-      viewCount: podcast.viewCount.toString(),
-      audioUrl: podcast.audioUrl,
-      status: podcast.isPublished ? 'published' : 'draft',
-      listens: podcast.viewCount
+      id: podcast._id, title: podcast.title, speaker: podcast.speaker,
+      description: podcast.description, thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
+      publishedAt: podcast.date.toISOString(), duration: podcast.duration || '00:00',
+      viewCount: podcast.viewCount.toString(), audioUrl: podcast.audioUrl,
+      status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount
     }));
-
-    console.log('GET /api/podcasts/saved - Returning saved podcasts');
     res.json({ savedPodcasts: formattedSavedPodcasts });
   } catch (error) {
     console.error('Get saved podcasts error:', error);
@@ -209,49 +182,28 @@ router.get('/saved', authenticateToken, async (req, res) => {
 // Get single podcast
 router.get('/:id', async (req, res) => {
   try {
-    const podcast = await Sermon.findOne({
-      _id: req.params.id,
-      type: 'podcast'
-    }).populate('createdBy', 'name');
+    const podcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' }).populate('createdBy', 'name');
+    if (!podcast) return res.status(404).json({ error: 'Podcast not found' });
 
-    if (!podcast) {
-      return res.status(404).json({ error: 'Podcast not found' });
-    }
-
-    // Increment listen count only for actual plays, not page refreshes
-    // Check if this is a legitimate listen request (not just metadata fetch)
     const isListenRequest = req.query.listen === 'true' || req.headers['x-requested-with'] === 'listen';
-
     if (isListenRequest) {
-      // Simple rate limiting: don't increment more than once per minute per podcast
       const now = Date.now();
       const lastListen = podcast.lastListenIncrement || 0;
-      const timeSinceLastListen = now - lastListen;
-
-      // Only increment if it's been more than 60 seconds since last listen
-      if (timeSinceLastListen > 60000) {
+      if (now - lastListen > 60000) {
         podcast.viewCount += 1;
         podcast.lastListenIncrement = now;
         await podcast.save();
       }
     }
 
-    // Transform to podcast format
     const formattedPodcast = {
-      id: podcast._id,
-      title: podcast.title,
-      speaker: podcast.speaker,
-      description: podcast.description,
-      thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
-      publishedAt: podcast.date.toISOString(),
-      duration: podcast.duration || '00:00',
-      viewCount: podcast.viewCount.toString(),
-      audioUrl: podcast.audioUrl,
-      status: podcast.isPublished ? 'published' : 'draft',
-      listens: podcast.viewCount,
+      id: podcast._id, title: podcast.title, speaker: podcast.speaker,
+      description: podcast.description, thumbnailUrl: podcast.thumbnailUrl || '/bible.JPG',
+      publishedAt: podcast.date.toISOString(), duration: podcast.duration || '00:00',
+      viewCount: podcast.viewCount.toString(), audioUrl: podcast.audioUrl,
+      status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount,
       broadcastStartTime: podcast.broadcastStartTime ? podcast.broadcastStartTime.toISOString() : null
     };
-
     res.json({ podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast fetch error:', error);
@@ -259,38 +211,37 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new podcast (moderator+) - temporarily disabled auth for testing
+// Create new podcast
 router.post('/', upload.any(), async (req, res) => {
   try {
     console.log('POST /api/podcasts - Request received');
-    console.log('POST /api/podcasts - Content-Type:', req.headers['content-type']);
-    console.log('POST /api/podcasts - Body keys:', Object.keys(req.body || {}));
-    console.log('POST /api/podcasts - Files:', req.files ? req.files.length : 'none');
-
-    // Log the actual body content
-    if (req.body) {
-      console.log('POST /api/podcasts - Body content:', JSON.stringify(req.body, null, 2));
-    }
+    console.log('☁️ Cloudinary configured:', isCloudStorageConfigured);
 
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     let audioUrl = req.body.audioUrl || '';
     let thumbnailUrl = req.body.thumbnailUrl || '/bible.JPG';
     let duration = req.body.duration || '00:00';
+    let tempFiles = []; // Track temp files for cleanup
 
-    // Handle uploaded files (with upload.any(), files is an array)
     if (req.files && req.files.length > 0) {
       const audioFile = req.files.find(file => file.fieldname === 'audioFile');
       if (audioFile) {
-        audioUrl = `/uploads/podcasts/${audioFile.filename}`;
-
-        // Get audio duration
+        tempFiles.push(audioFile.path);
+        if (isCloudStorageConfigured) {
+          // Upload to Cloudinary
+          const result = await cloudStorage.uploadFile(audioFile.path, {
+            resource_type: 'video',
+            folder: 'dove-ministries/podcasts'
+          });
+          audioUrl = result.secure_url;
+          console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+        } else {
+          audioUrl = `/uploads/podcasts/${audioFile.filename}`;
+        }
         try {
-          const audioPath = path.join(__dirname, '../uploads/podcasts', audioFile.filename);
-          duration = await getAudioDuration(audioPath);
+          duration = await getAudioDuration(audioFile.path);
         } catch (durationError) {
           console.warn('Could not get audio duration:', durationError);
           duration = '00:00';
@@ -299,170 +250,135 @@ router.post('/', upload.any(), async (req, res) => {
 
       const thumbnailFile = req.files.find(file => file.fieldname === 'thumbnailFile');
       if (thumbnailFile) {
-        thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+        tempFiles.push(thumbnailFile.path);
+        if (isCloudStorageConfigured) {
+          const result = await cloudStorage.uploadFile(thumbnailFile.path, {
+            resource_type: 'image',
+            folder: 'dove-ministries/thumbnails',
+            transformation: [{ width: 800, height: 600, crop: 'fill' }]
+          });
+          thumbnailUrl = result.secure_url;
+          console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+        } else {
+          thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+        }
       }
     }
 
-    console.log('POST /api/podcasts - Creating podcast with:', {
-      title: req.body.title,
-      speaker: req.body.speaker,
-      audioUrl,
-      thumbnailUrl
-    });
-
     const podcastData = {
-      title: req.body.title,
-      speaker: req.body.speaker,
-      description: req.body.description,
-      series: req.body.category,
-      duration: duration,
-      audioUrl: audioUrl,
-      thumbnailUrl: thumbnailUrl,
-      isPublished: req.body.status === 'published',
-      type: 'podcast',
-      createdBy: req.user?.id || null // Handle case where auth is disabled
+      title: req.body.title, speaker: req.body.speaker, description: req.body.description,
+      series: req.body.category, duration: duration, audioUrl: audioUrl, thumbnailUrl: thumbnailUrl,
+      isPublished: req.body.status === 'published', type: 'podcast',
+      createdBy: req.user?.id || null
     };
 
     const podcast = new Sermon(podcastData);
-    console.log('POST /api/podcasts - Saving podcast...');
     await podcast.save();
     console.log('POST /api/podcasts - Podcast saved successfully with ID:', podcast._id);
 
-    // Skip populate if createdBy is null
-    if (podcast.createdBy) {
-      await podcast.populate('createdBy', 'name');
+    // Cleanup temp files
+    for (const tempFile of tempFiles) {
+      try { fs.unlinkSync(tempFile); } catch (e) {}
     }
 
-    // Transform to podcast format
     const formattedPodcast = {
-      id: podcast._id,
-      title: podcast.title,
-      speaker: podcast.speaker,
-      description: podcast.description,
-      thumbnailUrl: podcast.thumbnailUrl,
-      publishedAt: podcast.date.toISOString(),
-      duration: podcast.duration,
-      viewCount: podcast.viewCount.toString(),
-      audioUrl: podcast.audioUrl,
-      status: podcast.isPublished ? 'published' : 'draft',
-      listens: podcast.viewCount
+      id: podcast._id, title: podcast.title, speaker: podcast.speaker,
+      description: podcast.description, thumbnailUrl: podcast.thumbnailUrl,
+      publishedAt: podcast.date.toISOString(), duration: podcast.duration,
+      viewCount: podcast.viewCount.toString(), audioUrl: podcast.audioUrl,
+      status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount
     };
 
-    console.log('POST /api/podcasts - Sending success response');
-
-    // Emit real-time event to all connected clients
     const io = req.app.get('io');
     io.emit('podcast:created', { podcast: formattedPodcast });
-
-    res.status(201).json({
-      message: 'Podcast created successfully',
-      podcast: formattedPodcast
-    });
+    res.status(201).json({ message: 'Podcast created successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast creation error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Update podcast (moderator+) - temporarily disabled auth for testing
+// Update podcast
 router.put('/:id', (req, res, next) => {
-  // Check if this is a FormData request (multipart/form-data)
   if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-    // Use multer for file uploads
     upload.any()(req, res, (err) => {
-      if (err) {
-        console.error('Multer error in PUT:', err);
-        return res.status(400).json({ error: 'File upload error: ' + err.message });
-      }
+      if (err) return res.status(400).json({ error: 'File upload error: ' + err.message });
       next();
     });
   } else {
-    // Skip multer for JSON requests
     next();
   }
 }, async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Find existing podcast
     const existingPodcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' });
-    if (!existingPodcast) {
-      return res.status(404).json({ error: 'Podcast not found' });
-    }
+    if (!existingPodcast) return res.status(404).json({ error: 'Podcast not found' });
 
     let audioUrl = existingPodcast.audioUrl || '';
     let thumbnailUrl = existingPodcast.thumbnailUrl || '/bible.JPG';
     let duration = req.body.duration || existingPodcast.duration || '00:00';
+    let tempFiles = [];
 
-    // Handle uploaded files (only if FormData was sent, files is an array with upload.any())
     if (req.files && req.files.length > 0) {
       const audioFile = req.files.find(file => file.fieldname === 'audioFile');
       if (audioFile) {
-        audioUrl = `/uploads/podcasts/${audioFile.filename}`;
-
-        // Get audio duration
-        try {
-          const audioPath = path.join(__dirname, '../uploads/podcasts', audioFile.filename);
-          duration = await getAudioDuration(audioPath);
-        } catch (durationError) {
-          console.warn('Could not get audio duration:', durationError);
-          duration = '00:00';
+        tempFiles.push(audioFile.path);
+        if (isCloudStorageConfigured) {
+          const result = await cloudStorage.uploadFile(audioFile.path, {
+            resource_type: 'video',
+            folder: 'dove-ministries/podcasts'
+          });
+          audioUrl = result.secure_url;
+          console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
+        } else {
+          audioUrl = `/uploads/podcasts/${audioFile.filename}`;
         }
+        try { duration = await getAudioDuration(audioFile.path); } catch (e) { duration = '00:00'; }
       }
 
       const thumbnailFile = req.files.find(file => file.fieldname === 'thumbnailFile');
       if (thumbnailFile) {
-        thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+        tempFiles.push(thumbnailFile.path);
+        if (isCloudStorageConfigured) {
+          const result = await cloudStorage.uploadFile(thumbnailFile.path, {
+            resource_type: 'image',
+            folder: 'dove-ministries/thumbnails',
+            transformation: [{ width: 800, height: 600, crop: 'fill' }]
+          });
+          thumbnailUrl = result.secure_url;
+          console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+        } else {
+          thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+        }
       }
     }
 
+    for (const tempFile of tempFiles) {
+      try { fs.unlinkSync(tempFile); } catch (e) {}
+    }
+
     const updateData = {
-      title: req.body.title,
-      speaker: req.body.speaker,
-      description: req.body.description,
-      series: req.body.category,
-      duration: duration,
-      audioUrl: audioUrl,
-      thumbnailUrl: thumbnailUrl,
+      title: req.body.title, speaker: req.body.speaker, description: req.body.description,
+      series: req.body.category, duration: duration, audioUrl: audioUrl, thumbnailUrl: thumbnailUrl,
       isPublished: req.body.status === 'published'
     };
 
-    const podcast = await Sermon.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('createdBy', 'name');
+    const podcast = await Sermon.findByIdAndUpdate(req.params.id, updateData, { new: true }).populate('createdBy', 'name');
+    if (!podcast) return res.status(404).json({ error: 'Podcast not found' });
 
-    if (!podcast) {
-      return res.status(404).json({ error: 'Podcast not found' });
-    }
-
-    // Transform to podcast format
     const formattedPodcast = {
-      id: podcast._id,
-      title: podcast.title,
-      speaker: podcast.speaker,
-      description: podcast.description,
-      thumbnailUrl: podcast.thumbnailUrl,
-      publishedAt: podcast.date.toISOString(),
-      duration: podcast.duration,
-      viewCount: podcast.viewCount.toString(),
-      audioUrl: podcast.audioUrl,
-      status: podcast.isPublished ? 'published' : 'draft',
-      listens: podcast.viewCount
+      id: podcast._id, title: podcast.title, speaker: podcast.speaker,
+      description: podcast.description, thumbnailUrl: podcast.thumbnailUrl,
+      publishedAt: podcast.date.toISOString(), duration: podcast.duration,
+      viewCount: podcast.viewCount.toString(), audioUrl: podcast.audioUrl,
+      status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount
     };
 
-    res.json({
-      message: 'Podcast updated successfully',
-      podcast: formattedPodcast
-    });
-
-    // Emit real-time event to all connected clients
     const io = req.app.get('io');
     io.emit('podcast:updated', { podcast: formattedPodcast });
+    res.json({ message: 'Podcast updated successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast update error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -472,110 +388,41 @@ router.put('/:id', (req, res, next) => {
 // Save podcast
 router.post('/:id/save', authenticateToken, async (req, res) => {
   try {
-    console.log('POST /api/podcasts/:id/save - Request received');
-    
-    // Validate ID
     if (!req.params.id || req.params.id === 'undefined' || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.error('Invalid podcast ID:', req.params.id);
       return res.status(400).json({ error: 'Invalid podcast ID' });
     }
-    
-    // Handle demo users - they use localStorage, not server-side storage
     if (req.user.id.startsWith('demo-')) {
-      console.log('Demo user detected, save not persisted to server');
-      return res.json({ 
-        message: 'Demo user - podcast save handled locally',
-        saved: true
-      });
+      return res.json({ message: 'Demo user - podcast save handled locally', saved: true });
     }
-    
     const userDoc = await User.findById(req.user.id);
-    if (!userDoc) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if podcast exists
+    if (!userDoc) return res.status(404).json({ error: 'User not found' });
     const podcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' });
-    if (!podcast) {
-      return res.status(404).json({ error: 'Podcast not found' });
-    }
+    if (!podcast) return res.status(404).json({ error: 'Podcast not found' });
 
-    // Check if already saved (convert to ObjectId for proper comparison)
     const podcastId = new mongoose.Types.ObjectId(req.params.id);
     const alreadySaved = userDoc.savedPodcasts.some(id => id.equals(podcastId));
 
     if (alreadySaved) {
-      // Unsave: remove from savedPodcasts
       userDoc.savedPodcasts = userDoc.savedPodcasts.filter(id => !id.equals(podcastId));
     } else {
-      // Save: add to savedPodcasts
       userDoc.savedPodcasts.push(podcastId);
     }
-    
     await userDoc.save();
-
-    console.log('POST /api/podcasts/:id/save - Podcast save/unsave completed');
-    res.json({ 
-      message: alreadySaved ? 'Podcast unsaved' : 'Podcast saved',
-      saved: !alreadySaved
-    });
+    res.json({ message: alreadySaved ? 'Podcast unsaved' : 'Podcast saved', saved: !alreadySaved });
   } catch (error) {
     console.error('Podcast save error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Unsave podcast
-router.post('/:id/unsave', authenticateToken, async (req, res) => {
-  try {
-    console.log('POST /api/podcasts/:id/unsave - Request received');
-    
-    // Handle demo users - they use localStorage, not server-side storage
-    if (req.user.id.startsWith('demo-')) {
-      console.log('Demo user detected, unsave not persisted to server');
-      return res.json({ 
-        message: 'Demo user - podcast unsave handled locally',
-        saved: false
-      });
-    }
-    
-    const userDoc = await User.findById(req.user.id);
-    if (!userDoc) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if podcast is saved (convert to ObjectId for proper comparison)
-    const podcastId = new mongoose.Types.ObjectId(req.params.id);
-    if (!userDoc.savedPodcasts.some(id => id.equals(podcastId))) {
-      return res.json({ message: 'Podcast not in saved list' });
-    }
-
-    // Remove from saved podcasts
-    userDoc.savedPodcasts = userDoc.savedPodcasts.filter(id => !id.equals(podcastId));
-    await userDoc.save();
-
-    console.log('POST /api/podcasts/:id/unsave - Podcast unsaved successfully');
-    res.json({ message: 'Podcast unsaved successfully' });
-  } catch (error) {
-    console.error('Podcast unsave error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
- // Delete podcast (moderator+) - temporarily disabled auth for testing
+// Delete podcast
 router.delete('/:id', async (req, res) => {
   try {
     const podcast = await Sermon.findByIdAndDelete(req.params.id);
-
-    if (!podcast) {
-      return res.status(404).json({ error: 'Podcast not found' });
-    }
-
-    res.json({ message: 'Podcast deleted successfully' });
-
-    // Emit real-time event to all connected clients
+    if (!podcast) return res.status(404).json({ error: 'Podcast not found' });
     const io = req.app.get('io');
     io.emit('podcast:deleted', { id: req.params.id });
+    res.json({ message: 'Podcast deleted successfully' });
   } catch (error) {
     console.error('Podcast deletion error:', error);
     res.status(500).json({ error: 'Server error' });
