@@ -210,7 +210,9 @@ const Tab3: React.FC = () => {
                   backgroundImage: 'none', // Override the hardcoded CSS background
                   position: 'relative',
                   overflow: 'hidden',
-                  zIndex: 1 // Ensure this is above any parent backgrounds
+                  zIndex: 1,
+                  height: '200px', // Explicit height for the media container
+                  width: '100%'
                 }}
               >
                 <img
@@ -220,10 +222,8 @@ const Tab3: React.FC = () => {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    zIndex: 2 // Higher than the parent's background
+                    position: 'relative',
+                    zIndex: 2
                   }}
                   onError={(e) => {
                     const target = e.currentTarget;
