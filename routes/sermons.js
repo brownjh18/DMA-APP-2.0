@@ -445,7 +445,7 @@ router.post('/upload-video', authenticateToken, videoUpload.single('video'), asy
       const publicId = cloudStorage.extractPublicId(videoUrl);
       if (publicId) {
         // Generate thumbnail URL using Cloudinary transformation
-        thumbnailUrl = cloudinary.url(publicId, {
+        thumbnailUrl = cloudStorage.getFileUrl(publicId, {
           resource_type: 'video',
           transformation: [
             { width: 400, height: 400, crop: 'fill', gravity: 'auto' },
