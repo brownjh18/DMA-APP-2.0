@@ -21,7 +21,8 @@ interface Devotion {
 
 // Helper function to get thumbnail URL with multiple fallbacks
 const getDevotionThumbnailUrl = (thumbnailUrl?: string): string => {
-  if (!thumbnailUrl || !thumbnailUrl.trim()) {
+  // Check if thumbnailUrl is missing, empty, or is the old default
+  if (!thumbnailUrl || !thumbnailUrl.trim() || thumbnailUrl === '/dove.png') {
     return '/hero-evangelism.jpg'; // Primary fallback for devotions
   }
   // Handle local uploads

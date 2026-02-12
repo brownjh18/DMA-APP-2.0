@@ -77,7 +77,8 @@ const getMinistryImage = (imageUrl?: string): string => {
 
 // Helper function to get devotion thumbnail with default fallback and multiple fallbacks
 const getDevotionThumbnail = (thumbnailUrl?: string): string => {
-  if (!thumbnailUrl || !thumbnailUrl.trim()) {
+  // Check if thumbnailUrl is missing, empty, or is the old default
+  if (!thumbnailUrl || !thumbnailUrl.trim() || thumbnailUrl === '/dove.png') {
     return '/hero-evangelism.jpg'; // Primary fallback for devotions
   }
   if (thumbnailUrl.startsWith('/uploads/')) {

@@ -163,7 +163,7 @@ const SavedDevotions: React.FC = () => {
                   {/* Header with thumbnail */}
                   <div
                     style={{
-                      backgroundImage: `url(${devotion.thumbnailUrl ? getFullUrl(devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
+                      backgroundImage: `url(${devotion.thumbnailUrl && devotion.thumbnailUrl !== '/dove.png' ? getFullUrl(devotion.thumbnailUrl) : '/hero-evangelism.jpg'})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat',

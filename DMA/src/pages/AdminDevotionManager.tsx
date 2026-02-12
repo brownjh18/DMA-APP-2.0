@@ -678,7 +678,7 @@ const AdminDevotionManager: React.FC = () => {
                         position: 'relative'
                       }}>
                         <img
-                          src={d.thumbnailUrl ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
+                          src={d.thumbnailUrl && d.thumbnailUrl !== '/dove.png' ? (d.thumbnailUrl.startsWith('/uploads/') ? `${BACKEND_BASE_URL}${d.thumbnailUrl}` : d.thumbnailUrl) : '/hero-evangelism.jpg'}
                           alt="Devotion thumbnail"
                           style={{
                             width: '100%',

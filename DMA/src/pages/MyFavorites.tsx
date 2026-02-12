@@ -960,7 +960,7 @@ const Saved: React.FC = () => {
                   >
                     <div style={{ position: 'relative' }}>
                       <img
-                        src={getFullUrl(devotion.thumbnailUrl || '/hero-evangelism.jpg')}
+                        src={getFullUrl((devotion.thumbnailUrl && devotion.thumbnailUrl !== '/dove.png') ? devotion.thumbnailUrl : '/hero-evangelism.jpg')}
                         alt={devotion.title}
                         style={{
                           width: '100%',
