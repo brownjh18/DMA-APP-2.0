@@ -346,10 +346,13 @@ const FullPodcastPlayer: React.FC = () => {
   const handleShare = async () => {
     if (!podcast) return;
 
+    // Generate the shareable URL that points to the Vercel deployment
+    const shareUrl = `https://dove-church-app.vercel.app/podcast-player?id=${podcast.id}`;
+    
     const shareData = {
       title: podcast.title,
       text: `${podcast.title} - ${podcast.speaker || 'Dove Ministries Africa'}\n\n${podcast.description}`,
-      url: window.location.href
+      url: shareUrl
     };
 
     try {
@@ -1237,68 +1240,6 @@ const FullPodcastPlayer: React.FC = () => {
               >
                 <IonIcon icon={share} style={{ fontSize: '1.6em' }} />
               </IonButton>
-            </div>
-
-            {/* Volume Controls - Always Visible */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '0 8px'
-            }}>
-              <IonButton
-                fill="clear"
-                onClick={toggleMute}
-                style={{
-                  '--color': 'rgba(255,255,255,0.7)',
-                  '--ripple-color': 'rgba(255,255,255,0.3)',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%'
-                }}
-              >
-                <IonIcon icon={isMuted || volume === 0 ? volumeOff : volume < 0.5 ? volumeLow : volumeHigh} style={{ fontSize: '1.2em' }} />
-              </IonButton>
-              
-              <div className="volume-slider-container" style={{
-                position: 'relative',
-                width: 'clamp(100px, 30vw, 140px)',
-                height: '6px',
-                background: 'rgba(255,255,255,0.2)',
-                borderRadius: '2px',
-                cursor: 'pointer'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  height: '100%',
-                  width: `${(isMuted ? 0 : volume) * 100}%`,
-                  background: 'rgba(255,255,255,0.8)',
-                  borderRadius: '2px',
-                  transition: 'width 0.1s ease'
-                }} />
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={isMuted ? 0 : volume}
-                  onChange={handleVolumeChange}
-                  className="volume-slider"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                    cursor: 'pointer',
-                    appearance: 'none'
-                  }}
-                />
-              </div>
             </div>
           </div>
         </div>

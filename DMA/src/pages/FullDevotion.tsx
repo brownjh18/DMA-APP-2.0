@@ -374,10 +374,13 @@ const FullDevotion: React.FC = () => {
                 onClick={async () => {
                   if (!devotion) return;
 
+                  // Generate the shareable URL that points to the Vercel deployment
+                  const shareUrl = `https://dove-church-app.vercel.app/full-devotion?id=${devotion.id}`;
+                  
                   const shareData = {
                     title: devotion.title,
                     text: devotion.content.substring(0, 100) + '...',
-                    url: `${window.location.origin}/full-devotion?id=${devotion.id}`
+                    url: shareUrl
                   };
 
                   try {

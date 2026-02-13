@@ -693,10 +693,13 @@ const Tab4: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedPodcast) {
+                  // Generate the shareable URL that points to the Vercel deployment
+                  const shareUrl = `https://dove-church-app.vercel.app/podcast-player?id=${selectedPodcast.id}`;
+                  
                   const shareData = {
                     title: selectedPodcast.title,
                     text: selectedPodcast.description,
-                    url: `${window.location.origin}/tab4`
+                    url: shareUrl
                   };
 
                   try {

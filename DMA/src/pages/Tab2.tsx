@@ -467,10 +467,13 @@ const Tab2: React.FC = () => {
                     className="channel-action-button"
                     onClick={async () => {
                       if (currentSermon) {
+                        // Generate the shareable URL that points to the Vercel deployment
+                        const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${currentSermon.id}`;
+                        
                         const shareData = {
                           title: currentSermon.title,
                           text: currentSermon.description,
-                          url: window.location.href
+                          url: shareUrl
                         };
 
                         try {
@@ -1153,10 +1156,13 @@ const Tab2: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedSermonForActionSheet) {
+                  // Generate the shareable URL that points to the Vercel deployment
+                  const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${selectedSermonForActionSheet.id}`;
+                  
                   const shareData = {
                     title: selectedSermonForActionSheet.title,
                     text: selectedSermonForActionSheet.description,
-                    url: window.location.href
+                    url: shareUrl
                   };
 
                   try {

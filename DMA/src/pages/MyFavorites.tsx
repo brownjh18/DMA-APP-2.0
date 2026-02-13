@@ -1090,10 +1090,13 @@ const Saved: React.FC = () => {
             <IonList style={{ background: 'transparent', padding: '0' }}>
               <IonItem button style={{ '--background-hover': 'rgba(255,255,255,0.1)', '--padding-start': '8px', '--inner-padding-end': '8px', minHeight: '32px' }} onClick={async () => {
                 if (currentSermon) {
+                  // Generate the shareable URL that points to the Vercel deployment
+                  const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${currentSermon.id}`;
+                  
                   const shareData = {
                     title: currentSermon.title,
                     text: currentSermon.description,
-                    url: window.location.href
+                    url: shareUrl
                   };
 
                   try {

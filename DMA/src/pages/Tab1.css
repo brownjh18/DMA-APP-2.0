@@ -748,15 +748,17 @@
   text-shadow: none;
 }
 
-/* Page background */
+/* Light mode - clean white background */
 .content-ios {
-  background: #000000 !important;
+  --ion-background-color: #ffffff;
+  background: #ffffff;
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .content-ios {
     --ion-background-color: #000000;
+    background: #000000;
   }
 
   .toolbar-ios {
