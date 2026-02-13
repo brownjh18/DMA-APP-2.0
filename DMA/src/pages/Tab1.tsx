@@ -964,12 +964,6 @@ const Tab1: React.FC = () => {
                       )}
                     </div>
                     <div className="devotion-content-small">
-                      <div className="devotion-top">
-                        <div className="devotion-label">
-                          <IonIcon icon={playCircle} />
-                          <span>Sermon</span>
-                        </div>
-                      </div>
                       <div className="devotion-verse" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                           <h3>{video.title.length > 40 ? video.title.substring(0, 40) + '…' : video.title}</h3>
@@ -1158,12 +1152,6 @@ const Tab1: React.FC = () => {
                     />
                   </div>
                   <div className="devotion-content-small">
-                    <div className="devotion-top">
-                      <div className="devotion-label">
-                        <IonIcon icon={calendar} />
-                        <span>Event</span>
-                      </div>
-                    </div>
                     <div className="devotion-verse">
                       <h3>{event.title.length > 40 ? event.title.substring(0, 40) + '…' : event.title}</h3>
                       <p className="verse-text">
@@ -1241,12 +1229,6 @@ const Tab1: React.FC = () => {
                     />
                   </div>
                   <div className="devotion-content-small">
-                    <div className="devotion-top">
-                      <div className="devotion-label">
-                        <IonIcon icon={people} />
-                        <span>Ministry</span>
-                      </div>
-                    </div>
                     <div className="devotion-verse">
                       <h3>{ministry.name.length > 40 ? ministry.name.substring(0, 40) + '…' : ministry.name}</h3>
                       <p className="verse-text">

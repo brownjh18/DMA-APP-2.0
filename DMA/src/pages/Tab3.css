@@ -689,7 +689,21 @@
   }
 
   .devotion-content {
-    color: #f1f5f9;
+    color: white;
+  }
+
+  .devotion-verse h3 {
+    color: white;
+  }
+
+  .verse-text {
+    color: white;
+    opacity: 0.95;
+  }
+
+  .devotion-summary {
+    color: white;
+    opacity: 0.95;
   }
 
   /* Frosted glass date badge - Dark mode */
