@@ -7,8 +7,8 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://dove-church-backend.vercel.app/api/$1" },
-    { "source": "/uploads/(.*)", "destination": "https://dove-church-backend.vercel.app/uploads/$1" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "https://dove-church-backend.vercel.app/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://dove-church-backend.vercel.app/uploads/:path*" },
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }
