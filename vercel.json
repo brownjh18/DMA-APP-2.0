@@ -5,8 +5,8 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "buildCommand": "npm run build",
-        "outputDirectory": "DMA/dist"
+        "buildCommand": "cd DMA && npm run build",
+        "outputDirectory": "dist"
       }
     },
     {
@@ -24,17 +24,15 @@
       "dest": "server.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "DMA/dist/index.html"
+      "src": "/((?!api|uploads).*)",
+      "dest": "/index.html"
     }
   ],
   "env": {
     "NODE_ENV": "production",
     "JWT_SECRET": "bcadd09f9a63199da614ffc0e50aea4d3ebf94431e338b2fdad3b16a4d1410b0",
     "MONGODB_URI": "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/?appName=Cluster1",
-    "PORT": "10000",
-    "VITE_API_URL": "https://dove-church-backend.vercel.app/api",
-    "VITE_BACKEND_URL": "https://dove-church-backend.vercel.app"
+    "PORT": "10000"
   },
   "regions": ["sfo1"]
 }
