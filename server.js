@@ -58,7 +58,8 @@ const io = new Server(server, {
     credentials: true
   }
 });
-const PORT = process.env.PORT || 5000;
+// Vercel automatically sets PORT, use it or default to 3000
+const PORT = process.env.PORT || 3000;
 
 // Make io accessible to routes
 app.set('io', io);
