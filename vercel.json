@@ -4,12 +4,24 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "DMA/dist",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "server.js"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "DMA/dist/index.html"
     }
   ],
   "env": {
