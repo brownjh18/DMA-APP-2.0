@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm install && node -e \"console.log('Build completed successfully')\""
+    "build": "npm install && cd DMA && npm install && npm run build",
+    "build:frontend": "cd DMA && npm run build"
   },
   "keywords": [
     "dove",
