@@ -7,17 +7,22 @@ const { authenticateToken, requireAdmin, requireModerator } = require('../middle
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const cloudStorage = require('../services/cloudStorage');
 
 // Check if Cloudinary is configured
 const isCloudStorage = cloudStorage.isConfigured();
 
-// Set ffmpeg and ffprobe paths
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+// Try to load ffmpeg/ffprobe if available (for local development only)
+let ffmpeg = null;
+try {
+  ffmpeg = require('fluent-ffmpeg');
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+  ffmpeg.setFfmpegPath(ffmpegPath);
+  ffmpeg.setFfprobePath(ffprobePath);
+} catch (error) {
+  console.warn('ffmpeg/ffprobe not available (running in production mode)');
+}
 
 const router = express.Router();
 
@@ -113,9 +118,14 @@ async function fetchYouTubeVideoDetails(videoUrl) {
   }
 }
 
-// Function to get video duration using ffmpeg
+// Function to get video duration using ffmpeg (if available)
 const getVideoDuration = (videoPath) => {
   return new Promise((resolve, reject) => {
+    if (!ffmpeg) {
+      console.warn('ffmpeg not available, returning default duration');
+      return resolve('00:00');
+    }
+    
     ffmpeg(videoPath)
       .ffprobe((err, data) => {
         if (err) {
@@ -142,9 +152,14 @@ const getVideoDuration = (videoPath) => {
   });
 };
 
-// Function to generate thumbnail from video
+// Function to generate thumbnail from video (if ffmpeg available)
 const generateThumbnail = (videoPath) => {
   return new Promise((resolve, reject) => {
+    if (!ffmpeg) {
+      console.warn('ffmpeg not available, skipping thumbnail generation');
+      return resolve('');
+    }
+    
     const thumbnailDir = path.join(__dirname, '../uploads/videos/thumbnails');
 
     // Ensure thumbnails directory exists

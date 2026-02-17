@@ -88,6 +88,7 @@ app.use(limiter);
 // CORS configuration - support multiple origins for web app and Capacitor mobile app
 const allowedOrigins = [
   'https://dovechurchapp.vercel.app',
+  'https://dove-church-frontend.vercel.app',
   'https://localhost',
   'http://localhost',
   'http://localhost:5000',

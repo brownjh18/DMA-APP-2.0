@@ -8,6 +8,19 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const liveCache = require('../services/liveCache');
 
+// Check if ffmpeg is available (for local development only)
+const isFfmpegAvailable = (() => {
+  try {
+    // Try to spawn a simple ffmpeg command to check availability
+    const { execSync } = require('child_process');
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    return true;
+  } catch (error) {
+    console.warn('ffmpeg not available (running in production mode)');
+    return false;
+  }
+})();
+
 const router = express.Router();
 
 // Get YouTube live video ID
@@ -174,53 +187,57 @@ router.post('/start', async (req, res) => {
     await broadcast.save();
     await broadcast.populate('createdBy', 'name');
 
-    // Start recording the live stream
-    if (streamUrl) {
-      try {
-        const uploadPath = path.join(__dirname, '../uploads/podcasts');
-        if (!fs.existsSync(uploadPath)) {
-          fs.mkdirSync(uploadPath, { recursive: true });
-        }
+     // Start recording the live stream (only if ffmpeg is available)
+     if (streamUrl && isFfmpegAvailable) {
+       try {
+         const uploadPath = path.join(__dirname, '../uploads/podcasts');
+         if (!fs.existsSync(uploadPath)) {
+           fs.mkdirSync(uploadPath, { recursive: true });
+         }
 
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const outputFile = path.join(uploadPath, `live-recording-${broadcast._id}-${uniqueSuffix}.mp3`);
+         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+         const outputFile = path.join(uploadPath, `live-recording-${broadcast._id}-${uniqueSuffix}.mp3`);
 
-        const ffmpeg = spawn('ffmpeg', [
-          '-i', streamUrl,
-          '-acodec', 'libmp3lame',
-          '-ab', '128k',
-          '-f', 'mp3',
-          outputFile
-        ]);
+         const ffmpeg = spawn('ffmpeg', [
+           '-i', streamUrl,
+           '-acodec', 'libmp3lame',
+           '-ab', '128k',
+           '-f', 'mp3',
+           outputFile
+         ]);
 
-        broadcast.recordingPid = ffmpeg.pid;
-        broadcast.audioUrl = `/uploads/podcasts/${path.basename(outputFile)}`;
-        await broadcast.save();
+         broadcast.recordingPid = ffmpeg.pid;
+         broadcast.audioUrl = `/uploads/podcasts/${path.basename(outputFile)}`;
+         await broadcast.save();
 
-        console.log(`Started recording for broadcast ${broadcast._id} with PID ${ffmpeg.pid}`);
+         console.log(`Started recording for broadcast ${broadcast._id} with PID ${ffmpeg.pid}`);
 
-        // Handle recording process events
-        ffmpeg.on('error', async (error) => {
-          console.error(`Recording error for broadcast ${broadcast._id}:`, error);
-          await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'failed' });
-        });
+         // Handle recording process events
+         ffmpeg.on('error', async (error) => {
+           console.error(`Recording error for broadcast ${broadcast._id}:`, error);
+           await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'failed' });
+         });
 
-        ffmpeg.on('close', async (code) => {
-          console.log(`Recording process for broadcast ${broadcast._id} exited with code ${code}`);
-          if (code === 0) {
-            // Recording completed successfully
-            await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'completed' });
-          } else {
-            await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'failed' });
-          }
-        });
+         ffmpeg.on('close', async (code) => {
+           console.log(`Recording process for broadcast ${broadcast._id} exited with code ${code}`);
+           if (code === 0) {
+             // Recording completed successfully
+             await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'completed' });
+           } else {
+             await Sermon.findByIdAndUpdate(broadcast._id, { recordingStatus: 'failed' });
+           }
+         });
 
-      } catch (recordingError) {
-        console.error('Failed to start recording:', recordingError);
-        broadcast.recordingStatus = 'failed';
-        await broadcast.save();
-      }
-    }
+       } catch (recordingError) {
+         console.error('Failed to start recording:', recordingError);
+         broadcast.recordingStatus = 'failed';
+         await broadcast.save();
+       }
+     } else if (streamUrl) {
+       console.warn('ffmpeg not available, skipping live stream recording');
+       broadcast.recordingStatus = 'not_available'; // Indicate recording not available
+       await broadcast.save();
+     }
 
     res.status(201).json({
       message: 'Live broadcast started successfully',
@@ -393,44 +410,48 @@ router.post('/:id/recording', [
     if (req.file) {
       audioUrl = `/uploads/podcasts/${req.file.filename}`;
 
-      // Try to get audio duration using ffmpeg
+      // Try to get audio duration using ffmpeg (if available)
       try {
-        const audioPath = path.join(__dirname, '../uploads/podcasts', req.file.filename);
-        const ffmpeg = require('fluent-ffmpeg');
-        const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-        const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+        if (isFfmpegAvailable) {
+          const audioPath = path.join(__dirname, '../uploads/podcasts', req.file.filename);
+          const ffmpeg = require('fluent-ffmpeg');
+          const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+          const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 
-        ffmpeg.setFfmpegPath(ffmpegPath);
-        ffmpeg.setFfprobePath(ffprobePath);
+          ffmpeg.setFfmpegPath(ffmpegPath);
+          ffmpeg.setFfprobePath(ffprobePath);
 
-        const getAudioDuration = (audioPath) => {
-          return new Promise((resolve, reject) => {
-            ffmpeg(audioPath)
-              .ffprobe((err, data) => {
-                if (err) {
-                  console.warn('Could not get audio duration:', err);
-                  resolve(duration); // Use provided duration as fallback
-                  return;
-                }
+          const getAudioDuration = (audioPath) => {
+            return new Promise((resolve, reject) => {
+              ffmpeg(audioPath)
+                .ffprobe((err, data) => {
+                  if (err) {
+                    console.warn('Could not get audio duration:', err);
+                    resolve(duration); // Use provided duration as fallback
+                    return;
+                  }
 
-                const totalSeconds = Math.floor(data.format.duration || 0);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const seconds = totalSeconds % 60;
+                  const totalSeconds = Math.floor(data.format.duration || 0);
+                  const hours = Math.floor(totalSeconds / 3600);
+                  const minutes = Math.floor((totalSeconds % 3600) / 60);
+                  const seconds = totalSeconds % 60;
 
-                let formattedDuration = '';
-                if (hours > 0) {
-                  formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                } else {
-                  formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                }
+                  let formattedDuration = '';
+                  if (hours > 0) {
+                    formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                  } else {
+                    formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                  }
 
-                resolve(formattedDuration);
-              });
-          });
-        };
+                  resolve(formattedDuration);
+                });
+            });
+          };
 
-        duration = await getAudioDuration(audioPath);
+          duration = await getAudioDuration(audioPath);
+        } else {
+          console.warn('ffmpeg not available, using provided duration');
+        }
       } catch (durationError) {
         console.warn('Could not get audio duration:', durationError);
         // Keep the provided duration

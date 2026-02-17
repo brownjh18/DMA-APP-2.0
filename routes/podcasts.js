@@ -8,14 +8,19 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const cloudStorage = require('../services/cloudStorage');
 
-// Set ffmpeg and ffprobe paths
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+// Try to load ffmpeg/ffprobe if available (for local development only)
+let ffmpeg = null;
+try {
+  ffmpeg = require('fluent-ffmpeg');
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+  ffmpeg.setFfmpegPath(ffmpegPath);
+  ffmpeg.setFfprobePath(ffprobePath);
+} catch (error) {
+  console.warn('ffmpeg/ffprobe not available (running in production mode)');
+}
 
 // Check Cloudinary configuration
 const isCloudStorageConfigured = cloudStorage.isConfigured();
@@ -74,9 +79,14 @@ async function uploadBufferToCloudinary(buffer, fieldName, mimeType) {
   }
 }
 
-// Function to get audio duration from buffer
+// Function to get audio duration from buffer (if ffmpeg available)
 const getAudioDurationFromBuffer = (buffer, mimeType) => {
   return new Promise((resolve, reject) => {
+    if (!ffmpeg) {
+      console.warn('ffmpeg not available, returning default duration');
+      return resolve('00:00');
+    }
+    
     const tempPath = path.join(__dirname, '../uploads/temp');
     if (!fs.existsSync(tempPath)) {
       fs.mkdirSync(tempPath, { recursive: true });
