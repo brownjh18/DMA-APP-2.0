@@ -1062,7 +1062,7 @@ const FullPodcastPlayer: React.FC = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            padding: '48px 20px calc(48px + env(safe-area-inset-bottom, 0px))',
+            padding: '38px 20px calc(48px + env(safe-area-inset-bottom, 0px))',
             background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 20%)',
             backdropFilter: 'blur(20px)',
             zIndex: 100

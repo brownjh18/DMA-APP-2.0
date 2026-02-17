@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonRefresher, IonRefresherContent, IonLoading } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { calendar, location, time, people, arrowBack } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
@@ -19,19 +19,31 @@ const Events: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    
+    const loadUpcomingEvents = async () => {
+      try {
+        const data = await apiService.getEvents({ published: 'true', limit: 50 });
+        if (isMounted) {
+          setUpcomingEvents(data.events || []);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+        if (isMounted) {
+          setUpcomingEvents([]);
+        }
+      }
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+    
     loadUpcomingEvents();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  const loadUpcomingEvents = async () => {
-    try {
-      const data = await apiService.getEvents({ published: 'true', limit: 50 });
-      setUpcomingEvents(data.events || []);
-    } catch (error) {
-      console.error('Error loading events:', error);
-      setUpcomingEvents([]);
-    }
-    setLoading(false);
-  };
 
   const handleRefresh = async (event: CustomEvent) => {
     await loadUpcomingEvents();
@@ -58,6 +70,7 @@ const Events: React.FC = () => {
 
   return (
     <IonPage>
+      <IonLoading isOpen={loading} message="Loading events..." duration={10000} />
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
           

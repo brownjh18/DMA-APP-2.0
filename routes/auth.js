@@ -112,6 +112,12 @@ router.post('/signup', [
   body('phone').optional().isMobilePhone().withMessage('Invalid phone number')
 ], async (req, res) => {
   try {
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not configured on the server');
+      return res.status(500).json({ error: 'Server configuration error. Please contact administrator.' });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -182,6 +188,12 @@ router.post('/register', [
   body('role').optional().isIn(['admin', 'moderator', 'user']).withMessage('Invalid role')
 ], async (req, res) => {
   try {
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not configured on the server');
+      return res.status(500).json({ error: 'Server configuration error. Please contact administrator.' });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -234,6 +246,12 @@ router.post('/login', [
   body('password').exists().withMessage('Password required')
 ], async (req, res) => {
   try {
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not configured on the server');
+      return res.status(500).json({ error: 'Server configuration error. Please contact administrator.' });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });

@@ -46,24 +46,34 @@ const EventDetail: React.FC = () => {
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    loadEvent();
-  }, [id]);
-
-  const loadEvent = async () => {
-    try {
-      const data = await apiService.getEvent(id);
-      if (data && data.event) {
-        setEvent(data.event);
-      } else {
-        console.error('Failed to load event');
-        history.push('/events');
+    let isMounted = true;
+    
+    const loadEvent = async () => {
+      try {
+        const data = await apiService.getEvent(id);
+        if (isMounted) {
+          if (data && data.event) {
+            setEvent(data.event);
+          } else {
+            console.error('Failed to load event');
+            if (isMounted) history.push('/events');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading event:', error);
+        if (isMounted) history.push('/events');
       }
-    } catch (error) {
-      console.error('Error loading event:', error);
-      history.push('/events');
-    }
-    setLoading(false);
-  };
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+    
+    loadEvent();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   const handleRegister = async () => {
     if (!event || !event.registrationRequired) return;

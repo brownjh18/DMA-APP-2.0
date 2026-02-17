@@ -11,6 +11,16 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+// Validate critical environment variables
+const requiredEnvVars = ['JWT_SECRET', 'MONGODB_URI'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+  console.warn('⚠️  Missing environment variables:', missingEnvVars.join(', '));
+  console.warn('⚠️  Please configure these in Vercel dashboard or .env file');
+} else {
+  console.log('✅ All required environment variables are configured');
+}
+
 // Import services
 const liveCache = require('./services/liveCache');
 const cloudStorage = require('./services/cloudStorage');
