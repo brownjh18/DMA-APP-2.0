@@ -9,14 +9,14 @@
 9        android:targetSdkVersion="35" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:14:5-67
-11-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:14:22-64
+11-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:14:5-67
+11-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:14:22-64
 12    <uses-permission android:name="android.permission.VIBRATE" />
-12-->[:capacitor-haptics] C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\haptics\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:5-66
-12-->[:capacitor-haptics] C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\haptics\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:22-63
+12-->[:capacitor-haptics] D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\haptics\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:5-66
+12-->[:capacitor-haptics] D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\haptics\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:22-63
 13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-13-->[:capacitor-network] C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\network\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:5-79
-13-->[:capacitor-network] C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\network\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:22-76
+13-->[:capacitor-network] D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\network\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:5-79
+13-->[:capacitor-network] D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\node_modules\@capacitor\network\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:22-76
 14
 15    <permission
 15-->[androidx.core:core:1.15.0] C:\Users\brown\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
@@ -30,66 +30,66 @@
 19-->[androidx.core:core:1.15.0] C:\Users\brown\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
 20
 21    <application
-21-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:5-13:19
+21-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:5-13:19
 22        android:allowBackup="true"
-22-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:18-44
+22-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:18-44
 23        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 23-->[androidx.core:core:1.15.0] C:\Users\brown\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 24        android:debuggable="true"
 25        android:extractNativeLibs="true"
 26        android:icon="@drawable/dove"
-26-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:45-74
+26-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:45-74
 27        android:label="@string/app_name"
-27-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:75-107
+27-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:75-107
 28        android:roundIcon="@drawable/dove"
-28-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:108-142
+28-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:108-142
 29        android:supportsRtl="true"
-29-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:143-169
+29-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:143-169
 30        android:theme="@style/AppTheme"
-30-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:170-201
+30-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:170-201
 31        android:usesCleartextTraffic="true" >
-31-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:202-237
+31-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:3:202-237
 32        <activity
-32-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:9-9:20
+32-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:9-9:20
 33            android:name="io.dove.ministries.africa.MainActivity"
-33-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:247-275
+33-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:247-275
 34            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
-34-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:19-146
+34-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:19-146
 35            android:exported="true"
-35-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:147-170
+35-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:147-170
 36            android:label="@string/title_activity_main"
-36-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:171-214
+36-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:171-214
 37            android:launchMode="singleTask"
-37-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:215-246
+37-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:215-246
 38            android:theme="@style/AppTheme.NoActionBarLaunch" >
-38-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:276-325
+38-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:4:276-325
 39            <intent-filter>
-39-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:5:13-8:29
+39-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:5:13-8:29
 40                <action android:name="android.intent.action.MAIN" />
-40-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:6:17-69
-40-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:6:25-66
+40-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:6:17-69
+40-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:6:25-66
 41
 42                <category android:name="android.intent.category.LAUNCHER" />
-42-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:7:17-77
-42-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:7:27-74
+42-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:7:17-77
+42-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:7:27-74
 43            </intent-filter>
 44        </activity>
 45
 46        <provider
 47            android:name="androidx.core.content.FileProvider"
-47-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:131-180
+47-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:131-180
 48            android:authorities="io.dove.ministries.africa.fileprovider"
-48-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:19-70
+48-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:19-70
 49            android:exported="false"
-49-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:71-95
+49-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:71-95
 50            android:grantUriPermissions="true" >
-50-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:96-130
+50-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:10:96-130
 51            <meta-data
-51-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:13-112
+51-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:13-112
 52                android:name="android.support.FILE_PROVIDER_PATHS"
-52-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:24-74
+52-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:24-74
 53                android:resource="@xml/file_paths" />
-53-->C:\Users\brown\Downloads\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:75-109
+53-->D:\Studies\Projects\DMA-App-main\DMA-App-main\DMA\android\app\src\main\AndroidManifest.xml:11:75-109
 54        </provider>
 55        <provider
 55-->[androidx.emoji2:emoji2:1.3.0] C:\Users\brown\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20

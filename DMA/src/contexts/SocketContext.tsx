@@ -116,11 +116,21 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [ministryDeleted, setMinistryDeleted] = useState<EventCallback>(null);
 
   useEffect(() => {
+    // Check if we're running on Vercel - Socket.IO doesn't work on Vercel free tier
+    const isVercel = import.meta.env.VITE_API_URL?.includes('vercel.app');
+    
+    if (isVercel) {
+      console.log('🔌 Socket.IO disabled: Vercel free tier doesn\'t support WebSocket connections');
+      setSocket(null);
+      setIsConnected(false);
+      return;
+    }
+
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const socketUrl = apiUrl || window.location.origin;
     
     const newSocket = io(socketUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

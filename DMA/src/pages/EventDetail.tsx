@@ -75,6 +75,17 @@ const EventDetail: React.FC = () => {
     };
   }, [id]);
 
+  const reloadEvent = async () => {
+    try {
+      const data = await apiService.getEvent(id);
+      if (data && data.event) {
+        setEvent(data.event);
+      }
+    } catch (error) {
+      console.error('Error reloading event:', error);
+    }
+  };
+
   const handleRegister = async () => {
     if (!event || !event.registrationRequired) return;
 
@@ -94,7 +105,7 @@ const EventDetail: React.FC = () => {
       if (response.ok) {
         setIsRegistered(true);
         // Reload event to get updated attendee count
-        loadEvent();
+        reloadEvent();
       } else {
         console.error('Failed to register');
       }

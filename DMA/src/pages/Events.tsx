@@ -45,6 +45,17 @@ const Events: React.FC = () => {
     };
   }, []);
 
+  const loadUpcomingEvents = async () => {
+    try {
+      const data = await apiService.getEvents({ published: 'true', limit: 50 });
+      setUpcomingEvents(data.events || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setUpcomingEvents([]);
+    }
+    setLoading(false);
+  };
+
   const handleRefresh = async (event: CustomEvent) => {
     await loadUpcomingEvents();
     event.detail.complete();
