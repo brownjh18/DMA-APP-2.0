@@ -41,6 +41,7 @@ import {
   location,
   people,
   radio,
+  arrowForward
 } from 'ionicons/icons';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -83,6 +84,10 @@ const getDevotionThumbnail = (thumbnailUrl?: string): string => {
   }
   if (thumbnailUrl.startsWith('/uploads/')) {
     return `${BACKEND_BASE_URL}${thumbnailUrl}`;
+  }
+  // Handle Cloudinary URLs
+  if (thumbnailUrl.includes('cloudinary.com')) {
+    return thumbnailUrl;
   }
   return thumbnailUrl;
 };
@@ -686,7 +691,7 @@ const Tab1: React.FC = () => {
     console.log('Loading latest ministries...');
     setMinistriesLoading(true);
     try {
-      const data = await apiService.getMinistries({ active: 'true', limit: 3 });
+      const data = await apiService.getMinistries({ active: 'all', limit: 3 });
       setLatestMinistries(data.ministries || []);
       ministriesCacheTime.current = Date.now();
       console.log('Ministries loaded successfully:', data.ministries?.length || 0, 'ministries');
@@ -787,64 +792,173 @@ const Tab1: React.FC = () => {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
-        {/* FOR YOU - DEVOTION */}
+        {/* FOR YOU - DEVOTION - Modern Design */}
         {todaysDevotion && (
           <section className="section-padding">
             <div className="section-head">
               <div className="section-title">
-                <IonIcon icon={heart} />
+                <IonIcon icon={heart} style={{ color: '#ff6b6b' }} />
                 <h2>Today's Devotion</h2>
               </div>
             </div>
 
-            <article className="devotion-card" role="article" aria-labelledby="devotion-title">
+            {/* Modern Devotion Card */}
+            <div 
+              className="modern-devotion-card"
+              onClick={() => {
+                const devotionId = todaysDevotion.id;
+                history.push(`/full-devotion?id=${devotionId}`);
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                position: 'relative',
+                boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 15px 50px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
+              }}
+            >
+              {/* Background Image with Overlay */}
               <div
-                className="devotion-media"
-                aria-hidden
                 style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   backgroundImage: `url('${getDevotionThumbnail(todaysDevotion.thumbnailUrl)}')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: 0.3,
+                  filter: 'blur(2px)',
                 }}
-              >
-                {/* subtle overlay handled by CSS */}
-              </div>
-
-              <div className="devotion-content">
-                <div className="devotion-top">
-                  <div className="devotion-date-frosted" aria-hidden>
-                    <IonIcon icon={time} />
-                    <span>{formatDate(todaysDevotion.date)}</span>
+              />
+              
+              {/* Content */}
+              <div style={{
+                position: 'relative',
+                zIndex: 2,
+                padding: '20px',
+                color: 'white',
+              }}>
+                {/* Header with Scripture Reference */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}>
+                    <IonIcon icon={book} style={{ fontSize: '14px' }} />
+                    <span>{todaysDevotion.scripture}</span>
+                  </div>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '22px',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+                    <IonIcon icon={book} style={{ fontSize: '20px' }} />
                   </div>
                 </div>
 
-                <div id="devotion-title" className="devotion-verse">
-                  <h3>{todaysDevotion.title}</h3>
-                  <p className="verse-text">"{todaysDevotion.content}"</p>
-                  <p className="verse-text scripture-ref" style={{ fontSize: '0.9em', marginTop: '8px' }}>
-                    {todaysDevotion.scripture}
-                  </p>
-                </div>
+                {/* Title and Scripture */}
+                <h3 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '22px',
+                  fontWeight: '800',
+                  lineHeight: '1.3',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                }}>
+                  {todaysDevotion.title}
+                </h3>
+                
+                <p style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '15px',
+                  fontStyle: 'italic',
+                  opacity: 0.95,
+                  lineHeight: '1.5',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}>
+                  "{todaysDevotion.content}"
+                </p>
 
-                <div className="devotion-bottom">
-                  <p className="devotion-summary">
-                    {todaysDevotion.reflection}
-                  </p>
-
-                  <div className="devotion-cta">
-                    <button
-                      className="frosted-read-btn"
-                      aria-label="Read full devotion"
-                      onClick={() => {
-                        const devotionId = todaysDevotion.id;
-                        console.log('Button clicked, navigating to:', `/full-devotion?id=${devotionId}`);
-                        history.push(`/full-devotion?id=${devotionId}`);
-                      }}
-                    >
-                      <IonIcon icon={book} />
-                    </button>
+                {/* Read More Button */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '20px',
+                    background: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  }}>
+                    <IonIcon 
+                      icon={arrowForward} 
+                      style={{ 
+                        fontSize: '18px', 
+                        color: '#667eea',
+                        marginLeft: '2px'
+                      }} 
+                    />
                   </div>
                 </div>
               </div>
-            </article>
+
+              {/* Decorative Elements */}
+              <div style={{
+                position: 'absolute',
+                top: '-50px',
+                right: '-50px',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }} />
+              <div style={{
+                position: 'absolute',
+                bottom: '-30px',
+                left: '-30px',
+                width: '100px',
+                height: '100px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                borderRadius: '50%',
+              }} />
+            </div>
           </section>
         )}
 
@@ -1146,7 +1260,11 @@ const Tab1: React.FC = () => {
                         borderRadius: '20px'
                       }}
                       onError={(e) => {
-                        e.currentTarget.src = '/bible.JPG'; // Fallback
+                        const target = e.currentTarget;
+                        if (!target.dataset['triedFallback']) {
+                          target.dataset['triedFallback'] = 'true';
+                          target.src = '/dove.png';
+                        }
                       }}
                       aria-hidden
                     />
@@ -1221,7 +1339,7 @@ const Tab1: React.FC = () => {
                           target.dataset['triedDove'] = 'true';
                           target.src = '/dove.png';
                         } else {
-                          // Second fallback: use data URL for a solid color placeholder
+                          // Second fallback: use a solid color placeholder
                           target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23f5f5f5" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999" font-size="12">Ministry</text></svg>');
                         }
                       }}
@@ -1252,12 +1370,8 @@ const Tab1: React.FC = () => {
           </div>
         </section>
 
-        {/* ABOUT DMA */}
-        <div style={{
-          padding: '20px',
-          maxWidth: '400px',
-          margin: '20px auto'
-        }}>
+        {/* ABOUT DOVE CHURCH */}
+        <section className="section-padding">
           <div style={{
             backgroundColor: 'var(--ion-background-color)',
             borderRadius: '16px',
@@ -1280,7 +1394,7 @@ const Tab1: React.FC = () => {
                 fontWeight: '700',
                 color: 'var(--ion-text-color)'
               }}>
-                About DMA
+                About Dove Church
               </h2>
             </div>
 
@@ -1294,21 +1408,22 @@ const Tab1: React.FC = () => {
               Transforming lives through faith, community, and service across Africa since 2005.
             </p>
 
-            <IonRouterLink routerLink="/tab5">
-              <IonButton style={{
+            <IonButton 
+              onClick={() => history.push('/tab5')}
+              style={{
                 width: '100%',
-                height: '44px',
-                borderRadius: '8px',
+                height: '48px',
+                borderRadius: '12px',
                 fontWeight: '600',
+                fontSize: '16px',
                 backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '8px'
+                '--border-radius': '12px'
               }}>
-                <IonIcon icon={informationCircle} slot="start" />
-                Learn More
-              </IonButton>
-            </IonRouterLink>
+              <IonIcon icon={arrowForward} slot="end" />
+              Know More
+            </IonButton>
           </div>
-        </div>
+        </section>
       </IonContent>
     </IonPage>
   );
