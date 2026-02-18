@@ -7,31 +7,38 @@ const multer = require('multer');
 const path = require('path');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { profileStorage: cloudProfileStorage, isConfigured: cloudIsConfigured } = require('../services/cloudStorage');
 
-// Configure multer for profile picture uploads
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + req.user.id + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const profileUpload = multer({
-  storage: profileStorage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit for profile pictures
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
+// Configure multer for profile picture uploads - use Cloudinary if available
+let profileUpload;
+if (cloudIsConfigured) {
+  profileUpload = multer({ storage: cloudProfileStorage });
+} else {
+  // Fallback to disk storage if Cloudinary is not configured
+  const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, './uploads');
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'profile-' + req.user.id + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-  }
-});
+  });
+  
+  profileUpload = multer({
+    storage: profileStorage,
+    limits: {
+      fileSize: 10 * 1024 * 1024 // 10MB limit for profile pictures
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    }
+  });
+}
 
 // Passport Google OAuth configuration (only if credentials are provided)
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -259,36 +266,7 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Demo authentication - accept admin credentials
-    if (email === 'admin@doveministriesafrica.org' && password === 'admin123') {
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          id: 'demo-admin-id',
-          name: 'Admin User',
-          email: email,
-          role: 'admin',
-          profilePicture: '/uploads/profile-demo-admin-id-1763714358980-580467867.jpg' // Default demo profile picture
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '365d' }
-      );
-
-      res.json({
-        message: 'Login successful',
-        token,
-        user: {
-          id: 'demo-admin-id',
-          name: 'Admin User',
-          email: email,
-          role: 'admin',
-          profilePicture: '/uploads/profile-demo-admin-id-1763714358980-580467867.jpg'
-        }
-      });
-      return;
-    }
-
-    // For all other users, check against database
+    // For all users, check against database
     try {
       const user = await User.findOne({ email });
       if (!user) {
@@ -305,6 +283,10 @@ router.post('/login', [
       if (!user.isActive) {
         return res.status(401).json({ error: 'Account is deactivated' });
       }
+
+      // Update last login
+      user.lastLogin = new Date();
+      await user.save();
 
       // Generate JWT token
       const token = jwt.sign(
@@ -346,17 +328,23 @@ router.post('/login', [
 // Get current user profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    // Return demo user data based on token
-    const user = {
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-      phone: req.user.phone,
-      profilePicture: req.user.profilePicture
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Return user data based on token
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      profilePicture: user.profilePicture
     };
 
-    res.json({ user });
+    res.json({ user: userData });
   } catch (error) {
     console.error('Profile fetch error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -374,41 +362,9 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    console.log('Profile update request:', {
-      userId: req.user.id,
-      isDemoUser: req.user.id.startsWith('demo-'),
-      requestBody: req.body,
-      currentUserName: req.user.name
-    });
-
-    // For demo users, return updated data with new token
-    if (req.user.id.startsWith('demo-')) {
-      const updatedUser = {
-        id: req.user.id,
-        name: req.body.name || req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        phone: req.body.phone
-      };
-
-      console.log('Demo user update - using current user data:', updatedUser);
-
-      // Generate new token with updated data
-      const newToken = jwt.sign(updatedUser, process.env.JWT_SECRET, { expiresIn: '365d' });
-
-      res.json({
-        message: 'Profile updated successfully',
-        token: newToken,
-        user: updatedUser
-      });
-      return;
-    }
-
     const updates = {};
     if (req.body.name) updates.name = req.body.name;
     if (req.body.phone) updates.phone = req.body.phone;
-
-    console.log('Database updates to apply:', updates);
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -420,8 +376,6 @@ router.put('/profile', authenticateToken, [
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('Updated user from database:', user);
-
     const responseUser = {
       id: user._id,
       name: user.name,
@@ -430,8 +384,6 @@ router.put('/profile', authenticateToken, [
       profilePicture: user.profilePicture,
       phone: user.phone
     };
-
-    console.log('Sending response:', responseUser);
 
     res.json({
       message: 'Profile updated successfully',
@@ -453,29 +405,8 @@ router.post('/upload-profile-picture', [
       return res.status(400).json({ error: 'Profile picture file is required' });
     }
 
-    const profilePictureUrl = `/uploads/${req.file.filename}`;
-
-    // For demo users, return updated data with new token
-    if (req.user.id.startsWith('demo-')) {
-      const updatedUser = {
-        id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        profilePicture: profilePictureUrl,
-        phone: req.user.phone
-      };
-
-      // Generate new token with updated data
-      const newToken = jwt.sign(updatedUser, process.env.JWT_SECRET, { expiresIn: '365d' });
-
-      res.json({
-        message: 'Profile picture uploaded successfully',
-        token: newToken,
-        user: updatedUser
-      });
-      return;
-    }
+    // Get the profile picture URL - Cloudinary returns URL in req.file.path, disk storage in req.file.filename
+    const profilePictureUrl = req.file.path || `/uploads/${req.file.filename}`;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -543,26 +474,7 @@ router.put('/change-password', authenticateToken, [
 router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await User.find({}).select('-password').sort({ createdAt: -1 });
-
-    // Include demo users if the current user is a demo user
-    const allUsers = [...users];
-    if (req.user.id.startsWith('demo-')) {
-      // Add the current demo user to the list
-      const demoUser = {
-        _id: req.user.id,
-        id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        isActive: true, // Demo users are always active
-        profilePicture: req.user.profilePicture,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      allUsers.unshift(demoUser); // Add to beginning of array
-    }
-
-    res.json({ users: allUsers });
+    res.json({ users });
   } catch (error) {
     console.error('Users fetch error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -584,26 +496,23 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     if (req.body.role) updates.role = req.body.role;
     if (req.body.isActive !== undefined) updates.isActive = req.body.isActive;
 
-    // Handle demo users (non-MongoDB ObjectId IDs)
-    if (req.params.id.startsWith('demo-')) {
-      // For demo users, return a mock response since they don't exist in the database
-      const mockUser = {
-        _id: req.params.id,
-        id: req.params.id,
-        name: req.params.id === 'demo-admin-id' ? 'Admin User' : 'Demo User',
-        email: req.params.id === 'demo-admin-id' ? 'admin@doveministriesafrica.org' : 'demo@example.com',
-        role: req.body.role || (req.params.id === 'demo-admin-id' ? 'admin' : 'user'),
-        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-        profilePicture: req.params.id === 'demo-admin-id' ? '/uploads/profile-demo-admin-id-1763714358980-580467867.jpg' : null,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+    // Get the target user to check if it's the protected admin
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-      res.json({
-        message: 'User updated successfully',
-        user: mockUser
-      });
-      return;
+    // Protect the default admin account from being demoted
+    const protectedAdminEmail = 'brownjh18@gmail.com';
+    if (targetUser.email === protectedAdminEmail) {
+      // Check if trying to change role away from admin
+      if (req.body.role && req.body.role !== 'admin') {
+        return res.status(403).json({ error: 'Cannot change role of the default admin account' });
+      }
+      // Check if trying to deactivate the admin
+      if (req.body.isActive === false) {
+        return res.status(403).json({ error: 'Cannot deactivate the default admin account' });
+      }
     }
 
     const user = await User.findByIdAndUpdate(
@@ -629,11 +538,19 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
 // Delete user (admin only)
 router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // Protect the default admin account from being deleted
+    const protectedAdminEmail = 'brownjh18@gmail.com';
+    if (user.email === protectedAdminEmail) {
+      return res.status(403).json({ error: 'Cannot delete the default admin account' });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
 
     res.json({
       message: 'User deleted successfully'

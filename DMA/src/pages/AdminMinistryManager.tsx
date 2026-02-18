@@ -35,6 +35,7 @@ import {
 } from 'ionicons/icons';
 import './Tab4.css';
 import { BACKEND_BASE_URL } from '../services/api';
+import { apiService } from '../services/api';
 
 const AdminMinistryManager: React.FC = () => {
   const history = useHistory();
@@ -79,34 +80,22 @@ const AdminMinistryManager: React.FC = () => {
 
   const loadMinistries = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/ministries?page=1&limit=100', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const formattedMinistries = data.ministries.map((ministry: any) => ({
-          id: ministry._id,
-          name: ministry.name,
-          leader: ministry.leader,
-          description: ministry.description,
-          members: ministry.memberCount || 0,
-          status: ministry.isActive ? 'active' : 'inactive',
-          meetings: ministry.meetingSchedule || 'TBD',
-          category: ministry.category,
-          endTime: ministry.endTime,
-          contactEmail: ministry.contactEmail,
-          contactPhone: ministry.contactPhone,
-          imageUrl: ministry.imageUrl
-        }));
-        setMinistries(formattedMinistries);
-      } else {
-        console.error('Failed to load ministries');
-      }
+      const data = await apiService.getMinistries({ page: 1, limit: 100 });
+      const formattedMinistries = data.ministries.map((ministry: any) => ({
+        id: ministry._id,
+        name: ministry.name,
+        leader: ministry.leader,
+        description: ministry.description,
+        members: ministry.memberCount || 0,
+        status: ministry.isActive ? 'active' : 'inactive',
+        meetings: ministry.meetingSchedule || 'TBD',
+        category: ministry.category,
+        endTime: ministry.endTime,
+        contactEmail: ministry.contactEmail,
+        contactPhone: ministry.contactPhone,
+        imageUrl: ministry.imageUrl
+      }));
+      setMinistries(formattedMinistries);
     } catch (error) {
       console.error('Error loading ministries:', error);
     }
@@ -120,26 +109,12 @@ const AdminMinistryManager: React.FC = () => {
 
   const toggleStatus = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
       const ministry = ministries.find(m => m.id === id);
       if (!ministry) return;
 
       const newStatus = ministry.status === 'active' ? false : true;
-
-      const response = await fetch(`/api/ministries/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isActive: newStatus })
-      });
-
-      if (response.ok) {
-        await loadMinistries(); // Reload to get updated data from server
-      } else {
-        console.error('Failed to update ministry status');
-      }
+      await apiService.updateMinistry(id, { isActive: newStatus });
+      await loadMinistries(); // Reload to get updated data from server
     } catch (error) {
       console.error('Error updating ministry status:', error);
     }
@@ -147,20 +122,8 @@ const AdminMinistryManager: React.FC = () => {
 
   const deleteMinistry = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/ministries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        await loadMinistries(); // Reload to get updated data from server
-      } else {
-        console.error('Failed to delete ministry');
-      }
+      await apiService.deleteMinistry(id);
+      await loadMinistries(); // Reload to get updated data from server
     } catch (error) {
       console.error('Error deleting ministry:', error);
     }

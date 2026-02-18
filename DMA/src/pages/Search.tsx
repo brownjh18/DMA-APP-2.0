@@ -58,18 +58,17 @@ const Search: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
-  const searchbarRef = useRef<HTMLIonSearchbarElement>(null);
   const history = useHistory();
   const location = useLocation();
 
-  // Auto-focus search bar when page loads
+  // Auto-focus search input when page loads
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchbarRef.current) {
-        searchbarRef.current.setFocus();
+      const searchInput = document.querySelector('.modern-searchbar input') as HTMLInputElement;
+      if (searchInput) {
+        searchInput.focus();
       }
-    }, 300); // Small delay to ensure DOM is ready
-
+    }, 300);
     return () => clearTimeout(timer);
   }, []);
 
@@ -176,63 +175,212 @@ const Search: React.FC = () => {
   ];
 
   return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
+    <IonPage className="search-page" style={{ backgroundColor: '#ffffff' }}>
+      <style>{`
+        .search-page {
+          background: #ffffff !important;
+          --ion-background-color: #ffffff !important;
+        }
+        .search-page .ion-page {
+          background: #ffffff !important;
+        }
+        .search-page > div {
+          background: #ffffff !important;
+        }
+        @media (prefers-color-scheme: dark) {
+          .search-page {
+            background: #000000 !important;
+            --ion-background-color: #000000 !important;
+          }
+        }
+      `}</style>
+      <IonHeader style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e5e5' }}>
+        <IonToolbar style={{ 
+          '--padding-start': '8px', 
+          '--padding-end': '8px',
+          '--background': 'var(--ion-background-color, #ffffff)',
+          borderBottom: '1px solid var(--ion-color-step-100, #e5e5e5)'
+        }}>
           <IonButton
             fill="clear"
             slot="start"
             onClick={() => history.goBack()}
+            style={{ '--color': 'var(--ion-color-primary)' }}
           >
             <IonIcon icon={arrowBack} />
           </IonButton>
-          <IonTitle>Search</IonTitle>
+          
+          {/* Modern Search Bar in Header */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            background: 'var(--ion-color-step-50, #f5f5f7)',
+            borderRadius: '12px',
+            padding: '0 12px',
+            height: '40px',
+            marginRight: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            border: '1px solid var(--ion-color-step-100, #e5e5e5)'
+          }} className="header-searchbar">
+            <IonIcon 
+              icon={search} 
+              style={{ 
+                color: 'var(--ion-color-primary, #007aff)', 
+                fontSize: '18px',
+                flexShrink: 0
+              }} 
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search..."
+              autoFocus
+              style={{
+                flex: 1,
+                border: 'none',
+                background: 'transparent',
+                padding: '8px',
+                fontSize: '15px',
+                color: 'var(--ion-text-color, #1c1c1e)',
+                outline: 'none',
+                fontFamily: 'inherit',
+                minWidth: '0'
+              }}
+            />
+            {searchQuery && (
+              <IonIcon 
+                icon={close} 
+                style={{ 
+                  color: 'var(--ion-color-medium, #8e8e93)', 
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setHasSearched(false);
+                }}
+              />
+            )}
+          </div>
+          <style>{`
+            @media (prefers-color-scheme: dark) {
+              .header-searchbar {
+                background: #2c2c2e !important;
+                border-color: #3a3a3c !important;
+              }
+              .header-searchbar input {
+                color: #ffffff !important;
+              }
+            }
+          `}</style>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="search-page-content">
+      <IonContent 
+        className="search-page-content"
+        style={{ 
+          '--ion-background-color': '#ffffff !important',
+          background: '#ffffff !important'
+        }}
+      >
         <style>{`
           .search-page-content {
-            --ion-background-color: #ffffff;
+            --ion-background-color: #ffffff !important;
+            background: #ffffff !important;
+          }
+          
+          .search-page-content .ion-page {
+            background: #ffffff !important;
+          }
+          
+          .search-page-container {
+            background: #ffffff !important;
           }
           
           @media (prefers-color-scheme: dark) {
             .search-page-content {
-              --ion-background-color: rgba(0, 0, 0, 0.95);
-              backdrop-filter: blur(20px);
-              -webkit-backdrop-filter: blur(20px);
+              --ion-background-color: #000000;
+              background: #000000;
+            }
+            .search-page-content .ion-page {
+              background: #000000 !important;
+            }
+            .search-page-container {
+              background: #000000 !important;
             }
           }
+          
+          /* Filter chips modern styling */
+          .filter-chip {
+            --background: #f5f5f7;
+            --color: #1c1c1e;
+            --border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            height: 36px;
+            --padding-start: 16px;
+            --padding-end: 16px;
+            margin: 0;
+            transition: all 0.2s ease;
+          }
+          
+          .filter-chip.selected {
+            --background: #007aff;
+            --color: #ffffff;
+          }
+          
+          @media (prefers-color-scheme: dark) {
+            .filter-chip {
+              --background: #2c2c2e;
+              --color: #ffffff;
+            }
+          }
+          
+          /* Search result card styling */
+          .search-result-item {
+            --padding-start: 12px;
+            --inner-padding-end: 12px;
+            --background: transparent;
+            border-bottom: 1px solid var(--ion-color-step-100);
+            margin-bottom: 8px;
+          }
+          
+          .search-result-item:last-child {
+            border-bottom: none;
+          }
         `}</style>
-        <div style={{ padding: '16px' }}>
-          {/* Search Bar */}
-          <IonSearchbar
-            ref={searchbarRef}
-            value={searchQuery}
-            onIonInput={(e) => handleSearchChange(e.detail.value!)}
-            onIonClear={() => {
-              setSearchQuery('');
-              setSearchResults([]);
-              setHasSearched(false);
-            }}
-            placeholder="Search sermons, events, devotions..."
-            showClearButton="always"
-          />
+        <div style={{ padding: '16px', background: '#ffffff !important' }} className="search-page-container">
 
           {/* Filter Chips */}
           <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-            <IonText color="medium" style={{ fontSize: '0.9em', marginBottom: '8px', display: 'block' }}>
+            <IonText color="medium" style={{ fontSize: '0.9em', marginBottom: '12px', display: 'block', fontWeight: '500' }}>
               Filter by:
             </IonText>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {filters.map((filter) => (
                 <IonChip
                   key={filter.value}
-                  color={selectedFilter === filter.value ? 'primary' : 'light'}
+                  color={selectedFilter === filter.value ? 'primary' : 'medium'}
                   onClick={() => handleFilterChange(filter.value)}
-                  style={{ cursor: 'pointer' }}
+                  style={{ 
+                    cursor: 'pointer',
+                    fontWeight: selectedFilter === filter.value ? '600' : '400',
+                    background: selectedFilter === filter.value ? 'var(--ion-color-primary)' : 'var(--ion-color-step-50, #f5f5f7)',
+                    borderRadius: '20px',
+                    padding: '8px 16px',
+                    height: '36px',
+                    margin: 0
+                  }}
                 >
-                  <IonLabel>{filter.label}</IonLabel>
+                  <IonLabel style={{ fontSize: '14px' }}>{filter.label}</IonLabel>
                 </IonChip>
               ))}
             </div>
@@ -241,8 +389,8 @@ const Search: React.FC = () => {
           {/* Loading State */}
           {isLoading && (
             <div style={{ textAlign: 'center', padding: '40px' }}>
-              <IonSpinner name="crescent" />
-              <IonText color="medium" style={{ display: 'block', marginTop: '16px' }}>
+              <IonSpinner name="crescent" color="primary" style={{ width: '40px', height: '40px' }} />
+              <IonText color="medium" style={{ display: 'block', marginTop: '16px', fontSize: '14px' }}>
                 Searching...
               </IonText>
             </div>
@@ -257,22 +405,41 @@ const Search: React.FC = () => {
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
                   </IonText>
 
-                  <IonList>
+                  <IonList lines="none" style={{ background: 'transparent' }}>
                     {searchResults.map((result, index) => (
-                      <IonItem
+                      <div
                         key={`${result.type}-${result.id}-${index}`}
-                        button
                         onClick={() => history.push(result.url)}
-                        style={{ '--padding-start': '16px', '--inner-padding-end': '16px' }}
+                        style={{
+                          display: 'flex',
+                          gap: '16px',
+                          padding: '12px',
+                          marginBottom: '12px',
+                          background: 'var(--ion-background-color, #ffffff)',
+                          borderRadius: '16px',
+                          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                          border: '1px solid var(--ion-color-step-100, #e5e5e5)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+                        }}
                       >
                         {/* Thumbnail */}
                         <div
-                          slot="start"
                           style={{
-                            marginRight: '16px',
-                            width: '120px',
-                            height: '120px',
-                            flexShrink: 0
+                            width: '100px',
+                            height: '100px',
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            background: 'var(--ion-color-step-100)'
                           }}
                         >
                           {result.image ? (
@@ -282,12 +449,19 @@ const Search: React.FC = () => {
                               style={{
                                 width: '100%',
                                 height: '100%',
-                                borderRadius: '12px',
                                 objectFit: 'cover'
                               }}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = '/bible.JPG';
+                                // Use type-specific fallback images
+                                if (result.type === 'devotion') {
+                                  target.src = '/hero-evangelism.jpg';
+                                } else if (result.type === 'event' || result.type === 'ministry') {
+                                  target.src = '/dove.png';
+                                } else {
+                                  target.src = '/bible.JPG';
+                                }
+                                target.onerror = null; // Prevent infinite loop
                               }}
                             />
                           ) : (
@@ -295,42 +469,42 @@ const Search: React.FC = () => {
                               style={{
                                 width: '100%',
                                 height: '100%',
-                                borderRadius: '12px',
-                                backgroundColor: 'var(--ion-color-light-shade)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))'
                               }}
                             >
                               <IonIcon
                                 icon={getTypeIcon(result.type)}
-                                color={getTypeColor(result.type)}
+                                color="light"
                                 size="large"
                               />
                             </div>
                           )}
                         </div>
 
-                        <IonLabel>
-                          <h2 style={{ fontWeight: '600', marginBottom: '4px' }}>{result.title}</h2>
-                          <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9em', marginBottom: '4px' }}>
+                        <IonLabel style={{ flex: 1, margin: '0 12px' }}>
+                          <h2 style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>{result.title}</h2>
+                          <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.85em', marginBottom: '4px' }}>
                             {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                           </p>
                           {result.description && (
                             <p style={{
                               color: 'var(--ion-color-medium)',
-                              fontSize: '0.85em',
+                              fontSize: '0.8em',
                               lineHeight: '1.4',
                               display: '-webkit-box',
                               WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              marginBottom: '4px'
                             }}>
                               {result.description}
                             </p>
                           )}
                           {result.date && (
-                            <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.8em', marginTop: '4px' }}>
+                            <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.75em' }}>
                               {new Date(result.date).toLocaleDateString()}
                             </p>
                           )}
@@ -338,12 +512,16 @@ const Search: React.FC = () => {
 
                         <IonBadge
                           color={getTypeColor(result.type)}
-                          slot="end"
-                          style={{ fontSize: '0.7em', padding: '4px 8px' }}
+                          style={{ 
+                            fontSize: '0.65em', 
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            alignSelf: 'center'
+                          }}
                         >
                           {result.type}
                         </IonBadge>
-                      </IonItem>
+                      </div>
                     ))}
                   </IonList>
                 </>

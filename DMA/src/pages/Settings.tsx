@@ -5,28 +5,42 @@ import {
   IonTitle,
   IonContent,
   IonIcon,
-  IonToggle,
-  IonSelect,
-  IonSelectOption,
+  IonButton,
   IonItem,
   IonLabel,
+  IonToggle,
+  IonAlert,
 } from "@ionic/react";
 
 import {
-  moon,
-  language,
-  informationCircle,
   settingsSharp,
-  heart,
   arrowBack,
+  moon,
+  sunny,
+  phonePortrait,
+  notifications,
+  trash,
+  informationCircleOutline,
+  shieldCheckmark,
+  documentText,
 } from "ionicons/icons";
 
 import { useSettings } from '../contexts/SettingsContext';
 import { useHistory } from 'react-router-dom';
+import { useState } from 'react';
 
 const Settings: React.FC = () => {
   const history = useHistory();
-  const { language, darkMode, setLanguage, setDarkMode } = useSettings();
+  const { 
+    appearance, 
+    setAppearance,
+    pushNotifications,
+    setPushNotifications,
+    clearCache,
+  } = useSettings();
+
+  const [showClearCacheAlert, setShowClearCacheAlert] = useState(false);
+
   return (
     <IonPage>
       <IonHeader translucent>
@@ -116,66 +130,270 @@ const Settings: React.FC = () => {
             </p>
           </div>
 
-          {/* Essential Settings */}
-          <div style={{ marginBottom: '32px' }}>
-            {/* Language Selection */}
-            <IonItem
+          {/* Appearance Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{
+              fontSize: '0.9em',
+              fontWeight: '600',
+              color: 'var(--ion-color-primary)',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Appearance
+            </h3>
+            
+            {/* Appearance Selection - 3 Icons Horizontally */}
+            <div
               style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
+                borderRadius: '16px',
                 border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                padding: '16px',
+                background: 'var(--ion-background-color, #ffffff)'
               }}
-              lines="none"
             >
-              <IonIcon icon={language} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>Language</IonLabel>
-              <IonSelect
-                placeholder="Select language"
-                value={language}
-                onIonChange={(e) => setLanguage(e.detail.value)}
-              >
-                <IonSelectOption value="en">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    🇺🇸 English
-                  </div>
-                </IonSelectOption>
-                <IonSelectOption value="sw">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    🇰🇪 Swahili
-                  </div>
-                </IonSelectOption>
-                <IonSelectOption value="lg">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    🇺🇬 Luganda
-                  </div>
-                </IonSelectOption>
-              </IonSelect>
-            </IonItem>
+              <div style={{
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <IonIcon icon={phonePortrait} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                  <IonLabel style={{ margin: 0 }}>Theme</IonLabel>
+                </div>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                gap: '8px'
+              }}>
+                {/* System Option */}
+                <IonButton
+                  fill={appearance === 'system' ? 'solid' : 'clear'}
+                  onClick={() => setAppearance('system')}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 'auto',
+                    '--border-radius': '10px',
+                    '--padding-start': '12px',
+                    '--padding-end': '12px',
+                    '--padding-top': '10px',
+                    '--padding-bottom': '10px',
+                    flex: 1,
+                    '--background': appearance === 'system' 
+                      ? 'var(--ion-color-primary)' 
+                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
+                    '--color': appearance === 'system' ? '#ffffff' : 'var(--ion-text-color)',
+                  }}
+                >
+                  <IonIcon 
+                    icon={phonePortrait} 
+                    style={{ fontSize: '18px' }} 
+                  />
+                  <span style={{ fontSize: '10px', marginTop: '2px' }}>System</span>
+                </IonButton>
 
-            {/* Dark Mode Toggle */}
-            <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
-              lines="none"
-            >
-              <IonIcon icon={moon} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-              <IonLabel>Dark Mode</IonLabel>
-              <IonToggle
-                slot="end"
-                checked={darkMode}
-                onIonChange={(e) => setDarkMode(e.detail.checked)}
-              />
-            </IonItem>
+                {/* Light Option */}
+                <IonButton
+                  fill={appearance === 'light' ? 'solid' : 'clear'}
+                  onClick={() => setAppearance('light')}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 'auto',
+                    '--border-radius': '10px',
+                    '--padding-start': '12px',
+                    '--padding-end': '12px',
+                    '--padding-top': '10px',
+                    '--padding-bottom': '10px',
+                    flex: 1,
+                    '--background': appearance === 'light' 
+                      ? 'var(--ion-color-primary)' 
+                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
+                    '--color': appearance === 'light' ? '#ffffff' : 'var(--ion-text-color)',
+                  }}
+                >
+                  <IonIcon 
+                    icon={sunny} 
+                    style={{ fontSize: '18px' }} 
+                  />
+                  <span style={{ fontSize: '10px', marginTop: '2px' }}>Light</span>
+                </IonButton>
 
+                {/* Dark Option */}
+                <IonButton
+                  fill={appearance === 'dark' ? 'solid' : 'clear'}
+                  onClick={() => setAppearance('dark')}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 'auto',
+                    '--border-radius': '10px',
+                    '--padding-start': '12px',
+                    '--padding-end': '12px',
+                    '--padding-top': '10px',
+                    '--padding-bottom': '10px',
+                    flex: 1,
+                    '--background': appearance === 'dark' 
+                      ? 'var(--ion-color-primary)' 
+                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
+                    '--color': appearance === 'dark' ? '#ffffff' : 'var(--ion-text-color)',
+                  }}
+                >
+                  <IonIcon 
+                    icon={moon} 
+                    style={{ fontSize: '18px' }} 
+                  />
+                  <span style={{ fontSize: '10px', marginTop: '2px' }}>Dark</span>
+                </IonButton>
+              </div>
+            </div>
           </div>
 
+          {/* Notifications Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{
+              fontSize: '0.9em',
+              fontWeight: '600',
+              color: 'var(--ion-color-primary)',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Notifications
+            </h3>
+
+            <div
+              style={{
+                borderRadius: '16px',
+                border: '1px solid var(--ion-color-step-300)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                background: 'var(--ion-background-color, #ffffff)'
+              }}
+            >
+              {/* Push Notifications */}
+              <IonItem
+                style={{
+                  '--border-radius': '16px'
+                }}
+                lines="none"
+              >
+                <IonIcon icon={notifications} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonLabel>Push Notifications</IonLabel>
+                <IonToggle
+                  checked={pushNotifications}
+                  onIonChange={(e) => setPushNotifications(e.detail.checked)}
+                  slot="end"
+                />
+              </IonItem>
+            </div>
+          </div>
+
+          {/* Storage Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{
+              fontSize: '0.9em',
+              fontWeight: '600',
+              color: 'var(--ion-color-primary)',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Storage
+            </h3>
+
+            <div
+              style={{
+                borderRadius: '16px',
+                border: '1px solid var(--ion-color-step-300)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                background: 'var(--ion-background-color, #ffffff)'
+              }}
+            >
+              {/* Clear Cache */}
+              <IonItem
+                style={{
+                  '--border-radius': '16px',
+                  cursor: 'pointer'
+                }}
+                lines="none"
+                button
+                onClick={() => setShowClearCacheAlert(true)}
+              >
+                <IonIcon icon={trash} slot="start" style={{ color: 'var(--ion-color-danger)' }} />
+                <IonLabel style={{ color: 'var(--ion-color-danger)' }}>Clear Cache</IonLabel>
+              </IonItem>
+            </div>
+          </div>
+
+          {/* About Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{
+              fontSize: '0.9em',
+              fontWeight: '600',
+              color: 'var(--ion-color-primary)',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              About
+            </h3>
+
+            <div
+              style={{
+                borderRadius: '16px',
+                border: '1px solid var(--ion-color-step-300)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                background: 'var(--ion-background-color, #ffffff)'
+              }}
+            >
+              {/* App Version */}
+              <IonItem
+                style={{
+                  '--border-radius': '16px'
+                }}
+                lines="none"
+              >
+                <IonIcon icon={informationCircleOutline} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonLabel>App Version</IonLabel>
+                <span slot="end" style={{ opacity: 0.7 }}>1.0.0</span>
+              </IonItem>
+
+              {/* Privacy Policy */}
+              <IonItem
+                style={{
+                  '--border-radius': '16px'
+                }}
+                lines="none"
+                button
+              >
+                <IonIcon icon={shieldCheckmark} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonLabel>Privacy Policy</IonLabel>
+              </IonItem>
+
+              {/* Terms of Service */}
+              <IonItem
+                style={{
+                  '--border-radius': '16px'
+                }}
+                lines="none"
+                button
+              >
+                <IonIcon icon={documentText} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonLabel>Terms of Service</IonLabel>
+              </IonItem>
+            </div>
+          </div>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
@@ -185,11 +403,34 @@ const Settings: React.FC = () => {
               fontSize: '0.8em',
               margin: '0'
             }}>
-              Dove Ministries Africa
+              Dove Church
             </p>
           </div>
         </div>
       </IonContent>
+
+      {/* Clear Cache Confirmation Alert */}
+      <IonAlert
+        isOpen={showClearCacheAlert}
+        onDidDismiss={() => setShowClearCacheAlert(false)}
+        header="Clear Cache"
+        message="This will remove all cached data, downloads, and saved preferences. Are you sure?"
+        buttons={[
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: () => {
+              setShowClearCacheAlert(false);
+            },
+          },
+          {
+            text: 'Clear',
+            handler: () => {
+              clearCache();
+            },
+          },
+        ]}
+      />
     </IonPage>
   );
 };

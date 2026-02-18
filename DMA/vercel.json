@@ -1,4 +1,5 @@
 {
+  "name": "dove-church",
   "env": {
     "VITE_API_URL": "https://dove-church-backend.vercel.app/api",
     "VITE_BACKEND_URL": "https://dove-church-backend.vercel.app"

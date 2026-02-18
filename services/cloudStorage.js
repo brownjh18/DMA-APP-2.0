@@ -252,6 +252,7 @@ module.exports = {
   cloudinary,
   isConfigured,
   getConfigStatus,
+  profileStorage,
   uploadVideo,
   uploadThumbnail,
   uploadAudio,

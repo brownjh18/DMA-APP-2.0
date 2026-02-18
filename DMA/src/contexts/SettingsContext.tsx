@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+type AppearanceMode = 'dark' | 'light' | 'system';
+
 interface SettingsContextType {
-  language: string;
-  darkMode: boolean;
-  setLanguage: (lang: string) => void;
-  setDarkMode: (enabled: boolean) => void;
+  appearance: AppearanceMode;
+  setAppearance: (mode: AppearanceMode) => void;
+  isDarkMode: boolean;
+  pushNotifications: boolean;
+  setPushNotifications: (value: boolean) => void;
+  clearCache: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -22,50 +26,115 @@ interface SettingsProviderProps {
 }
 
 export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) => {
-  const [language, setLanguageState] = useState('en');
-  const [darkMode, setDarkModeState] = useState(false);
+  const [appearance, setAppearanceState] = useState<AppearanceMode>('system');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [pushNotifications, setPushNotificationsState] = useState(true);
 
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('app-language') || 'en';
-    const savedDarkMode = localStorage.getItem('app-dark-mode') === 'true';
+  // Check if system prefers dark mode
+  const getSystemPreference = (): boolean => {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
 
-    setLanguageState(savedLanguage);
-    setDarkModeState(savedDarkMode);
+  // Calculate actual dark mode based on appearance setting
+  const calculateDarkMode = (mode: AppearanceMode): boolean => {
+    if (mode === 'system') {
+      return getSystemPreference();
+    }
+    return mode === 'dark';
+  };
 
-    // Apply dark mode
-    applyDarkMode(savedDarkMode);
-  }, []);
-
+  // Apply dark mode to the document
   const applyDarkMode = (isDark: boolean) => {
-    // Ionic React uses ion-theme-dark class for dark mode
     if (isDark) {
       document.documentElement.setAttribute('data-theme', 'dark');
       document.documentElement.classList.add('ion-theme-dark');
     } else {
-      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', 'light');
       document.documentElement.classList.remove('ion-theme-dark');
     }
   };
 
-  const setLanguage = (lang: string) => {
-    setLanguageState(lang);
-    localStorage.setItem('app-language', lang);
-    // Here you would typically trigger a language change in your i18n system
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedAppearance = (localStorage.getItem('app-appearance') as AppearanceMode) || 'system';
+    const savedNotifications = localStorage.getItem('app-push-notifications') !== 'false';
+
+    setAppearanceState(savedAppearance);
+    setPushNotificationsState(savedNotifications);
+
+    // Calculate initial dark mode state
+    const initialDarkMode = calculateDarkMode(savedAppearance);
+    setIsDarkMode(initialDarkMode);
+    applyDarkMode(initialDarkMode);
+  }, []);
+
+  // Listen for system preference changes when in system mode
+  useEffect(() => {
+    if (appearance !== 'system') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (appearance === 'system') {
+        const newDarkMode = e.matches;
+        setIsDarkMode(newDarkMode);
+        applyDarkMode(newDarkMode);
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, [appearance]);
+
+  const setAppearance = (mode: AppearanceMode) => {
+    setAppearanceState(mode);
+    localStorage.setItem('app-appearance', mode);
+    
+    const newDarkMode = calculateDarkMode(mode);
+    setIsDarkMode(newDarkMode);
+    applyDarkMode(newDarkMode);
   };
 
-  const setDarkMode = (enabled: boolean) => {
-    setDarkModeState(enabled);
-    localStorage.setItem('app-dark-mode', enabled.toString());
-    applyDarkMode(enabled);
+  const setPushNotifications = (value: boolean) => {
+    setPushNotificationsState(value);
+    localStorage.setItem('app-push-notifications', String(value));
   };
 
+  const clearCache = () => {
+    // Clear all app-related localStorage items
+    const keysToRemove = [
+      'app-appearance',
+      'app-push-notifications',
+      'app-language',
+      'recent-searches',
+      'downloaded-sermons',
+      'favorites'
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Reload the page to reset app state
+    window.location.reload();
+  };
 
   const value: SettingsContextType = {
-    language,
-    darkMode,
-    setLanguage,
-    setDarkMode,
+    appearance,
+    setAppearance,
+    isDarkMode,
+    pushNotifications,
+    setPushNotifications,
+    clearCache,
   };
 
   return (

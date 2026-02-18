@@ -350,47 +350,156 @@ const FloatingSearchIcon: React.FC = () => {
       </div>
 
 
-      {/* Search Modal - New Transparent Blur Design */}
+      {/* Search Modal - White Background for Light Mode, Blur for Dark Mode */}
       <IonModal
         isOpen={showSearchModal}
         onDidDismiss={() => setShowSearchModal(false)}
-        className="search-modal-transparent"
+        className="search-modal"
+        style={{
+          '--width': '100%',
+          '--max-width': '100%',
+          '--height': '100%',
+          '--max-height': '100%',
+          '--border-radius': '0',
+          '--margin': '0'
+        }}
       >
-        <IonHeader className="search-header-transparent">
-          <IonToolbar style={{ '--background': 'transparent' }}>
+        <IonHeader className="search-header">
+          <IonToolbar className="search-toolbar">
             <IonButton
               fill="clear"
               slot="start"
               onClick={() => setShowSearchModal(false)}
-              className="close-button-transparent"
+              style={{ '--color': 'var(--ion-color-primary)' }}
             >
               <IonIcon icon={close} />
             </IonButton>
-            <IonTitle style={{ color: 'var(--ion-text-color)' }}>Search</IonTitle>
+            
+            {/* Custom Search Bar in Header with X button inside */}
+            <div className="custom-searchbar" style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              background: 'var(--ion-color-step-50, #f5f5f7)',
+              borderRadius: '12px',
+              padding: '0 12px',
+              height: '40px',
+              marginRight: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              border: '1px solid var(--ion-color-step-100, #e5e5e5)',
+              transition: 'all 0.3s ease'
+            }}>
+              <IonIcon 
+                icon={search} 
+                style={{ 
+                  color: 'var(--ion-color-primary, #007aff)', 
+                  fontSize: '18px',
+                  flexShrink: 0
+                }} 
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search..."
+                autoFocus
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  padding: '8px',
+                  fontSize: '15px',
+                  color: 'var(--ion-text-color, #1c1c1e)',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  minWidth: '0'
+                }}
+              />
+              {searchQuery && (
+                <IonIcon 
+                  icon={close} 
+                  style={{ 
+                    color: 'var(--ion-color-medium, #8e8e93)', 
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchResults([]);
+                    setHasSearched(false);
+                  }}
+                />
+              )}
+            </div>
           </IonToolbar>
         </IonHeader>
 
-        <IonContent className="search-content-transparent">
-          <div style={{ padding: '0 16px' }}>
-            {/* Search Bar */}
-            <div className="search-bar-transparent">
-              <IonSearchbar
-                value={searchQuery}
-                onIonInput={(e: any) => handleSearchChange(e.detail.value!)}
-                onIonClear={() => {
-                  setSearchQuery('');
-                  setSearchResults([]);
-                  setHasSearched(false);
-                }}
-                placeholder="Search sermons, events, devotions..."
-                showClearButton="always"
-                style={{ '--background': 'transparent', '--color': 'var(--ion-text-color)', '--placeholder-color': 'rgba(var(--ion-text-color-rgb), 0.7)' }}
-              />
-            </div>
-
+        <IonContent className="search-content">
+          <style>{`
+            /* Full page modal on all screen sizes */
+            .search-modal {
+              --width: 100% !important;
+              --max-width: 100% !important;
+              --height: 100% !important;
+              --max-height: 100% !important;
+              --border-radius: 0 !important;
+              margin: 0 !important;
+            }
+            @media (min-width: 768px) {
+              .search-modal {
+                --width: 100% !important;
+                --max-width: 100% !important;
+              }
+            }
+            @media (prefers-color-scheme: light) {
+              .search-modal, .search-header, .search-toolbar, .search-content {
+                background: #ffffff !important;
+                --background: #ffffff !important;
+              }
+              .search-header {
+                border-bottom: 1px solid var(--ion-color-step-100, #e5e5e5);
+              }
+              .custom-searchbar {
+                background: var(--ion-color-step-50, #f5f5f7) !important;
+                border: 1px solid var(--ion-color-step-100, #e5e5e5) !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+              }
+            }
+            @media (prefers-color-scheme: dark) {
+              .search-modal, .search-header, .search-toolbar, .search-content {
+                background: transparent !important;
+                backdrop-filter: blur(20px) saturate(180%) !important;
+                -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+                --background: transparent !important;
+              }
+              .search-toolbar {
+                background: transparent !important;
+                --background: transparent !important;
+              }
+              .custom-searchbar {
+                background: rgba(30, 30, 30, 0.6) !important;
+                backdrop-filter: blur(16px) saturate(180%) !important;
+                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+              }
+            }
+            /* Use Ionic CSS variables for colors to adapt to both modes */
+            .filter-label, .loading-text, .results-count, .no-results-title, .no-results-text, .result-card-title, .result-card-subtitle, .result-card-description {
+              color: var(--ion-text-color, #1c1c1e) !important;
+            }
+            .filter-chips, .loading-spinner, .no-results {
+              color: var(--ion-text-color, #1c1c1e);
+            }
+          `}</style>
+          <div style={{ padding: '16px' }}>
             {/* Filter Chips */}
-            <div className="filter-chips-transparent">
-              <IonText style={{ fontSize: '0.9em', marginBottom: '8px', display: 'block', color: 'var(--ion-text-color)' }}>
+            <div className="filter-chips" style={{ marginTop: '0px' }}>
+              <IonText className="filter-label" style={{ fontSize: '0.9em', marginBottom: '8px', display: 'block' }}>
                 Filter by:
               </IonText>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -408,9 +517,9 @@ const FloatingSearchIcon: React.FC = () => {
 
             {/* Loading State */}
             {isLoading && (
-              <div className="loading-spinner-transparent">
+              <div className="loading-spinner" style={{ textAlign: 'center', padding: '40px' }}>
                 <IonSpinner name="crescent" color="primary" />
-                <IonText style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
+                <IonText className="loading-text" style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
                   Searching...
                 </IonText>
               </div>
@@ -421,7 +530,7 @@ const FloatingSearchIcon: React.FC = () => {
               <>
                 {searchResults.length > 0 ? (
                   <div style={{ marginBottom: '20px' }}>
-                    <IonText style={{ fontSize: '0.9em', marginBottom: '16px', display: 'block', color: 'var(--ion-text-color)' }}>
+                    <IonText className="results-count" style={{ fontSize: '0.9em', marginBottom: '16px', display: 'block', color: 'var(--ion-text-color)' }}>
                       {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
                     </IonText>
 
@@ -443,7 +552,15 @@ const FloatingSearchIcon: React.FC = () => {
                               className="result-card-thumbnail"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = '/bible.JPG';
+                                // Use type-specific fallback images
+                                if (result.type === 'devotion') {
+                                  target.src = '/hero-evangelism.jpg';
+                                } else if (result.type === 'event' || result.type === 'ministry') {
+                                  target.src = '/dove.png';
+                                } else {
+                                  target.src = '/bible.JPG';
+                                }
+                                target.onerror = null; // Prevent infinite loop
                               }}
                             />
                           ) : (
@@ -453,7 +570,7 @@ const FloatingSearchIcon: React.FC = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: 'rgba(var(--ion-text-color-rgb), 0.1)'
+                                backgroundColor: 'var(--ion-color-step-100, rgba(28, 28, 30, 0.1))'
                               }}
                             >
                               <IonIcon
@@ -464,18 +581,27 @@ const FloatingSearchIcon: React.FC = () => {
                           )}
 
                           {/* Content */}
-                          <div className="result-card-info">
-                            <div className="result-card-title">{result.title}</div>
-                            <div className="result-card-subtitle">
+                          <div className="result-card-info" style={{ flex: 1, margin: '0 12px' }}>
+                            <div className="result-card-title" style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px', color: 'var(--ion-text-color)' }}>{result.title}</div>
+                            <div className="result-card-subtitle" style={{ color: 'var(--ion-color-medium)', fontSize: '0.85em', marginBottom: '4px' }}>
                               {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                             </div>
                             {result.description && (
-                              <div className="result-card-description">
+                              <div className="result-card-description" style={{
+                                color: 'var(--ion-color-medium)',
+                                fontSize: '0.8em',
+                                lineHeight: '1.4',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                marginBottom: '4px'
+                              }}>
                                 {result.description}
                               </div>
                             )}
                             {result.date && (
-                              <div style={{ color: 'rgba(var(--ion-text-color-rgb), 0.6)', fontSize: '0.8em', marginTop: '4px' }}>
+                              <div style={{ color: 'var(--ion-color-medium)', fontSize: '0.8em', marginTop: '4px' }}>
                                 {new Date(result.date).toLocaleDateString()}
                               </div>
                             )}
@@ -490,15 +616,14 @@ const FloatingSearchIcon: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="no-results-transparent">
+                  <div className="no-results" style={{ textAlign: 'center', padding: '40px 20px' }}>
                     <IonIcon
                       icon={search}
                       size="large"
-                      className="no-results-icon"
-                      style={{ marginBottom: '16px' }}
+                      style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }}
                     />
-                    <div className="no-results-title">No results found</div>
-                    <div className="no-results-text">Try different keywords or check your spelling</div>
+                    <div className="no-results-title" style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>No results found</div>
+                    <div className="no-results-text" style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Try different keywords or check your spelling</div>
                   </div>
                 )}
               </>
@@ -506,15 +631,14 @@ const FloatingSearchIcon: React.FC = () => {
 
             {/* Initial State */}
             {!hasSearched && !isLoading && (
-              <div className="no-results-transparent">
+              <div className="no-results" style={{ textAlign: 'center', padding: '60px 20px' }}>
                 <IonIcon
                   icon={search}
                   size="large"
-                  className="no-results-icon"
-                  style={{ marginBottom: '16px' }}
+                  style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }}
                 />
-                <div className="no-results-title">Search Content</div>
-                <div className="no-results-text">Find sermons, events, devotions, and more</div>
+                <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>Search Content</div>
+                <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Find sermons, events, devotions, and more</div>
               </div>
             )}
           </div>

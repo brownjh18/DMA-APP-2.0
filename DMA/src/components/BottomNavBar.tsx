@@ -15,6 +15,16 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
   const { isAdmin, user } = useContext(AuthContext);
   const [shineContainer, setShineContainer] = useState<string | null>(null);
 
+  // Enhanced theme colors using CSS variables for instant updates
+  const theme = {
+    background: 'rgba(var(--ion-background-color-rgb), 0.95)',
+    text: 'var(--ion-text-color)',
+    active: 'var(--ion-color-primary)',
+    primaryGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    border: 'var(--ion-color-step-100, rgba(0, 0, 0, 0.08))',
+    shadow: 'var(--ion-box-shadow, 0 -8px 32px rgba(0, 0, 0, 0.12))',
+  };
+
   // Determine active based on current path
   const getActive = () => {
     switch (location.pathname) {
@@ -26,29 +36,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
     }
   };
   const active = getActive();
-
-
-
-  // Enhanced theme colors and styling
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = {
-    background: 'rgba(var(--ion-background-color-rgb), 0.95)',
-    text: 'var(--ion-text-color)',
-    active: 'var(--ion-color-primary)',
-    // Enhanced color palette
-    primaryGradient: isDarkMode 
-      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    surface: isDarkMode 
-      ? 'linear-gradient(135deg, rgba(30, 30, 60, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%)'
-      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
-    border: isDarkMode 
-      ? 'rgba(255, 255, 255, 0.1)' 
-      : 'rgba(0, 0, 0, 0.08)',
-    shadow: isDarkMode
-      ? '0 -8px 32px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.3)'
-      : '0 -8px 32px rgba(0, 0, 0, 0.12), 0 -4px 16px rgba(0, 0, 0, 0.08)',
-  };
 
   const navigationItems = [
     { name: 'sidebar', label: 'Menu', icon: menu, path: null, action: 'sidebar' },
@@ -81,6 +68,17 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
   return (
     <>
       <style>{`
+        /* Bottom Nav Bar - Instant dark/light mode response */
+        .bottom-nav-bar {
+          border-top: 1px solid var(--ion-color-step-100, rgba(0, 0, 0, 0.08));
+          box-shadow: var(--ion-box-shadow, 0 -8px 32px rgba(0, 0, 0, 0.12));
+        }
+        @media (prefers-color-scheme: dark) {
+          .bottom-nav-bar {
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.3) !important;
+          }
+        }
         @keyframes iconPulse {
           0% { transform: scale(1); }
           50% { transform: scale(1.1); }
@@ -147,7 +145,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
       `}</style>
       
       {/* Icon-Only Navigation Bar */}
-      <div style={{
+      <div className="bottom-nav-bar" style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
@@ -156,8 +154,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
         background: 'transparent',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
-        borderTop: `1px solid ${theme.border}`,
-        boxShadow: theme.shadow,
         zIndex: 999,
         display: 'flex',
         alignItems: 'flex-start',

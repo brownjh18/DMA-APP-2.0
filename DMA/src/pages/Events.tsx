@@ -22,19 +22,35 @@ const Events: React.FC = () => {
     let isMounted = true;
     
     const loadUpcomingEvents = async () => {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       try {
-        const data = await apiService.getEvents({ published: 'true', limit: 50 });
-        if (isMounted) {
-          setUpcomingEvents(data.events || []);
+        const response = await fetch(`${BACKEND_BASE_URL}/api/events?published=true&limit=50`, {
+          signal: controller.signal
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setUpcomingEvents(data.events || []);
+          }
+        } else {
+          if (isMounted) {
+            setUpcomingEvents([]);
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading events:', error);
         if (isMounted) {
           setUpcomingEvents([]);
         }
-      }
-      if (isMounted) {
-        setLoading(false);
+      } finally {
+        clearTimeout(timeoutId);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
@@ -81,7 +97,6 @@ const Events: React.FC = () => {
 
   return (
     <IonPage>
-      <IonLoading isOpen={loading} message="Loading events..." duration={10000} />
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
           

@@ -7,34 +7,26 @@ import {
   IonToolbar,
   IonButton,
   IonIcon,
-  IonCard,
-  IonCardContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonBadge,
   IonText,
   IonRefresher,
   IonRefresherContent,
   IonAlert,
-  IonLoading,
-  IonPopover,
   IonActionSheet
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
   add,
-  create,
   trash,
   people,
-  mail,
   person,
   checkmarkCircle,
   closeCircle,
-  time,
   calendar,
   ellipsisVertical,
-  arrowBack
+  arrowBack,
+  shield,
+  search,
+  closeCircle as closeIcon
 } from 'ionicons/icons';
 import apiService from '../services/api';
 import { useNetwork } from '../contexts/NetworkContext';
@@ -51,10 +43,28 @@ const AdminUserManager: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
-  const [animatingStat, setAnimatingStat] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Protected admin email
+  const protectedAdminEmail = 'brownjh18@gmail.com';
+
+  // Detect dark mode
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Helper to check if user is protected admin
+  const isProtectedAdmin = (user: any) => {
+    return user.email === protectedAdminEmail;
+  };
 
   useEffect(() => {
     loadUsers();
@@ -62,7 +72,6 @@ const AdminUserManager: React.FC = () => {
 
   useEffect(() => {
     if (isOnline) {
-      // Refresh the users list when coming back online
       loadUsers();
     }
   }, [isOnline]);
@@ -72,7 +81,6 @@ const AdminUserManager: React.FC = () => {
       setLoading(true);
       console.log('Starting to load users...');
       
-      // Add timeout to prevent hanging requests
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
@@ -85,7 +93,6 @@ const AdminUserManager: React.FC = () => {
     } catch (error: any) {
       console.error('Error loading users:', error);
       
-      // Show specific error message based on error type
       let errorMessage = 'Failed to load users';
       if (error.message?.includes('timeout')) {
         errorMessage = 'Request timed out. Please check your connection and try again.';
@@ -99,8 +106,6 @@ const AdminUserManager: React.FC = () => {
       
       setAlertMessage(errorMessage);
       setShowAlert(true);
-      
-      // Set empty users array on error to show no users rather than blank screen
       setUsers([]);
     } finally {
       setLoading(false);
@@ -118,6 +123,12 @@ const AdminUserManager: React.FC = () => {
       const user = users.find(u => u._id === id || u.id === id);
       if (!user) {
         setAlertMessage('User not found');
+        setShowAlert(true);
+        return;
+      }
+
+      if (isProtectedAdmin(user)) {
+        setAlertMessage('The default admin account cannot be deactivated');
         setShowAlert(true);
         return;
       }
@@ -143,12 +154,10 @@ const AdminUserManager: React.FC = () => {
         ));
       }
       
-      // If the user being updated is the currently logged-in user, update the auth context
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       const currentUserId = currentUser.id || currentUser._id;
       if (currentUserId === id && !newStatus) {
         console.log('🔄 Currently logged-in user was deactivated, logging out');
-        // If the currently logged-in user is being deactivated, log them out
         setTimeout(() => {
           try {
             history.push('/signin');
@@ -164,7 +173,6 @@ const AdminUserManager: React.FC = () => {
     } catch (error: any) {
       console.error('Error updating user status:', error);
       
-      // Provide specific error messages based on error type
       let errorMessage = 'Failed to update user status';
       if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
         errorMessage = 'Authentication failed. Please log in again.';
@@ -184,6 +192,11 @@ const AdminUserManager: React.FC = () => {
   };
 
   const openRoleModal = (user: any) => {
+    if (isProtectedAdmin(user)) {
+      setAlertMessage('The default admin account role cannot be changed');
+      setShowAlert(true);
+      return;
+    }
     setSelectedUser(user);
     setShowRoleModal(true);
   };
@@ -193,7 +206,6 @@ const AdminUserManager: React.FC = () => {
       try {
         const userId = selectedUser._id || selectedUser.id;
         
-        // Validate role
         if (!['user', 'admin'].includes(newRole)) {
           setAlertMessage('Invalid role specified');
           setShowAlert(true);
@@ -205,7 +217,6 @@ const AdminUserManager: React.FC = () => {
         const response = await apiService.updateUser(userId, { role: newRole });
         console.log('✅ Backend response:', response);
 
-        // Update local state with the returned user data from backend
         if (response.user) {
           setUsers(users.map(user => {
             const currentUserId = user._id || user.id;
@@ -216,7 +227,6 @@ const AdminUserManager: React.FC = () => {
             return user;
           }));
           
-          // If the user being updated is the currently logged-in user, update the auth context
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
           const currentUserId = currentUser.id || currentUser._id;
           if (currentUserId === userId) {
@@ -224,7 +234,6 @@ const AdminUserManager: React.FC = () => {
             updateAuthUser(response.user);
           }
         } else {
-          // Fallback: update role manually if no user data returned
           const updatedUserData = users.find(u => (u._id === userId || u.id === userId));
           setUsers(users.map(user =>
             (user._id === userId || user.id === userId)
@@ -232,7 +241,6 @@ const AdminUserManager: React.FC = () => {
               : user
           ));
           
-          // If the user being updated is the currently logged-in user, update the auth context
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
           const currentUserId = currentUser.id || currentUser._id;
           if (currentUserId === userId && updatedUserData) {
@@ -249,7 +257,6 @@ const AdminUserManager: React.FC = () => {
       } catch (error: any) {
         console.error('❌ Error updating user role:', error);
         
-        // Provide specific error messages based on error type
         let errorMessage = 'Failed to update user role';
         if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
           errorMessage = 'Authentication failed. Please log in again.';
@@ -273,6 +280,19 @@ const AdminUserManager: React.FC = () => {
 
   const deleteUser = async (id: string) => {
     try {
+      const user = users.find(u => u._id === id || u.id === id);
+      if (!user) {
+        setAlertMessage('User not found');
+        setShowAlert(true);
+        return;
+      }
+
+      if (isProtectedAdmin(user)) {
+        setAlertMessage('The default admin account cannot be deleted');
+        setShowAlert(true);
+        return;
+      }
+
       await apiService.deleteUser(id);
       setUsers(users.filter(user => (user._id !== id && user.id !== id)));
       setAlertMessage('User deleted successfully');
@@ -290,571 +310,656 @@ const AdminUserManager: React.FC = () => {
     setShowActionSheet(true);
   };
 
-  const handleStatClick = (statType: string) => {
-    // Trigger animation
-    setAnimatingStat(statType);
-    setTimeout(() => setAnimatingStat(null), 600); // Animation duration
-
-    // Update sorting/filtering
-    setSortBy(statType);
-    setFilterBy(statType === 'active' || statType === 'inactive' || statType === 'admins' ? statType : 'all');
-  };
-
-  const getSortedAndFilteredUsers = () => {
-    // Apply filter
+  const getFilteredUsers = () => {
     let filtered = users;
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(u => 
+        u.name?.toLowerCase().includes(query) || 
+        u.email?.toLowerCase().includes(query)
+      );
+    }
+
     if (filterBy === 'active') {
-      filtered = users.filter(u => u.isActive === true);
+      filtered = filtered.filter(u => u.isActive === true);
     } else if (filterBy === 'inactive') {
-      filtered = users.filter(u => u.isActive === false);
+      filtered = filtered.filter(u => u.isActive === false);
     } else if (filterBy === 'admins') {
-      filtered = users.filter(u => u.role === 'admin');
+      filtered = filtered.filter(u => u.role === 'admin');
     }
 
-    // Apply sorting
-    let sorted = [...filtered];
-    switch (sortBy) {
-      case 'date':
-        sorted.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-        break;
-      case 'active':
-      case 'inactive':
-      case 'admins':
-        sorted.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-        break;
-      default:
-        break;
-    }
-
-    return sorted;
+    return [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
   };
 
-  const getArrowIconColor = () => {
-    try {
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000';
-    } catch (error) {
-      return '#000000'; // fallback color
-    }
+  // Dynamic colors based on dark mode
+  const colors = {
+    bg: isDarkMode ? '#000000' : '#ffffff',
+    bgSecondary: isDarkMode ? '#1c1c1e' : '#f2f2f7',
+    bgTertiary: isDarkMode ? '#2c2c2e' : '#ffffff',
+    text: isDarkMode ? '#ffffff' : '#000000',
+    textSecondary: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+    textTertiary: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+    border: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    cardBg: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.8)',
+    cardBgActive: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : '#ffffff',
+    inputBg: isDarkMode ? '#2c2c2e' : '#f2f2f7',
   };
+
+  const headerBg = isDarkMode 
+    ? 'linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%)' 
+    : 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)';
+
+  const arrowColor = isDarkMode ? '#ffffff' : '#000000';
+
+  // Calculate stats
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.isActive).length;
+  const inactiveUsers = users.filter(u => !u.isActive).length;
+  const adminUsers = users.filter(u => u.role === 'admin').length;
 
   return (
-    <IonPage>
+    <IonPage style={{ backgroundColor: colors.bg }}>
+      <style>{`
+        @media (prefers-color-scheme: dark) {
+          .admin-user-page {
+            --ion-background-color: #000000 !important;
+            background: #000000 !important;
+          }
+        }
+        @media (prefers-color-scheme: light) {
+          .admin-user-page {
+            --ion-background-color: #ffffff !important;
+            background: #ffffff !important;
+          }
+        }
+      `}</style>
+      
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios">
+        <IonToolbar style={{ 
+          '--background': headerBg,
+          '--border-width': '0',
+          background: headerBg
+        }}>
           <div
             onClick={() => history.goBack()}
             style={{
               position: 'absolute',
               top: 'calc(var(--ion-safe-area-top) - -5px)',
-              left: 20,
-              width: 45,
-              height: 45,
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+              left: 16,
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               zIndex: 999,
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseDown={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(0.8)';
-            }}
-            onMouseUp={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              setTimeout(() => {
-                target.style.transform = 'scale(1)';
-              }, 200);
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(1)';
+              transition: 'all 0.2s ease'
             }}
           >
             <IonIcon
               icon={arrowBack}
               style={{
-                color: getArrowIconColor(),
-                fontSize: '20px',
+                color: arrowColor,
+                fontSize: '18px',
               }}
             />
           </div>
-          <IonTitle className="title-ios">User Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '20px' }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <IonIcon
-              icon={people}
-              style={{
-                fontSize: '3em',
-                color: 'var(--ion-color-primary)',
-                marginBottom: '16px'
-              }}
-            />
-            <h1 style={{
-              margin: '0 0 8px 0',
-              fontSize: '1.8em',
-              fontWeight: '700',
-              color: 'var(--ion-text-color)'
+      <IonContent fullscreen className="admin-user-page" style={{ 
+        '--background': colors.bg,
+        background: colors.bg
+      }}>
+        {/* Header Section */}
+        <div style={{ 
+          padding: '20px 16px', 
+          background: headerBg,
+          borderRadius: '0 0 24px 24px',
+          marginBottom: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)'
             }}>
-              User Management
-            </h1>
-            <p style={{
-              margin: '0',
-              color: 'var(--ion-text-color)',
-              opacity: 0.7,
-              fontSize: '1em'
+              <IonIcon icon={people} style={{ fontSize: '24px', color: '#fff' }} />
+            </div>
+            <div>
+              <h1 style={{
+                margin: 0,
+                fontSize: '1.5em',
+                fontWeight: '700',
+                color: '#fff',
+                letterSpacing: '-0.5px'
+              }}>
+                User Management
+              </h1>
+              <p style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '0.85em'
+              }}>
+                Manage user accounts and permissions
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(4, 1fr)', 
+          gap: '10px',
+          padding: '0 16px',
+          marginBottom: '20px'
+        }}>
+          <div 
+            onClick={() => setFilterBy(filterBy === 'all' ? 'all' : 'all')}
+            style={{
+              background: filterBy === 'all' 
+                ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' 
+                : colors.cardBg,
+              borderRadius: 16,
+              padding: '14px 10px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.3s ease',
+              boxShadow: filterBy === 'all' ? '0 8px 24px rgba(14, 165, 233, 0.3)' : 'none'
+            }}
+          >
+            <div style={{ 
+              fontSize: '1.6em', 
+              fontWeight: '700', 
+              color: filterBy === 'all' ? '#fff' : colors.text,
+              marginBottom: '4px'
             }}>
-              Manage user accounts and permissions
-            </p>
+              {totalUsers}
+            </div>
+            <div style={{ 
+              fontSize: '0.7em', 
+              color: filterBy === 'all' ? 'rgba(255, 255, 255, 0.7)' : colors.textSecondary,
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Total
+            </div>
           </div>
 
-          {/* Stats Cards */}
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            overflowX: 'auto',
-            paddingBottom: '8px',
-            marginBottom: '24px'
+          <div 
+            onClick={() => setFilterBy(filterBy === 'active' ? 'all' : 'active')}
+            style={{
+              background: filterBy === 'active' 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                : colors.cardBg,
+              borderRadius: 16,
+              padding: '14px 10px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.3s ease',
+              boxShadow: filterBy === 'active' ? '0 8px 24px rgba(16, 185, 129, 0.3)' : 'none'
+            }}
+          >
+            <div style={{ 
+              fontSize: '1.6em', 
+              fontWeight: '700', 
+              color: filterBy === 'active' ? '#fff' : colors.text,
+              marginBottom: '4px'
+            }}>
+              {activeUsers}
+            </div>
+            <div style={{ 
+              fontSize: '0.7em', 
+              color: filterBy === 'active' ? 'rgba(255, 255, 255, 0.7)' : colors.textSecondary,
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Active
+            </div>
+          </div>
+
+          <div 
+            onClick={() => setFilterBy(filterBy === 'inactive' ? 'all' : 'inactive')}
+            style={{
+              background: filterBy === 'inactive' 
+                ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
+                : colors.cardBg,
+              borderRadius: 16,
+              padding: '14px 10px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.3s ease',
+              boxShadow: filterBy === 'inactive' ? '0 8px 24px rgba(239, 68, 68, 0.3)' : 'none'
+            }}
+          >
+            <div style={{ 
+              fontSize: '1.6em', 
+              fontWeight: '700', 
+              color: filterBy === 'inactive' ? '#fff' : colors.text,
+              marginBottom: '4px'
+            }}>
+              {inactiveUsers}
+            </div>
+            <div style={{ 
+              fontSize: '0.7em', 
+              color: filterBy === 'inactive' ? 'rgba(255, 255, 255, 0.7)' : colors.textSecondary,
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Inactive
+            </div>
+          </div>
+
+          <div 
+            onClick={() => setFilterBy(filterBy === 'admins' ? 'all' : 'admins')}
+            style={{
+              background: filterBy === 'admins' 
+                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
+                : colors.cardBg,
+              borderRadius: 16,
+              padding: '14px 10px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.3s ease',
+              boxShadow: filterBy === 'admins' ? '0 8px 24px rgba(245, 158, 11, 0.3)' : 'none'
+            }}
+          >
+            <div style={{ 
+              fontSize: '1.6em', 
+              fontWeight: '700', 
+              color: filterBy === 'admins' ? '#fff' : colors.text,
+              marginBottom: '4px'
+            }}>
+              {adminUsers}
+            </div>
+            <div style={{ 
+              fontSize: '0.7em', 
+              color: filterBy === 'admins' ? 'rgba(255, 255, 255, 0.7)' : colors.textSecondary,
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Admins
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Add Bar */}
+        <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '10px',
+            marginBottom: filterBy !== 'all' ? '12px' : '0'
           }}>
             <div style={{
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              minWidth: '70px'
+              flex: 1,
+              position: 'relative',
+              background: colors.inputBg,
+              borderRadius: 14,
+              border: `1px solid ${colors.border}`
             }}>
-              <div
-                onClick={() => handleStatClick('date')}
+              <IonIcon 
+                icon={search} 
                 style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  border: '3px solid #3b82f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: sortBy === 'date' && filterBy === 'all' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  transform: animatingStat === 'date' ? 'scale(1.2) rotate(5deg)' : 'scale(1)',
-                  boxShadow: animatingStat === 'date' ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 4px rgba(59, 130, 246, 0.3)' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                {animatingStat === 'date' && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    animation: 'pulse 0.6s ease-out'
-                  }} />
-                )}
-                <div style={{
-                  fontSize: '1.2em',
-                  fontWeight: '700',
-                  color: '#3b82f6',
-                  position: 'relative',
-                  zIndex: 1,
-                  animation: animatingStat === 'date' ? 'bounce 0.6s ease-out' : 'none'
-                }}>
-                  {users.length}
-                </div>
-              </div>
-              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Total</div>
-            </div>
-            <div style={{
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              minWidth: '70px'
-            }}>
-              <div
-                onClick={() => handleStatClick('active')}
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: colors.textTertiary,
+                  fontSize: '18px'
+                }} 
+              />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  border: '3px solid #10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: filterBy === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  transform: animatingStat === 'active' ? 'scale(1.2) rotate(3deg)' : 'scale(1)',
-                  boxShadow: animatingStat === 'active' ? '0 8px 25px rgba(16, 185, 129, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.3)' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden'
+                  width: '100%',
+                  padding: '14px 14px 14px 44px',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: colors.text,
+                  fontSize: '0.95em'
                 }}
-              >
-                {animatingStat === 'active' && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    animation: 'pulse 0.6s ease-out'
-                  }} />
-                )}
-                <div style={{
-                  fontSize: '1.2em',
-                  fontWeight: '700',
-                  color: '#10b981',
-                  position: 'relative',
-                  zIndex: 1,
-                  animation: animatingStat === 'active' ? 'bounce 0.6s ease-out' : 'none'
-                }}>
-                  {users.filter(u => u.isActive).length}
-                </div>
-              </div>
-              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Active</div>
+              />
             </div>
-            <div style={{
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              minWidth: '70px'
-            }}>
-              <div
-                onClick={() => handleStatClick('inactive')}
-                style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  border: '3px solid #ef4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: filterBy === 'inactive' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  transform: animatingStat === 'inactive' ? 'scale(1.2) rotate(-3deg)' : 'scale(1)',
-                  boxShadow: animatingStat === 'inactive' ? '0 8px 25px rgba(239, 68, 68, 0.6), 0 0 0 4px rgba(239, 68, 68, 0.3)' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                {animatingStat === 'inactive' && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    background: 'radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    animation: 'pulse 0.6s ease-out'
-                  }} />
-                )}
-                <div style={{
-                  fontSize: '1.2em',
-                  fontWeight: '700',
-                  color: '#ef4444',
-                  position: 'relative',
-                  zIndex: 1,
-                  animation: animatingStat === 'inactive' ? 'bounce 0.6s ease-out' : 'none'
-                }}>
-                  {users.filter(u => !u.isActive).length}
-                </div>
-              </div>
-              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Inactive</div>
-            </div>
-            <div style={{
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              minWidth: '70px'
-            }}>
-              <div
-                onClick={() => handleStatClick('admins')}
-                style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  border: '3px solid #8b5cf6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: filterBy === 'admins' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  transform: animatingStat === 'admins' ? 'scale(1.2) rotate(2deg)' : 'scale(1)',
-                  boxShadow: animatingStat === 'admins' ? '0 8px 25px rgba(139, 92, 246, 0.6), 0 0 0 4px rgba(139, 92, 246, 0.3)' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                {animatingStat === 'admins' && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    animation: 'pulse 0.6s ease-out'
-                  }} />
-                )}
-                <div style={{
-                  fontSize: '1.2em',
-                  fontWeight: '700',
-                  color: '#8b5cf6',
-                  position: 'relative',
-                  zIndex: 1,
-                  animation: animatingStat === 'admins' ? 'bounce 0.6s ease-out' : 'none'
-                }}>
-                  {users.filter(u => u.role === 'admin').length}
-                </div>
-              </div>
-              <div style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>Admins</div>
-            </div>
-          </div>
-
-          {/* Add Button */}
-          <div style={{ marginBottom: '24px' }}>
             <IonButton
-              expand="block"
               onClick={() => history.push('/admin/users/add')}
               style={{
                 height: '48px',
-                borderRadius: '24px',
-                fontWeight: '600',
-                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.8) 0%, rgba(56, 189, 248, 0.6) 50%, rgba(56, 189, 248, 0.4) 100%)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(56, 189, 248, 0.5)',
-                boxShadow: '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                color: '#ffffff',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '--border-radius': '24px'
-              }}
-              onMouseDown={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                target.style.transform = 'scale(0.98)';
-                target.style.boxShadow = '0 4px 16px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
-              }}
-              onMouseUp={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                setTimeout(() => {
-                  target.style.transform = 'scale(1)';
-                  target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-                }, 200);
-              }}
-              onMouseLeave={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                target.style.transform = 'scale(1)';
-                target.style.boxShadow = '0 8px 32px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                boxShadow: '0 8px 24px rgba(14, 165, 233, 0.3)',
+                '--padding-start': '16px',
+                '--padding-end': '16px',
+                margin: 0
               }}
             >
-              <IonIcon icon={add} slot="start" />
-              Add User
+              <IonIcon icon={add} />
             </IonButton>
           </div>
 
-          {/* Users List */}
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
+          {/* Active Filter Badge */}
+          {filterBy !== 'all' && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              padding: '6px 12px',
+              borderRadius: 20,
+              marginBottom: '8px'
+            }}>
+              <IonText style={{ color: colors.textSecondary, fontSize: '0.8em', fontWeight: '500' }}>
+                Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
+              </IonText>
+              <div 
+                onClick={() => setFilterBy('all')}
+                style={{
+                  cursor: 'pointer',
+                  padding: '2px'
+                }}
+              >
+                <IonIcon icon={closeIcon} style={{ color: colors.textTertiary, fontSize: '16px' }} />
+              </div>
+            </div>
+          )}
+        </div>
 
-          <div style={{ marginBottom: '20px' }}>
+        {/* Users List */}
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
+
+        <div style={{ padding: '0 16px 20px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
             <h2 style={{
-              margin: '0 0 16px 0',
-              fontSize: '1.3em',
+              margin: 0,
+              fontSize: '1.1em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: colors.text
             }}>
               {filterBy === 'all' ? 'All Users' :
                filterBy === 'active' ? 'Active Users' :
                filterBy === 'inactive' ? 'Inactive Users' :
                filterBy === 'admins' ? 'Admin Users' :
                'All Users'}
-              {sortBy === 'date' && ' (Sorted by Date)'}
+              <span style={{ 
+                color: colors.textTertiary, 
+                fontWeight: '400',
+                fontSize: '0.85em',
+                marginLeft: '8px'
+              }}>
+                ({getFilteredUsers().length})
+              </span>
             </h2>
+          </div>
 
-            {getSortedAndFilteredUsers().length === 0 ? (
+          {getFilteredUsers().length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              background: colors.cardBg,
+              borderRadius: 20,
+              border: `1px solid ${colors.border}`
+            }}>
               <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
-                color: 'var(--ion-color-medium)'
+                width: 80,
+                height: 80,
+                borderRadius: 24,
+                background: isDarkMode 
+                  ? 'rgba(102, 126, 234, 0.2)' 
+                  : 'rgba(0, 122, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px'
               }}>
                 <IonIcon
                   icon={people}
                   style={{
-                    fontSize: '4em',
-                    marginBottom: '16px',
-                    opacity: 0.5
+                    fontSize: '2.5em',
+                    color: colors.textTertiary
                   }}
                 />
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600'
-                }}>
-                  {loading ? 'Loading users...' : 'No users found'}
-                </h3>
-                <p style={{
-                  margin: '0',
-                  fontSize: '0.9em',
-                  lineHeight: '1.4'
-                }}>
-                  {loading
-                    ? 'Please wait while we fetch the user list'
-                    : filterBy === 'all'
-                      ? 'No users have been registered yet'
-                      : `No users match the current ${filterBy} filter`
-                  }
-                </p>
-                {!loading && (
-                  <IonButton
-                    fill="outline"
-                    onClick={() => {
-                      setFilterBy('all');
-                      setSortBy('date');
-                    }}
-                    style={{
-                      marginTop: '16px',
-                      '--border-color': 'var(--ion-color-primary)',
-                      '--color': 'var(--ion-color-primary)'
-                    }}
-                  >
-                    Show all users
-                  </IonButton>
-                )}
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
-                {getSortedAndFilteredUsers().map((user) => (
-                  <div
-                    key={user._id || user.id}
-                    className="podcast-item"
-                    style={{
+              <h3 style={{
+                margin: '0 0 8px 0',
+                fontSize: '1.2em',
+                fontWeight: '600',
+                color: colors.text
+              }}>
+                {loading ? 'Loading users...' : 'No users found'}
+              </h3>
+              <p style={{
+                margin: '0',
+                fontSize: '0.9em',
+                color: colors.textSecondary,
+                lineHeight: '1.4'
+              }}>
+                {loading
+                  ? 'Please wait while we fetch the user list'
+                  : searchQuery
+                    ? 'No users match your search'
+                    : filterBy !== 'all'
+                      ? `No users match the current ${filterBy} filter`
+                      : 'No users have been registered yet'
+                }
+              </p>
+              {!loading && (searchQuery || filterBy !== 'all') && (
+                <IonButton
+                  fill="outline"
+                  onClick={() => {
+                    setFilterBy('all');
+                    setSearchQuery('');
+                  }}
+                  style={{
+                    marginTop: '20px',
+                    '--border-color': colors.border,
+                    '--color': isDarkMode ? '#fff' : '#007aff',
+                    '--background': 'transparent',
+                    '--border-radius': '12px'
+                  }}
+                >
+                  Clear filters
+                </IonButton>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {getFilteredUsers().map((user) => (
+                <div
+                  key={user._id || user.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: user.isActive ? colors.cardBgActive : colors.cardBg,
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    padding: '12px',
+                    border: `1px solid ${colors.border}`,
+                    transition: 'all 0.3s ease',
+                    boxShadow: isDarkMode 
+                      ? 'none' 
+                      : '0 2px 8px rgba(0, 0, 0, 0.06)'
+                  }}
+                >
+                  {/* User Avatar */}
+                  <div style={{ position: 'relative', marginRight: '12px' }}>
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: user.role === 'admin'
+                          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                          : 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: user.role === 'admin'
+                          ? '0 4px 12px rgba(245, 158, 11, 0.3)'
+                          : '0 4px 12px rgba(14, 165, 233, 0.3)'
+                      }}
+                    >
+                      <IonIcon icon={person} style={{ fontSize: '1.4em', color: '#fff' }} />
+                    </div>
+                    {/* Status indicator */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: -2,
+                      right: -2,
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      background: user.isActive ? '#10b981' : '#ef4444',
+                      border: `2px solid ${colors.bg}`,
                       display: 'flex',
                       alignItems: 'center',
-                      backgroundColor: 'var(--ion-background-color)',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      padding: '12px',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      maxWidth: '500px',
-                      position: 'relative'
-                    }}
-                    onClick={() => handleOptionsClick(user, { stopPropagation: () => {} } as any)}
-                  >
-                    <div className="podcast-options-btn">
-                      <IonButton
-                        fill="clear"
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOptionsClick(user, e);
-                        }}
-                        style={{
-                          margin: '0',
-                          padding: '0',
-                          minWidth: 'auto',
-                          height: 'auto',
-                          '--color': 'white'
-                        }}
-                      >
-                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
-                      </IonButton>
-                    </div>
-
-                    <div className="podcast-thumbnail-container" style={{ position: 'relative', marginRight: '16px' }}>
-                      <div
-                        className="podcast-thumbnail"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <IonIcon icon={person} style={{ fontSize: '2em', color: 'white' }} />
-                      </div>
-                      <div className={`podcast-badge ${!user.isActive ? 'live' : ''}`}>
-                        {user.role === 'admin' ? 'ADMIN' : 'USER'}
-                      </div>
-                    </div>
-
-                    <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div style={{ width: '100%' }}>
-                        <h4 className="podcast-title" style={{ marginBottom: '6px' }}>
-                          {user.name}
-                        </h4>
-                        <p style={{ margin: '0 0 8px 0', fontSize: '0.85em', color: 'var(--ion-color-medium)', fontWeight: '500' }}>
-                          {user.email}
-                        </p>
-                        <div className="podcast-meta">
-                          <div className="podcast-meta-item">
-                            <IonIcon icon={calendar} />
-                            <span>Joined {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                          </div>
-                          {user.lastLogin && (
-                            <div className="podcast-meta-item">
-                              <IonIcon icon={time} />
-                              <span>Last login {new Date(user.lastLogin).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      justifyContent: 'center'
+                    }}>
+                      <IonIcon 
+                        icon={user.isActive ? checkmarkCircle : closeCircle} 
+                        style={{ fontSize: '8px', color: '#fff' }} 
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '32px' }}>
-            <IonText style={{
-              color: 'var(--ion-text-color)',
-              opacity: 0.6,
-              fontSize: '0.9em'
-            }}>
-              Dove Ministries Africa - User Management
-            </IonText>
-          </div>
+                  {/* User Info */}
+                  <div style={{ flex: '1', minWidth: 0 }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      marginBottom: '2px'
+                    }}>
+                      <h4 style={{
+                        margin: 0,
+                        fontSize: '0.9em',
+                        fontWeight: '600',
+                        color: colors.text,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {user.name}
+                      </h4>
+                      {user.role === 'admin' && (
+                        <div style={{
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          padding: '1px 6px',
+                          borderRadius: 6,
+                          fontSize: '0.55em',
+                          fontWeight: '600',
+                          color: '#fff',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Admin
+                        </div>
+                      )}
+                      {isProtectedAdmin(user) && (
+                        <div style={{
+                          background: 'linear-gradient(135deg, #ffd700 0%, #ffb700 100%)',
+                          padding: '1px 6px',
+                          borderRadius: 6,
+                          fontSize: '0.55em',
+                          fontWeight: '600',
+                          color: '#000',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Owner
+                        </div>
+                      )}
+                    </div>
+                    <p style={{
+                      margin: '0 0 4px 0',
+                      fontSize: '0.75em',
+                      color: colors.textSecondary,
+                      fontWeight: '500',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {user.email}
+                    </p>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      fontSize: '0.65em',
+                      color: colors.textTertiary
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <IonIcon icon={calendar} style={{ fontSize: '10px' }} />
+                        <span>{new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                      {user.lastLogin && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <span>•</span>
+                          <span>{new Date(user.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Options Button */}
+                  <IonButton
+                    fill="clear"
+                    onClick={(e) => handleOptionsClick(user, e)}
+                    style={{
+                      margin: 0,
+                      padding: '6px',
+                      minWidth: 'auto',
+                      height: 'auto',
+                      '--color': colors.textTertiary
+                    }}
+                  >
+                    <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.1em' }} />
+                  </IonButton>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', padding: '24px' }}>
+          <IonText style={{
+            color: colors.textTertiary,
+            fontSize: '0.8em'
+          }}>
+            Dove Ministries Africa
+          </IonText>
         </div>
       </IonContent>
 
@@ -903,9 +1008,15 @@ const AdminUserManager: React.FC = () => {
           },
           {
             text: 'Update Role',
-            handler: (data) => {
-              if (data.role) {
-                changeRole(data.role);
+            handler: (data: any) => {
+              console.log('Alert data received:', data);
+              // IonAlert with radio buttons returns the selected value directly
+              const selectedRole = data;
+              if (selectedRole && (selectedRole === 'user' || selectedRole === 'admin')) {
+                changeRole(selectedRole);
+              } else {
+                setAlertMessage('Please select a role');
+                setShowAlert(true);
               }
             }
           }
@@ -929,7 +1040,7 @@ const AdminUserManager: React.FC = () => {
           },
           {
             text: 'Change Role',
-            icon: create,
+            icon: shield,
             handler: () => {
               if (selectedUser) {
                 openRoleModal(selectedUser);
@@ -956,14 +1067,24 @@ const AdminUserManager: React.FC = () => {
 
       <style>{`
         .rounded-alert .alert-wrapper {
-          border-radius: 12px !important;
+          border-radius: 16px !important;
+          background: ${isDarkMode ? '#1c1c1e' : '#ffffff'} !important;
+        }
+        .rounded-alert .alert-head {
+          background: ${isDarkMode ? '#1c1c1e' : '#ffffff'} !important;
+        }
+        .rounded-alert .alert-message {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'} !important;
         }
         .rounded-alert {
-          --backdrop-opacity: 0.5;
+          --backdrop-opacity: 0.7;
         }
         .rounded-alert::part(backdrop) {
           backdrop-filter: blur(10px);
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.5);
+        }
+        input::placeholder {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'} !important;
         }
       `}</style>
     </IonPage>

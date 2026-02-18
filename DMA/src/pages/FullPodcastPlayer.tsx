@@ -1059,7 +1059,7 @@ const FullPodcastPlayer: React.FC = () => {
           {/* Fixed Bottom Controls Section */}
           <div style={{
             position: 'fixed',
-            bottom: 0,
+            bottom: '25px',
             left: 0,
             right: 0,
             padding: '38px 20px calc(48px + env(safe-area-inset-bottom, 0px))',

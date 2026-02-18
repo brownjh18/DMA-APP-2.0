@@ -1,14 +1,7 @@
 {
+  "name": "dove-church-backend",
   "version": 2,
   "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "buildCommand": "cd DMA && npm run build",
-        "outputDirectory": "dist"
-      }
-    },
     {
       "src": "server.js",
       "use": "@vercel/node"
@@ -22,10 +15,6 @@
     {
       "src": "/uploads/(.*)",
       "dest": "server.js"
-    },
-    {
-      "src": "/((?!api|uploads).*)",
-      "dest": "/index.html"
     }
   ],
   "env": {

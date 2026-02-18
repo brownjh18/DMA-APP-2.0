@@ -1,5 +1,5 @@
 {
-  "name": "dove-ministries-backend",
+  "name": "dove-church-backend",
   "version": "1.0.0",
   "description": "Backend API for Dove Church admin management",
   "main": "server.js",

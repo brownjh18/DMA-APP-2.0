@@ -2,7 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardC
 import { heart, people, book, radio, chatbubble, musicalNotes, informationCircle, arrowBack } from 'ionicons/icons';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { BACKEND_BASE_URL } from '../services/api';
+import { BACKEND_BASE_URL, apiService } from '../services/api';
 import './Ministries.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -25,11 +25,13 @@ const Ministries: React.FC = () => {
 
   const fetchMinistries = async () => {
     try {
-      console.log('Fetching ministries from /api/ministries');
-      const response = await fetch('/api/ministries?active=true');
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched ministries data:', data);
+      console.log('Fetching ministries from API...');
+      // Use apiService like Tab1 does for consistency
+      const data = await apiService.getMinistries({ active: 'all', limit: 100 });
+      console.log('Fetched ministries data:', data);
+      
+      // Only use API data if there are actual ministries in the database
+      if (data.ministries && data.ministries.length > 0) {
         // Transform API data to match frontend structure
         const transformedMinistries = data.ministries.map((ministry: any) => ({
           id: ministry._id, // Use database _id as unique identifier
@@ -45,14 +47,13 @@ const Ministries: React.FC = () => {
         setMinistries(transformedMinistries);
         console.log('Transformed ministries:', transformedMinistries);
       } else {
-        console.error('Failed to fetch ministries:', response.status);
-        // Fallback to hardcoded if API fails
-        setMinistries(hardcodedMinistries);
+        // No ministries in database, show empty state
+        console.log('No ministries in database');
+        setMinistries([]);
       }
     } catch (error) {
       console.error('Error fetching ministries:', error);
-      // Fallback to hardcoded if API fails
-      setMinistries(hardcodedMinistries);
+      setMinistries([]);
     } finally {
       setLoading(false);
     }
@@ -97,52 +98,6 @@ const Ministries: React.FC = () => {
     }
     return imageUrl;
   };
-
-  // Keep hardcoded ministries as fallback
-  const hardcodedMinistries = [
-    {
-      id: 'married-couples',
-      name: 'Married Couples Ministry',
-      icon: heart,
-      description: 'Supporting and strengthening marriages through biblical teachings.',
-      image: 'hero-marriedcouples.jpg'
-    },
-    {
-      id: 'youth',
-      name: 'Youth Ministry',
-      icon: people,
-      description: 'Empowering young people to discover their purpose and live for Christ.',
-      image: 'hero-youth.jpg'
-    },
-    {
-      id: 'children',
-      name: 'Children Ministry',
-      icon: book,
-      description: 'Nurturing children in faith through age-appropriate teaching.',
-      image: 'hero-children.jpg'
-    },
-    {
-      id: 'evangelism',
-      name: 'Evangelism Ministry',
-      icon: radio,
-      description: 'Reaching out to the community with the message of salvation.',
-      image: 'hero-evangelism.jpg'
-    },
-    {
-      id: 'intercessions',
-      name: 'Intercessions Ministry',
-      icon: chatbubble,
-      description: 'Dedicated to prayer and interceding for the church and community.',
-      image: 'hero-intercessions.jpg'
-    },
-    {
-      id: 'worship',
-      name: 'Worship Ministry',
-      icon: musicalNotes,
-      description: 'Leading the congregation in worship through music and arts.',
-      image: 'hero-worship.jpg'
-    }
-  ];
 
   return (
     <IonPage>

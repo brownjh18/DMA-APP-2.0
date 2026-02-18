@@ -25,6 +25,7 @@ if (missingEnvVars.length > 0) {
 const liveCache = require('./services/liveCache');
 const cloudStorage = require('./services/cloudStorage');
 const Sermon = require('./models/Sermon');
+const User = require('./models/User');
 
 // Check if Cloudinary is configured
 const isCloudStorage = cloudStorage.isConfigured();
@@ -222,6 +223,12 @@ const connectDB = async () => {
 // Initial connection
 connectDB();
 
+// Create default admin user after database is connected
+mongoose.connection.once('open', async () => {
+  console.log('📦 Database connection opened, creating default admin user...');
+  await createDefaultAdminUser();
+});
+
 // Handle successful reconnection
 mongoose.connection.on('connected', () => {
   console.log('✅ Mongoose connected to MongoDB');
@@ -234,6 +241,48 @@ mongoose.connection.on('error', (err) => {
 mongoose.connection.on('disconnected', () => {
   console.warn('⚠️ Mongoose disconnected from MongoDB');
 });
+
+// Function to create default admin user
+async function createDefaultAdminUser() {
+  try {
+    const adminEmail = 'brownjh18@gmail.com';
+    const adminPassword = 'Jonah@2002';
+    const adminName = 'Admin User';
+    
+    // Check if admin user already exists
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    
+    if (existingAdmin) {
+      // Update existing user to be admin if not already
+      if (existingAdmin.role !== 'admin') {
+        existingAdmin.role = 'admin';
+        existingAdmin.isActive = true;
+        await existingAdmin.save();
+        console.log('✅ Updated existing user to admin role:', adminEmail);
+      } else {
+        console.log('✅ Admin user already exists:', adminEmail);
+      }
+      return;
+    }
+    
+    // Create new admin user
+    const adminUser = new User({
+      name: adminName,
+      email: adminEmail,
+      password: adminPassword,
+      role: 'admin',
+      isActive: true
+    });
+    
+    await adminUser.save();
+    console.log('✅ Default admin user created successfully!');
+    console.log(`   Email: ${adminEmail}`);
+    console.log(`   Password: ${adminPassword}`);
+    
+  } catch (error) {
+    console.error('❌ Error creating default admin user:', error.message);
+  }
+}
 
 // Function to check and update ended live broadcasts
 async function checkAndUpdateEndedBroadcasts() {

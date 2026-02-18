@@ -137,7 +137,13 @@ const EventDetail: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonLoading isOpen={loading} message="Loading event..." />
+        <IonLoading 
+          isOpen={loading} 
+          message="Loading event..." 
+          duration={10000}
+          backdropDismiss={true}
+          showBackdrop={true}
+        />
       </IonPage>
     );
   }

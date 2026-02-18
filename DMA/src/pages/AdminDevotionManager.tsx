@@ -41,6 +41,7 @@ import {
 } from 'ionicons/icons';
 import { useSocket } from '../contexts/SocketContext';
 import { BACKEND_BASE_URL } from '../services/api';
+import { apiService } from '../services/api';
 
 const AdminDevotionManager: React.FC = () => {
   const history = useHistory();
@@ -137,19 +138,8 @@ const AdminDevotionManager: React.FC = () => {
 
     try {
       setDevotionsLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/devotions?page=1&limit=100&published=all', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setDevotions(data.devotions); // Keep full devotion objects
-      } else {
-        console.error('Failed to fetch devotions');
-      }
+      const data = await apiService.getDevotions({ page: 1, limit: 100, published: 'all' });
+      setDevotions(data.devotions); // Keep full devotion objects
     } catch (error) {
       console.error('Error fetching devotions:', error);
     } finally {
@@ -170,27 +160,16 @@ const AdminDevotionManager: React.FC = () => {
     const newStatus = devotion.status === 'publish' ? 'draft' : 'publish';
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devotions/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        setDevotions(devotions.map(devotion =>
-          devotion._id === id
-            ? { ...devotion, status: newStatus }
-            : devotion
-        ));
-        // Set refresh flag for main pages
-        sessionStorage.setItem('devotionsNeedRefresh', 'true');
-        // Clear API cache for devotions
-        clearDevotionsCache();
-      }
+      await apiService.updateDevotion(id, { status: newStatus });
+      setDevotions(devotions.map(devotion =>
+        devotion._id === id
+          ? { ...devotion, status: newStatus }
+          : devotion
+      ));
+      // Set refresh flag for main pages
+      sessionStorage.setItem('devotionsNeedRefresh', 'true');
+      // Clear API cache for devotions
+      clearDevotionsCache();
     } catch (error) {
       console.error('Error toggling status:', error);
     }
@@ -203,27 +182,16 @@ const AdminDevotionManager: React.FC = () => {
     const newFeatured = !devotion.isFeatured;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devotions/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ isFeatured: newFeatured })
-      });
-
-      if (response.ok) {
-        setDevotions(devotions.map(devotion =>
-          devotion._id === id
-            ? { ...devotion, isFeatured: newFeatured }
-            : devotion
-        ));
-        // Set refresh flag for main pages
-        sessionStorage.setItem('devotionsNeedRefresh', 'true');
-        // Clear API cache for devotions
-        clearDevotionsCache();
-      }
+      await apiService.updateDevotion(id, { isFeatured: newFeatured });
+      setDevotions(devotions.map(devotion =>
+        devotion._id === id
+          ? { ...devotion, isFeatured: newFeatured }
+          : devotion
+      ));
+      // Set refresh flag for main pages
+      sessionStorage.setItem('devotionsNeedRefresh', 'true');
+      // Clear API cache for devotions
+      clearDevotionsCache();
     } catch (error) {
       console.error('Error toggling featured:', error);
     }
@@ -231,21 +199,12 @@ const AdminDevotionManager: React.FC = () => {
 
   const deleteDevotion = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devotions/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setDevotions(devotions.filter(devotion => devotion._id !== id));
-        // Set refresh flag for main pages
-        sessionStorage.setItem('devotionsNeedRefresh', 'true');
-        // Clear API cache for devotions
-        clearDevotionsCache();
-      }
+      await apiService.deleteDevotion(id);
+      setDevotions(devotions.filter(devotion => devotion._id !== id));
+      // Set refresh flag for main pages
+      sessionStorage.setItem('devotionsNeedRefresh', 'true');
+      // Clear API cache for devotions
+      clearDevotionsCache();
     } catch (error) {
       console.error('Error deleting devotion:', error);
     }
