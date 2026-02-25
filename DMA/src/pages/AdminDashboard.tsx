@@ -1,297 +1,240 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonIcon, IonButton, IonList, IonItem, IonLabel, IonBadge, IonSegment, IonSegmentButton, IonRefresher, IonRefresherContent, IonText, IonAlert } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonText, IonAlert } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { people, playCircle, book, calendar, chatbubble, images, newspaper, statsChart, add, create, trash, settings, logOut, cardOutline, informationCircle, radio, videocam, arrowBack } from 'ionicons/icons';
+import { 
+  people, playCircle, book, calendar, add, settings, arrowBack, 
+  flash, shield, wallet, videocam, radio, heart, mail, grid, list
+} from 'ionicons/icons';
 import { apiService } from '../services/api';
 import './AdminDashboard.css';
 
 const AdminDashboard: React.FC = () => {
   const history = useHistory();
-  const [activeSegment, setActiveSegment] = useState('overview');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [stats, setStats] = useState({
-    sermons: { total: 0, published: 0, featured: 0 },
-    devotions: { total: 0, published: 0, featured: 0 },
-    events: { total: 0, published: 0 },
-    ministries: { total: 0, published: 0 },
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [data, setData] = useState({
+    sermons: { total: 0, published: 0 },
+    devotions: { total: 0, published: 0 },
+    events: { total: 0, published: 0, upcoming: 0 },
+    ministries: { total: 0 },
     podcasts: { total: 0, published: 0 },
-    users: { total: 0, active: 0 }
+    users: { total: 0, active: 0 },
+    prayers: { pending: 0 }
   });
 
   useEffect(() => {
-    loadStats();
+    const cached = localStorage.getItem('adminCache2');
+    if (cached) {
+      try { setData(JSON.parse(cached)); } catch (e) {}
+    }
+    loadData();
   }, []);
 
-  // Refresh stats when window regains focus
-  useEffect(() => {
-    const handleFocus = () => {
-      loadStats();
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
-
-  const loadStats = async () => {
+  const loadData = async () => {
     try {
-      // Fetch real sermon stats
-      const sermonStats = await apiService.getSermonStats();
+      const [sermons, devotions, events, ministries, podcasts, users] = await Promise.all([
+        apiService.getSermonStats().catch(() => ({ stats: { total: 0, published: 0 } })),
+        apiService.getDevotions({ limit: 50 }).catch(() => ({ devotions: [] })),
+        apiService.getEvents({ limit: 50 }).catch(() => ({ events: [] })),
+        apiService.getMinistries({ limit: 50 }).catch(() => ({ ministries: [] })),
+        apiService.getPodcasts({ limit: 50 }).catch(() => ({ podcasts: [] })),
+        apiService.getUsers({ limit: 50 }).catch(() => ({ users: [] }))
+      ]);
 
-      // Fetch real devotion stats
-      const devotionsResponse = await apiService.getDevotions({ limit: 1000 }); // Get all for counting
-      const devotions = devotionsResponse.devotions || [];
-      const publishedDevotions = devotions.filter((d: any) => d.isPublished).length;
-      const featuredDevotions = devotions.filter((d: any) => d.isFeatured).length;
+      const eventsData = events.events || [];
+      const newData = {
+        sermons: { total: sermons.stats?.total || 0, published: sermons.stats?.published || 0 },
+        devotions: { total: devotions.devotions?.length || 0, published: devotions.devotions?.filter((d: any) => d.isPublished).length || 0 },
+        events: { total: eventsData.length, published: eventsData.filter((e: any) => e.isPublished).length, upcoming: eventsData.filter((e: any) => new Date(e.date) > new Date() && e.isPublished).length },
+        ministries: { total: ministries.ministries?.length || 0 },
+        podcasts: { total: podcasts.podcasts?.length || 0, published: podcasts.podcasts?.filter((p: any) => p.isPublished).length || 0 },
+        users: { total: users.users?.length || 0, active: users.users?.filter((u: any) => u.isActive).length || 0 },
+        prayers: { pending: 0 }
+      };
 
-      // Fetch real event stats
-      const eventsResponse = await apiService.getEvents({ limit: 1000 }); // Get all for counting
-      const events = eventsResponse.events || [];
-      const publishedEvents = events.filter((e: any) => e.isPublished).length;
-
-      // Fetch real ministry stats
-      const ministriesResponse = await apiService.getMinistries({ limit: 1000 }); // Get all for counting
-      const ministries = ministriesResponse.ministries || [];
-      const publishedMinistries = ministries.length;
-
-      // Fetch real podcast stats
-      const podcastsResponse = await apiService.getPodcasts({ limit: 1000 }); // Get all for counting
-      const podcasts = podcastsResponse.podcasts || [];
-      const publishedPodcasts = podcasts.filter((p: any) => p.isPublished).length;
-
-      // Fetch real live broadcast stats
-      const liveBroadcastsResponse = await apiService.getLiveBroadcasts({ limit: 1000 }); // Get all for counting
-      const liveBroadcasts = liveBroadcastsResponse.broadcasts || [];
-      const publishedLiveBroadcasts = liveBroadcasts.filter((b: any) => b.status === 'published').length;
-
-      // Fetch real user stats
-      const usersResponse = await apiService.getUsers({ limit: 1000 }); // Get all for counting
-      const users = usersResponse.users || [];
-      const activeUsers = users.filter((u: any) => u.isActive).length;
-
-      setStats({
-        sermons: {
-          total: sermonStats.stats.total,
-          published: sermonStats.stats.published,
-          featured: sermonStats.stats.featured
-        },
-        devotions: {
-          total: devotions.length,
-          published: publishedDevotions,
-          featured: featuredDevotions
-        },
-        events: {
-          total: events.length,
-          published: publishedEvents
-        },
-        ministries: {
-          total: ministries.length,
-          published: publishedMinistries
-        },
-        podcasts: {
-          total: podcasts.length,
-          published: publishedPodcasts
-        },
-        users: {
-          total: users.length,
-          active: activeUsers
-        }
-      });
+      setData(newData);
+      localStorage.setItem('adminCache2', JSON.stringify(newData));
     } catch (error) {
-      console.error('Error loading stats:', error);
-      // Show error state instead of mock data
-      setStats({
-        sermons: { total: 0, published: 0, featured: 0 },
-        devotions: { total: 0, published: 0, featured: 0 },
-        events: { total: 0, published: 0 },
-        ministries: { total: 0, published: 0 },
-        podcasts: { total: 0, published: 0 },
-        users: { total: 0, active: 0 }
-      });
+      console.error('Error loading data:', error);
     }
   };
 
-  const handleRefresh = async (event: CustomEvent) => {
-    await loadStats();
-    event.detail.complete();
-  };
+  const totalContent = data.sermons.total + data.devotions.total + data.events.total + data.ministries.total + data.podcasts.total;
 
+  // Keep the quick actions design as requested
+  const quickActions = [
+    { label: 'New Sermon', icon: add, color: '#6366f1', route: '/admin/sermons/add' },
+    { label: 'New Event', icon: add, color: '#f59e0b', route: '/admin/events/add' },
+    { label: 'New Devotion', icon: add, color: '#8b5cf6', route: '/admin/devotions/add' },
+    { label: 'New User', icon: add, color: '#06b6d4', route: '/admin/users/add' }
+  ];
+
+  const contentModules = [
+    { name: 'Sermons', icon: playCircle, route: '/admin/sermons', color: '#6366f1', val: data.sermons.total, sub: `${data.sermons.published} pub` },
+    { name: 'Devotions', icon: book, route: '/admin/devotions', color: '#8b5cf6', val: data.devotions.total, sub: `${data.devotions.published} pub` },
+    { name: 'Events', icon: calendar, route: '/admin/events', color: '#f59e0b', val: data.events.total, sub: `${data.events.upcoming} upc` },
+    { name: 'Ministries', icon: people, route: '/admin/ministries', color: '#10b981', val: data.ministries.total, sub: 'active' },
+    { name: 'Podcasts', icon: radio, route: '/admin/radio', color: '#ec4899', val: data.podcasts.total, sub: `${data.podcasts.published} pub` },
+    { name: 'Live', icon: videocam, route: '/admin/live', color: '#ef4444', val: '-', sub: 'broadcasts' },
+    { name: 'Users', icon: shield, route: '/admin/users', color: '#06b6d4', val: data.users.total, sub: `${data.users.active} active` },
+    { name: 'Prayers', icon: heart, route: '/admin/prayer', color: '#f97316', val: data.prayers.pending, sub: 'pending' },
+    { name: 'Contact', icon: mail, route: '/admin/contact', color: '#64748b', val: '-', sub: 'messages' },
+    { name: 'Giving', icon: wallet, route: '/admin/giving', color: '#14b8a6', val: '-', sub: 'donations' }
+  ];
 
   return (
     <IonPage>
       <IonHeader translucent>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
+          }}
+        >
+          <IonIcon icon={arrowBack} style={{ color: 'white', fontSize: '18px' }} />
+        </div>
         <IonToolbar className="toolbar-ios">
-          <div
-            onClick={() => history.goBack()}
-            style={{
-              position: 'absolute',
-              top: 'calc(var(--ion-safe-area-top) - -5px)',
-              left: 20,
-              width: 45,
-              height: 45,
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 999,
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseDown={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(0.8)';
-            }}
-            onMouseUp={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              setTimeout(() => {
-                target.style.transform = 'scale(1)';
-              }, 200);
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                fontSize: '20px',
-              }}
-            />
-          </div>
-          <IonTitle className="title-ios">Admin Dashboard</IonTitle>
+          <IonTitle className="title-ios">
+            <span style={{ fontWeight: '700', color: 'var(--ion-color-primary)' }}>Dashboard</span>
+          </IonTitle>
+          <IonButton fill="clear" slot="end" onClick={loadData} style={{ marginRight: '8px' }}>
+            <IonIcon icon={settings} />
+          </IonButton>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{
-          padding: '20px',
-          maxWidth: '1200px',
-          margin: '0 auto',
-          paddingTop: '20px'
-        }}>
-
-          {/* Main Dashboard Grid */}
+        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+          
+          {/* Welcome Banner Only */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '20px',
-            marginBottom: '32px'
+            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            borderRadius: '20px',
+            padding: '24px 28px',
+            marginBottom: '20px'
           }}>
+            <h1 style={{ margin: '0 0 4px 0', fontSize: '22px', fontWeight: '700', color: 'white' }}>
+              Welcome Back! 👋
+            </h1>
+            <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>
+              <span style={{ fontWeight: '700', fontSize: '18px' }}>{totalContent}</span> content items total
+            </p>
+          </div>
 
-            {/* Content Management Section */}
-            <div style={{
-              backgroundColor: 'var(--ion-background-color)',
-              padding: '24px',
-              borderRadius: '16px',
-              border: '1px solid var(--ion-color-step-200)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              gridColumn: '1 / -1' // Span full width
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <IonIcon icon={create} style={{ fontSize: '1.8em', color: 'var(--ion-color-primary)' }} />
-                  <h2 style={{ margin: '0', fontSize: '1.4em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-                    Content Management
-                  </h2>
-                </div>
-                <IonButton fill="clear" onClick={loadStats} style={{ '--color': 'var(--ion-color-primary)' }}>
-                  <IonIcon icon={settings} slot="icon-only" />
-                </IonButton>
-              </div>
-              {/* Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '12px',
-                borderBottom: '2px solid var(--ion-color-step-200)',
-                fontWeight: '600',
-                color: 'var(--ion-text-color)',
-                fontSize: '0.9em'
-              }}>
-                <span style={{ flex: 1 }}>Manage</span>
-                <span style={{ flex: 2 }}>Content Type</span>
-                <span style={{ flex: 1, textAlign: 'center' }}>Total</span>
-              </div>
-              {/* Rows */}
-              {[
-                { name: 'Sermons', icon: playCircle, route: '/admin/sermons', total: stats.sermons.total, published: stats.sermons.published, bg: 'var(--ion-color-primary)' },
-                { name: 'Devotions', icon: book, route: '/admin/devotions', total: stats.devotions.total, published: stats.devotions.published, bg: '#8b5cf6' },
-                { name: 'Events', icon: calendar, route: '/admin/events', total: stats.events.total, published: stats.events.published, bg: '#f59e0b' },
-                { name: 'Ministries', icon: people, route: '/admin/ministries', total: stats.ministries.total, published: stats.ministries.published, bg: '#10b981' },
-                { name: 'Users', icon: people, route: '/admin/users', total: stats.users.total, published: stats.users.active, bg: '#06b6d4' },
-                { name: 'Broadcasts', icon: radio, route: '/admin/radio', total: stats.podcasts.total, published: stats.podcasts.published, bg: '#667eea' },
-                { name: 'Go Live', icon: videocam, route: '/admin/live', total: '-', published: '-', bg: '#ef4444' },
-                { name: 'Contact', icon: informationCircle, route: '/admin/contact', total: '-', published: '-', bg: '#6b7280' }
-              ].map((item, index) => (
-                <div key={index} className="content-row" style={{
+          {/* Quick Actions - Keep original design */}
+          <div style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <IonIcon icon={flash} style={{ color: '#f59e0b' }} /> Quick Actions
+            </h3>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {quickActions.map((action, i) => (
+                <button key={i} onClick={() => history.push(action.route)} style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '12px',
-                  borderBottom: index < 7 ? '1px solid var(--ion-color-step-150)' : 'none',
-                  transition: 'background-color 0.2s ease',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  background: `${action.color}12`,
+                  border: `1px solid ${action.color}30`,
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                  borderRadius: '8px',
-                  marginBottom: '8px'
+                  transition: 'all 0.2s ease'
                 }}
-                onClick={() => history.push(item.route)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ion-item-background)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--ion-color-step-100)'}
+                onMouseEnter={(e) => { e.currentTarget.style.background = `${action.color}25`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = `${action.color}12`; }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      onClick={() => history.push(item.route)}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        background: `linear-gradient(135deg, ${item.bg} 0%, ${item.bg} 100%)`,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        boxShadow: `0 4px 12px rgba(0, 0, 0, 0.2)`,
-                        border: '2px solid rgba(255, 255, 255, 0.1)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.1)';
-                        e.currentTarget.style.boxShadow = `0 6px 20px rgba(0, 0, 0, 0.3)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.2)`;
-                      }}
-                    >
-                      <IonIcon icon={item.icon} style={{ fontSize: '20px', color: 'white' }} />
-                    </div>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: action.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <IonIcon icon={action.icon} style={{ fontSize: '14px', color: 'white' }} />
                   </div>
-                  <span style={{ flex: 2, fontWeight: '500', color: 'var(--ion-text-color)' }}>{item.name}</span>
-                  <span style={{ flex: 1, textAlign: 'center', fontWeight: '600', color: 'var(--ion-color-primary)' }}>{item.total}</span>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Modules - List View Style */}
+          <div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
+              Content Management
+            </h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gap: '8px',
+              background: 'var(--ion-card-background)',
+              borderRadius: '16px',
+              padding: '8px',
+              border: '1px solid var(--ion-color-step-200)'
+            }}>
+              {contentModules.map((mod, i) => (
+                <div key={i} onClick={() => history.push(mod.route)} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  border: '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = `${mod.color}10`;
+                  e.currentTarget.style.borderColor = `${mod.color}30`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                >
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    background: mod.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    boxShadow: `0 4px 12px ${mod.color}40`
+                  }}>
+                    <IonIcon icon={mod.icon} style={{ fontSize: '20px', color: 'white' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{mod.name}</p>
+                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
+                  </div>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: `${mod.color}15`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <span style={{ fontSize: '16px', fontWeight: '700', color: mod.color }}>{mod.val}</span>
+                  </div>
                 </div>
               ))}
             </div>
-
           </div>
 
-
-
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <IonText style={{
-              color: 'var(--ion-text-color)',
-              opacity: 0.6,
-              fontSize: '0.9em'
-            }}>
-              Dove Ministries Africa - Advanced Admin Control Panel
+          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
+            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
+              Dove Church • Admin Panel
             </IonText>
           </div>
         </div>

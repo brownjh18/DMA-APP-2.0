@@ -1,13 +1,14 @@
 {
-  "name": "dove-church",
+  "build": {
+    "command": "npm run build",
+    "outputDirectory": "dist"
+  },
   "env": {
     "VITE_API_URL": "https://dove-church-backend.vercel.app/api",
     "VITE_BACKEND_URL": "https://dove-church-backend.vercel.app"
   },
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/dove.png" },
     { "source": "/api/:path*", "destination": "https://dove-church-backend.vercel.app/api/:path*" },
     { "source": "/uploads/:path*", "destination": "https://dove-church-backend.vercel.app/uploads/:path*" },
     { "source": "/:path*", "destination": "/index.html" }

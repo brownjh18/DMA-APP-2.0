@@ -209,51 +209,33 @@ const AdminGivingManager: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios">
-          <div
-            onClick={() => history.goBack()}
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
+          }}
+        >
+          <IonIcon
+            icon={arrowBack}
             style={{
-              position: 'absolute',
-              top: 'calc(var(--ion-safe-area-top) - -5px)',
-              left: 20,
-              width: 45,
-              height: 45,
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 999,
-              transition: 'transform 0.2s ease'
+              color: 'white',
+              fontSize: '20px',
             }}
-            onMouseDown={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(0.8)';
-            }}
-            onMouseUp={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              setTimeout(() => {
-                target.style.transform = 'scale(1)';
-              }, 200);
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                fontSize: '20px',
-              }}
-            />
-          </div>
+          />
+        </div>
+        <IonToolbar className="toolbar-ios">
           <IonTitle className="title-ios">Giving Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -539,7 +521,7 @@ const AdminGivingManager: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - Giving Management
+              Dove Church - Giving Management
             </IonText>
           </div>
         </div>

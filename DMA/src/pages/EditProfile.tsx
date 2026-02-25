@@ -590,7 +590,7 @@ const EditProfile: React.FC = () => {
               opacity: 0.6,
               fontSize: '0.8em'
             }}>
-              Dove Ministries Africa
+              Dove Church
             </IonText>
           </div>
         </div>

@@ -181,7 +181,7 @@ const OfflineIndicator: React.FC = () => {
         style={{
           position: 'fixed',
           top: 'calc(var(--ion-safe-area-top) + 13px)',
-          left: '50%',
+          left: '75%',
           transform: 'translateX(-50%)',
           zIndex: 9998,
           display: 'flex',

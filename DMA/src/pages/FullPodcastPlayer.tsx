@@ -577,39 +577,37 @@ const FullPodcastPlayer: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent style={{ background: 'transparent' }}>
+        <div
+          onClick={() => history.goBack()}
+          style={{
+            position: 'absolute',
+            top: 'calc(var(--ion-safe-area-top) - -5px)',
+            left: 20,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 999,
+            transition: 'transform 0.2s ease'
+          }}
+        >
+          <IonIcon
+            icon={chevronBack}
+            style={{
+              color: 'white',
+              fontSize: '24px',
+            }}
+          />
+        </div>
         <IonToolbar style={{ '--background': 'transparent' }}>
-          <IonButtons slot="start">
-            <div
-              onClick={() => history.goBack()}
-              style={{
-                position: 'absolute',
-                top: 'calc(var(--ion-safe-area-top) - 23px)',
-                left: 'clamp(16px, 5vw, 32px)',
-                width: 45,
-                height: 45,
-                borderRadius: 25,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 999,
-                transition: 'transform 0.2s ease'
-              }}
-            >
-              <IonIcon
-                icon={chevronBack}
-                style={{
-                  color: 'white',
-                  fontSize: '24px',
-                }}
-              />
-            </div>
-          </IonButtons>
           <IonTitle style={{ color: 'white', textAlign: 'center', paddingRight: '60px' }}>
             Now Playing
           </IonTitle>

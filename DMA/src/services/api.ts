@@ -1,7 +1,7 @@
 // API Service for connecting frontend to backend
 import { Capacitor } from '@capacitor/core';
-// Use VITE_API_URL for both web and native (production), fallback to localhost for dev
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Use VITE_API_URL for production, fallback to localhost:5173 for local dev
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173/api';
 console.log('🔗 API Base URL:', API_BASE_URL);
 export { API_BASE_URL };
 
@@ -15,8 +15,8 @@ const getBackendBaseUrl = () => {
     console.log('🔗 Backend Base URL:', url);
     return url;
   }
-  // For localhost development, use direct backend URL
-  const url = 'http://localhost:5000';
+  // For localhost development, use direct backend URL on port 5173
+  const url = 'http://localhost:5173';
   console.log('🔗 Backend Base URL (localhost):', url);
   return url;
 };
@@ -157,10 +157,16 @@ class ApiService {
 
       if (!response.ok) {
         // Handle authentication errors (401/403) - token expired or invalid
+        // But don't trigger logout for sync/saved endpoints - those can fail without logging out
         if (response.status === 401 || response.status === 403) {
-          console.log('Authentication error, logging out user');
-          if (this.logoutCallback) {
-            this.logoutCallback();
+          const isSyncEndpoint = endpoint.includes('/saved') || endpoint.includes('/subscribe');
+          if (!isSyncEndpoint) {
+            console.log('Authentication error, logging out user');
+            if (this.logoutCallback) {
+              this.logoutCallback();
+            }
+          } else {
+            console.log('⚠️ Sync endpoint auth failed (non-critical), not logging out:', endpoint);
           }
           const error = await response.json().catch(() => ({ error: 'Authentication failed' }));
           throw new Error(error.error || 'Authentication failed');

@@ -499,7 +499,7 @@ const EditNewsArticle: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - News Management
+              Dove Church - News Management
             </IonText>
           </div>
         </div>

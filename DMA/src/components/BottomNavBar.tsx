@@ -45,13 +45,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
     { name: 'devotions', label: 'Devotions', icon: bookOutline, path: '/tab3', action: 'nav' },
   ];
 
-  const getCurrentLabel = () => {
-    const currentItem = navigationItems.find(item => 
-      item.action === 'nav' ? active === item.name : shineContainer === item.name
-    );
-    return currentItem ? currentItem.label : '';
-  };
-
   const handlePress = (item: any) => {
     if (item.action === 'sidebar') {
       onSidebarToggle();
@@ -62,8 +55,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
     }
     setTimeout(() => setShineContainer(null), 1000);
   };
-
-  const currentLabel = getCurrentLabel();
 
   return (
     <>
@@ -83,16 +74,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
           0% { transform: scale(1); }
           50% { transform: scale(1.1); }
           100% { transform: scale(1); }
-        }
-        @keyframes labelSlideIn {
-          0% {
-            transform: translateX(20px) scale(0.8);
-            opacity: 0;
-          }
-          100% {
-            transform: translateX(0) scale(1);
-            opacity: 1;
-          }
         }
         @keyframes iconGlow {
           0% { 
@@ -120,27 +101,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
         }
         .nav-icon.active .icon-element {
           animation: iconGlow 3s infinite;
-        }
-        .label-container {
-          position: fixed;
-          bottom: 90px;
-          right: 20px;
-          z-index: 1000;
-          pointer-events: none;
-        }
-        .nav-label {
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
-          color: white;
-          padding: 12px 20px;
-          border-radius: 25px;
-          font-size: 14px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          text-transform: capitalize;
-          box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3), 0 4px 16px rgba(0, 0, 0, 0.1);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          animation: labelSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
       `}</style>
       
@@ -208,15 +168,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
           );
         })}
       </div>
-      
-      {/* Dynamic Label Display */}
-      {currentLabel && (
-        <div className="label-container">
-          <div className="nav-label">
-            {currentLabel}
-          </div>
-        </div>
-      )}
     </>
   );
 };

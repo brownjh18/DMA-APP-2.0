@@ -474,7 +474,7 @@ const App: React.FC = () => {
     try {
       console.log('Syncing saved items from server...');
       
-      // Fetch saved sermons
+      // Fetch saved sermons - wrap in try-catch to prevent logout on failure
       try {
         const sermonsResponse = await apiService.getSavedSermons();
         if (sermonsResponse.savedSermons) {
@@ -496,10 +496,10 @@ const App: React.FC = () => {
           console.log(`Synced ${formattedSermons.length} saved sermons`);
         }
       } catch (error) {
-        console.error('Error syncing saved sermons:', error);
+        console.warn('Failed to sync saved sermons (non-critical):', error);
       }
 
-      // Fetch saved podcasts
+      // Fetch saved podcasts - wrap in try-catch to prevent logout on failure
       try {
         const podcastsResponse = await apiService.getSavedPodcasts();
         if (podcastsResponse.savedPodcasts) {
@@ -518,10 +518,10 @@ const App: React.FC = () => {
           console.log(`Synced ${formattedPodcasts.length} saved podcasts`);
         }
       } catch (error) {
-        console.error('Error syncing saved podcasts:', error);
+        console.warn('Failed to sync saved podcasts (non-critical):', error);
       }
 
-      // Fetch saved devotions
+      // Fetch saved devotions - wrap in try-catch to prevent logout on failure
       try {
         const devotionsResponse = await apiService.getSavedDevotions();
         if (devotionsResponse.savedDevotions) {
@@ -541,7 +541,7 @@ const App: React.FC = () => {
           console.log(`Synced ${formattedDevotions.length} saved devotions`);
         }
       } catch (error) {
-        console.error('Error syncing saved devotions:', error);
+        console.warn('Failed to sync saved devotions (non-critical):', error);
       }
 
       console.log('Saved items sync completed');

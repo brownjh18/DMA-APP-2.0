@@ -240,7 +240,7 @@ const AddUser: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - User Management
+              Dove Church - User Management
             </IonText>
           </div>
         </div>

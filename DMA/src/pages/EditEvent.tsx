@@ -803,7 +803,7 @@ const EditEvent: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - Event Management
+              Dove Church - Event Management
             </IonText>
           </div>
         </div>

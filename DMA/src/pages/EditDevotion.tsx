@@ -545,7 +545,7 @@ const EditDevotion: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - Devotion Management
+              Dove Church - Devotion Management
             </IonText>
           </div>
         </div>

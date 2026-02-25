@@ -282,7 +282,7 @@ const AddDonation: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Ministries Africa - Giving Management
+              Dove Church - Giving Management
             </IonText>
           </div>
         </div>
