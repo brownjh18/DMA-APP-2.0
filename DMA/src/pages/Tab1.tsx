@@ -283,6 +283,21 @@ const Tab1: React.FC = () => {
   // Use a ref to prevent multiple initializations
   const initializedRef = useRef(false);
 
+  // Clear all caches on page load/refresh
+  useEffect(() => {
+    console.log('🔄 Tab1: Clearing caches on page load/refresh');
+    // Clear all API caches
+    apiService.clearCacheByType('sermons');
+    apiService.clearCacheByType('podcasts');
+    apiService.clearCacheByType('devotions');
+    // Reset cache timestamps to force fresh fetch
+    devotionsCacheTime.current = 0;
+    sermonsCacheTime.current = 0;
+    podcastsCacheTime.current = 0;
+    eventsCacheTime.current = 0;
+    ministriesCacheTime.current = 0;
+  }, []);
+
   useEffect(() => {
     if (initializedRef.current) {
       console.log('Tab1: Already initialized, skipping');

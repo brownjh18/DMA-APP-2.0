@@ -376,7 +376,19 @@ const App: React.FC = () => {
           console.log('📝 Found saved token, attempting to verify...');
           apiService.setToken(savedToken);
 
-          // Verify token with backend
+          // If we have a saved user, set them immediately (don't wait for API)
+          if (savedUser) {
+            try {
+              const parsedUser = JSON.parse(savedUser);
+              setUser(parsedUser);
+              setToken(savedToken);
+              console.log('✅ User set from localStorage:', parsedUser.role);
+            } catch (e) {
+              console.warn('Failed to parse saved user:', e);
+            }
+          }
+
+          // Verify token with backend in background
           try {
             console.log('🌐 Calling apiService.getProfile()...');
             const profileResponse = await apiService.getProfile();
@@ -391,9 +403,17 @@ const App: React.FC = () => {
             await syncSavedItems();
           } catch (error: any) {
             console.error('❌ Error during profile fetch:', error);
-            // Check if it's an authentication error (401/403)
-            if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401') || error.message?.includes('HTTP 403')) {
-              // Token is invalid or expired, clear stored data
+            // Check if it's a definite authentication error (401/403)
+            const isAuthError = error.message?.includes('Authentication failed') || 
+                                error.message?.includes('HTTP 401') || 
+                                error.message?.includes('HTTP 403') ||
+                                error.message?.includes('401') ||
+                                error.message?.includes('403') ||
+                                error.status === 401 ||
+                                error.status === 403;
+            
+            if (isAuthError) {
+              // Token is definitely invalid, clear stored data
               console.log('❌ Token invalid or expired, clearing stored auth data');
               localStorage.removeItem('token');
               localStorage.removeItem('user');
@@ -401,14 +421,9 @@ const App: React.FC = () => {
               setToken(null);
               setUser(null);
             } else {
-              // Network error or other issue
-              console.log('⚠️ Network error during token verification, will retry...');
-              // Don't set user data immediately, let the retry mechanism handle it
-              setToken(savedToken);
-              // Set a flag to indicate we need to retry
-              setTimeout(() => {
-                checkAuthStatus();
-              }, 2000);
+              // Network error or other issue - keep user logged in with cached data
+              console.log('⚠️ Network error during token verification, keeping user logged in with cached data');
+              // User stays logged in with the data from localStorage
             }
           }
         } else {

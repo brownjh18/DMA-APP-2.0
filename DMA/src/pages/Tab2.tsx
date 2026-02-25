@@ -77,6 +77,12 @@ const Tab2: React.FC = () => {
   const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
 
+  // Clear all caches on page load/refresh
+  useEffect(() => {
+    console.log('🔄 Tab2: Clearing caches on page load/refresh');
+    apiService.clearCacheByType('sermons');
+  }, []);
+
   useEffect(() => {
     loadSermons();
     // Load saved sermons from localStorage

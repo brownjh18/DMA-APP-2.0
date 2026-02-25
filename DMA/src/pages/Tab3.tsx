@@ -42,6 +42,12 @@ const Tab3: React.FC = () => {
   const [devotionsLoading, setDevotionsLoading] = useState<boolean>(false);
   const [savedDevotions, setSavedDevotions] = useState<any[]>([]);
 
+  // Clear all caches on page load/refresh
+  useEffect(() => {
+    console.log('🔄 Tab3: Clearing caches on page load/refresh');
+    apiService.clearCacheByType('devotions');
+  }, []);
+
   const fetchDevotions = async (forceRefresh: boolean = false) => {
     if (devotionsLoading && !forceRefresh) return; // Prevent multiple calls if already loaded
 

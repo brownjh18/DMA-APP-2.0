@@ -64,6 +64,12 @@ const Tab4: React.FC = () => {
   const { currentMedia, setCurrentMedia, setIsPlaying } = usePlayer();
   const { onPodcastCreated, onPodcastUpdated, onPodcastDeleted } = useSocket() || {};
 
+  // Clear all caches on page load/refresh
+  useEffect(() => {
+    console.log('🔄 Tab4: Clearing caches on page load/refresh');
+    apiService.clearCacheByType('podcasts');
+  }, []);
+
   // Helper function to convert relative URLs to full backend URLs
   const getFullUrl = (url: string) => {
     if (!url || url.trim() === '') {
