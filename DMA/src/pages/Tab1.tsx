@@ -917,25 +917,6 @@ const Tab1: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'flex-end',
                 }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '20px',
-                    background: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  }}>
-                    <IonIcon 
-                      icon={arrowForward} 
-                      style={{ 
-                        fontSize: '18px', 
-                        color: '#667eea',
-                        marginLeft: '2px'
-                      }} 
-                    />
-                  </div>
                 </div>
               </div>
 
