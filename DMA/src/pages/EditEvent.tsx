@@ -19,7 +19,7 @@ import {
   checkmarkCircle,
   informationCircle,
   film,
-  location,
+  location as locationIcon,
   call,
   people
 } from 'ionicons/icons';
@@ -771,7 +771,7 @@ const EditEvent: React.FC = () => {
                   e.target.style.boxShadow = 'none';
                 }}
               />
-              <IonIcon icon={location} style={{
+              <IonIcon icon={locationIcon} style={{
                 position: 'absolute',
                 left: '14px',
                 top: '50%',

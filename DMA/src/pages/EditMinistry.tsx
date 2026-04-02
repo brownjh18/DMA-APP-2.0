@@ -19,7 +19,7 @@ import {
   checkmarkCircle,
   informationCircle,
   calendar,
-  location,
+  location as locationIcon,
   call,
   mail,
   person,
@@ -371,7 +371,7 @@ const EditMinistry: React.FC = () => {
                   background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
                 onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
                 onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-              <IonIcon icon={location} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
+              <IonIcon icon={locationIcon} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
             </div>
           </div>
 
