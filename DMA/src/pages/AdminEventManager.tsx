@@ -10,11 +10,15 @@ import {
   IonText,
   IonRefresher,
   IonRefresherContent,
+  IonLoading,
+  IonAlert,
   IonActionSheet,
   IonFab,
-  IonFabButton
+  IonFabButton,
+  useIonViewWillEnter
 } from '@ionic/react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
   add,
@@ -37,61 +41,63 @@ import './Tab4.css';
 
 const AdminEventManager: React.FC = () => {
   const history = useHistory();
-  const currentLocation = useLocation();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventsLoading, setEventsLoading] = useState<boolean>(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showActionSheet, setShowActionSheet] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
+  
+  // Default thumbnail for events when no custom thumbnail is uploaded
+  const DEFAULT_EVENT_THUMBNAIL = '/hero-evangelism.jpg';
 
   useEffect(() => {
     loadEvents();
   }, []);
 
-  // Refresh events when navigating to this page
-  useEffect(() => {
-    if (currentLocation.pathname === '/admin/events') {
-      loadEvents();
-    }
-  }, [currentLocation.pathname]);
-
-  // Check for refresh flag on mount
-  useEffect(() => {
-    const needsRefresh = sessionStorage.getItem('eventsNeedRefresh');
-    if (needsRefresh === 'true') {
+  useIonViewWillEnter(() => {
+    const needsRefresh = sessionStorage.getItem('eventsNeedRefresh') === 'true';
+    if (needsRefresh) {
       sessionStorage.removeItem('eventsNeedRefresh');
+      loadEvents(true);
+    } else if (events.length === 0) {
       loadEvents();
     }
-  }, []);
+  });
 
-
-  const loadEvents = async () => {
-    if (eventsLoading || events.length > 0) return; // Prevent multiple calls if already loaded
+  const loadEvents = async (forceRefresh = false) => {
+    if (!forceRefresh && eventsLoading && events.length > 0) return;
 
     try {
       setEventsLoading(true);
+      setLoading(true);
       console.log('Loading events from API...');
+      
       const data = await apiService.getEvents({ page: 1, limit: 100, published: 'all' });
       const formattedEvents = data.events.map((event: any) => ({
-        id: event._id,
+        _id: event._id,
         title: event.title,
-        date: event.date.split('T')[0], // Format date
+        date: event.date,
         time: event.time,
         location: event.location,
         description: event.description,
-        status: event.isPublished ? 'published' : 'draft',
+        isPublished: event.isPublished,
         attendees: event.currentAttendees || 0,
         capacity: event.maxAttendees || 0,
         organizer: event.speaker || '',
-        contactInfo: event.contactPhone || '',
         imageUrl: event.imageUrl
       }));
+      console.log('Events loaded:', formattedEvents.length);
       setEvents(formattedEvents);
     } catch (error) {
       console.error('Error loading events:', error);
+      setAlertMessage('Failed to load events. Please try again.');
+      setShowAlert(true);
     } finally {
       setLoading(false);
       setEventsLoading(false);
@@ -99,40 +105,53 @@ const AdminEventManager: React.FC = () => {
   };
 
   const handleRefresh = async (event: CustomEvent) => {
-    await loadEvents();
+    await loadEvents(true);
     event.detail.complete();
   };
 
   const toggleStatus = async (id: string) => {
     try {
-      const event = events.find(e => e.id === id);
-      if (!event) return;
+      const event = events.find(e => e._id === id);
+      if (!event) {
+        setAlertMessage('Event not found.');
+        setShowAlert(true);
+        return;
+      }
 
-      const newStatus = event.status === 'published' ? false : true;
-
+      const newStatus = !event.isPublished;
       await apiService.updateEvent(id, { isPublished: newStatus });
 
-      setEvents(events.map(event =>
-        event.id === id
-          ? { ...event, status: newStatus ? 'published' : 'draft' }
-          : event
+      setEvents(events.map(e => 
+        e._id === id ? { ...e, isPublished: newStatus } : e
       ));
+
+      setAlertMessage(`Event ${newStatus ? 'published' : 'unpublished'} successfully!`);
+      setShowAlert(true);
+
+      sessionStorage.setItem('eventsNeedRefresh', 'true');
     } catch (error) {
       console.error('Error updating event status:', error);
+      setAlertMessage('Failed to update event status. Please try again.');
+      setShowAlert(true);
     }
   };
 
   const deleteEvent = async (id: string) => {
     try {
       await apiService.deleteEvent(id);
-      setEvents(events.filter(event => event.id !== id));
+      setEvents(events.filter(e => e._id !== id));
+      setAlertMessage('Event deleted successfully!');
+      setShowAlert(true);
+      sessionStorage.setItem('eventsNeedRefresh', 'true');
     } catch (error) {
       console.error('Error deleting event:', error);
+      setAlertMessage('Failed to delete event. Please try again.');
+      setShowAlert(true);
     }
   };
 
   const openEditPage = (event: any) => {
-    history.push(`/admin/events/edit/${event.id}`, { event });
+    history.push(`/admin/events/edit/${event._id}`, { event });
   };
 
   const openActionSheet = (event: any) => {
@@ -140,25 +159,20 @@ const AdminEventManager: React.FC = () => {
     setShowActionSheet(true);
   };
 
-  const handleStatClick = (statType: string) => {
-    setFilterBy(statType === 'published' ? 'published' : 'all');
-  };
-
   // Calculate stats
   const totalEvents = events.length;
-  const publishedEvents = events.filter(e => e.status === 'published').length;
+  const publishedEvents = events.filter(e => e.isPublished).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
 
   const statsModules = [
-    { name: 'Total Events', icon: calendar, color: '#6366f1', val: totalEvents, sub: 'events' },
+    { name: 'Total Events', icon: calendar, color: '#f59e0b', val: totalEvents, sub: 'events' },
     { name: 'Published', icon: checkmarkCircle, color: '#10b981', val: publishedEvents, sub: 'events' },
-    { name: 'Total Attendees', icon: people, color: '#f59e0b', val: totalAttendees, sub: 'attendees' }
+    { name: 'Total Attendees', icon: people, color: '#8b5cf6', val: totalAttendees, sub: 'attendees' }
   ];
 
   const getSortedAndFilteredEvents = () => {
     let filtered = events;
     
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(e => 
@@ -167,12 +181,10 @@ const AdminEventManager: React.FC = () => {
       );
     }
 
-    // Apply filter
     if (filterBy === 'published') {
-      filtered = filtered.filter(e => e.status === 'published');
+      filtered = filtered.filter(e => e.isPublished === true);
     }
 
-    // Apply sorting
     let sorted = [...filtered];
     switch (sortBy) {
       case 'date':
@@ -182,19 +194,8 @@ const AdminEventManager: React.FC = () => {
           return dateB.getTime() - dateA.getTime();
         });
         break;
-      case 'attendees':
-        sorted.sort((a, b) => {
-          const attendeesA = a.attendees || 0;
-          const attendeesB = b.attendees || 0;
-          return attendeesB - attendeesA;
-        });
-        break;
-      case 'published':
-        sorted.sort((a, b) => {
-          const dateA = new Date(a.date + ' ' + a.time);
-          const dateB = new Date(b.date + ' ' + b.time);
-          return dateB.getTime() - dateA.getTime();
-        });
+      case 'title':
+        sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
         break;
       default:
         break;
@@ -203,34 +204,18 @@ const AdminEventManager: React.FC = () => {
     return sorted;
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
-        <div
-          onClick={() => history.goBack()}
-          style={{
-            position: 'absolute',
-            top: 'calc(var(--ion-safe-area-top) - -5px)',
-            left: 20,
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 999,
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
-          }}
-        >
-          <IonIcon icon={arrowBack} style={{ color: 'white', fontSize: '18px' }} />
-        </div>
+        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">
-            <span style={{ fontWeight: '700', color: 'var(--ion-color-primary)' }}>Event Management</span>
-          </IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadEvents()} style={{ marginRight: '8px' }}>
+          <IonTitle className="title-ios">Event Manager</IonTitle>
+          <IonButton fill="clear" slot="end" onClick={() => loadEvents(true)} style={{ marginRight: '8px' }}>
             <IonIcon icon={settings} />
           </IonButton>
         </IonToolbar>
@@ -238,71 +223,63 @@ const AdminEventManager: React.FC = () => {
 
       <IonContent fullscreen className="content-ios">
         <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
-          
-          {/* Stats Modules - 2 Column Grid */}
+
+          {/* Stats Modules */}
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              Event Statistics
-            </h3>
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '8px',
-              background: 'var(--ion-card-background)',
-              borderRadius: '16px',
-              padding: '8px',
-              border: '1px solid var(--ion-color-step-200)'
+              display: 'flex', 
+              gap: '10px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}>
               {statsModules.map((mod, i) => (
                 <div key={i} onClick={() => {
                   if (mod.name === 'Total Events') setFilterBy('all');
                   else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
                 }} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '14px',
-                  borderRadius: '12px',
+                  minWidth: '140px',
+                  flex: '0 0 auto',
+                  padding: '12px 16px',
+                  borderRadius: '14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: `1px solid ${mod.color}20`,
+                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}30`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
+                  e.currentTarget.style.borderColor = `${mod.color}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
+                  e.currentTarget.style.borderColor = `${mod.color}20`;
                 }}
                 >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    background: mod.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: `0 4px 12px ${mod.color}40`
-                  }}>
-                    <IonIcon icon={mod.icon} style={{ fontSize: '20px', color: 'white' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: mod.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: `0 2px 8px ${mod.color}30`
+                    }}>
+                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{mod.name}</p>
-                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    background: `${mod.color}15`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '16px', fontWeight: '700', color: mod.color }}>{mod.val}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
                   </div>
                 </div>
               ))}
@@ -353,7 +330,6 @@ const AdminEventManager: React.FC = () => {
               </div>
             </div>
 
-            {/* Active Filter Badge */}
             {filterBy !== 'all' && (
               <div style={{
                 display: 'inline-flex',
@@ -374,312 +350,285 @@ const AdminEventManager: React.FC = () => {
                     padding: '2px'
                   }}
                 >
-                  <IonIcon icon={closeIcon} style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '16px' }} />
+                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
             )}
           </div>
 
           {/* Events List */}
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
-
           <div>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              {filterBy === 'all' ? 'All Events' :
-               filterBy === 'published' ? 'Published Events' :
-               'All Events'}
-              <span style={{ 
-                color: 'var(--ion-text-color)', 
-                opacity: 0.4, 
-                fontWeight: '400',
-                fontSize: '0.85em',
-                marginLeft: '8px'
-              }}>
-                ({getSortedAndFilteredEvents().length})
-              </span>
-            </h3>
-
             {getSortedAndFilteredEvents().length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '60px 20px',
-                background: 'var(--ion-card-background)',
-                borderRadius: 20,
-                border: '1px solid var(--ion-color-step-200)'
+                color: 'var(--ion-color-medium)',
+                opacity: 0.6
               }}>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 24,
-                  background: 'var(--ion-color-primary)',
-                  opacity: 0.1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 20px'
-                }}>
-                  <IonIcon
-                    icon={calendar}
-                    style={{
-                      fontSize: '2.5em',
-                      color: 'var(--ion-color-primary)'
-                    }}
-                  />
-                </div>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)'
-                }}>
-                  {loading ? 'Loading events...' : 'No events found'}
-                </h3>
-                <p style={{
-                  margin: '0',
-                  fontSize: '0.9em',
-                  color: 'var(--ion-text-color)',
-                  opacity: 0.6,
-                  lineHeight: '1.4'
-                }}>
-                  {loading
-                    ? 'Please wait while we fetch the event list'
-                    : searchQuery
-                      ? 'No events match your search'
-                      : filterBy !== 'all'
-                        ? `No events match the current ${filterBy} filter`
-                        : 'No events have been added yet'
-                  }
+                <IonIcon icon={calendar} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
+                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No events found</p>
+                <p style={{ fontSize: '14px', margin: 0 }}>
+                  {searchQuery || filterBy !== 'all' 
+                    ? 'Try adjusting your search or filters' 
+                    : 'Start by adding your first event'}
                 </p>
-                {!loading && (searchQuery || filterBy !== 'all') && (
-                  <IonButton
-                    fill="outline"
-                    onClick={() => {
-                      setFilterBy('all');
-                      setSearchQuery('');
-                    }}
-                    style={{
-                      marginTop: '20px',
-                      '--border-color': 'var(--ion-color-step-200)',
-                      '--color': 'var(--ion-color-primary)',
-                      '--background': 'transparent',
-                      '--border-radius': '12px'
-                    }}
-                  >
-                    Clear filters
-                  </IonButton>
-                )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {getSortedAndFilteredEvents().map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openActionSheet(event);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'var(--ion-card-background)',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      padding: '14px',
-                      border: '1px solid var(--ion-color-step-200)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {/* Event Thumbnail */}
-                    <div style={{ position: 'relative', marginRight: '14px' }}>
-                      {event.imageUrl ? (
-                        <img
-                          src={event.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${event.imageUrl}` : event.imageUrl}
-                          alt={event.title}
-                          style={{
-                            width: '80px',
-                            height: '45px',
-                            borderRadius: '8px',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '80px',
-                            height: '45px',
-                            borderRadius: '8px',
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-                          }}
-                        >
-                          <IonIcon icon={calendar} style={{ fontSize: '1.5em', color: 'white' }} />
-                        </div>
-                      )}
-                      {/* Status Badge - Top Left */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '4px',
-                        left: '4px',
-                        background: event.status === 'published' 
-                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                          : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.55em',
-                        fontWeight: '600',
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        {event.status === 'published' ? 'Published' : 'Draft'}
-                      </div>
-                    </div>
+              getSortedAndFilteredEvents().map((event) => (
+                <div
+                  key={event._id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: 'var(--ion-card-background)',
+                    border: '1px solid var(--ion-color-step-200)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '10px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#f59e0b40';
+                    e.currentTarget.style.background = '#f59e0b08';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px #f59e0b20';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
+                    e.currentTarget.style.background = 'var(--ion-card-background)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onClick={() => openEditPage(event)}
+                >
+                  {/* Left accent line */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '3px',
+                    height: '100%',
+                    background: event.isPublished ? '#10b981' : '#f59e0b',
+                    opacity: 0.8
+                  }} />
 
-                    {/* Event Info */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '4px'
-                      }}>
-                        <h4 style={{
-                          margin: 0,
-                          fontSize: '0.95em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {event.title}
-                        </h4>
-                      </div>
-                      <p style={{
-                        margin: '0 0 4px 0',
-                        fontSize: '0.8em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.6,
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {event.organizer || 'Dove Church'}
-                      </p>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        fontSize: '0.7em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.4
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
-                          <span>{new Date(event.date + ' ' + event.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>•</span>
-                          <IonIcon icon={people} style={{ fontSize: '12px' }} />
-                          <span>{event.attendees}/{event.capacity}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Options Button */}
-                    <IonButton
-                      fill="clear"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openActionSheet(event);
-                      }}
+                  {/* Thumbnail */}
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    position: 'relative',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <img 
+                      src={event.imageUrl ? (event.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${event.imageUrl}` : event.imageUrl) : DEFAULT_EVENT_THUMBNAIL} 
+                      alt={event.title || 'Event'}
                       style={{
-                        margin: 0,
-                        padding: '8px',
-                        minWidth: 'auto',
-                        height: 'auto',
-                        '--color': 'var(--ion-text-color)',
-                        opacity: 0.5
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
                       }}
-                    >
-                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
-                    </IonButton>
+                      onError={(e) => {
+                        if (event.imageUrl && !failedThumbnails.has(event._id)) {
+                          (e.target as HTMLImageElement).src = DEFAULT_EVENT_THUMBNAIL;
+                          setFailedThumbnails(prev => new Set(prev).add(event._id));
+                        }
+                      }}
+                    />
                   </div>
-                ))}
-              </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {event.title || 'Untitled'}
+                      </p>
+                    </div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {event.organizer || 'Dove Church'}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                        {event.date ? formatDate(event.date) : 'No date'}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={people} style={{ fontSize: '12px' }} />
+                        {event.attendees}/{event.capacity}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action buttons with status badge above */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    <div style={{
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: '500',
+                      background: event.isPublished ? '#10b98120' : '#f59e0b20',
+                      color: event.isPublished ? '#10b981' : '#f59e0b',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {event.isPublished ? 'Published' : 'Draft'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(event._id); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: event.isPublished ? '#10b98115' : '#f59e0b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = event.isPublished ? '#10b98125' : '#f59e0b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = event.isPublished ? '#10b98115' : '#f59e0b15'}
+                      >
+                        <IonIcon 
+                          icon={event.isPublished ? eyeOff : eye} 
+                          style={{ fontSize: '16px', color: event.isPublished ? '#10b981' : '#f59e0b' }} 
+                        />
+                      </div>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); openActionSheet(event); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: '#64748b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Event Management
+              Dove Church • Admin Panel v2.0
             </IonText>
           </div>
         </div>
 
-        {/* FAB Button */}
-        <IonFab horizontal="end" vertical="bottom" slot="fixed" style={{ marginBottom: '80px', marginRight: '16px' }}>
-          <IonFabButton onClick={() => history.push('/admin/events/add')} style={{ '--background': '#6366f1', '--box-shadow': '0 4px 16px rgba(99, 102, 241, 0.5)' }}>
+        {/* FAB for adding new event */}
+        <IonFab
+          horizontal="end"
+          vertical="bottom"
+          slot="fixed"
+          style={{
+            '--background': '#f59e0b',
+            '--box-shadow': '0 6px 20px rgba(245, 158, 11, 0.4)',
+            'marginBottom': '70px',
+            'marginRight': '16px'
+          } as any}
+        >
+          <IonFabButton onClick={() => history.push('/admin/events/add')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
-
-        <IonActionSheet
-          isOpen={showActionSheet}
-          onDidDismiss={() => setShowActionSheet(false)}
-          header={`Options for "${selectedEvent?.title}"`}
-          buttons={[
-            {
-              text: selectedEvent?.status === 'published' ? 'Unpublish' : 'Publish',
-              icon: selectedEvent?.status === 'published' ? eyeOff : eye,
-              handler: () => {
-                if (selectedEvent) {
-                  toggleStatus(selectedEvent.id);
-                }
-              }
-            },
-            {
-              text: 'Edit',
-              icon: create,
-              handler: () => {
-                if (selectedEvent) {
-                  openEditPage(selectedEvent);
-                }
-              }
-            },
-            {
-              text: 'Delete',
-              role: 'destructive',
-              icon: trash,
-              handler: () => {
-                if (selectedEvent) {
-                  deleteEvent(selectedEvent.id);
-                }
-              }
-            },
-            {
-              text: 'Cancel',
-              role: 'cancel'
-            }
-          ]}
-        />
-
-        <style>{`
-          input::placeholder {
-            color: var(--ion-text-color) !important;
-            opacity: 0.4 !important;
-          }
-        `}</style>
       </IonContent>
+
+      {/* Delete Confirmation Alert */}
+      <IonAlert
+        isOpen={showAlert}
+        onDidDismiss={() => setShowAlert(false)}
+        header="Alert"
+        message={alertMessage}
+        buttons={['OK']}
+      />
+
+      {/* Action Sheet */}
+      <IonActionSheet
+        isOpen={showActionSheet}
+        onDidDismiss={() => setShowActionSheet(false)}
+        header={selectedEvent?.title || 'Event Options'}
+        buttons={[
+          {
+            text: 'Edit',
+            icon: create,
+            handler: () => {
+              if (selectedEvent) openEditPage(selectedEvent);
+            }
+          },
+          {
+            text: selectedEvent?.isPublished ? 'Unpublish' : 'Publish',
+            icon: selectedEvent?.isPublished ? eyeOff : eye,
+            handler: () => {
+              if (selectedEvent) toggleStatus(selectedEvent._id);
+            }
+          },
+          {
+            text: 'Delete',
+            icon: trash,
+            role: 'destructive',
+            handler: () => {
+              if (selectedEvent) deleteEvent(selectedEvent._id);
+            }
+          },
+          {
+            text: 'Cancel',
+            icon: arrowBack,
+            role: 'cancel'
+          }
+        ]}
+      />
+
+      {loading && events.length === 0 ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px 20px',
+          color: 'var(--ion-color-medium)',
+          opacity: 0.6
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid var(--ion-color-step-200)',
+            borderTop: '3px solid var(--ion-color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ fontSize: '14px', margin: 0 }}>Loading events...</p>
+        </div>
+      ) : null}
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </IonPage>
   );
 };

@@ -18,6 +18,7 @@ import {
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import {
   add,
   create,
@@ -37,8 +38,9 @@ import {
   checkmarkCircle,
   calendar
 } from 'ionicons/icons';
-import './Tab4.css';
+import { useSocket } from '../contexts/SocketContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
+import './Tab4.css';
 
 const AdminRadioManager: React.FC = () => {
   const history = useHistory();
@@ -55,8 +57,15 @@ const AdminRadioManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
+  
+  // Default thumbnail for radio/podcasts when no custom thumbnail is uploaded
+  const DEFAULT_RADIO_THUMBNAIL = '/hero-evangelism.jpg';
+  
+  // Socket.io real-time updates (only podcast events are supported in SocketContext)
+  const { isConnected, onPodcastCreated, onPodcastUpdated, onPodcastDeleted } = useSocket();
 
-  // Utility function to clear API cache for podcasts
+  // Helper function to clear API cache for podcasts
   const clearPodcastsCache = () => {
     try {
       const keys = Object.keys(localStorage);
@@ -74,24 +83,96 @@ const AdminRadioManager: React.FC = () => {
   // Utility function to handle API errors gracefully
   const handleApiError = (error: any, action: string) => {
     console.error(`Error ${action}:`, error);
+    
+    if (error.message?.includes('not found') || error.message?.includes('404')) {
+      console.log(`🗑️ Resource not found during ${action}, clearing cache and refreshing`);
+      clearPodcastsCache();
+      sessionStorage.setItem('podcastsNeedRefresh', 'true');
+      setTimeout(() => loadPodcasts(true), 1000);
+      return true; // Error was handled
+    }
+    
+    return false; // Error was not handled, show generic message
+  };
+
+  // Check if podcast data might be stale and needs refresh
+  const isDataStale = () => {
+    try {
+      const cacheKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('api_cache_') && (key.includes('/podcasts') || key.includes('/live-broadcasts'))
+      );
+      
+      for (const key of cacheKeys) {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const age = Date.now() - parsed.timestamp;
+          const maxAge = 5 * 60 * 1000; // 5 minutes
+          
+          if (age > maxAge) {
+            console.log(`📅 Cache data is stale (${Math.round(age / 1000 / 60)} minutes old), will refresh`);
+            return true;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking cache age:', error);
+    }
     return false;
   };
 
   useEffect(() => {
-    // Initial load - check if refresh is needed
+    // Set up real-time Socket.io listeners
+    if (isConnected) {
+      console.log('🔌 AdminRadioManager: Setting up Socket.io listeners');
+      
+      // Podcast listeners
+      onPodcastCreated((data: any) => {
+        console.log('📥 Received podcast:created event:', data);
+        if (data.podcast) {
+          setPodcasts(prev => [data.podcast, ...prev]);
+          clearPodcastsCache();
+          sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        }
+      });
+
+      onPodcastUpdated((data: any) => {
+        console.log('📥 Received podcast:updated event:', data);
+        if (data.podcast) {
+          setPodcasts(prev => 
+            prev.map(p => p._id === data.podcast._id ? data.podcast : p)
+          );
+          clearPodcastsCache();
+          sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        }
+      });
+
+      onPodcastDeleted((data: any) => {
+        console.log('📥 Received podcast:deleted event:', data);
+        if (data.id) {
+          setPodcasts(prev => prev.filter(p => p._id !== data.id));
+          clearPodcastsCache();
+          sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        }
+      });
+
+    }
+
+    // Check if refresh is needed on component mount
     const needsRefresh = sessionStorage.getItem('podcastsNeedRefresh') === 'true';
-    const shouldRefresh = needsRefresh || podcasts.length === 0;
+    const staleData = isDataStale();
+    const shouldRefresh = needsRefresh || staleData;
     
-    console.log('📱 AdminRadioManager mounted, needsRefresh:', needsRefresh, 'podcasts.length:', podcasts.length);
+    console.log('📱 AdminRadioManager mounted, needsRefresh:', needsRefresh, 'staleData:', staleData);
     loadPodcasts(shouldRefresh);
-  }, []);
+  }, [isConnected]);
 
   useIonViewWillEnter(() => {
     const needsRefresh = sessionStorage.getItem('podcastsNeedRefresh') === 'true';
     if (needsRefresh) {
       console.log('🔄 Refreshing podcasts due to navigation back from add/edit page');
       loadPodcasts(true);
-    } else if (podcasts.length === 0) {
+    } else if (podcasts.length === 0 && liveBroadcasts.length === 0) {
       loadPodcasts();
     }
   });
@@ -99,10 +180,10 @@ const AdminRadioManager: React.FC = () => {
   const loadPodcasts = async (forceRefresh = false) => {
     const needsRefresh = sessionStorage.getItem('podcastsNeedRefresh') === 'true';
     
-    // Don't block if already loading - just return to prevent duplicate calls
     if (!forceRefresh && !needsRefresh && podcastsLoading) return;
 
     try {
+      setPodcastsLoading(true);
       setLoading(true);
       console.log('Loading podcasts from API...');
       
@@ -113,7 +194,7 @@ const AdminRadioManager: React.FC = () => {
       }
       
       // Load podcasts using apiService - includes all for admin management (published and drafts)
-      const podcastData = await apiService.getPodcasts({ published: 'false', limit: 1000 });
+      const podcastData = await apiService.getPodcasts({ limit: 100, published: 'all' });
       if (podcastData && podcastData.podcasts) {
         setPodcasts(podcastData.podcasts);
       } else {
@@ -155,7 +236,7 @@ const AdminRadioManager: React.FC = () => {
       if (podcast) {
         const newStatus = podcast.status === 'published' ? 'draft' : 'published';
         const token = localStorage.getItem('token');
-        const response = await fetch(`${BACKEND_BASE_URL}/api/podcasts/${id}`, {
+        await fetch(`${BACKEND_BASE_URL}/api/podcasts/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -164,21 +245,20 @@ const AdminRadioManager: React.FC = () => {
           body: JSON.stringify({ status: newStatus })
         });
 
-        if (response.ok) {
-          setPodcasts(podcasts.map(p => 
-            p._id === id ? { ...p, status: newStatus } : p
-          ));
-          setAlertMessage(`Podcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
-          setShowAlert(true);
-          sessionStorage.setItem('podcastsNeedRefresh', 'true');
-          setTimeout(() => loadPodcasts(true), 500);
-        } else {
-          console.error('Failed to update podcast status');
-        }
+        // Update local state immediately for instant feedback
+        setPodcasts(podcasts.map(p => 
+          p._id === id ? { ...p, status: newStatus } : p
+        ));
+
+        setAlertMessage(`Podcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
+        setShowAlert(true);
+
+        sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        setTimeout(() => loadPodcasts(true), 500);
       } else if (liveBroadcast) {
         const newStatus = liveBroadcast.status === 'published' ? 'draft' : 'published';
         const token = localStorage.getItem('token');
-        const response = await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts/${id}`, {
+        await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -187,22 +267,32 @@ const AdminRadioManager: React.FC = () => {
           body: JSON.stringify({ isPublished: newStatus === 'published' })
         });
 
-        if (response.ok) {
-          setLiveBroadcasts(liveBroadcasts.map(b => 
-            b._id === id ? { ...b, status: newStatus } : b
-          ));
-          setAlertMessage(`Broadcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
-          setShowAlert(true);
-          sessionStorage.setItem('podcastsNeedRefresh', 'true');
-          setTimeout(() => loadPodcasts(true), 500);
-        } else {
-          console.error('Failed to update live broadcast status');
-        }
+        // Update local state immediately for instant feedback
+        setLiveBroadcasts(liveBroadcasts.map(b => 
+          b._id === id ? { ...b, status: newStatus } : b
+        ));
+
+        setAlertMessage(`Broadcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
+        setShowAlert(true);
+
+        sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        setTimeout(() => loadPodcasts(true), 500);
       }
     } catch (error: any) {
       console.error('Error updating status:', error);
-      setAlertMessage('Failed to update status. Please try again.');
-      setShowAlert(true);
+      
+      if (error.message?.includes('not found') || error.message?.includes('404')) {
+        console.log('🗑️ Resource not found in database, removing from local state');
+        setPodcasts(podcasts.filter(p => p._id !== id));
+        setLiveBroadcasts(liveBroadcasts.filter(b => b._id !== id));
+        setAlertMessage('This broadcast no longer exists and has been removed from the list.');
+        setShowAlert(true);
+        sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        setTimeout(() => loadPodcasts(true), 1000);
+      } else {
+        setAlertMessage('Failed to update status. Please try again.');
+        setShowAlert(true);
+      }
     }
   };
 
@@ -232,8 +322,19 @@ const AdminRadioManager: React.FC = () => {
       setTimeout(() => loadPodcasts(true), 500);
     } catch (error: any) {
       console.error('Error deleting broadcast:', error);
-      setAlertMessage('Failed to delete broadcast. Please try again.');
-      setShowAlert(true);
+      
+      if (error.message?.includes('not found') || error.message?.includes('404')) {
+        console.log('🗑️ Broadcast not found in database, removing from local state');
+        setPodcasts(podcasts.filter(p => p._id !== broadcastToDelete._id));
+        setLiveBroadcasts(liveBroadcasts.filter(b => b._id !== broadcastToDelete._id));
+        setAlertMessage('This broadcast no longer exists and has been removed from the list.');
+        setShowAlert(true);
+        sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        setTimeout(() => loadPodcasts(true), 1000);
+      } else {
+        setAlertMessage('Failed to delete broadcast. Please try again.');
+        setShowAlert(true);
+      }
     } finally {
       setShowDeleteConfirm(false);
       setBroadcastToDelete(null);
@@ -255,10 +356,7 @@ const AdminRadioManager: React.FC = () => {
   };
 
   const handleStatClick = (statType: string) => {
-    if (statType === 'total') setFilterBy('all');
-    else if (statType === 'published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
-    else if (statType === 'draft') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
-    else if (statType === 'views') setSortBy('listens');
+    setFilterBy(statType === 'published' || statType === 'draft' ? statType : 'all');
   };
 
   // Calculate stats
@@ -325,53 +423,12 @@ const AdminRadioManager: React.FC = () => {
     return sorted;
   };
 
-  const getStatusColor = (broadcast: any) => {
-    if (broadcast.isLive) {
-      return '#ef4444';
-    } else if (broadcast.broadcastStartTime && broadcast.type === 'podcast') {
-      return '#059669';
-    } else {
-      return '#007bff';
-    }
-  };
-
-  const getBadgeText = (broadcast: any) => {
-    if (broadcast.isLive) {
-      return 'LIVE';
-    } else if (broadcast.broadcastStartTime && broadcast.type === 'podcast') {
-      return 'RECORDED';
-    } else {
-      return 'UPLOADED';
-    }
-  };
-
   return (
     <IonPage>
       <IonHeader translucent>
-        <div
-          onClick={() => history.goBack()}
-          style={{
-            position: 'absolute',
-            top: 'calc(var(--ion-safe-area-top) - -5px)',
-            left: 20,
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 999,
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
-          }}
-        >
-          <IonIcon icon={arrowBack} style={{ color: 'white', fontSize: '18px' }} />
-        </div>
+        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">
-            <span style={{ fontWeight: '700', color: 'var(--ion-color-primary)' }}>Radio Management</span>
-          </IonTitle>
+          <IonTitle className="title-ios">Radio Manager</IonTitle>
           <IonButton fill="clear" slot="end" onClick={() => loadPodcasts(true)} style={{ marginRight: '8px' }}>
             <IonIcon icon={settings} />
           </IonButton>
@@ -380,68 +437,65 @@ const AdminRadioManager: React.FC = () => {
 
       <IonContent fullscreen className="content-ios">
         <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
-          
-          {/* Stats Modules - 2 Column Grid */}
+
+          {/* Stats Modules - Modern Compact Horizontal Cards */}
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              Broadcast Statistics
-            </h3>
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '8px',
-              background: 'var(--ion-card-background)',
-              borderRadius: '16px',
-              padding: '8px',
-              border: '1px solid var(--ion-color-step-200)'
+              display: 'flex', 
+              gap: '10px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}>
               {statsModules.map((mod, i) => (
-                <div key={i} onClick={() => handleStatClick(mod.name.toLowerCase().replace(' ', ''))} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '14px',
-                  borderRadius: '12px',
+                <div key={i} onClick={() => {
+                  if (mod.name === 'Total Broadcasts') setFilterBy('all');
+                  else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
+                  else if (mod.name === 'Drafts') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
+                  else if (mod.name === 'Total Listens') setSortBy('listens');
+                }} style={{
+                  minWidth: '140px',
+                  flex: '0 0 auto',
+                  padding: '12px 16px',
+                  borderRadius: '14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: `1px solid ${mod.color}20`,
+                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}30`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
+                  e.currentTarget.style.borderColor = `${mod.color}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
+                  e.currentTarget.style.borderColor = `${mod.color}20`;
                 }}
                 >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    background: mod.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: `0 4px 12px ${mod.color}40`
-                  }}>
-                    <IonIcon icon={mod.icon} style={{ fontSize: '20px', color: 'white' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: mod.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: `0 2px 8px ${mod.color}30`
+                    }}>
+                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{mod.name}</p>
-                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    background: `${mod.color}15`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '16px', fontWeight: '700', color: mod.color }}>{mod.val}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
                   </div>
                 </div>
               ))}
@@ -513,376 +567,303 @@ const AdminRadioManager: React.FC = () => {
                     padding: '2px'
                   }}
                 >
-                  <IonIcon icon={closeIcon} style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '16px' }} />
+                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
             )}
           </div>
 
           {/* Broadcasts List */}
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
-
           <div>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              {filterBy === 'all' ? 'All Broadcasts' :
-               filterBy === 'published' ? 'Published Broadcasts' :
-               filterBy === 'draft' ? 'Draft Broadcasts' :
-               'All Broadcasts'}
-              <span style={{ 
-                color: 'var(--ion-text-color)', 
-                opacity: 0.4, 
-                fontWeight: '400',
-                fontSize: '0.85em',
-                marginLeft: '8px'
-              }}>
-                ({getSortedAndFilteredBroadcasts().length})
-              </span>
-            </h3>
-
             {getSortedAndFilteredBroadcasts().length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '60px 20px',
-                background: 'var(--ion-card-background)',
-                borderRadius: 20,
-                border: '1px solid var(--ion-color-step-200)'
+                color: 'var(--ion-color-medium)',
+                opacity: 0.6
               }}>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 24,
-                  background: 'var(--ion-color-primary)',
-                  opacity: 0.1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 20px'
-                }}>
-                  <IonIcon
-                    icon={radio}
-                    style={{
-                      fontSize: '2.5em',
-                      color: 'var(--ion-color-primary)'
-                    }}
-                  />
-                </div>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)'
-                }}>
-                  {loading ? 'Loading broadcasts...' : 'No broadcasts found'}
-                </h3>
-                <p style={{
-                  margin: '0',
-                  fontSize: '0.9em',
-                  color: 'var(--ion-text-color)',
-                  opacity: 0.6,
-                  lineHeight: '1.4'
-                }}>
-                  {loading
-                    ? 'Please wait while we fetch the broadcast list'
-                    : searchQuery
-                      ? 'No broadcasts match your search'
-                      : filterBy !== 'all'
-                        ? `No broadcasts match the current ${filterBy} filter`
-                        : 'No podcasts have been added yet'
-                  }
+                <IonIcon icon={radio} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
+                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No broadcasts found</p>
+                <p style={{ fontSize: '14px', margin: 0 }}>
+                  {searchQuery || filterBy !== 'all' 
+                    ? 'Try adjusting your search or filters' 
+                    : 'Start by adding your first broadcast'}
                 </p>
-                {!loading && (searchQuery || filterBy !== 'all') && (
-                  <IonButton
-                    fill="outline"
-                    onClick={() => {
-                      setFilterBy('all');
-                      setSearchQuery('');
-                    }}
-                    style={{
-                      marginTop: '20px',
-                      '--border-color': 'var(--ion-color-step-200)',
-                      '--color': 'var(--ion-color-primary)',
-                      '--background': 'transparent',
-                      '--border-radius': '12px'
-                    }}
-                  >
-                    Clear filters
-                  </IonButton>
-                )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {getSortedAndFilteredBroadcasts().map((broadcast) => (
-                  <div
-                    key={`${broadcast.type}-${broadcast._id || broadcast.id || Math.random()}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openActionSheet(broadcast);
-                    }}
- style={{
-                      display: 'flex', alignItems: 'center',
-                      background: 'var(--ion-card-background)',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      padding: '14px',
-                      border: '1px solid var(--ion-color-step-200)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {/* Broadcast Thumbnail */}
-                    <div style={{ position: 'relative', marginRight: '14px' }}>
-                      {broadcast.thumbnailUrl ? (
-                        <img
-                          src={broadcast.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${broadcast.thumbnailUrl}` : broadcast.thumbnailUrl}
-                          alt={broadcast.title}
-                          style={{
-                            width: '120px',
-                            height: '68px',
-                            borderRadius: '10px',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '120px',
-                            height: '68px',
-                            borderRadius: '10px',
-                            background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
-                          }}
-                        >
-                          <IonIcon icon={broadcast.type === 'live' ? radio : playCircle} style={{ fontSize: '2em', color: 'white' }} />
-                        </div>
-                      )}
-                      {/* Type Badge - Top Left (LIVE/RECORDED/UPLOADED) */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '4px',
-                        left: '4px',
-                        background: getStatusColor(broadcast),
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.6em',
-                        fontWeight: '600',
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        {getBadgeText(broadcast)}
-                      </div>
-                      {/* Duration Badge - Bottom Right */}
-                      {broadcast.duration && broadcast.duration !== 'Live' && (
-                        <div style={{
+              getSortedAndFilteredBroadcasts().map((broadcast) => (
+                <div
+                  key={`${broadcast.type}-${broadcast._id || broadcast.id || Math.random()}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: 'var(--ion-card-background)',
+                    border: '1px solid var(--ion-color-step-200)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '10px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#6366f140';
+                    e.currentTarget.style.background = '#6366f108';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px #6366f120';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
+                    e.currentTarget.style.background = 'var(--ion-card-background)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onClick={() => openEditPage(broadcast)}
+                >
+                  {/* Left accent line */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '3px',
+                    height: '100%',
+                    background: broadcast.isPublished ? '#10b981' : '#f59e0b',
+                    opacity: 0.8
+                  }} />
+
+                  {/* Thumbnail */}
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    position: 'relative',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {broadcast.thumbnailUrl ? (
+                      <img 
+                        src={broadcast.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${broadcast.thumbnailUrl}` : broadcast.thumbnailUrl} 
+                        alt={broadcast.title || 'Broadcast'}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
                           position: 'absolute',
-                          bottom: '4px',
-                          right: '4px',
-                          background: 'rgba(0, 0, 0, 0.85)',
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          fontSize: '0.7em',
-                          fontWeight: '500',
-                          color: '#fff'
-                        }}>
-                          {broadcast.duration}
-                        </div>
-                      )}
-                      {/* Published/Draft Badge - Bottom Left */}
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '4px',
-                        left: '4px',
-                        background: broadcast.isPublished 
-                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                          : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.6em',
-                        fontWeight: '600',
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        {broadcast.isPublished ? 'Published' : 'Draft'}
-                      </div>
-                    </div>
-
-                    {/* Broadcast Info */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '4px'
-                      }}>
-                        <h4 style={{
-                          margin: 0,
-                          fontSize: '0.95em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {broadcast.title}
-                        </h4>
-                      </div>
-                      <p style={{
-                        margin: '0 0 4px 0',
-                        fontSize: '0.8em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.6,
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {broadcast.speaker || 'Dove Church'}
-                      </p>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        fontSize: '0.7em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.4
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
-                          <span>{new Date(broadcast.publishedAt || broadcast.broadcastStartTime || broadcast.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>•</span>
-                          <IonIcon icon={broadcast.type === 'podcast' ? musicalNote : eye} style={{ fontSize: '12px' }} />
-                          <span>{broadcast.type === 'podcast' ? (broadcast.listens || 0) : (broadcast.viewCount || 0)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Options Button */}
-                    <IonButton
-                      fill="clear"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openActionSheet(broadcast);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: '8px',
-                        minWidth: 'auto',
-                        height: 'auto',
-                        '--color': 'var(--ion-text-color)',
-                        opacity: 0.5
-                      }}
-                    >
-                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
-                    </IonButton>
+                          top: 0,
+                          left: 0
+                        }}
+                        onError={(e) => {
+                          if (broadcast.thumbnailUrl && !failedThumbnails.has(broadcast._id || broadcast.id)) {
+                            (e.target as HTMLImageElement).src = DEFAULT_RADIO_THUMBNAIL;
+                            setFailedThumbnails(prev => new Set(prev).add(broadcast._id || broadcast.id));
+                          }
+                        }}
+                      />
+                    ) : (
+                      <IonIcon icon={broadcast.type === 'live' ? radio : playCircle} style={{ fontSize: '28px', color: 'white', opacity: 0.8 }} />
+                    )}
                   </div>
-                ))}
-              </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {broadcast.title || 'Untitled'}
+                      </p>
+                    </div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {broadcast.speaker || 'Dove Church'}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                        {new Date(broadcast.publishedAt || broadcast.broadcastStartTime || broadcast.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={broadcast.type === 'podcast' ? musicalNote : eye} style={{ fontSize: '12px' }} />
+                        {broadcast.type === 'podcast' ? (broadcast.listens || 0) : (broadcast.viewCount || 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action buttons with status badge above */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    {/* Status Badge - positioned above action buttons */}
+                    <div style={{
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: '500',
+                      background: broadcast.isPublished ? '#10b98120' : '#f59e0b20',
+                      color: broadcast.isPublished ? '#10b981' : '#f59e0b',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {broadcast.isPublished ? 'Published' : 'Draft'}
+                    </div>
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(broadcast._id || broadcast.id); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: broadcast.isPublished ? '#10b98115' : '#f59e0b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = broadcast.isPublished ? '#10b98125' : '#f59e0b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = broadcast.isPublished ? '#10b98115' : '#f59e0b15'}
+                      >
+                        <IonIcon 
+                          icon={broadcast.isPublished ? eyeOff : eye} 
+                          style={{ fontSize: '16px', color: broadcast.isPublished ? '#10b981' : '#f59e0b' }} 
+                        />
+                      </div>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); openActionSheet(broadcast); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: '#64748b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Radio Management
+              Dove Church • Admin Panel v2.0
             </IonText>
           </div>
         </div>
 
-        {/* FAB Button */}
-        <IonFab horizontal="end" vertical="bottom" slot="fixed" style={{ marginBottom: '80px', marginRight: '16px' }}>
-          <IonFabButton onClick={() => history.push('/admin/radio/add')} style={{ '--background': '#6366f1', '--box-shadow': '0 4px 16px rgba(99, 102, 241, 0.5)' }}>
+        {/* FAB for adding new broadcast */}
+        <IonFab
+          horizontal="end"
+          vertical="bottom"
+          slot="fixed"
+          style={{
+            '--background': '#6366f1',
+            '--box-shadow': '0 6px 20px rgba(99, 102, 241, 0.4)',
+            'marginBottom': '70px',
+            'marginRight': '16px'
+          } as any}
+        >
+          <IonFabButton onClick={() => history.push('/admin/radio/add')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
 
+        {/* Delete Confirmation Alert */}
+        <IonAlert
+          isOpen={showDeleteConfirm}
+          onDidDismiss={() => setShowDeleteConfirm(false)}
+          header="Delete Broadcast"
+          message="Are you sure you want to delete this broadcast? This action cannot be undone."
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            { text: 'Delete', role: 'destructive', handler: deleteBroadcast }
+          ]}
+        />
+
+        {/* General Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
-          header="Notice"
+          header="Alert"
           message={alertMessage}
           buttons={['OK']}
         />
-        <IonAlert
-          isOpen={showDeleteConfirm}
-          onDidDismiss={() => {
-            setShowDeleteConfirm(false);
-            setBroadcastToDelete(null);
-          }}
-          header="Confirm Delete"
-          message={`Are you sure you want to delete "${broadcastToDelete?.title}"? This action cannot be undone.`}
-          buttons={[
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: () => {
-                setShowDeleteConfirm(false);
-                setBroadcastToDelete(null);
-              }
-            },
-            {
-              text: 'Delete',
-              role: 'destructive',
-              handler: deleteBroadcast
-            }
-          ]}
-        />
+
+        {/* Action Sheet */}
         <IonActionSheet
           isOpen={showActionSheet}
           onDidDismiss={() => setShowActionSheet(false)}
-          header={`Options for "${selectedBroadcast?.title}"`}
+          header={selectedBroadcast?.title || 'Broadcast Options'}
           buttons={[
-            {
-              text: selectedBroadcast?.isPublished ? 'Unpublish' : 'Publish',
-              icon: selectedBroadcast?.isPublished ? eyeOff : eye,
-              handler: () => {
-                if (selectedBroadcast) {
-                  toggleStatus(selectedBroadcast._id || selectedBroadcast.id);
-                }
-              }
-            },
             {
               text: 'Edit',
               icon: create,
               handler: () => {
-                if (selectedBroadcast) {
-                  openEditPage(selectedBroadcast);
-                }
+                if (selectedBroadcast) openEditPage(selectedBroadcast);
+              }
+            },
+            {
+              text: selectedBroadcast?.isPublished ? 'Unpublish' : 'Publish',
+              icon: selectedBroadcast?.isPublished ? eyeOff : eye,
+              handler: () => {
+                if (selectedBroadcast) toggleStatus(selectedBroadcast._id || selectedBroadcast.id);
               }
             },
             {
               text: 'Delete',
-              role: 'destructive',
               icon: trash,
+              role: 'destructive',
               handler: () => {
-                if (selectedBroadcast) {
-                  confirmDeleteBroadcast(selectedBroadcast);
-                }
+                if (selectedBroadcast) confirmDeleteBroadcast(selectedBroadcast);
               }
             },
             {
               text: 'Cancel',
+              icon: arrowBack,
               role: 'cancel'
             }
           ]}
         />
 
+        {loading && podcasts.length === 0 && liveBroadcasts.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            color: 'var(--ion-color-medium)',
+            opacity: 0.6
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid var(--ion-color-step-200)',
+              borderTop: '3px solid var(--ion-color-primary)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }} />
+            <p style={{ fontSize: '14px', margin: 0 }}>Loading broadcasts...</p>
+          </div>
+        ) : null}
+
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </IonContent>
-      <style>{`
-        input::placeholder {
-          color: var(--ion-text-color) !important;
-          opacity: 0.4 !important;
-        }
-      `}</style>
     </IonPage>
   );
 };

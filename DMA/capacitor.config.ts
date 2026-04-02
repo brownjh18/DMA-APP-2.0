@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Dove Church',
   webDir: 'dist',
   server: {
-    // Android URL removed for production - app will load from bundled web assets
+    // Live reload server URL for development
+    url: 'http://192.168.1.4:8101',
+    cleartext: true
   },
   plugins: {
     SplashScreen: {

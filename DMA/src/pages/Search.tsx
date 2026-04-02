@@ -32,7 +32,6 @@ import {
   calendar,
   book,
   people,
-  newspaper,
   arrowBack,
   filter,
   close
@@ -42,7 +41,7 @@ import apiService, { BACKEND_BASE_URL } from '../services/api';
 
 interface SearchResult {
   id: string;
-  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry' | 'news';
+  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry';
   title: string;
   subtitle?: string;
   description?: string;
@@ -147,7 +146,6 @@ const Search: React.FC = () => {
       case 'event': return calendar;
       case 'devotion': return book;
       case 'ministry': return people;
-      case 'news': return newspaper;
       default: return search;
     }
   };
@@ -159,7 +157,6 @@ const Search: React.FC = () => {
       case 'event': return 'tertiary';
       case 'devotion': return 'success';
       case 'ministry': return 'warning';
-      case 'news': return 'danger';
       default: return 'medium';
     }
   };
@@ -170,8 +167,7 @@ const Search: React.FC = () => {
     { value: 'podcast', label: 'Podcasts' },
     { value: 'event', label: 'Events' },
     { value: 'devotion', label: 'Devotions' },
-    { value: 'ministry', label: 'Ministries' },
-    { value: 'news', label: 'News' }
+    { value: 'ministry', label: 'Ministries' }
   ];
 
   return (

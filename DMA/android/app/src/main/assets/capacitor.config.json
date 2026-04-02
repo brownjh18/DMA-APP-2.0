@@ -2,7 +2,10 @@
 	"appId": "io.dove.ministries.africa",
 	"appName": "Dove Church",
 	"webDir": "dist",
-	"server": {},
+	"server": {
+		"url": "http://192.168.1.4:8101",
+		"cleartext": true
+	},
 	"plugins": {
 		"SplashScreen": {
 			"launchShowDuration": 3000,

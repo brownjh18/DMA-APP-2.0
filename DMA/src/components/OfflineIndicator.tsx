@@ -1,136 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { IonToast, IonIcon } from '@ionic/react';
-import { cloudOffline, refresh, wifi, cloudDone } from 'ionicons/icons';
+import { IonIcon } from '@ionic/react';
+import { cloudOffline, wifi } from 'ionicons/icons';
 import { useNetwork } from '../contexts/NetworkContext';
 
 const OfflineIndicator: React.FC = () => {
-  const { isOnline, networkStatus, lastOnlineTime } = useNetwork();
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastColor, setToastColor] = useState<'success' | 'warning' | 'danger'>('danger');
-  const [wasOffline, setWasOffline] = useState(false);
+  const { isOnline } = useNetwork();
+  const [isVisible, setIsVisible] = useState(false);
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
+  const [wasOnline, setWasOnline] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!isOnline && !wasOffline) {
-      // Just went offline
-      setWasOffline(true);
-      setToastMessage('You are now offline. Some features may be limited.');
-      setToastColor('warning');
-      setShowToast(true);
-    } else if (isOnline && wasOffline) {
-      // Just came back online
-      setWasOffline(false);
-      setToastMessage('Welcome back! You are now online.');
-      setToastColor('success');
-      setShowToast(true);
-      
-      // Trigger data synchronization
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('syncOfflineData'));
-      }, 1000);
+    // Only show indicator when connection status changes
+    if (wasOnline === null) {
+      // Initial load - don't show
+      setWasOnline(isOnline);
+      return;
     }
-  }, [isOnline, wasOffline]);
+
+    if (isOnline !== wasOnline) {
+      // Connection status changed - show indicator
+      setStatus(isOnline ? 'online' : 'offline');
+      setIsVisible(true);
+      setWasOnline(isOnline);
+
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, wasOnline]);
+
+  // Don't render anything if not visible
+  if (!isVisible) return null;
 
   return (
     <>
-      {/* Connection Status Badge - Centered in Header with Sync Indicator on Left */}
+      {/* Connection Status Badge - Centered at Bottom (above bottom nav) */}
       <div
         style={{
           position: 'fixed',
-          top: 'calc(var(--ion-safe-area-top) + 13px)',
-          left: !isOnline || (lastOnlineTime && Date.now() - lastOnlineTime < 10000) ? '70%' : '75%',
+          bottom: '70px',
+          left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 9998,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '6px',
-          background: isOnline 
-            ? 'linear-gradient(135deg, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 0.9))' 
-            : 'linear-gradient(135deg, rgba(255, 107, 107, 0.9), rgba(238, 90, 36, 0.9))',
+          background: status === 'online'
+            ? 'linear-gradient(135deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 0.95))'
+            : 'linear-gradient(135deg, rgba(255, 107, 107, 0.95), rgba(238, 90, 36, 0.95))',
           color: 'white',
-          padding: '8px 12px',
-          borderRadius: '16px',
-          fontSize: '11px',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '13px',
           fontWeight: '600',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-          transition: 'left 0.3s ease',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+          animation: 'slideUp 0.3s ease-out, pulse 2s ease-in-out infinite',
         }}
       >
-        {/* Sync/Reconnect Indicator on the Left */}
-        {!isOnline ? (
-          // Red reconnect indicator when offline
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '3px',
-              paddingRight: '5px',
-              borderRight: '1px solid rgba(255,255,255,0.3)',
-              marginRight: '2px',
-            }}
-          >
-            <IonIcon icon={refresh} style={{ fontSize: '9px', animation: 'spin 1s linear infinite' }} />
-            <span style={{ fontSize: '9px' }}>Reconnect</span>
-          </div>
-        ) : lastOnlineTime && Date.now() - lastOnlineTime < 10000 ? (
-          // Green synced indicator when recently back online
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '3px',
-              paddingRight: '5px',
-              borderRight: '1px solid rgba(255,255,255,0.3)',
-              marginRight: '2px',
-            }}
-          >
-            <IonIcon icon={cloudDone} style={{ fontSize: '9px' }} />
-            <span style={{ fontSize: '9px' }}>Synced</span>
-          </div>
-        ) : null}
         <IonIcon 
-          icon={isOnline ? wifi : cloudOffline} 
-          style={{ fontSize: '12px' }} 
+          icon={status === 'online' ? wifi : cloudOffline} 
+          style={{ fontSize: '14px' }} 
         />
-        <span>{isOnline ? 'Online' : 'Offline'}</span>
+        <span>{status === 'online' ? 'Back Online' : 'Offline - Check Connection'}</span>
       </div>
-
-      {/* Status Toast - Below Page Header */}
-      <IonToast
-        isOpen={showToast}
-        onDidDismiss={() => {
-          setShowToast(false);
-        }}
-        message={toastMessage}
-        duration={3000}
-        position="top"
-        color={toastColor}
-        buttons={[
-          {
-            text: 'Dismiss',
-            role: 'cancel',
-            side: 'end'
-          }
-        ]}
-        style={{
-          '--border-radius': '16px',
-          '--box-shadow': '0 8px 32px rgba(0,0,0,0.2)',
-          'margin-top': 'calc(var(--ion-safe-area-top) + 60px)',
-        }}
-      />
 
       {/* CSS Animation */}
       <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateX(-50%) translateY(20px);
+            transform: translateX(-50%) translateY(-20px);
           }
           to {
             opacity: 1;
@@ -139,9 +82,9 @@ const OfflineIndicator: React.FC = () => {
         }
         
         @keyframes pulse {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.9; }
-          100% { transform: scale(1); opacity: 1; }
+          0% { transform: translateX(-50%) scale(1); }
+          50% { transform: translateX(-50%) scale(1.03); }
+          100% { transform: translateX(-50%) scale(1); }
         }
       `}</style>
     </>

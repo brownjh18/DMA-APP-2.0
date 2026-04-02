@@ -29,6 +29,7 @@ import {
   IonThumbnail,
   useIonViewWillEnter,
 } from '@ionic/react';
+import NotificationBell from '../components/NotificationBell';
 import {
   playCircle,
   play,
@@ -36,7 +37,6 @@ import {
   calendar,
   time,
   heart,
-  newspaper,
   informationCircle,
   location,
   people,
@@ -800,6 +800,9 @@ const Tab1: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Home</IonTitle>
+          <div slot="end" style={{ display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
+            <NotificationBell />
+          </div>
         </IonToolbar>
       </IonHeader>
 
@@ -1220,7 +1223,7 @@ const Tab1: React.FC = () => {
         <section className="section-padding">
           <div className="section-head">
             <div className="section-title">
-              <IonIcon icon={newspaper} />
+              <IonIcon icon={informationCircle} />
               <h2>Updates</h2>
             </div>
             <IonButton fill="clear" className="view-all-link" onClick={() => history.push('/events')}>

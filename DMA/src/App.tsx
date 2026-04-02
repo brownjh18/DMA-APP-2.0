@@ -41,10 +41,6 @@ const getPageTitle = (pathname: string): string => {
       title = 'Dove Church - Edit Event';
     } else if (pathname.startsWith('/admin/ministries/edit/')) {
       title = 'Dove Church - Edit Ministry';
-    } else if (pathname.startsWith('/admin/news/edit/')) {
-      title = 'Dove Church - Edit News';
-    } else if (pathname.startsWith('/admin/giving/edit/')) {
-      title = 'Dove Church - Edit Donation';
     } else if (pathname.startsWith('/admin/sermons/add')) {
       title = 'Dove Church - Add Sermon';
     } else if (pathname.startsWith('/admin/devotions/add')) {
@@ -53,10 +49,6 @@ const getPageTitle = (pathname: string): string => {
       title = 'Dove Church - Add Event';
     } else if (pathname.startsWith('/admin/ministries/add')) {
       title = 'Dove Church - Add Ministry';
-    } else if (pathname.startsWith('/admin/news/add')) {
-      title = 'Dove Church - Add News';
-    } else if (pathname.startsWith('/admin/giving/add')) {
-      title = 'Dove Church - Add Donation';
     } else if (pathname.startsWith('/admin/users/add')) {
       title = 'Dove Church - Add User';
     } else if (pathname.startsWith('/admin/radio/add')) {
@@ -67,8 +59,6 @@ const getPageTitle = (pathname: string): string => {
       title = 'Dove Church - Edit Broadcast';
     } else if (pathname.includes('/full-devotion')) {
       title = 'Dove Church - Devotion';
-    } else if (pathname.includes('/full-news')) {
-      title = 'Dove Church - News';
     } else if (pathname.includes('/podcast-player')) {
       title = 'Dove Church - Podcast Player';
     } else if (pathname.includes('/sermon-player')) {
@@ -184,6 +174,7 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { DownloadsProvider } from './contexts/DownloadsContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
@@ -195,6 +186,8 @@ import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
 import BottomFadeEffect from './components/BottomFadeEffect';
+import PermissionRequester from './components/PermissionRequester';
+import NotificationListener from './components/NotificationListener';
 import './components/FloatingSearchIcon.css';
 import Tab1 from './pages/Tab1';
 import Tab2 from './pages/Tab2';
@@ -202,7 +195,6 @@ import Tab3 from './pages/Tab3';
 import Tab4 from './pages/Tab4';
 import Tab5 from './pages/Tab5';
 import FullDevotion from './pages/FullDevotion';
-import FullNewsArticle from './pages/FullNewsArticle';
 import Profile from './pages/Profile';
 import PrayerRequest from './pages/PrayerRequest';
 import AdminDashboard from './pages/AdminDashboard';
@@ -220,22 +212,15 @@ import AdminSermonManager from './pages/AdminSermonManager';
 import AdminDevotionManager from './pages/AdminDevotionManager';
 import AdminEventManager from './pages/AdminEventManager';
 import AdminMinistryManager from './pages/AdminMinistryManager';
-import AdminGivingManager from './pages/AdminGivingManager';
-import AdminNewsManager from './pages/AdminNewsManager';
 import AdminContactManager from './pages/AdminContactManager';
 import AddSermon from './pages/AddSermon';
 import EditSermon from './pages/EditSermon';
 import EditDevotion from './pages/EditDevotion';
 import EditEvent from './pages/EditEvent';
 import EditMinistry from './pages/EditMinistry';
-import EditNewsArticle from './pages/EditNewsArticle';
-import EditDonation from './pages/EditDonation';
 import AddDevotion from './pages/AddDevotion';
 import AddEvent from './pages/AddEvent';
 import AddMinistry from './pages/AddMinistry';
-import AddDonation from './pages/AddDonation';
-import AddNewsArticle from './pages/AddNewsArticle';
-import AdminPrayerManager from './pages/AdminPrayerManager';
 import AdminUserManager from './pages/AdminUserManager';
 import AdminRadioManager from './pages/AdminRadioManager';
 import AdminGoLive from './pages/AdminGoLive';
@@ -249,6 +234,7 @@ import EditLiveBroadcast from './pages/EditLiveBroadcast';
 import WatchHistory from './pages/WatchHistory';
 import ReadingHistory from './pages/ReadingHistory';
 import Search from './pages/Search';
+import Notifications from './pages/Notifications';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -291,6 +277,7 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [authCheckTrigger, setAuthCheckTrigger] = useState<number>(0);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const [permissionsReady, setPermissionsReady] = useState<boolean>(false);
 
   useEffect(() => {
     // Set status bar to not overlay the webview (only on native platforms)
@@ -449,16 +436,31 @@ const App: React.FC = () => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('🔐 Login attempt for:', email);
       const response = await apiService.login(email, password);
+      console.log('✅ Login successful, token received');
+      
+      // Set state first
       setToken(response.token);
       setUser(response.user);
       apiService.setToken(response.token);
+      
+      // Save to localStorage
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
+      console.log('✅ Token and user saved to localStorage');
       
-      // Sync saved items from server to localStorage after login
-      await syncSavedItems();
-    } catch (error) {
+      // Force a small delay to ensure state updates propagate before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Sync saved items from server to localStorage after login (non-blocking)
+      syncSavedItems().catch(err => {
+        console.warn('⚠️ Failed to sync saved items after login (non-critical):', err);
+      });
+      
+      console.log('✅ Login complete, user state:', user?.role);
+    } catch (error: any) {
+      console.error('❌ Login failed:', error.message);
       throw error;
     }
   };
@@ -599,6 +601,7 @@ const App: React.FC = () => {
   };
 
   return (
+    <NotificationProvider>
     <SettingsProvider>
       <NetworkProvider>
         <DownloadsProvider>
@@ -607,10 +610,12 @@ const App: React.FC = () => {
               <PlayerProvider>
                 <IonApp>
                   <OfflineIndicator />
+                  <PermissionRequester onPermissionsReady={() => setPermissionsReady(true)} />
                   <IonReactRouter>
                     <PageTitleUpdater />
                     <AudioPlayer />
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} user={user} />
+                <NotificationListener />
 
                 <IonRouterOutlet id="main-content">
                 <Route exact path="/tab1">
@@ -636,9 +641,6 @@ const App: React.FC = () => {
                 </Route>
                 <Route exact path="/full-devotion">
                   <FullDevotion />
-                </Route>
-                <Route exact path="/full-news">
-                  <FullNewsArticle />
                 </Route>
                 <Route exact path="/tab5">
                   <Tab5 />
@@ -681,6 +683,9 @@ const App: React.FC = () => {
                 </Route>
                 <Route exact path="/search">
                   <Search />
+                </Route>
+                <Route exact path="/notifications">
+                  <Notifications />
                 </Route>
                 <ProtectedRoute
                   path="/admin"
@@ -740,22 +745,6 @@ const App: React.FC = () => {
                   exact
                 />
                 <ProtectedRoute
-                  path="/admin/giving"
-                  component={AdminGivingManager}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
-                  path="/admin/news"
-                  component={AdminNewsManager}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
                   path="/admin/contact"
                   component={AdminContactManager}
                   isAuthenticated={isLoggedIn}
@@ -804,22 +793,6 @@ const App: React.FC = () => {
                   exact
                 />
                 <ProtectedRoute
-                  path="/admin/news/edit/:id"
-                  component={EditNewsArticle}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
-                  path="/admin/giving/edit/:id"
-                  component={EditDonation}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
                   path="/admin/devotions/add"
                   component={AddDevotion}
                   isAuthenticated={isLoggedIn}
@@ -838,30 +811,6 @@ const App: React.FC = () => {
                 <ProtectedRoute
                   path="/admin/ministries/add"
                   component={AddMinistry}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
-                  path="/admin/giving/add"
-                  component={AddDonation}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
-                  path="/admin/news/add"
-                  component={AddNewsArticle}
-                  isAuthenticated={isLoggedIn}
-                  isAdmin={isAdmin}
-                  isAuthChecking={isAuthChecking}
-                  exact
-                />
-                <ProtectedRoute
-                  path="/admin/prayer"
-                  component={AdminPrayerManager}
                   isAuthenticated={isLoggedIn}
                   isAdmin={isAdmin}
                   isAuthChecking={isAuthChecking}
@@ -940,6 +889,7 @@ const App: React.FC = () => {
      </DownloadsProvider>
    </NetworkProvider>
  </SettingsProvider>
+ </NotificationProvider>
  );
 };
 

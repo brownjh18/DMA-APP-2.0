@@ -13,9 +13,11 @@ import {
   IonAlert,
   IonActionSheet,
   IonFab,
-  IonFabButton
+  IonFabButton,
+  useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import {
   add,
   trash,
@@ -29,11 +31,15 @@ import {
   shield,
   search,
   closeCircle as closeIcon,
-  settings
+  settings,
+  create,
+  eye,
+  eyeOff
 } from 'ionicons/icons';
 import apiService from '../services/api';
 import { useNetwork } from '../contexts/NetworkContext';
 import { AuthContext } from '../App';
+import './Tab4.css';
 
 const AdminUserManager: React.FC = () => {
   const history = useHistory();
@@ -41,6 +47,7 @@ const AdminUserManager: React.FC = () => {
   const { updateUser: updateAuthUser } = useContext(AuthContext);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -48,24 +55,109 @@ const AdminUserManager: React.FC = () => {
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('date');
 
   // Protected admin email
   const protectedAdminEmail = 'brownjh18@gmail.com';
 
+  // Helper function to clear API cache for users
+  const clearUsersCache = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('api_cache_') && key.includes('/users')) {
+          localStorage.removeItem(key);
+          console.log('🗑️ Cleared cache:', key);
+        }
+      });
+    } catch (error) {
+      console.warn('Error clearing cache:', error);
+    }
+  };
+
+  // Utility function to handle API errors gracefully
+  const handleApiError = (error: any, action: string) => {
+    console.error(`Error ${action}:`, error);
+    
+    if (error.message?.includes('not found') || error.message?.includes('404')) {
+      console.log(`🗑️ Resource not found during ${action}, clearing cache and refreshing`);
+      clearUsersCache();
+      sessionStorage.setItem('usersNeedRefresh', 'true');
+      setTimeout(() => loadUsers(true), 1000);
+      return true; // Error was handled
+    }
+    
+    return false; // Error was not handled, show generic message
+  };
+
+  // Check if user data might be stale and needs refresh
+  const isDataStale = () => {
+    try {
+      const cacheKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('api_cache_') && key.includes('/users')
+      );
+      
+      for (const key of cacheKeys) {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const age = Date.now() - parsed.timestamp;
+          const maxAge = 5 * 60 * 1000; // 5 minutes
+          
+          if (age > maxAge) {
+            console.log(`📅 Cache data is stale (${Math.round(age / 1000 / 60)} minutes old), will refresh`);
+            return true;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking cache age:', error);
+    }
+    return false;
+  };
+
   useEffect(() => {
-    loadUsers();
+    // Check if refresh is needed on component mount
+    const needsRefresh = sessionStorage.getItem('usersNeedRefresh') === 'true';
+    const staleData = isDataStale();
+    const shouldRefresh = needsRefresh || staleData;
+    
+    console.log('📱 AdminUserManager mounted, needsRefresh:', needsRefresh, 'staleData:', staleData);
+    loadUsers(shouldRefresh);
   }, []);
 
   useEffect(() => {
     if (isOnline) {
-      loadUsers();
+      const needsRefresh = sessionStorage.getItem('usersNeedRefresh') === 'true';
+      loadUsers(needsRefresh);
     }
   }, [isOnline]);
 
-  const loadUsers = async () => {
+  useIonViewWillEnter(() => {
+    const needsRefresh = sessionStorage.getItem('usersNeedRefresh') === 'true';
+    if (needsRefresh) {
+      console.log('🔄 Refreshing users due to navigation back from add/edit page');
+      loadUsers(true);
+    } else if (users.length === 0) {
+      loadUsers();
+    }
+  });
+
+  const loadUsers = async (forceRefresh = false) => {
+    const needsRefresh = sessionStorage.getItem('usersNeedRefresh') === 'true';
+    
+    if (!forceRefresh && !needsRefresh && usersLoading) return;
+
     try {
+      setUsersLoading(true);
       setLoading(true);
       console.log('Starting to load users...');
+      
+      if (needsRefresh) {
+        sessionStorage.removeItem('usersNeedRefresh');
+        console.log('🔄 Refresh flag detected and cleared');
+        clearUsersCache();
+      }
       
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout')), 10000)
@@ -79,22 +171,25 @@ const AdminUserManager: React.FC = () => {
     } catch (error: any) {
       console.error('Error loading users:', error);
       
-      let errorMessage = 'Failed to load users';
-      if (error.message?.includes('timeout')) {
-        errorMessage = 'Request timed out. Please check your connection and try again.';
-      } else if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
-        errorMessage = 'Authentication failed. Please log in again.';
-      } else if (error.message?.includes('HTTP 403')) {
-        errorMessage = 'Access denied. Admin privileges required.';
-      } else if (error.message) {
-        errorMessage = `Failed to load users: ${error.message}`;
+      if (!handleApiError(error, 'loading users')) {
+        let errorMessage = 'Failed to load users';
+        if (error.message?.includes('timeout')) {
+          errorMessage = 'Request timed out. Please check your connection and try again.';
+        } else if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
+          errorMessage = 'Authentication failed. Please log in again.';
+        } else if (error.message?.includes('HTTP 403')) {
+          errorMessage = 'Access denied. Admin privileges required.';
+        } else if (error.message) {
+          errorMessage = `Failed to load users: ${error.message}`;
+        }
+        
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
+        setUsers([]);
       }
-      
-      setAlertMessage(errorMessage);
-      setShowAlert(true);
-      setUsers([]);
     } finally {
       setLoading(false);
+      setUsersLoading(false);
       console.log('Loading users completed');
     }
   };
@@ -156,24 +251,29 @@ const AdminUserManager: React.FC = () => {
 
       setAlertMessage(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
       setShowAlert(true);
+      
+      sessionStorage.setItem('usersNeedRefresh', 'true');
+      setTimeout(() => loadUsers(true), 500);
     } catch (error: any) {
       console.error('Error updating user status:', error);
       
-      let errorMessage = 'Failed to update user status';
-      if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
-        errorMessage = 'Authentication failed. Please log in again.';
-      } else if (error.message?.includes('HTTP 403')) {
-        errorMessage = 'Access denied. Admin privileges required.';
-      } else if (error.message?.includes('HTTP 404')) {
-        errorMessage = 'User not found. The user may have been deleted.';
-      } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error.message) {
-        errorMessage = `Failed to update user status: ${error.message}`;
+      if (!handleApiError(error, 'updating user status')) {
+        let errorMessage = 'Failed to update user status';
+        if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
+          errorMessage = 'Authentication failed. Please log in again.';
+        } else if (error.message?.includes('HTTP 403')) {
+          errorMessage = 'Access denied. Admin privileges required.';
+        } else if (error.message?.includes('HTTP 404')) {
+          errorMessage = 'User not found. The user may have been deleted.';
+        } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message) {
+          errorMessage = `Failed to update user status: ${error.message}`;
+        }
+        
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
       }
-      
-      setAlertMessage(errorMessage);
-      setShowAlert(true);
     }
   };
 
@@ -240,26 +340,30 @@ const AdminUserManager: React.FC = () => {
         setShowRoleModal(false);
         setSelectedUser(null);
         
+        sessionStorage.setItem('usersNeedRefresh', 'true');
+        setTimeout(() => loadUsers(true), 500);
       } catch (error: any) {
         console.error('❌ Error updating user role:', error);
         
-        let errorMessage = 'Failed to update user role';
-        if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
-          errorMessage = 'Authentication failed. Please log in again.';
-        } else if (error.message?.includes('HTTP 403')) {
-          errorMessage = 'Access denied. Admin privileges required.';
-        } else if (error.message?.includes('HTTP 404')) {
-          errorMessage = 'User not found. The user may have been deleted.';
-        } else if (error.message?.includes('Invalid role')) {
-          errorMessage = 'Invalid role specified. Please choose a valid role.';
-        } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message) {
-          errorMessage = `Failed to update user role: ${error.message}`;
+        if (!handleApiError(error, 'updating user role')) {
+          let errorMessage = 'Failed to update user role';
+          if (error.message?.includes('Authentication failed') || error.message?.includes('HTTP 401')) {
+            errorMessage = 'Authentication failed. Please log in again.';
+          } else if (error.message?.includes('HTTP 403')) {
+            errorMessage = 'Access denied. Admin privileges required.';
+          } else if (error.message?.includes('HTTP 404')) {
+            errorMessage = 'User not found. The user may have been deleted.';
+          } else if (error.message?.includes('Invalid role')) {
+            errorMessage = 'Invalid role specified. Please choose a valid role.';
+          } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else if (error.message) {
+            errorMessage = `Failed to update user role: ${error.message}`;
+          }
+          
+          setAlertMessage(errorMessage);
+          setShowAlert(true);
         }
-        
-        setAlertMessage(errorMessage);
-        setShowAlert(true);
       }
     }
   };
@@ -283,6 +387,9 @@ const AdminUserManager: React.FC = () => {
       setUsers(users.filter(user => (user._id !== id && user.id !== id)));
       setAlertMessage('User deleted successfully');
       setShowAlert(true);
+      
+      sessionStorage.setItem('usersNeedRefresh', 'true');
+      setTimeout(() => loadUsers(true), 500);
     } catch (error: any) {
       console.error('Error deleting user:', error);
       setAlertMessage('Failed to delete user: ' + (error.message || 'Unknown error'));
@@ -294,32 +401,6 @@ const AdminUserManager: React.FC = () => {
     event.stopPropagation();
     setSelectedUser(user);
     setShowActionSheet(true);
-  };
-
-  const getFilteredUsers = () => {
-    let filtered = users;
-    
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(u => 
-        u.name?.toLowerCase().includes(query) || 
-        u.email?.toLowerCase().includes(query)
-      );
-    }
-
-    if (filterBy === 'active') {
-      filtered = filtered.filter(u => u.isActive === true);
-    } else if (filterBy === 'inactive') {
-      filtered = filtered.filter(u => u.isActive === false);
-    } else if (filterBy === 'admins') {
-      filtered = filtered.filter(u => u.role === 'admin');
-    }
-
-    return [...filtered].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return dateB.getTime() - dateA.getTime();
-    });
   };
 
   // Helper to check if user is protected admin
@@ -340,34 +421,54 @@ const AdminUserManager: React.FC = () => {
     { name: 'Admins', icon: shield, color: '#f59e0b', val: adminUsers, sub: 'admins' }
   ];
 
+  const getFilteredUsers = () => {
+    let filtered = users;
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(u => 
+        u.name?.toLowerCase().includes(query) || 
+        u.email?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply filter
+    if (filterBy === 'active') {
+      filtered = filtered.filter(u => u.isActive === true);
+    } else if (filterBy === 'inactive') {
+      filtered = filtered.filter(u => u.isActive === false);
+    } else if (filterBy === 'admins') {
+      filtered = filtered.filter(u => u.role === 'admin');
+    }
+
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+      case 'name':
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
-        <div
-          onClick={() => history.goBack()}
-          style={{
-            position: 'absolute',
-            top: 'calc(var(--ion-safe-area-top) - -5px)',
-            left: 20,
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 999,
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
-          }}
-        >
-          <IonIcon icon={arrowBack} style={{ color: 'white', fontSize: '18px' }} />
-        </div>
+        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">
-            <span style={{ fontWeight: '700', color: 'var(--ion-color-primary)' }}>User Management</span>
-          </IonTitle>
-          <IonButton fill="clear" slot="end" onClick={loadUsers} style={{ marginRight: '8px' }}>
+          <IonTitle className="title-ios">User Manager</IonTitle>
+          <IonButton fill="clear" slot="end" onClick={() => loadUsers(true)} style={{ marginRight: '8px' }}>
             <IonIcon icon={settings} />
           </IonButton>
         </IonToolbar>
@@ -375,20 +476,16 @@ const AdminUserManager: React.FC = () => {
 
       <IonContent fullscreen className="content-ios">
         <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
-          
-          {/* Stats Modules - 2 Column Grid */}
+
+          {/* Stats Modules - Modern Compact Horizontal Cards */}
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              User Statistics
-            </h3>
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '8px',
-              background: 'var(--ion-card-background)',
-              borderRadius: '16px',
-              padding: '8px',
-              border: '1px solid var(--ion-color-step-200)'
+              display: 'flex', 
+              gap: '10px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}>
               {statsModules.map((mod, i) => (
                 <div key={i} onClick={() => {
@@ -397,51 +494,47 @@ const AdminUserManager: React.FC = () => {
                   else if (mod.name === 'Inactive') setFilterBy(filterBy === 'inactive' ? 'all' : 'inactive');
                   else if (mod.name === 'Admins') setFilterBy(filterBy === 'admins' ? 'all' : 'admins');
                 }} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '14px',
-                  borderRadius: '12px',
+                  minWidth: '140px',
+                  flex: '0 0 auto',
+                  padding: '12px 16px',
+                  borderRadius: '14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: `1px solid ${mod.color}20`,
+                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}30`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
+                  e.currentTarget.style.borderColor = `${mod.color}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
+                  e.currentTarget.style.borderColor = `${mod.color}20`;
                 }}
                 >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    background: mod.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: `0 4px 12px ${mod.color}40`
-                  }}>
-                    <IonIcon icon={mod.icon} style={{ fontSize: '20px', color: 'white' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: mod.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: `0 2px 8px ${mod.color}30`
+                    }}>
+                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{mod.name}</p>
-                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    background: `${mod.color}15`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '16px', fontWeight: '700', color: mod.color }}>{mod.val}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
                   </div>
                 </div>
               ))}
@@ -513,408 +606,404 @@ const AdminUserManager: React.FC = () => {
                     padding: '2px'
                   }}
                 >
-                  <IonIcon icon={closeIcon} style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '16px' }} />
+                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
             )}
           </div>
 
           {/* Users List */}
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
-
           <div>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              {filterBy === 'all' ? 'All Users' :
-               filterBy === 'active' ? 'Active Users' :
-               filterBy === 'inactive' ? 'Inactive Users' :
-               filterBy === 'admins' ? 'Admin Users' :
-               'All Users'}
-              <span style={{ 
-                color: 'var(--ion-text-color)', 
-                opacity: 0.4, 
-                fontWeight: '400',
-                fontSize: '0.85em',
-                marginLeft: '8px'
-              }}>
-                ({getFilteredUsers().length})
-              </span>
-            </h3>
-
             {getFilteredUsers().length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '60px 20px',
-                background: 'var(--ion-card-background)',
-                borderRadius: 20,
-                border: '1px solid var(--ion-color-step-200)'
+                color: 'var(--ion-color-medium)',
+                opacity: 0.6
               }}>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 24,
-                  background: 'var(--ion-color-primary)',
-                  opacity: 0.1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 20px'
-                }}>
-                  <IonIcon
-                    icon={people}
-                    style={{
-                      fontSize: '2.5em',
-                      color: 'var(--ion-color-primary)'
-                    }}
-                  />
-                </div>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)'
-                }}>
-                  {loading ? 'Loading users...' : 'No users found'}
-                </h3>
-                <p style={{
-                  margin: '0',
-                  fontSize: '0.9em',
-                  color: 'var(--ion-text-color)',
-                  opacity: 0.6,
-                  lineHeight: '1.4'
-                }}>
-                  {loading
-                    ? 'Please wait while we fetch the user list'
-                    : searchQuery
-                      ? 'No users match your search'
-                      : filterBy !== 'all'
-                        ? `No users match the current ${filterBy} filter`
-                        : 'No users have been registered yet'
-                  }
+                <IonIcon icon={people} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
+                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No users found</p>
+                <p style={{ fontSize: '14px', margin: 0 }}>
+                  {searchQuery || filterBy !== 'all' 
+                    ? 'Try adjusting your search or filters' 
+                    : 'No users have been registered yet'}
                 </p>
-                {!loading && (searchQuery || filterBy !== 'all') && (
-                  <IonButton
-                    fill="outline"
-                    onClick={() => {
-                      setFilterBy('all');
-                      setSearchQuery('');
-                    }}
-                    style={{
-                      marginTop: '20px',
-                      '--border-color': 'var(--ion-color-step-200)',
-                      '--color': 'var(--ion-color-primary)',
-                      '--background': 'transparent',
-                      '--border-radius': '12px'
-                    }}
-                  >
-                    Clear filters
-                  </IonButton>
-                )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {getFilteredUsers().map((user) => (
-                  <div
-                    key={user._id || user.id}
-                    onClick={(e) => handleOptionsClick(user, e)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'var(--ion-card-background)',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      padding: '14px',
-                      border: '1px solid var(--ion-color-step-200)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {/* User Avatar */}
-                    <div style={{ position: 'relative', marginRight: '14px' }}>
+              getFilteredUsers().map((user) => (
+                <div
+                  key={user._id || user.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: 'var(--ion-card-background)',
+                    border: '1px solid var(--ion-color-step-200)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '10px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#6366f140';
+                    e.currentTarget.style.background = '#6366f108';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px #6366f120';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
+                    e.currentTarget.style.background = 'var(--ion-card-background)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onClick={(e) => handleOptionsClick(user, e)}
+                >
+                  {/* Left accent line */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '3px',
+                    height: '100%',
+                    background: user.isActive ? '#10b981' : '#ef4444',
+                    opacity: 0.8
+                  }} />
+
+                  {/* Avatar */}
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    position: 'relative',
+                    background: user.role === 'admin'
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                      : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <IonIcon icon={person} style={{ fontSize: '28px', color: 'white', opacity: 0.9 }} />
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {user.name || 'Untitled'}
+                      </p>
+                      {user.role === 'admin' && (
+                        <div style={{
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          background: '#f59e0b20',
+                          color: '#f59e0b',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          Admin
+                        </div>
+                      )}
+                      {isProtectedAdmin(user) && (
+                        <div style={{
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          background: '#ffd70020',
+                          color: '#d4a017',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          Owner
+                        </div>
+                      )}
+                    </div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.email}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                        {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                      {user.lastLogin && (
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <IonIcon icon={checkmarkCircle} style={{ fontSize: '12px' }} />
+                          Last: {new Date(user.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action buttons with status badge above */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    {/* Status Badge - positioned above action buttons */}
+                    <div style={{
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: '500',
+                      background: user.isActive ? '#10b98120' : '#ef444420',
+                      color: user.isActive ? '#10b981' : '#ef4444',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {user.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <div
+                        onClick={(e) => { e.stopPropagation(); toggleActive(user._id || user.id); }}
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 12,
-                          background: user.role === 'admin'
-                            ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                            : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: user.isActive ? '#10b98115' : '#ef444415',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: user.role === 'admin'
-                            ? '0 4px 12px rgba(245, 158, 11, 0.3)'
-                            : '0 4px 12px rgba(99, 102, 241, 0.3)'
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = user.isActive ? '#10b98125' : '#ef444425'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = user.isActive ? '#10b98115' : '#ef444415'}
                       >
-                        <IonIcon icon={person} style={{ fontSize: '1.4em', color: '#fff' }} />
-                      </div>
-                      {/* Status indicator */}
-                      <div style={{
-                        position: 'absolute',
-                        bottom: -2,
-                        right: -2,
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        background: user.isActive ? '#10b981' : '#ef4444',
-                        border: `2px solid var(--ion-card-background)`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
                         <IonIcon 
-                          icon={user.isActive ? checkmarkCircle : closeCircle} 
-                          style={{ fontSize: '8px', color: '#fff' }} 
+                          icon={user.isActive ? eyeOff : eye} 
+                          style={{ fontSize: '16px', color: user.isActive ? '#10b981' : '#ef4444' }} 
                         />
                       </div>
-                    </div>
-
-                    {/* User Info */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '4px'
-                      }}>
-                        <h4 style={{
-                          margin: 0,
-                          fontSize: '0.95em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {user.name}
-                        </h4>
-                        {user.role === 'admin' && (
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            padding: '2px 8px',
-                            borderRadius: 6,
-                            fontSize: '0.6em',
-                            fontWeight: '600',
-                            color: '#fff',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}>
-                            Admin
-                          </div>
-                        )}
-                        {isProtectedAdmin(user) && (
-                          <div style={{
-                            background: 'linear-gradient(135deg, #ffd700 0%, #ffb700 100%)',
-                            padding: '2px 8px',
-                            borderRadius: 6,
-                            fontSize: '0.6em',
-                            fontWeight: '600',
-                            color: '#000',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}>
-                            Owner
-                          </div>
-                        )}
+                      <div
+                        onClick={(e) => { e.stopPropagation(); openRoleModal(user); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: '#f59e0b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f59e0b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#f59e0b15'}
+                      >
+                        <IonIcon icon={shield} style={{ fontSize: '16px', color: '#f59e0b' }} />
                       </div>
-                      <p style={{
-                        margin: '0 0 4px 0',
-                        fontSize: '0.8em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.6,
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {user.email}
-                      </p>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        fontSize: '0.7em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.4
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
-                          <span>{new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                        {user.lastLogin && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span>•</span>
-                            <span>Last: {new Date(user.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          </div>
-                        )}
+                      <div
+                        onClick={(e) => { e.stopPropagation(); handleOptionsClick(user, e); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: '#64748b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
                       </div>
                     </div>
-
-                    {/* Options Button */}
-                    <IonButton
-                      fill="clear"
-                      onClick={(e) => handleOptionsClick(user, e)}
-                      style={{
-                        margin: 0,
-                        padding: '8px',
-                        minWidth: 'auto',
-                        height: 'auto',
-                        '--color': 'var(--ion-text-color)',
-                        opacity: 0.5
-                      }}
-                    >
-                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
-                    </IonButton>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • User Management
+              Dove Church • Admin Panel v2.0
             </IonText>
           </div>
         </div>
 
-        {/* FAB Button */}
-        <IonFab horizontal="end" vertical="bottom" slot="fixed" style={{ marginBottom: '80px', marginRight: '16px' }}>
-          <IonFabButton onClick={() => history.push('/admin/users/add')} style={{ '--background': '#6366f1', '--box-shadow': '0 4px 16px rgba(99, 102, 241, 0.5)' }}>
+        {/* FAB for adding new user */}
+        <IonFab
+          horizontal="end"
+          vertical="bottom"
+          slot="fixed"
+          style={{
+            '--background': '#6366f1',
+            '--box-shadow': '0 6px 20px rgba(99, 102, 241, 0.4)',
+            'marginBottom': '70px',
+            'marginRight': '16px'
+          } as any}
+        >
+          <IonFabButton onClick={() => history.push('/admin/users/add')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
+
+        {/* General Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header="Alert"
+          message={alertMessage}
+          buttons={['OK']}
+        />
+
+        {/* Role Change Modal */}
+        <IonAlert
+          isOpen={showRoleModal}
+          onDidDismiss={() => {
+            setShowRoleModal(false);
+            setSelectedUser(null);
+          }}
+          header={`Change Role for ${selectedUser?.name}`}
+          message="Select the new role for this user:"
+          cssClass="rounded-alert"
+          inputs={[
+            {
+              name: 'role',
+              type: 'radio',
+              label: 'User',
+              value: 'user',
+              checked: selectedUser?.role === 'user'
+            },
+            {
+              name: 'role',
+              type: 'radio',
+              label: 'Admin',
+              value: 'admin',
+              checked: selectedUser?.role === 'admin'
+            }
+          ]}
+          buttons={[
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              handler: () => {
+                setShowRoleModal(false);
+                setSelectedUser(null);
+              }
+            },
+            {
+              text: 'Update Role',
+              handler: (data: any) => {
+                console.log('Alert data received:', data);
+                const selectedRole = data;
+                if (selectedRole && (selectedRole === 'user' || selectedRole === 'admin')) {
+                  changeRole(selectedRole);
+                } else {
+                  setAlertMessage('Please select a role');
+                  setShowAlert(true);
+                }
+              }
+            }
+          ]}
+        />
+
+        {/* Action Sheet */}
+        <IonActionSheet
+          isOpen={showActionSheet}
+          onDidDismiss={() => setShowActionSheet(false)}
+          header={selectedUser?.name || 'User Options'}
+          buttons={[
+            {
+              text: 'Edit',
+              icon: create,
+              handler: () => {
+                if (selectedUser) {
+                  history.push(`/admin/users/edit/${selectedUser._id || selectedUser.id}`, { user: selectedUser });
+                }
+              }
+            },
+            {
+              text: selectedUser?.isActive ? 'Deactivate' : 'Activate',
+              icon: selectedUser?.isActive ? closeCircle : checkmarkCircle,
+              handler: () => {
+                if (selectedUser) {
+                  const userId = selectedUser._id || selectedUser.id;
+                  toggleActive(userId);
+                }
+              }
+            },
+            {
+              text: 'Change Role',
+              icon: shield,
+              handler: () => {
+                if (selectedUser) {
+                  openRoleModal(selectedUser);
+                }
+              }
+            },
+            {
+              text: 'Delete User',
+              icon: trash,
+              role: 'destructive',
+              handler: () => {
+                if (selectedUser) {
+                  const userId = selectedUser._id || selectedUser.id;
+                  deleteUser(userId);
+                }
+              }
+            },
+            {
+              text: 'Cancel',
+              icon: arrowBack,
+              role: 'cancel'
+            }
+          ]}
+        />
+
+        {loading && users.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            color: 'var(--ion-color-medium)',
+            opacity: 0.6
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid var(--ion-color-step-200)',
+              borderTop: '3px solid var(--ion-color-primary)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }} />
+            <p style={{ fontSize: '14px', margin: 0 }}>Loading users...</p>
+          </div>
+        ) : null}
+
+        <style>{`
+          .rounded-alert .alert-wrapper {
+            border-radius: 16px !important;
+            background: var(--ion-card-background) !important;
+          }
+          .rounded-alert .alert-head {
+            background: var(--ion-card-background) !important;
+          }
+          .rounded-alert .alert-message {
+            color: var(--ion-text-color) !important;
+            opacity: 0.7 !important;
+          }
+          .rounded-alert {
+            --backdrop-opacity: 0.7;
+          }
+          .rounded-alert::part(backdrop) {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.5);
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </IonContent>
-
-      <IonAlert
-        isOpen={showAlert}
-        onDidDismiss={() => setShowAlert(false)}
-        header="Notice"
-        message={alertMessage}
-        buttons={['OK']}
-      />
-
-      {/* Role Change Modal */}
-      <IonAlert
-        isOpen={showRoleModal}
-        onDidDismiss={() => {
-          setShowRoleModal(false);
-          setSelectedUser(null);
-        }}
-        header={`Change Role for ${selectedUser?.name}`}
-        message="Select the new role for this user:"
-        cssClass="rounded-alert"
-        inputs={[
-          {
-            name: 'role',
-            type: 'radio',
-            label: 'User',
-            value: 'user',
-            checked: selectedUser?.role === 'user'
-          },
-          {
-            name: 'role',
-            type: 'radio',
-            label: 'Admin',
-            value: 'admin',
-            checked: selectedUser?.role === 'admin'
-          }
-        ]}
-        buttons={[
-          {
-            text: 'Cancel',
-            role: 'cancel',
-            handler: () => {
-              setShowRoleModal(false);
-              setSelectedUser(null);
-            }
-          },
-          {
-            text: 'Update Role',
-            handler: (data: any) => {
-              console.log('Alert data received:', data);
-              // IonAlert with radio buttons returns the selected value directly
-              const selectedRole = data;
-              if (selectedRole && (selectedRole === 'user' || selectedRole === 'admin')) {
-                changeRole(selectedRole);
-              } else {
-                setAlertMessage('Please select a role');
-                setShowAlert(true);
-              }
-            }
-          }
-        ]}
-      />
-
-      <IonActionSheet
-        isOpen={showActionSheet}
-        onDidDismiss={() => setShowActionSheet(false)}
-        header={`Options for "${selectedUser?.name}"`}
-        buttons={[
-          {
-            text: selectedUser?.isActive ? 'Deactivate' : 'Activate',
-            icon: selectedUser?.isActive ? closeCircle : checkmarkCircle,
-            handler: () => {
-              if (selectedUser) {
-                const userId = selectedUser._id || selectedUser.id;
-                toggleActive(userId);
-              }
-            }
-          },
-          {
-            text: 'Change Role',
-            icon: shield,
-            handler: () => {
-              if (selectedUser) {
-                openRoleModal(selectedUser);
-              }
-            }
-          },
-          {
-            text: 'Delete User',
-            role: 'destructive',
-            icon: trash,
-            handler: () => {
-              if (selectedUser) {
-                const userId = selectedUser._id || selectedUser.id;
-                deleteUser(userId);
-              }
-            }
-          },
-          {
-            text: 'Cancel',
-            role: 'cancel'
-          }
-        ]}
-      />
-
-      <style>{`
-        .rounded-alert .alert-wrapper {
-          border-radius: 16px !important;
-          background: var(--ion-card-background) !important;
-        }
-        .rounded-alert .alert-head {
-          background: var(--ion-card-background) !important;
-        }
-        .rounded-alert .alert-message {
-          color: var(--ion-text-color) !important;
-          opacity: 0.7 !important;
-        }
-        .rounded-alert {
-          --backdrop-opacity: 0.7;
-        }
-        .rounded-alert::part(backdrop) {
-          backdrop-filter: blur(10px);
-          background: rgba(0, 0, 0, 0.5);
-        }
-        input::placeholder {
-          color: var(--ion-text-color) !important;
-          opacity: 0.4 !important;
-        }
-      `}</style>
     </IonPage>
   );
 };

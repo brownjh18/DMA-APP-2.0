@@ -18,6 +18,7 @@ import {
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import {
   add,
   create,
@@ -28,7 +29,6 @@ import {
   ellipsisVertical,
   arrowBack,
   calendar,
-  musicalNote,
   time,
   search,
   closeCircle as closeIcon,
@@ -53,6 +53,10 @@ const AdminSermonManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
+  
+  // Default thumbnail for sermons when no custom thumbnail is uploaded
+  const DEFAULT_SERMON_THUMBNAIL = '/hero-evangelism.jpg';
 
   // Utility function to clear API cache for sermons
   const clearSermonsCache = () => {
@@ -87,7 +91,6 @@ const AdminSermonManager: React.FC = () => {
   // Check if sermon data might be stale and needs refresh
   const isDataStale = () => {
     try {
-      // Check if we have sermons data that's older than 5 minutes
       const cacheKeys = Object.keys(localStorage).filter(key => 
         key.startsWith('api_cache_') && key.includes('/sermons')
       );
@@ -112,7 +115,6 @@ const AdminSermonManager: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check if refresh is needed on component mount
     const needsRefresh = sessionStorage.getItem('sermonsNeedRefresh') === 'true';
     const staleData = isDataStale();
     const shouldRefresh = needsRefresh || staleData;
@@ -128,17 +130,13 @@ const AdminSermonManager: React.FC = () => {
       console.log('🔄 Refreshing sermons due to navigation back from add/edit page');
       loadSermons(true);
     } else if (sermons.length === 0) {
-      // Only load if no sermons exist
       loadSermons();
     }
   });
 
-
   const loadSermons = async (forceRefresh = false) => {
-    // Check for refresh flag in sessionStorage
     const needsRefresh = sessionStorage.getItem('sermonsNeedRefresh') === 'true';
     
-    // Prevent multiple concurrent calls, but always allow refresh when needed
     if (!forceRefresh && !needsRefresh && sermonsLoading) return;
 
     try {
@@ -146,16 +144,12 @@ const AdminSermonManager: React.FC = () => {
       setLoading(true);
       console.log('Loading sermons from API...');
       
-      // Clear refresh flag if it exists
       if (needsRefresh) {
         sessionStorage.removeItem('sermonsNeedRefresh');
         console.log('🔄 Refresh flag detected and cleared');
-        
-        // Also clear the cache when refresh is needed
         clearSermonsCache();
       }
       
-      // Load all sermons (both published and drafts) for admin
       const response = await apiService.getSermons({ published: 'all' });
       console.log('Sermons loaded:', response.sermons?.length || 0);
       setSermons(response.sermons || []);
@@ -192,7 +186,6 @@ const AdminSermonManager: React.FC = () => {
       const newStatus = !sermon.isPublished;
       await apiService.toggleSermonPublishStatus(id, newStatus);
 
-      // Update local state immediately for instant feedback
       setSermons(sermons.map(s => 
         s._id === id ? { ...s, isPublished: newStatus } : s
       ));
@@ -200,24 +193,17 @@ const AdminSermonManager: React.FC = () => {
       setAlertMessage(`Sermon ${newStatus ? 'published' : 'unpublished'} successfully!`);
       setShowAlert(true);
 
-      // Also trigger a refresh to ensure data consistency
       console.log('🔄 Refreshing sermon list after status change');
       sessionStorage.setItem('sermonsNeedRefresh', 'true');
       setTimeout(() => loadSermons(true), 500);
     } catch (error: any) {
       console.error('Error toggling sermon status:', error);
       
-      // Handle specific error cases
       if (error.message?.includes('Sermon not found') || error.message?.includes('404')) {
         console.log('🗑️ Sermon not found in database, removing from local state');
-        
-        // Remove the sermon from local state since it doesn't exist in the database
         setSermons(sermons.filter(s => s._id !== id));
-        
         setAlertMessage('This sermon no longer exists and has been removed from the list.');
         setShowAlert(true);
-        
-        // Trigger a refresh to ensure data consistency
         sessionStorage.setItem('sermonsNeedRefresh', 'true');
         setTimeout(() => loadSermons(true), 1000);
       } else {
@@ -238,30 +224,22 @@ const AdminSermonManager: React.FC = () => {
     try {
       await apiService.deleteSermon(sermonToDelete._id);
 
-      // Update local state immediately for instant feedback
       setSermons(sermons.filter(s => s._id !== sermonToDelete._id));
 
       setAlertMessage('Sermon deleted successfully!');
       setShowAlert(true);
 
-      // Also trigger a refresh to ensure data consistency
       console.log('🔄 Refreshing sermon list after deletion');
       sessionStorage.setItem('sermonsNeedRefresh', 'true');
       setTimeout(() => loadSermons(true), 500);
     } catch (error: any) {
       console.error('Error deleting sermon:', error);
       
-      // Handle specific error cases
       if (error.message?.includes('Sermon not found') || error.message?.includes('404')) {
         console.log('🗑️ Sermon not found in database, removing from local state');
-        
-        // Remove the sermon from local state since it doesn't exist in the database
         setSermons(sermons.filter(s => s._id !== sermonToDelete._id));
-        
         setAlertMessage('This sermon no longer exists and has been removed from the list.');
         setShowAlert(true);
-        
-        // Trigger a refresh to ensure data consistency
         sessionStorage.setItem('sermonsNeedRefresh', 'true');
         setTimeout(() => loadSermons(true), 1000);
       } else {
@@ -303,7 +281,6 @@ const AdminSermonManager: React.FC = () => {
   const getSortedAndFilteredSermons = () => {
     let filtered = sermons;
     
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(s => 
@@ -312,14 +289,12 @@ const AdminSermonManager: React.FC = () => {
       );
     }
 
-    // Apply filter
     if (filterBy === 'published') {
       filtered = filtered.filter(s => s.isPublished === true);
     } else if (filterBy === 'draft') {
       filtered = filtered.filter(s => s.isPublished === false);
     }
 
-    // Apply sorting
     let sorted = [...filtered];
     switch (sortBy) {
       case 'date':
@@ -329,20 +304,8 @@ const AdminSermonManager: React.FC = () => {
           return dateB.getTime() - dateA.getTime();
         });
         break;
-      case 'views':
-        sorted.sort((a, b) => {
-          const viewsA = a.viewCount || 0;
-          const viewsB = b.viewCount || 0;
-          return viewsB - viewsA;
-        });
-        break;
-      case 'published':
-      case 'draft':
-        sorted.sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.date || 0);
-          const dateB = new Date(b.createdAt || b.date || 0);
-          return dateB.getTime() - dateA.getTime();
-        });
+      case 'title':
+        sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
         break;
       default:
         break;
@@ -351,33 +314,22 @@ const AdminSermonManager: React.FC = () => {
     return sorted;
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatDuration = (duration: string) => {
+    if (!duration) return 'No duration';
+    return duration;
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
-        <div
-          onClick={() => history.goBack()}
-          style={{
-            position: 'absolute',
-            top: 'calc(var(--ion-safe-area-top) - -5px)',
-            left: 20,
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 999,
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
-          }}
-        >
-          <IonIcon icon={arrowBack} style={{ color: 'white', fontSize: '18px' }} />
-        </div>
+        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">
-            <span style={{ fontWeight: '700', color: 'var(--ion-color-primary)' }}>Sermon Management</span>
-          </IonTitle>
+          <IonTitle className="title-ios">Sermon Manager</IonTitle>
           <IonButton fill="clear" slot="end" onClick={() => loadSermons(true)} style={{ marginRight: '8px' }}>
             <IonIcon icon={settings} />
           </IonButton>
@@ -386,20 +338,16 @@ const AdminSermonManager: React.FC = () => {
 
       <IonContent fullscreen className="content-ios">
         <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
-          
-          {/* Stats Modules - 2 Column Grid */}
+
+          {/* Stats Modules - Modern Compact Horizontal Cards */}
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              Sermon Statistics
-            </h3>
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '8px',
-              background: 'var(--ion-card-background)',
-              borderRadius: '16px',
-              padding: '8px',
-              border: '1px solid var(--ion-color-step-200)'
+              display: 'flex', 
+              gap: '10px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}>
               {statsModules.map((mod, i) => (
                 <div key={i} onClick={() => {
@@ -408,51 +356,47 @@ const AdminSermonManager: React.FC = () => {
                   else if (mod.name === 'Drafts') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
                   else if (mod.name === 'Total Views') setSortBy('views');
                 }} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '14px',
-                  borderRadius: '12px',
+                  minWidth: '140px',
+                  flex: '0 0 auto',
+                  padding: '12px 16px',
+                  borderRadius: '14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: `1px solid ${mod.color}20`,
+                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}30`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
+                  e.currentTarget.style.borderColor = `${mod.color}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
+                  e.currentTarget.style.borderColor = `${mod.color}20`;
                 }}
                 >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    background: mod.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: `0 4px 12px ${mod.color}40`
-                  }}>
-                    <IonIcon icon={mod.icon} style={{ fontSize: '20px', color: 'white' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: mod.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: `0 2px 8px ${mod.color}30`
+                    }}>
+                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: 'var(--ion-text-color)' }}>{mod.name}</p>
-                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    background: `${mod.color}15`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '16px', fontWeight: '700', color: mod.color }}>{mod.val}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
                   </div>
                 </div>
               ))}
@@ -524,359 +468,309 @@ const AdminSermonManager: React.FC = () => {
                     padding: '2px'
                   }}
                 >
-                  <IonIcon icon={closeIcon} style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '16px' }} />
+                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
             )}
           </div>
 
           {/* Sermons List */}
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
-
           <div>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-              {filterBy === 'all' ? 'All Sermons' :
-               filterBy === 'published' ? 'Published Sermons' :
-               filterBy === 'draft' ? 'Draft Sermons' :
-               'All Sermons'}
-              <span style={{ 
-                color: 'var(--ion-text-color)', 
-                opacity: 0.4, 
-                fontWeight: '400',
-                fontSize: '0.85em',
-                marginLeft: '8px'
-              }}>
-                ({getSortedAndFilteredSermons().length})
-              </span>
-            </h3>
-
             {getSortedAndFilteredSermons().length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '60px 20px',
-                background: 'var(--ion-card-background)',
-                borderRadius: 20,
-                border: '1px solid var(--ion-color-step-200)'
+                color: 'var(--ion-color-medium)',
+                opacity: 0.6
               }}>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 24,
-                  background: 'var(--ion-color-primary)',
-                  opacity: 0.1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 20px'
-                }}>
-                  <IonIcon
-                    icon={playCircle}
-                    style={{
-                      fontSize: '2.5em',
-                      color: 'var(--ion-color-primary)'
-                    }}
-                  />
-                </div>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.2em',
-                  fontWeight: '600',
-                  color: 'var(--ion-text-color)'
-                }}>
-                  {loading ? 'Loading sermons...' : 'No sermons found'}
-                </h3>
-                <p style={{
-                  margin: '0',
-                  fontSize: '0.9em',
-                  color: 'var(--ion-text-color)',
-                  opacity: 0.6,
-                  lineHeight: '1.4'
-                }}>
-                  {loading
-                    ? 'Please wait while we fetch the sermon list'
-                    : searchQuery
-                      ? 'No sermons match your search'
-                      : filterBy !== 'all'
-                        ? `No sermons match the current ${filterBy} filter`
-                        : 'No sermons have been added yet'
-                  }
+                <IonIcon icon={playCircle} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
+                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No sermons found</p>
+                <p style={{ fontSize: '14px', margin: 0 }}>
+                  {searchQuery || filterBy !== 'all' 
+                    ? 'Try adjusting your search or filters' 
+                    : 'Start by adding your first sermon'}
                 </p>
-                {!loading && (searchQuery || filterBy !== 'all') && (
-                  <IonButton
-                    fill="outline"
-                    onClick={() => {
-                      setFilterBy('all');
-                      setSearchQuery('');
-                    }}
-                    style={{
-                      marginTop: '20px',
-                      '--border-color': 'var(--ion-color-step-200)',
-                      '--color': 'var(--ion-color-primary)',
-                      '--background': 'transparent',
-                      '--border-radius': '12px'
-                    }}
-                  >
-                    Clear filters
-                  </IonButton>
-                )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {getSortedAndFilteredSermons().map((sermon) => (
-                  <div
-                    key={sermon._id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openActionSheet(sermon);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'var(--ion-card-background)',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      padding: '14px',
-                      border: '1px solid var(--ion-color-step-200)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {/* Sermon Thumbnail */}
-                    <div style={{ position: 'relative', marginRight: '14px' }}>
-                      {sermon.thumbnailUrl ? (
-                        <img
-                          src={sermon.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${sermon.thumbnailUrl}` : sermon.thumbnailUrl}
-                          alt={sermon.title}
-                          style={{
-                            width: '120px',
-                            height: '68px',
-                            borderRadius: '10px',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '120px',
-                            height: '68px',
-                            borderRadius: '10px',
-                            background: 'linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
-                          }}
-                        >
-                          <IonIcon icon={playCircle} style={{ fontSize: '2em', color: 'white' }} />
-                        </div>
-                      )}
-                      {/* Duration Badge - Bottom Right */}
-                      {sermon.duration && (
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '4px',
-                          right: '4px',
-                          background: 'rgba(0, 0, 0, 0.85)',
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          fontSize: '0.7em',
-                          fontWeight: '500',
-                          color: '#fff'
-                        }}>
-                          {sermon.duration}
-                        </div>
-                      )}
-                      {/* Published/Draft Badge - Top Left */}
+              getSortedAndFilteredSermons().map((sermon) => (
+                <div
+                  key={sermon._id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: 'var(--ion-card-background)',
+                    border: '1px solid var(--ion-color-step-200)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '10px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#6366f140';
+                    e.currentTarget.style.background = '#6366f108';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px #6366f120';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
+                    e.currentTarget.style.background = 'var(--ion-card-background)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onClick={() => openEditPage(sermon)}
+                >
+                  {/* Left accent line */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '3px',
+                    height: '100%',
+                    background: sermon.isPublished ? '#10b981' : '#f59e0b',
+                    opacity: 0.8
+                  }} />
+
+                  {/* Thumbnail */}
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    position: 'relative',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <img 
+                      src={sermon.thumbnailUrl ? (sermon.thumbnailUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${sermon.thumbnailUrl}` : sermon.thumbnailUrl) : DEFAULT_SERMON_THUMBNAIL} 
+                      alt={sermon.title || 'Sermon'}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
+                      }}
+                      onError={(e) => {
+                        if (sermon.thumbnailUrl && !failedThumbnails.has(sermon._id)) {
+                          (e.target as HTMLImageElement).src = DEFAULT_SERMON_THUMBNAIL;
+                          setFailedThumbnails(prev => new Set(prev).add(sermon._id));
+                        }
+                      }}
+                    />
+                    {/* Duration Badge */}
+                    {sermon.duration && (
                       <div style={{
                         position: 'absolute',
-                        top: '4px',
-                        left: '4px',
-                        background: sermon.isPublished 
-                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                          : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.6em',
-                        fontWeight: '600',
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        {sermon.isPublished ? 'Published' : 'Draft'}
-                      </div>
-                    </div>
-
-                    {/* Sermon Info */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '4px'
-                      }}>
-                        <h4 style={{
-                          margin: 0,
-                          fontSize: '0.95em',
-                          fontWeight: '600',
-                          color: 'var(--ion-text-color)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {sermon.title}
-                        </h4>
-                      </div>
-                      <p style={{
-                        margin: '0 0 4px 0',
-                        fontSize: '0.8em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.6,
+                        bottom: '2px',
+                        right: '2px',
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        padding: '2px 4px',
+                        borderRadius: '3px',
+                        fontSize: '9px',
                         fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
+                        color: '#fff'
                       }}>
-                        {sermon.speaker || 'Dove Church'}
+                        {sermon.duration}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {sermon.title || 'Untitled'}
                       </p>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        fontSize: '0.7em',
-                        color: 'var(--ion-text-color)',
-                        opacity: 0.4
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
-                          <span>{new Date(sermon.createdAt || sermon.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>•</span>
-                          <IonIcon icon={eye} style={{ fontSize: '12px' }} />
-                          <span>{sermon.viewCount || 0}</span>
-                        </div>
+                    </div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {sermon.speaker || 'Dove Church'}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                        {sermon.createdAt ? formatDate(sermon.createdAt) : 'No date'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action buttons with status badge above */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    {/* Status Badge */}
+                    <div style={{
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: '500',
+                      background: sermon.isPublished ? '#10b98120' : '#f59e0b20',
+                      color: sermon.isPublished ? '#10b981' : '#f59e0b',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {sermon.isPublished ? 'Published' : 'Draft'}
+                    </div>
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(sermon._id); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: sermon.isPublished ? '#10b98115' : '#f59e0b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = sermon.isPublished ? '#10b98125' : '#f59e0b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = sermon.isPublished ? '#10b98115' : '#f59e0b15'}
+                      >
+                        <IonIcon 
+                          icon={sermon.isPublished ? eyeOff : eye} 
+                          style={{ fontSize: '16px', color: sermon.isPublished ? '#10b981' : '#f59e0b' }} 
+                        />
+                      </div>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); openActionSheet(sermon); }}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: '#64748b15',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
+                      >
+                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
                       </div>
                     </div>
-
-                    {/* Options Button */}
-                    <IonButton
-                      fill="clear"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openActionSheet(sermon);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: '8px',
-                        minWidth: 'auto',
-                        height: 'auto',
-                        '--color': 'var(--ion-text-color)',
-                        opacity: 0.5
-                      }}
-                    >
-                      <IonIcon icon={ellipsisVertical} style={{ fontSize: '1.2em' }} />
-                    </IonButton>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
             <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Sermon Management
+              Dove Church • Admin Panel v2.0
             </IonText>
           </div>
         </div>
 
-        {/* FAB Button */}
-        <IonFab horizontal="end" vertical="bottom" slot="fixed" style={{ marginBottom: '80px', marginRight: '16px' }}>
-          <IonFabButton onClick={() => history.push('/admin/sermons/add')} style={{ '--background': '#6366f1', '--box-shadow': '0 4px 16px rgba(99, 102, 241, 0.5)' }}>
+        {/* FAB for adding new sermon */}
+        <IonFab
+          horizontal="end"
+          vertical="bottom"
+          slot="fixed"
+          style={{
+            '--background': '#6366f1',
+            '--box-shadow': '0 6px 20px rgba(99, 102, 241, 0.4)',
+            'marginBottom': '70px',
+            'marginRight': '16px'
+          } as any}
+        >
+          <IonFabButton onClick={() => history.push('/admin/sermons/add')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
-
-        <IonLoading isOpen={loading} message="Loading sermons..." />
-        <IonAlert
-          isOpen={showAlert}
-          onDidDismiss={() => setShowAlert(false)}
-          header="Notice"
-          message={alertMessage}
-          buttons={['OK']}
-        />
-        <IonAlert
-          isOpen={showDeleteConfirm}
-          onDidDismiss={() => {
-            setShowDeleteConfirm(false);
-            setSermonToDelete(null);
-          }}
-          header="Confirm Delete"
-          message={`Are you sure you want to delete the sermon "${sermonToDelete?.title}" by ${sermonToDelete?.speaker}? This action cannot be undone.`}
-          buttons={[
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: () => {
-                setShowDeleteConfirm(false);
-                setSermonToDelete(null);
-              }
-            },
-            {
-              text: 'Delete',
-              role: 'destructive',
-              handler: deleteSermon
-            }
-          ]}
-        />
-        <IonActionSheet
-          isOpen={showActionSheet}
-          onDidDismiss={() => setShowActionSheet(false)}
-          header={`Options for "${selectedSermon?.title}"`}
-          buttons={[
-            {
-              text: selectedSermon?.isPublished ? 'Unpublish' : 'Publish',
-              icon: selectedSermon?.isPublished ? eyeOff : eye,
-              handler: () => {
-                if (selectedSermon) {
-                  toggleStatus(selectedSermon._id);
-                }
-              }
-            },
-            {
-              text: 'Edit',
-              icon: create,
-              handler: () => {
-                if (selectedSermon) {
-                  openEditPage(selectedSermon);
-                }
-              }
-            },
-            {
-              text: 'Delete',
-              role: 'destructive',
-              icon: trash,
-              handler: () => {
-                if (selectedSermon) {
-                  confirmDeleteSermon(selectedSermon);
-                }
-              }
-            },
-            {
-              text: 'Cancel',
-              role: 'cancel'
-            }
-          ]}
-        />
-
       </IonContent>
+
+      {/* Delete Confirmation Alert */}
+      <IonAlert
+        isOpen={showDeleteConfirm}
+        onDidDismiss={() => setShowDeleteConfirm(false)}
+        header="Delete Sermon"
+        message="Are you sure you want to delete this sermon? This action cannot be undone."
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          { text: 'Delete', role: 'destructive', handler: deleteSermon }
+        ]}
+      />
+
+      {/* General Alert */}
+      <IonAlert
+        isOpen={showAlert}
+        onDidDismiss={() => setShowAlert(false)}
+        header="Alert"
+        message={alertMessage}
+        buttons={['OK']}
+      />
+
+      {/* Action Sheet */}
+      <IonActionSheet
+        isOpen={showActionSheet}
+        onDidDismiss={() => setShowActionSheet(false)}
+        header={selectedSermon?.title || 'Sermon Options'}
+        buttons={[
+          {
+            text: 'Edit',
+            icon: create,
+            handler: () => {
+              if (selectedSermon) openEditPage(selectedSermon);
+            }
+          },
+          {
+            text: selectedSermon?.isPublished ? 'Unpublish' : 'Publish',
+            icon: selectedSermon?.isPublished ? eyeOff : eye,
+            handler: () => {
+              if (selectedSermon) toggleStatus(selectedSermon._id);
+            }
+          },
+          {
+            text: 'Delete',
+            icon: trash,
+            role: 'destructive',
+            handler: () => {
+              if (selectedSermon) confirmDeleteSermon(selectedSermon);
+            }
+          },
+          {
+            text: 'Cancel',
+            icon: arrowBack,
+            role: 'cancel'
+          }
+        ]}
+      />
+
+      {loading && sermons.length === 0 ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px 20px',
+          color: 'var(--ion-color-medium)',
+          opacity: 0.6
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid var(--ion-color-step-200)',
+            borderTop: '3px solid var(--ion-color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ fontSize: '14px', margin: 0 }}>Loading sermons...</p>
+        </div>
+      ) : null}
+
       <style>{`
-        input::placeholder {
-          color: var(--ion-text-color) !important;
-          opacity: 0.4 !important;
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </IonPage>

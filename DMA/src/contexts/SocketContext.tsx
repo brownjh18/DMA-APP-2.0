@@ -120,14 +120,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const isVercel = import.meta.env.VITE_API_URL?.includes('vercel.app');
     
     if (isVercel) {
-      console.log('🔌 Socket.IO disabled: Vercel free tier doesn\'t support WebSocket connections');
-      setSocket(null);
-      setIsConnected(false);
-      return;
+      console.log('⚠️ Socket.IO Warning: VITE_API_URL points to Vercel which doesn\'t support persistent WebSocket connections.');
+      console.log('⚠️ Real-time notifications will not work. Consider using a different hosting provider or a push notification service like Firebase.');
+      // Still try to connect, but expect it to fail
+      // setSocket(null);
+      // setIsConnected(false);
+      // return;
     }
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const socketUrl = apiUrl || window.location.origin;
+    // Remove /api suffix for socket connection
+    const socketUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
     
     const newSocket = io(socketUrl, {
       transports: ['polling', 'websocket'],

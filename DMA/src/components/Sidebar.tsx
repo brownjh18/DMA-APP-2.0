@@ -16,9 +16,11 @@ import {
   heartOutline,
   logOutOutline,
   cloudDownloadOutline,
+  notificationsOutline,
 } from "ionicons/icons";
 import { AuthContext } from "../App";
 import { BACKEND_BASE_URL } from "../services/api";
+import NotificationBell from "./NotificationBell";
 
 
 interface SidebarProps {
@@ -387,6 +389,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
               <span style={isActive('/admin') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Admin Dashboard</span>
             </div>
           )}
+
+          <div
+            className="nav-item"
+            onClick={() => navigateTo('/notifications')}
+            style={isActive('/notifications') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+          >
+            <IonIcon icon={notificationsOutline} style={isActive('/notifications') ? { color: '#3b82f6' } : {}} />
+            <span style={isActive('/notifications') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Notifications</span>
+          </div>
 
           {user && (
             <div className="nav-item" onClick={handleLogout} style={{ marginTop: '10px', borderTop: '1px solid var(--ion-color-step-200)', paddingTop: '16px' }}>

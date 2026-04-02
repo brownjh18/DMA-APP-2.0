@@ -1,7 +1,24 @@
 // API Service for connecting frontend to backend
 import { Capacitor } from '@capacitor/core';
-// Use VITE_API_URL for production, fallback to localhost:5173 for local dev
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173/api';
+
+// Helper to get the development API URL based on the current network
+const getDevApiUrl = () => {
+  // If VITE_API_URL is set, use it (production)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // For Capacitor apps running on device/emulator, use localhost
+  // This works with ADB reverse (adb reverse tcp:10000 tcp:10000)
+  if (Capacitor.isNativePlatform()) {
+    return 'http://localhost:10000/api';
+  }
+  
+  // For web development, use localhost
+  return 'http://localhost:10000/api';
+};
+
+const API_BASE_URL = getDevApiUrl();
 console.log('🔗 API Base URL:', API_BASE_URL);
 export { API_BASE_URL };
 
@@ -157,16 +174,22 @@ class ApiService {
 
       if (!response.ok) {
         // Handle authentication errors (401/403) - token expired or invalid
-        // But don't trigger logout for sync/saved endpoints - those can fail without logging out
+        // But don't trigger logout for certain endpoints that can fail without logging out
         if (response.status === 401 || response.status === 403) {
+          // Endpoints that should NOT trigger logout
           const isSyncEndpoint = endpoint.includes('/saved') || endpoint.includes('/subscribe');
-          if (!isSyncEndpoint) {
-            console.log('Authentication error, logging out user');
+          const isProfileEndpoint = endpoint === '/auth/profile';
+          const isSearchEndpoint = endpoint === '/search';
+          const isAdminEndpoint = endpoint.includes('/auth/users') || endpoint.includes('/sermons') || endpoint.includes('/devotions') || endpoint.includes('/events') || endpoint.includes('/ministries') || endpoint.includes('/podcasts') || endpoint.includes('/giving') || endpoint.includes('/prayer-requests') || endpoint.includes('/news') || endpoint.includes('/live-broadcasts');
+          const noLogoutEndpoint = isSyncEndpoint || isProfileEndpoint || isSearchEndpoint || isAdminEndpoint;
+          
+          if (!noLogoutEndpoint) {
+            console.log('Authentication error on critical endpoint, logging out user');
             if (this.logoutCallback) {
               this.logoutCallback();
             }
           } else {
-            console.log('⚠️ Sync endpoint auth failed (non-critical), not logging out:', endpoint);
+            console.log('⚠️ Non-critical endpoint auth failed, not logging out:', endpoint);
           }
           const error = await response.json().catch(() => ({ error: 'Authentication failed' }));
           throw new Error(error.error || 'Authentication failed');

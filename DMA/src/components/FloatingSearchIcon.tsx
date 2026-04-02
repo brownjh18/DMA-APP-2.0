@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { IonIcon, IonBadge, IonPopover, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonText, IonChip, IonSpinner, IonSearchbar } from '@ionic/react';
-import { search, radio, playCircle, calendar, book, people, newspaper, informationCircle, arrowBack, close } from 'ionicons/icons';
+import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close, notifications } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -9,7 +9,7 @@ import './FloatingSearchIcon.css';
 
 interface SearchResult {
   id: string;
-  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry' | 'news';
+  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry';
   title: string;
   subtitle?: string;
   description?: string;
@@ -178,7 +178,6 @@ const FloatingSearchIcon: React.FC = () => {
       case 'event': return calendar;
       case 'devotion': return book;
       case 'ministry': return people;
-      case 'news': return newspaper;
       default: return search;
     }
   };
@@ -190,7 +189,6 @@ const FloatingSearchIcon: React.FC = () => {
       case 'event': return 'tertiary';
       case 'devotion': return 'success';
       case 'ministry': return 'warning';
-      case 'news': return 'danger';
       default: return 'medium';
     }
   };
@@ -201,8 +199,7 @@ const FloatingSearchIcon: React.FC = () => {
     { value: 'podcast', label: 'Podcasts' },
     { value: 'event', label: 'Events' },
     { value: 'devotion', label: 'Devotions' },
-    { value: 'ministry', label: 'Ministries' },
-    { value: 'news', label: 'News' }
+    { value: 'ministry', label: 'Ministries' }
   ];
 
   const handleSearchClick = () => {
@@ -258,43 +255,95 @@ const FloatingSearchIcon: React.FC = () => {
             onClick={handleLiveBroadcastClick}
             style={{
               position: 'absolute',
-              top: 'calc(var(--ion-safe-area-top) + 4px)', // Position slightly below search button
-              right: 90, // Position next to search button (20px right + 45px button + 25px gap)
-              width: 70,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: 'red',
+              top: 'calc(var(--ion-safe-area-top) - 18px)',
+              right: 120,
+              width: 45,
+              height: 45,
+              borderRadius: 25,
+              backgroundColor: '#ef4444',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 6px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+              boxShadow: '0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
               zIndex: 999,
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255,255,255,0.2)',
-              padding: '0 8px',
-              gap: '4px'
+              transition: 'transform 0.2s ease',
+              overflow: 'hidden'
             }}
           >
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)',
+              pointerEvents: 'none',
+              borderRadius: '25px'
+            }} />
             <IonIcon
               icon={radio}
               style={{
                 color: 'white',
-                fontSize: '14px',
-                flexShrink: 0
+                fontSize: '20px',
+                flexShrink: 0,
+                position: 'relative',
+                zIndex: 1
               }}
             />
-            <span style={{
-              color: 'white',
-              fontSize: '12px',
-              fontWeight: '600',
-              whiteSpace: 'nowrap'
-            }}>
-              Live
-            </span>
           </div>
         )}
+
+        {/* Notification Bell Button */}
+        <div
+          className="floating-notification-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Navigate directly to notifications page
+            history.push('/notifications');
+          }}
+          style={{
+            position: 'fixed',
+            top: 'calc(var(--ion-safe-area-top) + 4px)',
+            right: 65,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10000,
+            transition: 'transform 0.2s ease',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
+            pointerEvents: 'none',
+            borderRadius: '25px'
+          }} />
+          <IonIcon
+            icon={notifications}
+            style={{
+              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+              fontSize: '20px',
+            }}
+          />
+        </div>
 
         {/* Search Button */}
         <div
@@ -310,7 +359,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'absolute',
             top: 'calc(var(--ion-safe-area-top) - 18px)',
-            right: 20,
+            right: 10,
             width: 45,
             height: 45,
             borderRadius: 25,

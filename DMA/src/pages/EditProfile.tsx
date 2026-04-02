@@ -135,36 +135,27 @@ const EditProfile: React.FC = () => {
         phone: formData.phone
       });
 
-
-
-      let profilePictureUrl = user?.profilePicture;
-      let finalResponse = profileResponse;
+      let updatedUserData = profileResponse.user || {};
 
       // Upload profile picture if selected
       if (selectedImage) {
         const formDataUpload = new FormData();
         formDataUpload.append('profilePicture', selectedImage);
         const uploadResponse = await apiService.uploadProfilePicture(formDataUpload);
-  
-        profilePictureUrl = uploadResponse.user.profilePicture;
-        finalResponse = uploadResponse; // Use the upload response if it has the token
+        
+        if (uploadResponse.user) {
+          updatedUserData = { ...updatedUserData, ...uploadResponse.user };
+        }
       }
 
   
 
-      // Update token in localStorage if new token provided
-      if (finalResponse.token) {
-        localStorage.setItem('token', finalResponse.token);
-        apiService.setToken(finalResponse.token);
-      }
+      // Update global user state with the latest data
+      updateUser(updatedUserData);
+      setUser(updatedUserData);
 
-      // Update global user state
-      const updatedUser = {
-        ...finalResponse.user,
-        profilePicture: profilePictureUrl
-      };
-      updateUser(updatedUser);
-      setUser(updatedUser);
+      // Also update localStorage directly for persistence
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
 
       // Clear form selections
       setSelectedImage(null);
