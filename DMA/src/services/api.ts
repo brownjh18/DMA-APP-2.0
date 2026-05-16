@@ -8,10 +8,11 @@ const getDevApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  // For Capacitor apps running on device/emulator, use localhost
-  // This works with ADB reverse (adb reverse tcp:10000 tcp:10000)
+  // For Capacitor apps running on device/emulator, use 10.0.2.2 for Android emulator
+  // Android emulator maps 10.0.2.2 to the host machine's localhost
+  // Backend runs on port 10000 when using .env
   if (Capacitor.isNativePlatform()) {
-    return 'http://localhost:10000/api';
+    return 'http://10.0.2.2:10000/api';
   }
   
   // For web development, use localhost
@@ -32,8 +33,14 @@ const getBackendBaseUrl = () => {
     console.log('🔗 Backend Base URL:', url);
     return url;
   }
-  // For localhost development, use direct backend URL on port 5173
-  const url = 'http://localhost:5173';
+// For Capacitor apps running on device/emulator, use 10.0.2.2
+    if (Capacitor.isNativePlatform()) {
+      const url = 'http://10.0.2.2:10000';
+      console.log('🔗 Backend Base URL (native):', url);
+      return url;
+    }
+    // For localhost development, use direct backend URL on port 10000
+    const url = 'http://localhost:10000';
   console.log('🔗 Backend Base URL (localhost):', url);
   return url;
 };
@@ -125,7 +132,9 @@ class ApiService {
   }
 
   private isAuthEndpoint(endpoint: string): boolean {
-    return endpoint.startsWith('/auth/') || endpoint === '/auth/login' || endpoint === '/auth/signup';
+    // Only match the actual auth action endpoints - login and signup should NOT trigger logout
+    // Profile and users endpoints should trigger logout on auth failure
+    return endpoint === '/auth/login' || endpoint === '/auth/signup';
   }
 
   private async request(endpoint: string, options: RequestInit = {}, retryCount = 0, forceRefresh: boolean = false): Promise<any> {
@@ -180,8 +189,8 @@ class ApiService {
           const isSyncEndpoint = endpoint.includes('/saved') || endpoint.includes('/subscribe');
           const isProfileEndpoint = endpoint === '/auth/profile';
           const isSearchEndpoint = endpoint === '/search';
-          const isAdminEndpoint = endpoint.includes('/auth/users') || endpoint.includes('/sermons') || endpoint.includes('/devotions') || endpoint.includes('/events') || endpoint.includes('/ministries') || endpoint.includes('/podcasts') || endpoint.includes('/giving') || endpoint.includes('/prayer-requests') || endpoint.includes('/news') || endpoint.includes('/live-broadcasts');
-          const noLogoutEndpoint = isSyncEndpoint || isProfileEndpoint || isSearchEndpoint || isAdminEndpoint;
+          const isAdminOnlyEndpoint = endpoint.includes('/auth/users') || endpoint.includes('/admin');
+          const noLogoutEndpoint = isSyncEndpoint || isProfileEndpoint || isSearchEndpoint || isAdminOnlyEndpoint || this.isAuthEndpoint(endpoint);
           
           if (!noLogoutEndpoint) {
             console.log('Authentication error on critical endpoint, logging out user');
@@ -300,13 +309,15 @@ class ApiService {
     }
   }
 
-  // Authentication
-  async login(email: string, password: string) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  }
+// Authentication
+   async login(email: string, password: string) {
+     // Ensure we don't have a stale token before login
+     this.clearToken();
+     return this.request('/auth/login', {
+       method: 'POST',
+       body: JSON.stringify({ email, password }),
+     });
+   }
 
   async register(userData: any) {
     return this.request('/auth/signup', {
@@ -317,7 +328,7 @@ class ApiService {
 
   // Google OAuth
   initiateGoogleAuth() {
-    const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
+    const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : BACKEND_BASE_URL;
     const googleAuthUrl = `${backendUrl}/api/auth/google`;
     window.location.href = googleAuthUrl;
   }
@@ -855,6 +866,11 @@ class ApiService {
       ...filters
     });
     return this.request(`/search?${searchParams}`);
+  }
+
+  async getSearchSuggestions(): Promise<string[]> {
+    const response = await this.request('/search/suggestions');
+    return response.suggestions || [];
   }
   
   // YouTube

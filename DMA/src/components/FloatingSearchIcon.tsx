@@ -4,6 +4,7 @@ import { search, radio, playCircle, calendar, book, people, informationCircle, a
 import { useHistory, useLocation } from 'react-router-dom';
 import { YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import './FloatingSearchIcon.css';
 
@@ -32,6 +33,7 @@ const FloatingSearchIcon: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
   const { setCurrentMedia, setIsPlaying, setCurrentSermon, isPlaying, currentSermon, currentMedia } = usePlayer();
+  const { unreadCount } = useNotifications();
 
   // Check for live broadcasts and YouTube live streams periodically with rate limiting and caching
   useEffect(() => {
@@ -323,7 +325,7 @@ const FloatingSearchIcon: React.FC = () => {
             cursor: 'pointer',
             zIndex: 10000,
             transition: 'transform 0.2s ease',
-            overflow: 'hidden'
+            overflow: 'visible'
           }}
         >
           <div style={{
@@ -343,6 +345,28 @@ const FloatingSearchIcon: React.FC = () => {
               fontSize: '20px',
             }}
           />
+          {unreadCount > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 2,
+                right: 4,
+                minWidth: 18,
+                height: 18,
+                backgroundColor: '#ef4444',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 4px',
+                boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
+                fontWeight: 600,
+                fontSize: 10
+              }}
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </div>
+          )}
         </div>
 
         {/* Search Button */}

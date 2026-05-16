@@ -186,7 +186,6 @@ import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
 import BottomFadeEffect from './components/BottomFadeEffect';
-import PermissionRequester from './components/PermissionRequester';
 import NotificationListener from './components/NotificationListener';
 import './components/FloatingSearchIcon.css';
 import Tab1 from './pages/Tab1';
@@ -277,7 +276,6 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [authCheckTrigger, setAuthCheckTrigger] = useState<number>(0);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
-  const [permissionsReady, setPermissionsReady] = useState<boolean>(false);
 
   useEffect(() => {
     // Set status bar to not overlay the webview (only on native platforms)
@@ -289,12 +287,23 @@ const App: React.FC = () => {
       console.log('StatusBar not available on this platform');
     }
 
-    // Set status bar style based on system theme
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const updateStatusBar = (isDark: boolean) => {
+    // Set status bar style based on theme
+    const updateStatusBarFromTheme = () => {
       try {
         if ((window as any).Capacitor?.getPlatform() !== 'web') {
+          const root = document.documentElement;
+          const dataTheme = root.getAttribute('data-theme');
+          let isDark = false;
+          
+          if (dataTheme === 'dark') {
+            isDark = true;
+          } else if (dataTheme === 'light') {
+            isDark = false;
+          } else {
+            // System preference
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          
           if (isDark) {
             StatusBar.setStyle({ style: Style.Dark });
             StatusBar.setBackgroundColor({ color: '#000000' });
@@ -309,14 +318,19 @@ const App: React.FC = () => {
     };
 
     // Set initial status bar style
-    updateStatusBar(mediaQuery.matches);
+    updateStatusBarFromTheme();
 
-    // Listen for theme changes
-    const handleThemeChange = (e: MediaQueryListEvent) => {
-      updateStatusBar(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleThemeChange);
+    // Listen for theme attribute changes using MutationObserver
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          updateStatusBarFromTheme();
+          break;
+        }
+      }
+    });
+    
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     // Temporarily disable MutationObserver to test if it's causing freezing
     // Fix aria-hidden focus issue by adding inert to hidden pages
@@ -429,8 +443,7 @@ const App: React.FC = () => {
 
     // Cleanup
     return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-      // observer.disconnect(); // Disabled for testing
+      observer.disconnect();
     };
   }, []);
 
@@ -438,27 +451,29 @@ const App: React.FC = () => {
     try {
       console.log('🔐 Login attempt for:', email);
       const response = await apiService.login(email, password);
-      console.log('✅ Login successful, token received');
+      console.log('✅ Login successful, token received', response);
+      console.log('📋 User data received:', response.user);
       
       // Set state first
       setToken(response.token);
       setUser(response.user);
       apiService.setToken(response.token);
+      console.log('✅ State updated, user:', response.user?.name);
       
       // Save to localStorage
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       console.log('✅ Token and user saved to localStorage');
       
-      // Force a small delay to ensure state updates propagate before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Sync saved items from server to localStorage after login (non-blocking)
-      syncSavedItems().catch(err => {
-        console.warn('⚠️ Failed to sync saved items after login (non-critical):', err);
-      });
+      // Wrap in a separate try-catch to ensure login completes even if sync fails
+      setTimeout(() => {
+        syncSavedItems().catch(err => {
+          console.warn('⚠️ Failed to sync saved items after login (non-critical):', err);
+        });
+      }, 500);
       
-      console.log('✅ Login complete, user state:', user?.role);
+      console.log('✅ Login complete');
     } catch (error: any) {
       console.error('❌ Login failed:', error.message);
       throw error;
@@ -486,86 +501,95 @@ const App: React.FC = () => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  // Function to sync saved items from server to localStorage
-  const syncSavedItems = async () => {
-    try {
-      console.log('Syncing saved items from server...');
-      
-      // Fetch saved sermons - wrap in try-catch to prevent logout on failure
-      try {
-        const sermonsResponse = await apiService.getSavedSermons();
-        if (sermonsResponse.savedSermons) {
-          const formattedSermons = sermonsResponse.savedSermons.map((s: any) => ({
-            id: s._id,
-            _id: s._id,
-            title: s.title,
-            speaker: s.speaker,
-            description: s.description,
-            thumbnailUrl: s.thumbnailUrl,
-            videoUrl: s.videoUrl,
-            duration: s.duration,
-            date: s.date,
-            scripture: s.scripture,
-            series: s.series,
-            type: 'sermon'
-          }));
-          localStorage.setItem('savedSermons', JSON.stringify(formattedSermons));
-          console.log(`Synced ${formattedSermons.length} saved sermons`);
-        }
-      } catch (error) {
-        console.warn('Failed to sync saved sermons (non-critical):', error);
-      }
+// Function to sync saved items from server to localStorage
+   const syncSavedItems = async () => {
+     try {
+       console.log('Syncing saved items from server...');
+       
+       // Temporarily disable logout during sync to prevent auto-logout
+       const originalLogoutCallback = (apiService as any).logoutCallback;
+       (apiService as any).logoutCallback = null;
+       
+       try {
+         // Fetch saved sermons
+         try {
+           const sermonsResponse = await apiService.getSavedSermons();
+           if (sermonsResponse.savedSermons) {
+             const formattedSermons = sermonsResponse.savedSermons.map((s: any) => ({
+               id: s._id,
+               _id: s._id,
+               title: s.title,
+               speaker: s.speaker,
+               description: s.description,
+               thumbnailUrl: s.thumbnailUrl,
+               videoUrl: s.videoUrl,
+               duration: s.duration,
+               date: s.date,
+               scripture: s.scripture,
+               series: s.series,
+               type: 'sermon'
+             }));
+             localStorage.setItem('savedSermons', JSON.stringify(formattedSermons));
+             console.log(`Synced ${formattedSermons.length} saved sermons`);
+           }
+         } catch (error) {
+           console.warn('Failed to sync saved sermons (non-critical):', error);
+         }
 
-      // Fetch saved podcasts - wrap in try-catch to prevent logout on failure
-      try {
-        const podcastsResponse = await apiService.getSavedPodcasts();
-        if (podcastsResponse.savedPodcasts) {
-          const formattedPodcasts = podcastsResponse.savedPodcasts.map((p: any) => ({
-            id: p._id,
-            _id: p._id,
-            title: p.title,
-            speaker: p.speaker,
-            description: p.description,
-            thumbnailUrl: p.thumbnailUrl,
-            audioUrl: p.audioUrl,
-            duration: p.duration,
-            publishedAt: p.publishedAt
-          }));
-          localStorage.setItem('savedPodcasts', JSON.stringify(formattedPodcasts));
-          console.log(`Synced ${formattedPodcasts.length} saved podcasts`);
-        }
-      } catch (error) {
-        console.warn('Failed to sync saved podcasts (non-critical):', error);
-      }
+         // Fetch saved podcasts
+         try {
+           const podcastsResponse = await apiService.getSavedPodcasts();
+           if (podcastsResponse.savedPodcasts) {
+             const formattedPodcasts = podcastsResponse.savedPodcasts.map((p: any) => ({
+               id: p._id,
+               _id: p._id,
+               title: p.title,
+               speaker: p.speaker,
+               description: p.description,
+               thumbnailUrl: p.thumbnailUrl,
+               audioUrl: p.audioUrl,
+               duration: p.duration,
+               publishedAt: p.publishedAt
+             }));
+             localStorage.setItem('savedPodcasts', JSON.stringify(formattedPodcasts));
+             console.log(`Synced ${formattedPodcasts.length} saved podcasts`);
+           }
+         } catch (error) {
+           console.warn('Failed to sync saved podcasts (non-critical):', error);
+         }
 
-      // Fetch saved devotions - wrap in try-catch to prevent logout on failure
-      try {
-        const devotionsResponse = await apiService.getSavedDevotions();
-        if (devotionsResponse.savedDevotions) {
-          const formattedDevotions = devotionsResponse.savedDevotions.map((d: any) => ({
-            id: d._id,
-            _id: d._id,
-            title: d.title,
-            scripture: d.scripture,
-            content: d.content,
-            reflection: d.reflection,
-            prayer: d.prayer,
-            author: d.author,
-            thumbnailUrl: d.thumbnailUrl,
-            publishedAt: d.createdAt || d.date
-          }));
-          localStorage.setItem('savedDevotions', JSON.stringify(formattedDevotions));
-          console.log(`Synced ${formattedDevotions.length} saved devotions`);
-        }
-      } catch (error) {
-        console.warn('Failed to sync saved devotions (non-critical):', error);
-      }
+         // Fetch saved devotions
+         try {
+           const devotionsResponse = await apiService.getSavedDevotions();
+           if (devotionsResponse.savedDevotions) {
+             const formattedDevotions = devotionsResponse.savedDevotions.map((d: any) => ({
+               id: d._id,
+               _id: d._id,
+               title: d.title,
+               scripture: d.scripture,
+               content: d.content,
+               reflection: d.reflection,
+               prayer: d.prayer,
+               author: d.author,
+               thumbnailUrl: d.thumbnailUrl,
+               publishedAt: d.createdAt || d.date
+             }));
+             localStorage.setItem('savedDevotions', JSON.stringify(formattedDevotions));
+             console.log(`Synced ${formattedDevotions.length} saved devotions`);
+           }
+         } catch (error) {
+           console.warn('Failed to sync saved devotions (non-critical):', error);
+         }
 
-      console.log('Saved items sync completed');
-    } catch (error) {
-      console.error('Error syncing saved items:', error);
-    }
-  };
+         console.log('Saved items sync completed');
+       } finally {
+         // Restore logout callback
+         (apiService as any).logoutCallback = originalLogoutCallback;
+       }
+     } catch (error) {
+       console.error('Error syncing saved items:', error);
+     }
+   };
 
   // Function to directly set authentication state (used for automatic login after registration)
   const setAuthState = (token: string, user: any) => {
@@ -610,7 +634,6 @@ const App: React.FC = () => {
               <PlayerProvider>
                 <IonApp>
                   <OfflineIndicator />
-                  <PermissionRequester onPermissionsReady={() => setPermissionsReady(true)} />
                   <IonReactRouter>
                     <PageTitleUpdater />
                     <AudioPlayer />

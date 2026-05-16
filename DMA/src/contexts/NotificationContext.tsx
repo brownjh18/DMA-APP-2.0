@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { PushNotifications, PushNotificationSchema, ActionPerformed, Token } from '@capacitor/push-notifications';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
-import { useHistory } from 'react-router-dom';
+import apiService from '../services/api';
 
 export interface Notification {
   id: string;
@@ -22,15 +21,34 @@ interface NotificationContextType {
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
   clearAll: () => void;
+  refreshNotifications: () => Promise<void>;
+}
+
+interface CachedContent {
+  sermons: string[];
+  podcasts: string[];
+  devotions: string[];
+  events: string[];
+  lastCheck: string;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+// Polling interval in milliseconds (1 minute)
+const POLLING_INTERVAL = 60 * 1000;
+
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const history = useHistory();
+  const [cachedContent, setCachedContent] = useState<CachedContent>({
+    sermons: [],
+    podcasts: [],
+    devotions: [],
+    events: [],
+    lastCheck: new Date().toISOString()
+  });
+  const pollingIntervalRef = useRef<number | null>(null);
 
-  // Load notifications from localStorage on mount
+  // Load notifications and cache from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('notifications');
     if (saved) {
@@ -41,12 +59,57 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         console.error('Failed to parse saved notifications:', e);
       }
     }
+
+    const savedCache = localStorage.getItem('contentCache');
+    if (savedCache) {
+      try {
+        const parsed = JSON.parse(savedCache);
+        setCachedContent(parsed);
+      } catch (e) {
+        console.error('Failed to parse saved cache:', e);
+      }
+    }
   }, []);
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('notifications', JSON.stringify(notifications));
   }, [notifications]);
+
+  // Save cache to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('contentCache', JSON.stringify(cachedContent));
+  }, [cachedContent]);
+
+  // Show local notification on device
+  const showLocalNotification = useCallback(async (title: string, body: string, data?: any) => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Check if we have permission
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display !== 'granted') {
+          console.log('Notification permission not granted, skipping device notification');
+          return;
+        }
+
+        await LocalNotifications.schedule({
+          notifications: [{
+            title: title,
+            body: body,
+            id: Date.now() + Math.random(),
+            iconColor: '#6366f1',
+            smallIcon: 'res://icon',
+            extra: data || {},
+            channelId: 'dma-notifications',
+            actionTypeId: 'notification-open',
+          }],
+        });
+        console.log('Device notification scheduled:', title);
+      } catch (error) {
+        console.error('Failed to show device notification:', error);
+      }
+    }
+  }, []);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
     const newNotification: Notification = {
@@ -59,20 +122,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50 notifications
 
     // Show local notification
-    if (Capacitor.isNativePlatform()) {
-      LocalNotifications.schedule({
-        notifications: [{
-          title: notification.title,
-          body: notification.message,
-          id: Date.now(),
-          iconColor: '#6366f1',
-          sound: 'beep.wav',
-          smallIcon: 'res://icon',
-          extra: notification.data || {},
-        }],
-      });
-    }
-  }, []);
+    showLocalNotification(notification.title, notification.message, notification.data);
+  }, [showLocalNotification]);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev =>
@@ -93,91 +144,143 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     localStorage.removeItem('notifications');
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  // Request notification permissions
-  const requestNotificationPermission = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) return 'granted'; // Web doesn't need permission
-
+  // Poll for new content from the server
+  const refreshNotifications = useCallback(async () => {
     try {
-      const permStatus = await PushNotifications.requestPermissions();
-      return permStatus.receive;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token, skipping notification poll');
+        return;
+      }
+
+      const now = new Date();
+      const lastCheck = cachedContent.lastCheck ? new Date(cachedContent.lastCheck) : null;
+      
+      // Format date for API query (last 24 hours or since last check)
+      const sinceDate = lastCheck ? lastCheck.toISOString() : new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      // Fetch new content from server
+      const [sermonsRes, podcastsRes, devotionsRes, eventsRes] = await Promise.allSettled([
+        apiService.getSermons({ limit: 10, since: sinceDate }),
+        apiService.getPodcasts({ limit: 10, since: sinceDate }),
+        apiService.getDevotions({ limit: 10, since: sinceDate }),
+        apiService.getEvents({ limit: 10, since: sinceDate }),
+      ]);
+
+      const newSermonIds: string[] = [];
+      const newPodcastIds: string[] = [];
+      const newDevotionIds: string[] = [];
+      const newEventIds: string[] = [];
+
+      // Check for new sermons
+      if (sermonsRes.status === 'fulfilled' && sermonsRes.value?.sermons) {
+        const sermons = sermonsRes.value.sermons;
+        sermons.forEach((sermon: any) => {
+          if (!cachedContent.sermons.includes(sermon._id)) {
+            newSermonIds.push(sermon._id);
+addNotification({
+               title: 'New Sermon Available',
+               message: sermon.title || 'A new sermon has been added',
+               type: 'sermon',
+               data: { sermonId: sermon._id, type: 'sermon', thumbnailUrl: sermon.thumbnailUrl || sermon.thumbnail },
+             });
+          }
+        });
+      }
+
+      // Check for new podcasts
+      if (podcastsRes.status === 'fulfilled' && podcastsRes.value?.podcasts) {
+        const podcasts = podcastsRes.value.podcasts;
+        podcasts.forEach((podcast: any) => {
+          if (!cachedContent.podcasts.includes(podcast._id)) {
+            newPodcastIds.push(podcast._id);
+addNotification({
+               title: 'New Podcast Episode',
+               message: podcast.title || 'A new podcast episode is available',
+               type: 'podcast',
+               data: { podcastId: podcast._id, type: 'podcast', thumbnailUrl: podcast.thumbnailUrl || podcast.thumbnail },
+             } as any);
+          }
+        });
+      }
+
+      // Check for new devotions
+      if (devotionsRes.status === 'fulfilled' && devotionsRes.value?.devotions) {
+        const devotions = devotionsRes.value.devotions;
+        devotions.forEach((devotion: any) => {
+          if (!cachedContent.devotions.includes(devotion._id)) {
+            newDevotionIds.push(devotion._id);
+addNotification({
+               title: 'New Daily Devotion',
+               message: devotion.title || 'A new devotion is available for today',
+               type: 'devotion',
+               data: { devotionId: devotion._id, type: 'devotion', thumbnailUrl: devotion.thumbnailUrl || devotion.thumbnail },
+             } as any);
+          }
+        });
+      }
+
+      // Check for new events
+      if (eventsRes.status === 'fulfilled' && eventsRes.value?.events) {
+        const events = eventsRes.value.events;
+        events.forEach((event: any) => {
+          if (!cachedContent.events.includes(event._id)) {
+            newEventIds.push(event._id);
+addNotification({
+               title: 'Upcoming Event',
+               message: event.title || 'A new event has been scheduled',
+               type: 'event',
+               data: { eventId: event._id, type: 'event', thumbnailUrl: event.imageUrl || event.thumbnail },
+             } as any);
+          }
+        });
+      }
+
+      // Update cache with new content IDs
+      if (newSermonIds.length > 0 || newPodcastIds.length > 0 || 
+          newDevotionIds.length > 0 || newEventIds.length > 0) {
+        setCachedContent({
+          sermons: [...new Set([...cachedContent.sermons, ...newSermonIds])].slice(-100),
+          podcasts: [...new Set([...cachedContent.podcasts, ...newPodcastIds])].slice(-100),
+          devotions: [...new Set([...cachedContent.devotions, ...newDevotionIds])].slice(-100),
+          events: [...new Set([...cachedContent.events, ...newEventIds])].slice(-100),
+          lastCheck: now.toISOString(),
+        });
+        
+        console.log(`Notification poll complete: ${newSermonIds.length} sermons, ${newPodcastIds.length} podcasts, ${newDevotionIds.length} devotions, ${newEventIds.length} events found`);
+      } else {
+        // Update last check time even if no new content
+        setCachedContent(prev => ({
+          ...prev,
+          lastCheck: now.toISOString(),
+        }));
+      }
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      return 'denied';
+      console.error('Error polling for notifications:', error);
     }
-  }, []);
+  }, [cachedContent, addNotification]);
 
-  // Check notification permissions
-  const checkNotificationPermission = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) return 'granted';
-
-    try {
-      const permStatus = await PushNotifications.checkPermissions();
-      return permStatus.receive;
-    } catch (error) {
-      console.error('Error checking notification permission:', error);
-      return 'denied';
-    }
-  }, []);
-
-  // Initialize push notifications for mobile
+  // Set up polling interval
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    // Run initial poll after a short delay
+    const initialPollTimeout = setTimeout(() => {
+      refreshNotifications();
+    }, 3000);
 
-    const initPushNotifications = async () => {
-      try {
-        // Check and request permission
-        const permStatus = await requestNotificationPermission();
-        if (permStatus !== 'granted') {
-          console.log('Push notification permission not granted');
-          return;
-        }
+    // Set up periodic polling
+    pollingIntervalRef.current = window.setInterval(() => {
+      refreshNotifications();
+    }, POLLING_INTERVAL);
 
-        // Register for push notifications
-        await PushNotifications.register();
-
-        // Listen for registration
-        PushNotifications.addListener('registration', (token: Token) => {
-          console.log('Push registration success, token: ' + token.value);
-          // Store token for later use
-          localStorage.setItem('pushToken', token.value);
-        });
-
-        PushNotifications.addListener('registrationError', (error: any) => {
-          console.error('Error on registration: ' + JSON.stringify(error));
-        });
-
-        // Listen for incoming notifications
-        PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-          console.log('Push notification received:', notification);
-          const data = notification.data;
-          if (data) {
-            addNotification({
-              title: data.title || 'New Notification',
-              message: data.message || '',
-              type: data.type || 'general',
-              data: data,
-            });
-          }
-        });
-
-        // Listen for notification tap
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-          console.log('Push notification action performed:', notification);
-          // Handle navigation based on notification data
-          const data = notification.notification.data;
-          if (data && data.url) {
-            history.push(data.url);
-          }
-        });
-      } catch (error) {
-        console.error('Error initializing push notifications:', error);
+    return () => {
+      clearTimeout(initialPollTimeout);
+      if (pollingIntervalRef.current) {
+        window.clearInterval(pollingIntervalRef.current);
       }
     };
+  }, [refreshNotifications]);
 
-    initPushNotifications();
-  }, [addNotification, requestNotificationPermission, history]);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <NotificationContext.Provider
@@ -189,6 +292,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         markAllAsRead,
         removeNotification,
         clearAll,
+        refreshNotifications,
       }}
     >
       {children}
