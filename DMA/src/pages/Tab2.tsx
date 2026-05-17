@@ -233,13 +233,25 @@ const Tab2: React.FC = () => {
       } else {
         // For initial load, set featured sermon and remaining videos
         if (combinedResult.videos.length > 0) {
-          // Apply safety check to mark old live broadcasts as ended
+          // Apply safety check to mark old live broadcasts as ended and calculate duration
           const checkedVideos = combinedResult.videos.map((video: any) => {
             if (shouldBeConsideredEnded(video)) {
+              // Calculate duration if the video has broadcast start/end times
+              let calculatedDuration = video.duration;
+              if (!calculatedDuration || calculatedDuration === 'LIVE' || calculatedDuration === '—') {
+                if (video.broadcastStartTime && video.broadcastEndTime) {
+                  calculatedDuration = calculateDuration(video.broadcastStartTime, video.broadcastEndTime);
+                } else if (video.broadcastStartTime) {
+                  // If only start time is available, estimate duration (e.g., 1 hour default)
+                  calculatedDuration = '1:00:00';
+                } else {
+                  calculatedDuration = '00:00';
+                }
+              }
               return {
                 ...video,
                 isLive: false,
-                duration: video.duration || '00:00'
+                duration: calculatedDuration
               };
             }
             return video;
@@ -351,6 +363,26 @@ const Tab2: React.FC = () => {
     }
   };
   
+  // Helper function to calculate duration between start and end times
+  const calculateDuration = (startTime: string | Date, endTime: string | Date) => {
+    if (!startTime || !endTime) return '00:00';
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+    const diffMs = end - start;
+    if (diffMs <= 0) return '00:00';
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+    
+    // Format based on duration length
+    if (hours > 0) {
+      return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+  };
+
   // Helper function to check if a broadcast should be considered ended
   const shouldBeConsideredEnded = (sermon: any) => {
     // If explicitly marked as not live, it's ended

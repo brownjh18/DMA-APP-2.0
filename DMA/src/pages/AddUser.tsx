@@ -160,8 +160,8 @@ const AddUser: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent style={{ background: isDarkMode ? 'transparent' : colors.bg }}>
-        <IonToolbar style={{ background: isDarkMode ? 'transparent' : colors.bg, '--border-width': '0px' }}>
+      <IonHeader translucent>
+        <IonToolbar style={{ '--border-width': '0px' }}>
           <BackButton />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
             <IonTitle style={{ color: isDarkMode ? '#fff' : colors.text, fontWeight: '600', fontSize: '18px', letterSpacing: '-0.3px', textAlign: 'center' }}>

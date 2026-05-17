@@ -21,11 +21,17 @@
 
     <!-- add to homescreen for ios -->
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Dove Church" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+     <meta name="apple-mobile-web-app-title" content="Dove Church" />
+     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+     <script>
+       window.onerror = function(message, source, lineno, colno, error) {
+         console.error('EARLY ERROR:', {message, source, lineno, colno, error});
+         if (error && error.stack) console.error('Stack:', error.stack);
+       };
+     </script>
+   </head>
+   <body>
+     <div id="root"></div>
+     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

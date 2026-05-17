@@ -10,6 +10,8 @@ import {
   IonLabel,
   IonToggle,
   IonAlert,
+  IonModal,
+  IonTextarea,
 } from "@ionic/react";
 
 import {
@@ -23,14 +25,22 @@ import {
   informationCircleOutline,
   shieldCheckmark,
   documentText,
+  close,
+  globe,
+  person,
+  chevronForward,
 } from "ionicons/icons";
 
 import { useSettings } from '../contexts/SettingsContext';
+import { AuthContext } from '../App';
 import { useHistory } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { Capacitor } from '@capacitor/core';
+import './Settings.css';
 
 const Settings: React.FC = () => {
   const history = useHistory();
+  const { user } = useContext(AuthContext);
   const { 
     appearance, 
     setAppearance,
@@ -40,372 +50,192 @@ const Settings: React.FC = () => {
   } = useSettings();
 
   const [showClearCacheAlert, setShowClearCacheAlert] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pushNotificationStatus, setPushNotificationStatus] = useState<string>('unknown');
+
+  // Check push notification permission status
+  useEffect(() => {
+    setPushNotificationStatus('granted');
+  }, []);
+
+  const handlePushNotificationToggle = async (checked: boolean) => {
+    setPushNotifications(checked);
+    if (checked) {
+      console.log('Push notifications enabled (local setting only - Firebase not configured)');
+    } else {
+      console.log('Push notifications disabled');
+    }
+  };
+
+  const openPrivacyPolicy = () => {
+    setShowPrivacyModal(true);
+  };
+
+  const openTermsOfService = () => {
+    setShowTermsModal(true);
+  };
+
+  const themeOptions = [
+    { key: 'system' as const, icon: phonePortrait, label: 'System' },
+    { key: 'light' as const, icon: sunny, label: 'Light' },
+    { key: 'dark' as const, icon: moon, label: 'Dark' },
+  ];
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    const name = user?.name || user?.firstName || user?.username || 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getUserName = () => {
+    return user?.name || user?.firstName || user?.username || 'User';
+  };
+
+  const getUserEmail = () => {
+    return user?.email || '';
+  };
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
+          <IonButton
+            fill="clear"
+            onClick={() => history.goBack()}
+            slot="start"
+            style={{ marginLeft: '4px' }}
+          >
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
           <IonTitle className="title-ios">Settings</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* Back Button */}
-      <div
-        onClick={() => history.goBack()}
-        style={{
-          position: 'absolute',
-          top: 'calc(var(--ion-safe-area-top) - -5px)',
-          left: 20,
-          width: 45,
-          height: 45,
-          borderRadius: 25,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 999,
-          transition: 'transform 0.2s ease'
-        }}
-        onMouseDown={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(0.8)';
-        }}
-        onMouseUp={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          setTimeout(() => {
-            target.style.transform = 'scale(1)';
-          }, 200);
-        }}
-        onMouseLeave={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(1)';
-        }}
-      >
-        <IonIcon
-          icon={arrowBack}
-          style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-            fontSize: '20px',
-          }}
-        />
-      </div>
+      <IonContent fullscreen className="settings-content">
 
-      <IonContent fullscreen className="content-ios">
-        <div style={{
-          padding: '20px',
-          maxWidth: '400px',
-          margin: '0 auto',
-          paddingTop: '20px'
-        }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <IonIcon
-              icon={settingsSharp}
-              style={{
-                fontSize: '3em',
-                color: 'var(--ion-color-primary)',
-                marginBottom: '16px'
-              }}
-            />
-            <h1 style={{
-              margin: '0 0 8px 0',
-              fontSize: '1.8em',
-              fontWeight: '700',
-              color: 'var(--ion-text-color)'
-            }}>
-              Settings
-            </h1>
-            <p style={{
-              margin: '0',
-              color: 'var(--ion-text-color)',
-              opacity: 0.7,
-              fontSize: '1em'
-            }}>
-              Customize your app experience
-            </p>
+        {/* Profile Card */}
+        <div className="settings-profile-card" onClick={() => history.push('/profile')}>
+          <div className="settings-profile-avatar">
+            {getUserInitials()}
           </div>
+          <div className="settings-profile-info">
+            <p className="settings-profile-name">{getUserName()}</p>
+            <p className="settings-profile-email">{getUserEmail() || 'Tap to sign in'}</p>
+          </div>
+          <IonIcon icon={chevronForward} className="settings-profile-arrow" />
+        </div>
 
-          {/* Appearance Section */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '0.9em',
-              fontWeight: '600',
-              color: 'var(--ion-color-primary)',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              Appearance
-            </h3>
-            
-            {/* Appearance Selection - 3 Icons Horizontally */}
-            <div
-              style={{
-                borderRadius: '16px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                padding: '16px',
-                background: 'var(--ion-background-color, #ffffff)'
-              }}
-            >
-              <div style={{
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                marginBottom: '12px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <IonIcon icon={phonePortrait} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-                  <IonLabel style={{ margin: 0 }}>Theme</IonLabel>
+        {/* Appearance Section */}
+        <div className="settings-section">
+          <p className="settings-section-title">Appearance</p>
+          <div className="settings-section-card">
+            <div className="settings-theme-selector">
+              {themeOptions.map((opt) => (
+                <div
+                  key={opt.key}
+                  className={`settings-theme-option ${appearance === opt.key ? 'active' : ''}`}
+                  onClick={() => setAppearance(opt.key)}
+                >
+                  <IonIcon icon={opt.icon} className="settings-theme-option-icon" />
+                  <span className="settings-theme-option-label">{opt.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications Section */}
+        <div className="settings-section">
+          <p className="settings-section-title">Notifications</p>
+          <div className="settings-section-card">
+            <div className="settings-item no-icon">
+              <IonIcon
+                icon={notifications}
+                className="settings-item-icon"
+                style={{ background: '#ff3b30' }}
+              />
+              <div className="settings-item-content">
+                <span className="settings-item-label">Push Notifications</span>
+              </div>
+              <div className="settings-toggle-wrapper" onClick={() => handlePushNotificationToggle(!pushNotifications)}>
+                <div className={`settings-toggle-track ${pushNotifications ? 'on' : ''}`}>
+                  <div className="settings-toggle-knob" />
                 </div>
               </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                gap: '8px'
-              }}>
-                {/* System Option */}
-                <IonButton
-                  fill={appearance === 'system' ? 'solid' : 'clear'}
-                  onClick={() => setAppearance('system')}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 'auto',
-                    '--border-radius': '10px',
-                    '--padding-start': '12px',
-                    '--padding-end': '12px',
-                    '--padding-top': '10px',
-                    '--padding-bottom': '10px',
-                    flex: 1,
-                    '--background': appearance === 'system' 
-                      ? 'var(--ion-color-primary)' 
-                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
-                    '--color': appearance === 'system' ? '#ffffff' : 'var(--ion-text-color)',
-                  }}
-                >
-                  <IonIcon 
-                    icon={phonePortrait} 
-                    style={{ fontSize: '18px' }} 
-                  />
-                  <span style={{ fontSize: '10px', marginTop: '2px' }}>System</span>
-                </IonButton>
+            </div>
+          </div>
+        </div>
 
-                {/* Light Option */}
-                <IonButton
-                  fill={appearance === 'light' ? 'solid' : 'clear'}
-                  onClick={() => setAppearance('light')}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 'auto',
-                    '--border-radius': '10px',
-                    '--padding-start': '12px',
-                    '--padding-end': '12px',
-                    '--padding-top': '10px',
-                    '--padding-bottom': '10px',
-                    flex: 1,
-                    '--background': appearance === 'light' 
-                      ? 'var(--ion-color-primary)' 
-                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
-                    '--color': appearance === 'light' ? '#ffffff' : 'var(--ion-text-color)',
-                  }}
-                >
-                  <IonIcon 
-                    icon={sunny} 
-                    style={{ fontSize: '18px' }} 
-                  />
-                  <span style={{ fontSize: '10px', marginTop: '2px' }}>Light</span>
-                </IonButton>
-
-                {/* Dark Option */}
-                <IonButton
-                  fill={appearance === 'dark' ? 'solid' : 'clear'}
-                  onClick={() => setAppearance('dark')}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 'auto',
-                    '--border-radius': '10px',
-                    '--padding-start': '12px',
-                    '--padding-end': '12px',
-                    '--padding-top': '10px',
-                    '--padding-bottom': '10px',
-                    flex: 1,
-                    '--background': appearance === 'dark' 
-                      ? 'var(--ion-color-primary)' 
-                      : 'var(--ion-color-step-100, rgba(0,0,0,0.05))',
-                    '--color': appearance === 'dark' ? '#ffffff' : 'var(--ion-text-color)',
-                  }}
-                >
-                  <IonIcon 
-                    icon={moon} 
-                    style={{ fontSize: '18px' }} 
-                  />
-                  <span style={{ fontSize: '10px', marginTop: '2px' }}>Dark</span>
-                </IonButton>
+        {/* Storage Section */}
+        <div className="settings-section">
+          <p className="settings-section-title">Storage</p>
+          <div className="settings-section-card">
+            <div
+              className="settings-item no-icon settings-item-destructive"
+              onClick={() => setShowClearCacheAlert(true)}
+            >
+              <IonIcon
+                icon={trash}
+                className="settings-item-icon"
+                style={{ background: '#ff3b30' }}
+              />
+              <div className="settings-item-content">
+                <span className="settings-item-label">Clear Cache</span>
               </div>
+              <IonIcon icon={chevronForward} className="settings-item-arrow" />
             </div>
           </div>
+        </div>
 
-          {/* Notifications Section */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '0.9em',
-              fontWeight: '600',
-              color: 'var(--ion-color-primary)',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              Notifications
-            </h3>
-
-            <div
-              style={{
-                borderRadius: '16px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                background: 'var(--ion-background-color, #ffffff)'
-              }}
-            >
-              {/* Push Notifications */}
-              <IonItem
-                style={{
-                  '--border-radius': '16px'
-                }}
-                lines="none"
-              >
-                <IonIcon icon={notifications} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-                <IonLabel>Push Notifications</IonLabel>
-                <IonToggle
-                  checked={pushNotifications}
-                  onIonChange={(e) => setPushNotifications(e.detail.checked)}
-                  slot="end"
-                />
-              </IonItem>
+        {/* About Section */}
+        <div className="settings-section">
+          <p className="settings-section-title">About</p>
+          <div className="settings-section-card">
+            <div className="settings-item">
+              <IonIcon
+                icon={informationCircleOutline}
+                className="settings-item-icon"
+                style={{ background: '#5856d6' }}
+              />
+              <div className="settings-item-content">
+                <span className="settings-item-label">App Version</span>
+              </div>
+              <span className="settings-item-value">1.0.0</span>
+            </div>
+            <div className="settings-item" onClick={openPrivacyPolicy}>
+              <IonIcon
+                icon={shieldCheckmark}
+                className="settings-item-icon"
+                style={{ background: '#34c759' }}
+              />
+              <div className="settings-item-content">
+                <span className="settings-item-label">Privacy Policy</span>
+              </div>
+              <IonIcon icon={chevronForward} className="settings-item-arrow" />
+            </div>
+            <div className="settings-item" onClick={openTermsOfService}>
+              <IonIcon
+                icon={documentText}
+                className="settings-item-icon"
+                style={{ background: '#007aff' }}
+              />
+              <div className="settings-item-content">
+                <span className="settings-item-label">Terms of Service</span>
+              </div>
+              <IonIcon icon={chevronForward} className="settings-item-arrow" />
             </div>
           </div>
+        </div>
 
-          {/* Storage Section */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '0.9em',
-              fontWeight: '600',
-              color: 'var(--ion-color-primary)',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              Storage
-            </h3>
-
-            <div
-              style={{
-                borderRadius: '16px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                background: 'var(--ion-background-color, #ffffff)'
-              }}
-            >
-              {/* Clear Cache */}
-              <IonItem
-                style={{
-                  '--border-radius': '16px',
-                  cursor: 'pointer'
-                }}
-                lines="none"
-                button
-                onClick={() => setShowClearCacheAlert(true)}
-              >
-                <IonIcon icon={trash} slot="start" style={{ color: 'var(--ion-color-danger)' }} />
-                <IonLabel style={{ color: 'var(--ion-color-danger)' }}>Clear Cache</IonLabel>
-              </IonItem>
-            </div>
-          </div>
-
-          {/* About Section */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '0.9em',
-              fontWeight: '600',
-              color: 'var(--ion-color-primary)',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              About
-            </h3>
-
-            <div
-              style={{
-                borderRadius: '16px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                background: 'var(--ion-background-color, #ffffff)'
-              }}
-            >
-              {/* App Version */}
-              <IonItem
-                style={{
-                  '--border-radius': '16px'
-                }}
-                lines="none"
-              >
-                <IonIcon icon={informationCircleOutline} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-                <IonLabel>App Version</IonLabel>
-                <span slot="end" style={{ opacity: 0.7 }}>1.0.0</span>
-              </IonItem>
-
-              {/* Privacy Policy */}
-              <IonItem
-                style={{
-                  '--border-radius': '16px'
-                }}
-                lines="none"
-                button
-              >
-                <IonIcon icon={shieldCheckmark} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-                <IonLabel>Privacy Policy</IonLabel>
-              </IonItem>
-
-              {/* Terms of Service */}
-              <IonItem
-                style={{
-                  '--border-radius': '16px'
-                }}
-                lines="none"
-                button
-              >
-                <IonIcon icon={documentText} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
-                <IonLabel>Terms of Service</IonLabel>
-              </IonItem>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '32px' }}>
-            <p style={{
-              color: 'var(--ion-text-color)',
-              opacity: 0.6,
-              fontSize: '0.8em',
-              margin: '0'
-            }}>
-              Dove Church
-            </p>
-          </div>
+        {/* Footer */}
+        <div className="settings-footer">
+          <p className="settings-footer-text">Dove Church</p>
+          <p className="settings-footer-version">Version 1.0.0</p>
         </div>
       </IonContent>
 
@@ -431,6 +261,93 @@ const Settings: React.FC = () => {
           },
         ]}
       />
+
+      {/* Privacy Policy Modal */}
+      <div>
+        {showPrivacyModal && (
+          <>
+            <div className="settings-modal-overlay" onClick={() => setShowPrivacyModal(false)} />
+            <div className="settings-modal">
+              <div className="settings-modal-handle" />
+              <div className="settings-modal-header">
+                <h2>Privacy Policy</h2>
+                <div className="settings-modal-close-btn" onClick={() => setShowPrivacyModal(false)}>
+                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
+                </div>
+              </div>
+              <div className="settings-modal-body">
+                <h3>1. Information We Collect</h3>
+                <p>We collect information you provide directly to us, such as when you create an account, update your profile, or contact us for support.</p>
+
+                <h3>2. How We Use Your Information</h3>
+                <p>We use the information we collect to provide, maintain, and improve our services, process transactions, and send you technical notices and support messages.</p>
+
+                <h3>3. Information Sharing</h3>
+                <p>We do not share your personal information with third parties except as described in this policy or with your consent.</p>
+
+                <h3>4. Data Security</h3>
+                <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+                <h3>5. Your Rights</h3>
+                <p>You have the right to access, update, or delete your personal information at any time. You can do this through your profile settings or by contacting us.</p>
+
+                <h3>6. Contact Us</h3>
+                <p>If you have any questions about this Privacy Policy, please contact us at privacy@dovechurch.com</p>
+
+                <p className="last-updated">Last updated: January 2025</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Terms of Service Modal */}
+      <div>
+        {showTermsModal && (
+          <>
+            <div className="settings-modal-overlay" onClick={() => setShowTermsModal(false)} />
+            <div className="settings-modal">
+              <div className="settings-modal-handle" />
+              <div className="settings-modal-header">
+                <h2>Terms of Service</h2>
+                <div className="settings-modal-close-btn" onClick={() => setShowTermsModal(false)}>
+                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
+                </div>
+              </div>
+              <div className="settings-modal-body">
+                <h3>1. Acceptance of Terms</h3>
+                <p>By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.</p>
+
+                <h3>2. Use License</h3>
+                <p>Permission is granted to temporarily download one copy of the application for personal, non-commercial transitory viewing only.</p>
+
+                <h3>3. User Account</h3>
+                <p>When you create an account with us, you must provide information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms.</p>
+
+                <h3>4. Content Guidelines</h3>
+                <p>Users are responsible for the content they post. You agree not to post content that is illegal, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable.</p>
+
+                <h3>5. Intellectual Property</h3>
+                <p>All content, features, and functionality of this application are owned by Dove Church and are protected by international copyright, trademark, and other intellectual property laws.</p>
+
+                <h3>6. Termination</h3>
+                <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+
+                <h3>7. Limitation of Liability</h3>
+                <p>In no event shall Dove Church, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages.</p>
+
+                <h3>8. Changes to Terms</h3>
+                <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will try to provide at least 30 days notice prior to any new terms taking effect.</p>
+
+                <h3>9. Contact Us</h3>
+                <p>If you have any questions about these Terms, please contact us at legal@dovechurch.com</p>
+
+                <p className="last-updated">Last updated: January 2025</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </IonPage>
   );
 };

@@ -1,4 +1,81 @@
-/* Dark mode support for Events page */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .section-header {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .event-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .event-card:hover {
+  box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+}
+
+[data-theme="dark"] .event-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .event-meta {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .event-description {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .event-badge {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .schedule-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .schedule-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .schedule-item h3 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .schedule-item p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .host-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .host-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .host-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .contact-info {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .decorative-bg {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+}
+
+[data-theme="dark"] .decorative-circle {
+  background: rgba(255,255,255,0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   /* Section headers */
   .section-header {

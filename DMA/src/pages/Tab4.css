@@ -164,7 +164,25 @@
   margin-left: 2px;
 }
 
-/* Dark mode support */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .podcasts-content {
+  --ion-background-color: #0f0f0f !important;
+  background: linear-gradient(135deg, #0f0f0f 0%, rgba(59, 130, 246, 0.03) 100%) !important;
+}
+
+[data-theme="dark"] .podcast-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .podcast-meta {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .podcast-item:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   .podcasts-content {
     --ion-background-color: #0f0f0f !important;

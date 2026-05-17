@@ -1,0 +1,38 @@
+/* Notifications page – supports the redesigned list rows + grouped summary rows */
+
+/* page-level background */
+.notifications-page {
+  --ion-background-color: transparent;
+}
+
+/* toolbar */
+::slotted(ion-toolbar) {}
+
+/* inline styles in the component already handle .notif-card, .notif-toolbar,
+   .notif-stats, .notif-rows-list, .notif-groups-list rows, badges, thumbnails etc.
+   This file is kept for structural CSS selectors and legacy fallbacks */
+
+/* legacy – kept so old markup doesn't break if ever re-used */
+.notif-card {
+  max-width: 660px;
+  margin: 12px auto;
+  background: var(--ion-background-color, rgba(255,255,255,0.97));
+  border-radius: 20px;
+  box-shadow: 0 8px 36px rgba(16,24,40,0.07);
+  overflow: hidden;
+}
+
+.floating-card {
+  max-width: 880px;
+  margin: 18px auto;
+  background: var(--ion-background-color, rgba(255,255,255,0.96));
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(16,24,40,0.08);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+/* responsive refinement */
+@media (max-width: 480px) {
+  .notif-card { margin: 10px; border-radius: 16px; }
+}

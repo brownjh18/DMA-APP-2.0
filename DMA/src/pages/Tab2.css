@@ -36,7 +36,17 @@
   margin-top: 76px; /* Account for header height */
 }
 
-/* Dark mode support */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .sermons-content {
+  --ion-background-color: #000000 !important;
+  background: #000000 !important;
+}
+
+[data-theme="dark"] .video-title {
+  color: #f1f5f9;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   .sermons-content {
     --ion-background-color: #000000 !important;

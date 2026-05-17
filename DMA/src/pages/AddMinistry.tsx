@@ -283,9 +283,8 @@ const AddMinistry: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent style={{ background: isDarkMode ? 'transparent' : colors.bg }}>
-        <IonToolbar style={{ 
-          background: isDarkMode ? 'transparent' : colors.bg,
+      <IonHeader translucent>
+        <IonToolbar style={{
           '--border-width': '0px'
         }}>
           <BackButton />

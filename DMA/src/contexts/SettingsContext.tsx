@@ -8,7 +8,7 @@ interface SettingsContextType {
   isDarkMode: boolean;
   pushNotifications: boolean;
   setPushNotifications: (value: boolean) => void;
-  clearCache: () => void;
+  clearCache: () => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -111,7 +111,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     localStorage.setItem('app-push-notifications', String(value));
   };
 
-  const clearCache = () => {
+  const clearCache = async () => {
     // Clear all app-related localStorage items
     const keysToRemove = [
       'app-appearance',
@@ -119,10 +119,48 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       'app-language',
       'recent-searches',
       'downloaded-sermons',
-      'favorites'
+      'favorites',
+      'notifications',
+      'pushToken',
+      'token',
+      'user',
+      'savedSermons',
+      'savedPodcasts',
+      'savedDevotions'
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Clear IndexedDB (if any app data is stored there)
+    try {
+      if (typeof indexedDB !== 'undefined') {
+        const dbNames = await indexedDB.databases();
+        for (const db of dbNames) {
+          if (db.name && (db.name.includes('capacitor') || db.name.includes('dma') || db.name.includes('dove'))) {
+            indexedDB.deleteDatabase(db.name);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Could not clear IndexedDB:', error);
+    }
+    
+    // Clear Cache API (for cached assets)
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          if (cacheName.includes('dma') || cacheName.includes('dove') || cacheName.includes('workbox')) {
+            await caches.delete(cacheName);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Could not clear Cache API:', error);
+    }
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
     
     // Reload the page to reset app state
     window.location.reload();

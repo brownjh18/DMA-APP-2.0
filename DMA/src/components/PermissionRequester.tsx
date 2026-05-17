@@ -108,11 +108,17 @@ const PermissionRequester: React.FC<PermissionRequesterProps> = ({ onPermissions
 
   const requestNotificationPermission = async (): Promise<boolean> => {
     try {
-      // For Capacitor apps, use the PushNotifications plugin
+      // For Capacitor apps, use the LocalNotifications plugin
       if ((window as any).Capacitor?.isNativePlatform()) {
-        const { PushNotifications } = (window as any).Plugins || {};
-        if (PushNotifications) {
-          const result = await PushNotifications.requestPermissions();
+        const { LocalNotifications } = (window as any).Plugins || (window as any).Capacitor?.Plugins;
+        if (LocalNotifications) {
+          // Check if notifications are enabled
+          const status = await LocalNotifications.checkPermissions();
+          if (status.display === 'granted') {
+            return true;
+          }
+          // Request permission
+          const result = await LocalNotifications.requestPermissions();
           return result.display === 'granted';
         }
       }

@@ -1,4 +1,109 @@
-/* Dark mode support for Ministries page */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .intro-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .intro-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .verse-card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .verse-text {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .verse-reference {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .ministry-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .ministry-card:hover {
+  box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+}
+
+[data-theme="dark"] .decorative-bg {
+  background: rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .ministry-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .ministry-leader {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .ministry-description {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .ministry-activity-title {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .activity-tag {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .activity-tag-more {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .learn-more-btn {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .involved-card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+}
+
+[data-theme="dark"] .involved-icon-bg {
+  background-color: rgba(255,255,255,0.2) !important;
+}
+
+[data-theme="dark"] .involved-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .involved-text {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+[data-theme="dark"] .contact-info {
+  background: rgba(255,255,255,0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+[data-theme="dark"] .contact-info-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .contact-info-text {
+  color: rgba(255,255,255,0.9) !important;
+}
+
+[data-theme="dark"] .decorative-circle {
+  background: rgba(255,255,255,0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   /* Introduction card */
   .intro-card {

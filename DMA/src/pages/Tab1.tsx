@@ -41,15 +41,18 @@ import {
   location,
   people,
   radio,
-  arrowForward
+  arrowForward,
+  arrowForwardOutline,
+  close
 } from 'ionicons/icons';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import { fetchCombinedSermons } from '../services/youtubeService';
 import { apiService, BACKEND_BASE_URL, API_BASE_URL } from '../services/api';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSocket } from '../contexts/SocketContext';
+import { AuthContext } from '../App';
 import './Tab1.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -93,16 +96,23 @@ const getDevotionThumbnail = (thumbnailUrl?: string): string => {
 };
 
 // Helper function to calculate duration between start and end times
-const calculateDuration = (startTime: string, endTime: string) => {
-  if (!startTime || !endTime) return '—';
+const calculateDuration = (startTime: string | Date, endTime: string | Date) => {
+  if (!startTime || !endTime) return '00:00';
   const start = new Date(startTime).getTime();
   const end = new Date(endTime).getTime();
   const diffMs = end - start;
-  if (diffMs <= 0) return '—';
+  if (diffMs <= 0) return '00:00';
+  
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const hours = Math.floor(diffMins / 60);
   const mins = diffMins % 60;
-  return hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
+  const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+  
+  // Format based on duration length
+  if (hours > 0) {
+    return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${mins}:${String(secs).padStart(2, '0')}`;
 };
 
 // Helper function to check if a broadcast should be considered ended
@@ -242,12 +252,12 @@ const generateDailyDevotions = (): Devotion[] => {
 };
 
 const DEFAULT_PROGRAMS = [
-  { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ff6b6b' },
-  { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#45b7d1' },
-  { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24' },
-  { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#f0932b' },
-  { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#eb4d4b' },
-  { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#6c5ce7' },
+  { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ff6b6b', description: 'Join us for a powerful prayer service where we seek God\'s intervention and breakthrough. Come with your prayer requests and experience the power of collective prayer.', location: 'Main Sanctuary' },
+  { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#45b7d1', description: 'Dive deep into God\'s Word with our mid-week Bible study. Learn practical applications of scripture for daily living and grow in your understanding of God\'s teachings.', location: 'Fellowship Hall' },
+  { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24', description: 'A time of worship, practice, and fellowship for all worship team members. Develop your gifts and connect with fellow worshippers.', location: 'Worship Center' },
+  { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#f0932b', description: 'Experience the refreshing presence of God at our Friday service. Worship, word, and wonderful fellowship await you as we prepare for the weekend.', location: 'Main Sanctuary' },
+  { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#eb4d4b', description: 'Weekend worship team gathering for rehearsal and spiritual preparation for Sunday services.', location: 'Worship Center' },
+  { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#6c5ce7', description: 'Join us for our Sunday services featuring powerful worship, life-changing Word, and warm fellowship. Multiple services available.', location: 'Main Sanctuary' },
 ];
 
 
@@ -268,6 +278,7 @@ const Tab1: React.FC = () => {
   const [ministriesLoading, setMinistriesLoading] = useState(false);
   const [devotionsLoading, setDevotionsLoading] = useState(false);
   const { setCurrentMedia, setIsPlaying } = usePlayer();
+  const { user } = useContext(AuthContext);
 
   // Socket.io real-time updates
   const { isConnected, onDevotionCreated, onDevotionUpdated, onDevotionDeleted, onEventCreated, onEventUpdated, onEventDeleted, onMinistryCreated, onMinistryUpdated, onMinistryDeleted, onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket();
@@ -795,13 +806,52 @@ const Tab1: React.FC = () => {
 
   const todaysDevotion = allDevotions[0]; // Always show the latest devotion uploaded
 
+  // Popover state for program details
+  const [selectedProgram, setSelectedProgram] = useState<typeof DEFAULT_PROGRAMS[0] | null>(null);
+
+  const handleProgramClick = (program: typeof DEFAULT_PROGRAMS[0]) => {
+    setSelectedProgram(program);
+  };
+
+  const closePopover = () => {
+    setSelectedProgram(null);
+  };
+
+  // Time-based greeting function
+  const getTimeBasedGreeting = (): string => {
+    const hour = new Date().getHours();
+    let greeting: string;
+    
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good Evening';
+    } else {
+      greeting = 'Good Night';
+    }
+    
+    // Check if user is signed in - try multiple sources
+    const userName = user?.name || user?.firstName || user?.username || localStorage.getItem('userName');
+    
+    if (userName) {
+      // Extract first name if full name is provided
+      const firstName = userName.split(' ')[0];
+      return `${greeting}, ${firstName}`;
+    }
+    
+    // If not signed in, just return the greeting without a name
+    return greeting;
+  };
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Home</IonTitle>
           <div slot="end" style={{ display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
-            <NotificationBell />
+            <NotificationBell onClick={() => history.push('/notifications')} />
           </div>
         </IonToolbar>
       </IonHeader>
@@ -816,7 +866,7 @@ const Tab1: React.FC = () => {
             <div className="section-head">
               <div className="section-title">
                 <IonIcon icon={heart} style={{ color: '#ff6b6b' }} />
-                <h2>Today's Devotion</h2>
+                <h2>{getTimeBasedGreeting()}</h2>
               </div>
             </div>
 
@@ -961,30 +1011,42 @@ const Tab1: React.FC = () => {
           </section>
         )}
 
-        {/* WEEKLY PROGRAMS */}
+        {/* WEEKLY PROGRAMS - Modern Quick Actions */}
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
               <IonIcon icon={time} />
               <h2>Weekly Programs</h2>
             </div>
+            <IonButton fill="clear" className="view-all-link" onClick={() => history.push('/events#weekly-programs')}>
+              View All
+            </IonButton>
           </div>
 
-          <div className="programs-row" role="list">
+          <div className="quick-actions-grid" role="list">
             {DEFAULT_PROGRAMS.map((p, idx) => (
               <div
                 key={idx}
-                className="program-card"
+                className="quick-action-card"
                 role="listitem"
-                onClick={() => history.push('/events#weekly-programs')}
+                onClick={() => handleProgramClick(p)}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="program-badge" style={{ background: p.color }}>
-                  <strong>{p.day}</strong>
+                <div className="quick-action-icon" style={{ background: `linear-gradient(135deg, ${p.color} 0%, ${p.color}cc 100%)` }}>
+                  <IonIcon icon={calendar} style={{ color: 'white', fontSize: '20px' }} />
                 </div>
-                <div className="program-body">
-                  <div className="program-name">{p.program}</div>
-                  <div className="program-time">{p.time}</div>
+                <div className="quick-action-content">
+                  <div className="quick-action-day" style={{ color: p.color }}>{p.day}</div>
+                  <div className="quick-action-name">{p.program}</div>
+                  <div className="quick-action-time">
+                    <IonIcon icon={time} style={{ fontSize: '12px', marginRight: '4px' }} />
+                    {p.time}
+                  </div>
+                </div>
+                <div className="quick-action-end">
+                  <div className="quick-action-open-btn">
+                    <IonIcon icon={arrowForwardOutline} style={{ fontSize: '12px' }} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -1423,6 +1485,62 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
         </section>
+
+        {/* PROGRAM DETAILS POPOVER */}
+        {selectedProgram && (
+          <>
+            {/* Overlay backdrop */}
+            <div
+              className="program-popover-backdrop"
+              onClick={closePopover}
+            />
+            {/* Popover card */}
+            <div className="program-popover">
+              <div className="program-popover-header" style={{ background: `linear-gradient(135deg, ${selectedProgram.color} 0%, ${selectedProgram.color}cc 100%)` }}>
+                <div className="program-popover-close" onClick={closePopover}>
+                  <IonIcon icon={close} />
+                </div>
+                <div className="program-popover-icon">
+                  <IonIcon icon={calendar} style={{ color: 'white', fontSize: '28px' }} />
+                </div>
+                <div className="program-popover-day">{selectedProgram.day}</div>
+                <h3 className="program-popover-title">{selectedProgram.program}</h3>
+              </div>
+              <div className="program-popover-body">
+                <div className="program-popover-info-row">
+                  <IonIcon icon={time} style={{ fontSize: '16px', color: selectedProgram.color }} />
+                  <span>{selectedProgram.time}</span>
+                </div>
+                <div className="program-popover-info-row">
+                  <IonIcon icon={location} style={{ fontSize: '16px', color: selectedProgram.color }} />
+                  <span>{selectedProgram.location}</span>
+                </div>
+                <div className="program-popover-description">
+                  <p>{selectedProgram.description}</p>
+                </div>
+                <div className="program-popover-actions">
+                  <IonButton
+                    expand="block"
+                    className="program-popover-cta"
+                    style={{
+                      '--background': `linear-gradient(135deg, ${selectedProgram.color}, ${selectedProgram.color}cc)`,
+                      '--border-radius': '12px',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      marginTop: '8px'
+                    } as any}
+                    onClick={() => {
+                      closePopover();
+                      history.push('/events#weekly-programs');
+                    }}
+                  >
+                    View Full Schedule
+                  </IonButton>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </IonContent>
     </IonPage>
   );

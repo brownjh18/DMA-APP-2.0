@@ -323,7 +323,7 @@ const FullSermonPlayer: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent style={{ background: 'transparent' }}>
+      <IonHeader translucent>
         <IonToolbar style={{ '--background': 'transparent' }}>
         </IonToolbar>
       </IonHeader>

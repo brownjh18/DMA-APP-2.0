@@ -14,6 +14,10 @@ http://ionicframework.com/docs/theming/ */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* App-wide nav background tokens (used by bottom tab bar and page headers) */
+  --app-nav-bg-light: rgba(255, 255, 255, 0.95);
+  --app-nav-bg-dark: rgba(30, 41, 59, 0.95);
 }
 
 /* Modern Sidebar Styling */
@@ -105,14 +109,46 @@ http://ionicframework.com/docs/theming/ */
   font-weight: 600;
 }
 
-/* Global Header Styles - Frosted Glass Effect */
+/* Global Header Styles - Same transparent frosted glass as bottom nav bar */
 .global-header {
-  background-color: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: transparent;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Apply same frosted glass background to all page headers matching bottom nav bar */
+ion-header::part(background),
+ion-header::part(toolbar) {
+  background: var(--app-nav-bg-light) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Dark theme header background */
+[data-theme="dark"] ion-header::part(background),
+[data-theme="dark"] ion-header::part(toolbar) {
+  background: var(--app-nav-bg-dark) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+ion-header.header-ios ion-toolbar,
+ion-header.header-md ion-toolbar {
+  --background: transparent !important;
+  background: transparent !important;
+  backdrop-filter: blur(40px) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+}
+
+/* Override any inline background styles on IonHeader to ensure consistency with bottom nav */
+ion-header.header-ios,
+ion-header.header-md {
+  background: transparent !important;
 }
 
 /* Frosted Glass Button Effect */
@@ -141,11 +177,14 @@ http://ionicframework.com/docs/theming/ */
 
 /* Modern Tab Bar Styling */
 .tab-bar {
-  --background: rgba(255, 255, 255, 0.95);
+  /* use shared app nav background token so headers can match */
+  --background: var(--app-nav-bg-light);
   --border: 1px solid rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Ensure tab-bar uses dark token in dark theme section below (keeps overrides minimal) */
 
 .tab-button {
   --color-selected: var(--primary-color);
@@ -234,15 +273,119 @@ ion-content[fullscreen] {
   }
 }
 
-/* Dark mode support */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] {
+  --background-light: var(--background-dark);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+[data-theme="dark"] .menu-content {
+  --background: linear-gradient(180deg, #1a1a2e 0%, #000000 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 0 16px 16px 0;
+}
+
+[data-theme="dark"] .menu-item {
+  --color: #f1f5f9;
+  --detail-icon-color: #f1f5f9;
+}
+
+[data-theme="dark"] .menu-item:hover {
+  --background: rgba(255, 255, 255, 0.1);
+  --color: #f1f5f9;
+  --detail-icon-color: #f1f5f9;
+}
+
+[data-theme="dark"] .menu-item ion-icon {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .menu-section {
+  --color: #f1f5f9;
+}
+
+[data-theme="dark"] .menu-section:hover {
+  --background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .menu-section ion-icon {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .user-profile {
+  --background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .user-profile h2 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .user-profile p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tab-bar {
+  --background: rgba(30, 41, 59, 0.95);
+  --border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .ios-glass-tabbar {
+  --background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .ios-glass-tabbar .tab-button {
+  --color: #cbd5e1;
+  --color-selected: #1e293b;
+  --background-selected: #ffffff;
+}
+
+[data-theme="dark"] .ios-glass-tabbar .tab-button.ion-selected ion-icon {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .global-header {
+  background: transparent;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] ion-header.header-ios ion-toolbar,
+[data-theme="dark"] ion-header.header-md ion-toolbar {
+  --background: transparent !important;
+  background: transparent !important;
+  backdrop-filter: blur(40px) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+}
+
+[data-theme="dark"] ion-header.header-ios,
+[data-theme="dark"] ion-header.header-md {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .frosted-button {
+  background-color: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background-light: var(--background-dark);
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
   }
 
-  .menu-content {
+  :root:not([data-theme="light"]) .menu-content {
     --background: linear-gradient(180deg, #1a1a2e 0%, #000000 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -251,77 +394,89 @@ ion-content[fullscreen] {
     border-radius: 0 16px 16px 0;
   }
 
-  .menu-item {
+  :root:not([data-theme="light"]) .menu-item {
     --color: #f1f5f9;
     --detail-icon-color: #f1f5f9;
   }
 
-  .menu-item:hover {
+  :root:not([data-theme="light"]) .menu-item:hover {
     --background: rgba(255, 255, 255, 0.1);
     --color: #f1f5f9;
     --detail-icon-color: #f1f5f9;
   }
 
-  .menu-item ion-icon {
+  :root:not([data-theme="light"]) .menu-item ion-icon {
     color: #f1f5f9;
   }
 
-  .menu-section {
+  :root:not([data-theme="light"]) .menu-section {
     --color: #f1f5f9;
   }
 
-  .menu-section:hover {
+  :root:not([data-theme="light"]) .menu-section:hover {
     --background: rgba(255, 255, 255, 0.1);
   }
 
-  .menu-section ion-icon {
+  :root:not([data-theme="light"]) .menu-section ion-icon {
     color: #f1f5f9;
   }
 
-  .user-profile {
+  :root:not([data-theme="light"]) .user-profile {
     --background: rgba(255, 255, 255, 0.1);
   }
 
-  .user-profile h2 {
+  :root:not([data-theme="light"]) .user-profile h2 {
     color: #f1f5f9;
   }
 
-  .user-profile p {
+  :root:not([data-theme="light"]) .user-profile p {
     color: #94a3b8;
   }
 
-  .tab-bar {
+  :root:not([data-theme="light"]) .tab-bar {
     --background: rgba(30, 41, 59, 0.95);
     --border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .ios-glass-tabbar {
+  :root:not([data-theme="light"]) .ios-glass-tabbar {
     --background: #1e293b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 
-  .ios-glass-tabbar .tab-button {
+  :root:not([data-theme="light"]) .ios-glass-tabbar .tab-button {
     --color: #cbd5e1;
     --color-selected: #1e293b;
     --background-selected: #ffffff;
   }
 
-
-  .ios-glass-tabbar .tab-button.ion-selected ion-icon {
+  :root:not([data-theme="light"]) .ios-glass-tabbar .tab-button.ion-selected ion-icon {
     color: #a78bfa;
   }
 
-  /* Global Header - Dark Mode Background */
-  .global-header {
-    background-color: rgba(30, 41, 59, 0.8);
+  :root:not([data-theme="light"]) .global-header {
+    background: transparent;
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
-  /* Frosted Glass Button - Dark Mode */
-  .frosted-button {
+  :root:not([data-theme="light"]) ion-header.header-ios ion-toolbar,
+  :root:not([data-theme="light"]) ion-header.header-md ion-toolbar {
+    --background: transparent !important;
+    background: transparent !important;
+    backdrop-filter: blur(40px) !important;
+    -webkit-backdrop-filter: blur(40px) !important;
+  }
+
+  :root:not([data-theme="light"]) ion-header.header-ios,
+  :root:not([data-theme="light"]) ion-header.header-md {
+    background: transparent !important;
+  }
+
+  :root:not([data-theme="light"]) .frosted-button {
     background-color: rgba(30, 41, 59, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);

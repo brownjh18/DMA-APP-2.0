@@ -1,4 +1,112 @@
-/* Dark mode support for Profile page */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .profile-header {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .profile-name {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .profile-member-since {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .profile-badge {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-theme="dark"] .personal-info-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .personal-info-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .info-item {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .info-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .info-value {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .activity-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .activity-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .favorites-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .favorites-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .ministry-item {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .ministry-name {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .actions-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .actions-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .action-item {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .action-item:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .action-icon-bg {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-theme="dark"] .action-text {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .signout-card {
+  background: #000000 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .signout-button {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   /* Profile header card */
   .profile-header {

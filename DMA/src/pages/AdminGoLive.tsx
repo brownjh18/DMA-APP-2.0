@@ -62,7 +62,7 @@ const AdminGoLive: React.FC = () => {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -1181,7 +1181,7 @@ const AdminGoLive: React.FC = () => {
       {/* Floating Background Orbs */}
       <FloatingOrbs />
 
-      <IonHeader translucent style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+      <IonHeader translucent>
         <BackButton />
         <IonToolbar style={{ background: 'transparent' }}>
           <IonTitle style={{ textAlign: 'center' }}>

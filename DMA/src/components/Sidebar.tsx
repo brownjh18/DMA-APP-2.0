@@ -395,7 +395,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
             onClick={() => navigateTo('/notifications')}
             style={isActive('/notifications') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={notificationsOutline} style={isActive('/notifications') ? { color: '#3b82f6' } : {}} />
+            <NotificationBell size="medium" />
             <span style={isActive('/notifications') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Notifications</span>
           </div>
 

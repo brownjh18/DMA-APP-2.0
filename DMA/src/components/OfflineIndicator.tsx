@@ -23,10 +23,10 @@ const OfflineIndicator: React.FC = () => {
       setIsVisible(true);
       setWasOnline(isOnline);
 
-      // Auto-hide after 5 seconds
+      // Auto-hide after 3 seconds
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
     }

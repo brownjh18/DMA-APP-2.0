@@ -521,24 +521,22 @@ const Saved: React.FC = () => {
           setLastScroll(currentScroll);
         }}
       >
+        {/* YouTube-style Video Player Section */}
         {currentSermon && (() => {
           console.log('Rendering video player section, currentSermon:', currentSermon);
           return (
-            <>
-              {/* Content Overlay */}
+          <>
+            {/* Video Player and Details Container */}
+            <div style={{ position: 'relative' }}>
+              {/* Video Player */}
               <div style={{
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 80%, transparent 100%)',
-                position: 'fixed',
-                top: 'calc(var(--ion-safe-area-top) + 56px)',
-                left: '0',
-                right: '0',
-                zIndex: '10',
-                height: expandedDescription ? '400px' : '200px',
-                transition: 'height 0.3s ease'
+                width: '100%',
+                background: 'black',
+                position: 'relative'
               }}>
                 {(() => {
                   if (!(currentSermon as any).videoUrl) {
-                    return <div style={{ padding: '20px', textAlign: 'center', color: 'white' }}>Video not available</div>;
+                    return <div style={{ padding: '100px', textAlign: 'center', color: 'white' }}>Video not available</div>;
                   }
                   const videoUrl = getFullUrl((currentSermon as any).videoUrl);
                   console.log('Video URL:', videoUrl, 'isDatabase:', (currentSermon as any).isDatabaseSermon);
@@ -553,64 +551,183 @@ const Saved: React.FC = () => {
                     />
                   );
                 })()}
-                <div style={{
-                  margin: '0 10px',
-                  padding: expandedDescription ? '5px 15px 10px 15px' : '5px 15px 0px 15px',
-                  border: '2px solid white',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(180deg, rgba(13, 128, 163, 0.1) 0%, rgba(13, 128, 163, 0.3) 50%, rgba(13, 128, 163, 0.1) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ flex: 1, marginRight: '4px' }}>
-                      <h2
-                        style={{ margin: '0 0 8px 0', fontSize: '1.2em', fontWeight: '600', cursor: 'pointer' }}
-                        onClick={() => setExpandedDescription(!expandedDescription)}
-                      >
-                        {currentSermon.title}
-                      </h2>
-                      <div style={{
-                        maxHeight: expandedDescription ? '200px' : '0',
-                        overflow: 'hidden',
-                        transition: 'max-height 0.3s ease'
-                      }}>
-                        <p style={{ margin: '0 0 8px 0', color: 'var(--ion-color-medium)', fontSize: '0.8em' }}>
-                          <IonIcon icon={eye} style={{ verticalAlign: 'middle', marginRight: '4px' }} />0 views • {formatDate(currentSermon.date)}
-                        </p>
-                        {currentSermon.description && (
-                          <div>
-                            <p style={{ margin: '0 0 8px 0', lineHeight: '1.4', color: 'var(--ion-color-dark)', fontSize: '0.8em' }}>
-                              {currentSermon.description}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+              </div>
+
+              {/* Video Details Section */}
+              <div className="video-details-section" style={{ padding: '16px' }}>
+                {/* Video Title */}
+                <h1 className="video-title-large" style={{ fontSize: '1.2em', fontWeight: '600', margin: '0 0 12px 0', lineHeight: '1.3', color: 'var(--ion-text-color)' }}>
+                  {currentSermon.title}
+                </h1>
+
+                {/* Channel Info and Action Buttons */}
+                <div className="channel-info-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div className="channel-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div>
+                      <h3 className="channel-name" style={{ fontSize: '0.8em', fontWeight: '600', margin: '0 0 2px 0', color: 'var(--ion-text-color)' }}>
+                        {currentSermon.speaker || 'Dove Ministries Africa'}
+                      </h3>
+                      <p className="channel-stats" style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', margin: 0 }}>
+                        {formatDate(currentSermon.date)}
+                      </p>
                     </div>
-                    <div style={{ flexShrink: 0, display: 'flex', gap: '8px' }}>
-                      <IonButton fill="clear" size="small" style={{ padding: '4px', marginTop: '-2px', '--color': 'white', borderRadius: '4px', fontSize: '1.2em', fontWeight: 'bold' }} onClick={(e) => { e.persist(); setPopoverEvent(e.nativeEvent); setShowPopover(true); }}>
-                        ⋮
-                      </IonButton>
-                      <IonButton
-                        fill="clear"
-                        size="small"
-                        style={{ padding: '2px', marginTop: '-2px' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentSermon(null);
-                          setIsPlaying(false);
+                  </div>
+                  {/* Action Buttons next to channel info */}
+                  <div className="channel-action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* Delete Button */}
+                    <div
+                      className="channel-action-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSavedSermon(currentSermon.id);
+                      }}
+                      style={{
+                        width: 45,
+                        height: 45,
+                        borderRadius: 25,
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s ease'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.8)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon
+                        icon={trash}
+                        style={{
+                          color: '#ef4444',
+                          fontSize: '20px',
                         }}
-                      >
-                        <IonIcon icon={close} />
-                      </IonButton>
+                      />
+                    </div>
+                    {/* Close Button */}
+                    <div
+                      className="channel-action-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSermon(null);
+                        setIsPlaying(false);
+                      }}
+                      style={{
+                        width: 45,
+                        height: 45,
+                        borderRadius: 25,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s ease'
+                      }}
+                      onMouseDown={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(0.8)';
+                      }}
+                      onMouseUp={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <IonIcon
+                        icon={close}
+                        style={{
+                          color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                          fontSize: '20px',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
+
+                {/* Description */}
+                <div className="description-section" style={{ 
+                  background: 'var(--ion-item-background)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  marginBottom: '16px'
+                }}>
+                  <p className="description-text" style={{ margin: 0, lineHeight: '1.5', color: 'var(--ion-text-color)', fontSize: '0.9em' }}>
+                    {(() => {
+                      const description = currentSermon.description || 'No description available.';
+                      const shouldTruncate = description.length > 150 && !expandedDescription;
+
+                      return shouldTruncate ? (
+                        <>
+                          {description.substring(0, 150)}...
+                          <button
+                            onClick={() => setExpandedDescription(true)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--ion-color-primary)',
+                              cursor: 'pointer',
+                              fontSize: '0.9em',
+                              fontWeight: '600',
+                              marginLeft: '4px',
+                              padding: '0'
+                            }}
+                          >
+                            Show more
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {description}
+                          {description.length > 150 && (
+                            <button
+                              onClick={() => setExpandedDescription(false)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--ion-color-primary)',
+                                cursor: 'pointer',
+                                fontSize: '0.9em',
+                                fontWeight: '600',
+                                marginLeft: '4px',
+                                padding: '0'
+                              }}
+                            >
+                              Show less
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </p>
+                </div>
               </div>
-            </>
+            </div>
+          </>
           );
         })()}
-        <div style={{ padding: '16px', marginTop: currentSermon ? (expandedDescription ? '385px' : '355px') : '0' }}>
+        
+        {/* Content below player or list when no player is active */}
+        <div style={{ padding: '16px', marginTop: currentSermon ? '0' : '0' }}>
           {!currentSermon && (
             <>
               {/* Header Section */}

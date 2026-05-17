@@ -576,7 +576,7 @@ const FullPodcastPlayer: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent style={{ background: 'transparent' }}>
+      <IonHeader translucent>
         <div
           onClick={() => history.goBack()}
           style={{

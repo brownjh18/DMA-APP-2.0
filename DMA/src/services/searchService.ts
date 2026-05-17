@@ -1,8 +1,9 @@
 // src/services/searchService.ts
+import apiService from './api';
 
 export interface SearchResult {
   id: string;
-  type: 'sermon' | 'news' | 'event' | 'devotion' | 'ministry';
+  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry';
   title: string;
   subtitle?: string;
   description?: string;
@@ -18,21 +19,12 @@ export interface SearchResponse {
   query: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
 export async function searchContent(query: string, limit: number = 20): Promise<SearchResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}&limit=${limit}`);
-
-    if (!response.ok) {
-      throw new Error(`Search failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
+    const response = await apiService.search(query, { limit });
+    return response;
   } catch (error) {
     console.error('Search API error:', error);
-    // Return empty results instead of throwing to prevent app crashes
     return {
       results: [],
       total: 0,
@@ -43,17 +35,10 @@ export async function searchContent(query: string, limit: number = 20): Promise<
 
 export async function getSearchSuggestions(): Promise<string[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/search/suggestions`);
-
-    if (!response.ok) {
-      throw new Error(`Suggestions failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.suggestions || [];
+    const suggestions = await apiService.getSearchSuggestions();
+    return suggestions;
   } catch (error) {
     console.error('Suggestions API error:', error);
-    // Fallback to static suggestions
     return [
       'Sunday Service',
       'Prayer Meeting',

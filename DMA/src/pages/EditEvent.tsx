@@ -412,9 +412,9 @@ const EditEvent: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonHeader translucent style={{ background: isDarkMode ? 'transparent' : colors.bg }}>
-        <IonToolbar style={{ 
+  <IonPage>
+      <IonHeader translucent>
+        <IonToolbar style={{
           background: isDarkMode ? 'transparent' : colors.bg,
           '--border-width': '0px'
         }}>

@@ -1,0 +1,527 @@
+/* Settings Page - Modern iOS-style Redesign */
+
+.settings-content {
+  --ion-background-color: #f2f2f7;
+  background: #f2f2f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+/* Header */
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 20px 16px;
+  position: relative;
+}
+
+.settings-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ion-text-color, #1a1a1a);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+/* Profile Card */
+.settings-profile-card {
+  margin: 0 16px 20px;
+  background: var(--ion-background-color, #ffffff);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-profile-card:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+.settings-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.settings-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-text-color, #1a1a1a);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-profile-email {
+  font-size: 13px;
+  color: var(--ion-color-medium, #8e8e93);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-profile-arrow {
+  color: #c7c7cc;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Grouped Section */
+.settings-section {
+  margin: 0 16px 18px;
+}
+
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px 8px;
+  margin: 0;
+}
+
+.settings-section-card {
+  background: var(--ion-background-color, #ffffff);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Settings Item Row */
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+  min-height: 44px;
+}
+
+.settings-item:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.settings-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 52px;
+  right: 16px;
+  height: 0.5px;
+  background: rgba(60, 60, 67, 0.12);
+}
+
+/* When no icon, adjust separator */
+.settings-item.no-icon:not(:last-child)::after {
+  left: 16px;
+}
+
+.settings-item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: white;
+}
+
+.settings-item-icon-large {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.settings-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-item-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ion-text-color, #1a1a1a);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-item-value {
+  font-size: 13px;
+  color: var(--ion-color-medium, #8e8e93);
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.settings-item-arrow {
+  color: #c7c7cc;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.settings-item-destructive .settings-item-label {
+  color: #ff3b30;
+}
+
+/* Theme Selector */
+.settings-theme-selector {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+
+.settings-theme-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-theme-option:active {
+  transform: scale(0.96);
+}
+
+.settings-theme-option.active {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
+}
+
+.settings-theme-option-icon {
+  font-size: 22px;
+  color: var(--ion-text-color, #1a1a1a);
+  transition: color 0.2s ease;
+}
+
+.settings-theme-option.active .settings-theme-option-icon {
+  color: #667eea;
+}
+
+.settings-theme-option-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ion-text-color, #1a1a1a);
+  transition: color 0.2s ease;
+}
+
+.settings-theme-option.active .settings-theme-option-label {
+  color: #667eea;
+}
+
+/* Toggle Switch */
+.settings-toggle-wrapper {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.settings-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.settings-toggle-track {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: #e9e9ea;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  position: relative;
+}
+
+.settings-toggle-track.on {
+  background: #34c759;
+}
+
+.settings-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.settings-toggle-track.on .settings-toggle-knob {
+  transform: translateX(18px);
+}
+
+/* Footer */
+.settings-footer {
+  text-align: center;
+  padding: 20px 16px 32px;
+}
+
+.settings-footer-text {
+  font-size: 12px;
+  color: #8e8e93;
+  margin: 0 0 4px;
+}
+
+.settings-footer-version {
+  font-size: 11px;
+  color: #aeaeb2;
+  margin: 0;
+}
+
+/* Detail Modal */
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9998;
+  animation: settingsFadeIn 0.2s ease;
+}
+
+@keyframes settingsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes settingsSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.settings-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: var(--ion-background-color, #ffffff);
+  border-radius: 14px 14px 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: settingsSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-modal-handle {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: #d1d1d6;
+  margin: 8px auto 0;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.settings-modal-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ion-text-color, #1a1a1a);
+}
+
+.settings-modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--ion-text-color, #1a1a1a);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.settings-modal-close-btn:active {
+  transform: scale(0.9);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.settings-modal-body {
+  padding: 20px;
+  line-height: 1.6;
+  font-size: 14px;
+  color: var(--ion-text-color, #1a1a1a);
+}
+
+.settings-modal-body h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--ion-text-color, #1a1a1a);
+}
+
+.settings-modal-body p {
+  margin: 0 0 16px;
+  color: var(--ion-color-medium, #8e8e93);
+}
+
+.settings-modal-body .last-updated {
+  margin-top: 20px;
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .settings-content {
+  --ion-background-color: #000000;
+  background: #000000;
+}
+
+[data-theme="dark"] .settings-section-card {
+  background: #1c1c1e;
+}
+
+[data-theme="dark"] .settings-profile-card {
+  background: #1c1c1e;
+}
+
+[data-theme="dark"] .settings-item:not(:last-child)::after {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .settings-item:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .settings-theme-option {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .settings-theme-option.active {
+  background: rgba(102, 126, 234, 0.15);
+}
+
+[data-theme="dark"] .settings-toggle-track {
+  background: #39393d;
+}
+
+[data-theme="dark"] .settings-toggle-track.on {
+  background: #30d158;
+}
+
+[data-theme="dark"] .settings-modal {
+  background: #1c1c1e;
+}
+
+[data-theme="dark"] .settings-modal-handle {
+  background: #545458;
+}
+
+[data-theme="dark"] .settings-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .settings-modal-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+[data-theme="dark"] .settings-modal-close-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-content {
+    --ion-background-color: #000000;
+    background: #000000;
+  }
+
+  .settings-section-card {
+    background: #1c1c1e;
+  }
+
+  .settings-profile-card {
+    background: #1c1c1e;
+  }
+
+  .settings-item:not(:last-child)::after {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .settings-item:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .settings-theme-option {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .settings-theme-option.active {
+    background: rgba(102, 126, 234, 0.15);
+  }
+
+  .settings-toggle-track {
+    background: #39393d;
+  }
+
+  .settings-toggle-track.on {
+    background: #30d158;
+  }
+
+  .settings-modal {
+    background: #1c1c1e;
+  }
+
+  .settings-modal-handle {
+    background: #545458;
+  }
+
+  .settings-modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .settings-modal-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .settings-modal-close-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}

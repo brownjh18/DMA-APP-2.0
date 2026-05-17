@@ -676,7 +676,183 @@
   margin: 0;
 }
 
-/* Dark Mode Support */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .devotion-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .devotion-media {
+  filter: brightness(0.35) contrast(0.85);
+}
+
+[data-theme="dark"] .devotion-content {
+  color: white;
+}
+
+[data-theme="dark"] .devotion-verse h3 {
+  color: white;
+}
+
+[data-theme="dark"] .verse-text {
+  color: white;
+  opacity: 0.95;
+}
+
+[data-theme="dark"] .devotion-summary {
+  color: white;
+  opacity: 0.95;
+}
+
+[data-theme="dark"] .devotion-date-frosted {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+[data-theme="dark"] .frosted-read-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+[data-theme="dark"] .frosted-read-btn ion-icon {
+  color: white;
+}
+
+[data-theme="dark"] .devotion-label {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .devotion-date {
+  background: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .devotion-verse h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .verse-text {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .devotion-summary {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .cta-btn {
+  --color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .devotion-card-enhanced {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .category-indicator {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .devotion-date-badge {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .devotion-content-container {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .secondary-action-btn {
+  --border-color: rgba(255, 255, 255, 0.4);
+  --color: #f9fafb;
+}
+
+[data-theme="dark"] .share-action-btn {
+  --color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .series-badge {
+  --background: rgba(102, 126, 234, 0.3);
+  --color: #93c5fd;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+}
+
+[data-theme="dark"] .reading-time {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .stat-item {
+  background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .category-section {
+  background: linear-gradient(135deg, rgba(30,41,59,0.3), rgba(30,41,59,0.1));
+}
+
+[data-theme="dark"] .category-header h2 {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .category-header p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .category-chips ion-chip {
+  --background: rgba(30,41,59,0.6);
+  --color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .section-header h2 {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .section-header p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .devotion-card-modern {
+  --background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .devotion-title {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .devotion-preview {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .devotion-date {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .empty-state {
+  background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .empty-state h3 {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .empty-state p {
+  color: #9ca3af;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   /* Today's Devotion card - ensure text visibility */
   .devotion-card {

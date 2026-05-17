@@ -190,12 +190,10 @@ const Search: React.FC = () => {
           }
         }
       `}</style>
-      <IonHeader style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e5e5' }}>
+      <IonHeader translucent>
         <IonToolbar style={{ 
           '--padding-start': '8px', 
-          '--padding-end': '8px',
-          '--background': 'var(--ion-background-color, #ffffff)',
-          borderBottom: '1px solid var(--ion-color-step-100, #e5e5e5)'
+          '--padding-end': '8px'
         }}>
           <IonButton
             fill="clear"

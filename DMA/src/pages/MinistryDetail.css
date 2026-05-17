@@ -1,4 +1,55 @@
-/* Dark mode support for Ministry Detail page */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .ministry-header {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.8)) !important;
+}
+
+[data-theme="dark"] .ministry-title {
+  color: #f1f5f9 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+[data-theme="dark"] .ministry-subtitle {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+[data-theme="dark"] .content-card {
+  background: rgba(30, 41, 59, 0.8) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .card-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .card-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .activity-item {
+  background: rgba(102, 126, 234, 0.1) !important;
+  border: 1px solid rgba(102, 126, 234, 0.2) !important;
+}
+
+[data-theme="dark"] .activity-text {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .contact-card {
+  background: rgba(30, 41, 59, 0.8) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+[data-theme="dark"] .contact-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .contact-text {
+  color: #94a3b8 !important;
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   /* Ministry header */
   .ministry-header {

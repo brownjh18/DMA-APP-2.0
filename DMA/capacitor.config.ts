@@ -5,8 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Dove Church',
   webDir: 'dist',
   server: {
-    // Live reload server URL for development
-    url: 'http://192.168.1.4:8101',
     cleartext: true
   },
   plugins: {

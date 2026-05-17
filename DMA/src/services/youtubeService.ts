@@ -315,6 +315,52 @@ async function checkYouTubeLiveStatus(videoId: string): Promise<boolean> {
 }
 
 /**
+ * Convert ISO 8601 duration to formatted time string (HH:MM:SS or MM:SS)
+ */
+function isoDurationToTime(isoDuration?: string): string {
+  if (!isoDuration) return '';
+  
+  // Match ISO 8601 duration format: PT1H2M3S, PT45M, PT1H, etc.
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return '';
+  
+  const [, hours = '0', minutes = '0', seconds = '0'] = match;
+  const h = Number(hours);
+  const m = Number(minutes);
+  const s = Number(seconds);
+  
+  // If there are hours, format as HH:MM:SS
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  
+  // Otherwise format as MM:SS
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/**
+ * Calculate duration from start and end timestamps
+ */
+function calculateDurationFromTimestamps(startTime: string | Date, endTime: string | Date): string {
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+  const diffMs = end - start;
+  
+  if (diffMs <= 0) return '00:00';
+  
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+  const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+  
+  // Format based on duration length
+  if (hours > 0) {
+    return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+/**
  * Fetch combined sermons from database and YouTube
  * Prioritizes database sermons - they always show even if YouTube fails
  */
@@ -369,7 +415,7 @@ export async function fetchCombinedSermons(maxResults = 30, pageToken?: string, 
       }
 
       // Determine duration based on live status
-      let duration: string | undefined;
+      let duration: string;
       if (isLive) {
         // If currently live, show LIVE
         duration = 'LIVE';
@@ -380,18 +426,11 @@ export async function fetchCombinedSermons(maxResults = 30, pageToken?: string, 
           duration = sermon.duration;
         } else if (sermon.broadcastStartTime && sermon.broadcastEndTime) {
           // Calculate duration from broadcast start/end times
-          const startTime = new Date(sermon.broadcastStartTime).getTime();
-          const endTime = new Date(sermon.broadcastEndTime).getTime();
-          const diffMs = endTime - startTime;
-          if (diffMs > 0) {
-            const diffMins = Math.floor(diffMs / (1000 * 60));
-            const hours = Math.floor(diffMins / 60);
-            const mins = diffMins % 60;
-            duration = hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
-          }
+          duration = calculateDurationFromTimestamps(sermon.broadcastStartTime, sermon.broadcastEndTime);
         } else if (sermon.videoUrl) {
-          // For uploaded videos without duration, leave undefined (will be fetched from video metadata)
-          duration = undefined;
+          // For uploaded videos without duration, provide a default
+          // The duration will be shown as "00:00" instead of being hidden
+          duration = '00:00';
         } else {
           // Fallback duration for other cases
           duration = '45:00';

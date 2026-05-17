@@ -54,10 +54,11 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
+  color: var(--ion-text-color, #1a1a1a);
 }
 .view-all-link {
   font-size: 13px;
-  color: #0026ff;
+  color: var(--ion-color-primary, #667eea);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -287,8 +288,48 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-x: visible;
-  padding: 0;
+  max-height: 245px; /* Show only 3 podcasts (3 * 75px + gaps) */
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+
+.podcasts-row::-webkit-scrollbar {
+  width: 4px;
+}
+
+.podcasts-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.podcasts-row::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+/* Blur fade effect at the bottom */
+.podcasts-row::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--ion-background-color));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Dark mode blur fade for podcasts */
+[data-theme="dark"] .podcasts-row::after {
+  background: linear-gradient(to bottom, transparent, #000000);
+}
+
+@media (prefers-color-scheme: dark) {
+  .podcasts-row::after {
+    background: linear-gradient(to bottom, transparent, #000000);
+  }
 }
 
 /* Podcast cards */
@@ -388,7 +429,167 @@
   overflow: hidden;
 }
 
-/* Programs */
+/* Programs - Modern Quick Actions (inline with icon, details, arrow+button) */
+.quick-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 162px; /* Show only 3 programs (3 * 54px each) */
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+
+.quick-actions-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.quick-actions-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.quick-actions-grid::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+/* Blur fade effect at the bottom */
+.quick-actions-grid::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--ion-background-color));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Dark mode blur fade */
+[data-theme="dark"] .quick-actions-grid::after {
+  background: linear-gradient(to bottom, transparent, #000000);
+}
+
+@media (prefers-color-scheme: dark) {
+  .quick-actions-grid::after {
+    background: linear-gradient(to bottom, transparent, #000000);
+  }
+}
+
+.quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quick-action-card:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.quick-action-card:active {
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(0.995);
+}
+
+.quick-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-icon ion-icon {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.quick-action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-day {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.quick-action-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-text-color, #1a1a1a);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.quick-action-time {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--ion-color-medium, #64748b);
+  font-weight: 500;
+  gap: 3px;
+}
+
+.quick-action-time ion-icon {
+  font-size: 12px;
+}
+
+.quick-action-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.quick-action-arrow {
+  color: #94a3b8;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.quick-action-card:hover .quick-action-arrow {
+  transform: translateX(3px);
+  color: #667eea;
+}
+
+.quick-action-open-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0932b, #eb4d4b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(240, 147, 43, 0.3);
+  transition: all 0.2s ease;
+}
+
+.quick-action-card:hover .quick-action-open-btn {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(240, 147, 43, 0.4);
+}
+
+/* Legacy Programs styles (kept for compatibility) */
 .programs-row {
   display:flex;
   gap:16px;
@@ -754,7 +955,278 @@
   background: #ffffff;
 }
 
-/* Dark mode support */
+/* Dark mode support - Manual override via data-theme attribute */
+[data-theme="dark"] .content-ios {
+  --ion-background-color: #000000;
+  background: #000000;
+}
+
+[data-theme="dark"] .toolbar-ios {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+}
+
+[data-theme="dark"] .section-title ion-icon {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .view-all-link {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .devotion-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .devotion-content {
+  color: white;
+}
+
+[data-theme="dark"] .devotion-verse h3 {
+  color: white;
+}
+
+[data-theme="dark"] .devotion-verse .verse-text {
+  color: white;
+  opacity: 0.95;
+}
+
+[data-theme="dark"] .devotion-date-frosted {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+[data-theme="dark"] .frosted-read-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+[data-theme="dark"] .frosted-read-btn ion-icon {
+  color: white;
+}
+
+[data-theme="dark"] .devotion-card-small {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .devotion-card-small:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .devotion-content-small {
+  /* Uses var(--ion-background-color) which is #000000 in dark mode */
+}
+
+[data-theme="dark"] .devotion-verse h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .devotion-verse .verse-text {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .sermon-card {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .sermon-duration {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .sermon-play-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .sermon-meta {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .podcast-card {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .podcast-duration {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .podcast-play-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .podcast-meta {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .program-card {
+  background: linear-gradient(180deg, #1a1a1a, #1a1a1a);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .update-item {
+  background: #1a1a1a;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .update-body .muted {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .event-meta {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .about-card {
+  background: #1a1a1a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .stat {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .stat-number {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .stat-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .program-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .program-name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .program-time {
+  color: #94a3b8;
+}
+
+/* Quick Actions - Dark Mode */
+[data-theme="dark"] .quick-action-card {
+  background: transparent;
+}
+
+[data-theme="dark"] .quick-action-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .quick-action-card:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .quick-action-name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .quick-action-time {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .quick-action-day {
+  color: #64748b;
+}
+
+[data-theme="dark"] .quick-action-arrow {
+  color: #64748b;
+}
+
+[data-theme="dark"] .quick-action-card:hover .quick-action-arrow {
+  color: #818cf8;
+}
+
+[data-theme="dark"] .update-item {
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .update-item:hover {
+  background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .update-body strong {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .update-body .muted {
+  color: #c7d2fe;
+}
+
+[data-theme="dark"] .event-item {
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .event-item:hover {
+  background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .event-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .event-meta {
+  color: #c7d2fe;
+}
+
+[data-theme="dark"] .about-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .about-card::before {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
+}
+
+[data-theme="dark"] .stat {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .stat-number {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .stat-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .podcasts-row {
+  /* No special background in dark mode */
+}
+
+[data-theme="dark"] .podcast-card {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .podcast-card:active,
+[data-theme="dark"] .podcast-card:focus {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .podcast-play-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   .content-ios {
     --ion-background-color: #000000;
@@ -1056,4 +1528,199 @@
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.9; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* ========= Program Details Popover (Centered Modal) ========= */
+.program-popover-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { 
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.program-popover {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: var(--ion-background-color, #ffffff);
+  border-radius: 24px;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.2);
+  animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: min(400px, calc(100% - 48px));
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.program-popover-header {
+  padding: 24px 24px 20px;
+  text-align: center;
+  position: relative;
+  border-radius: 24px 24px 0 0;
+  color: white;
+}
+
+.program-popover-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.program-popover-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.program-popover-close:active {
+  transform: scale(0.9);
+}
+
+.program-popover-close ion-icon {
+  font-size: 16px;
+}
+
+.program-popover-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.program-popover-day {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+
+.program-popover-title {
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  padding: 0 8px;
+}
+
+.program-popover-body {
+  padding: 16px 20px 20px;
+}
+
+.program-popover-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-text-color, #1a1a1a);
+}
+
+.program-popover-info-row span {
+  flex: 1;
+}
+
+.program-popover-description {
+  margin-top: 12px;
+  padding: 0 2px;
+}
+
+.program-popover-description p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ion-color-medium, #64748b);
+  margin: 0;
+}
+
+.program-popover-actions {
+  margin-top: 14px;
+}
+
+.program-popover-cta {
+  height: 42px;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px;
+}
+
+/* Dark mode popover */
+[data-theme="dark"] .program-popover {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .program-popover-info-row {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .program-popover-description p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .program-popover-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  .program-popover {
+    background: #1a1a1a;
+  }
+
+  .program-popover-info-row {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f1f5f9;
+  }
+
+  .program-popover-description p {
+    color: #94a3b8;
+  }
+
+  .program-popover-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
 }
