@@ -353,11 +353,12 @@ function calculateDurationFromTimestamps(startTime: string | Date, endTime: stri
   const mins = diffMins % 60;
   const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
   
-  // Format based on duration length
+// Format based on duration length
   if (hours > 0) {
-    return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
-  return `${mins}:${String(secs).padStart(2, '0')}`;
+  // Otherwise format as MM:SS
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 /**

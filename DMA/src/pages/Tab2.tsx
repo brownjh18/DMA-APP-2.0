@@ -363,25 +363,25 @@ const Tab2: React.FC = () => {
     }
   };
   
-  // Helper function to calculate duration between start and end times
-  const calculateDuration = (startTime: string | Date, endTime: string | Date) => {
-    if (!startTime || !endTime) return '00:00';
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    const diffMs = end - start;
-    if (diffMs <= 0) return '00:00';
-    
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
-    
-    // Format based on duration length
-    if (hours > 0) {
-      return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-    return `${mins}:${String(secs).padStart(2, '0')}`;
-  };
+// Helper function to calculate duration between start and end times
+   const calculateDuration = (startTime: string | Date, endTime: string | Date) => {
+     if (!startTime || !endTime) return '00:00';
+     const start = new Date(startTime).getTime();
+     const end = new Date(endTime).getTime();
+     const diffMs = end - start;
+     if (diffMs <= 0) return '00:00';
+
+     const diffMins = Math.floor(diffMs / (1000 * 60));
+     const hours = Math.floor(diffMins / 60);
+     const mins = diffMins % 60;
+     const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+     // Format based on duration length
+     if (hours > 0) {
+       return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+     }
+     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+   };
 
   // Helper function to check if a broadcast should be considered ended
   const shouldBeConsideredEnded = (sermon: any) => {
@@ -776,19 +776,19 @@ const Tab2: React.FC = () => {
                         }
                       }}
                     />
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      right: '12px',
-                      backgroundColor: lastSermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.8em',
-                      fontWeight: lastSermon.isLive ? 'bold' : 'normal'
-                    }}>
-                      {lastSermon.isLive ? 'LIVE' : (lastSermon.duration || '—')}
-                    </div>
+<div style={{
+                       position: 'absolute',
+                       bottom: '12px',
+                       right: '12px',
+                       backgroundColor: lastSermon?.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
+                       color: 'white',
+                       padding: '4px 8px',
+                       borderRadius: '4px',
+                       fontSize: '0.8em',
+                       fontWeight: lastSermon?.isLive ? 'bold' : 'normal'
+                     }}>
+                       {lastSermon?.isLive ? 'LIVE' : (lastSermon?.duration && lastSermon.duration !== '—' ? lastSermon.duration : '—')}
+                     </div>
                     {/* Play Button Overlay */}
                     <div style={{
                       position: 'absolute',
@@ -918,19 +918,19 @@ const Tab2: React.FC = () => {
                           }
                         }}
                       />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '8px',
-                        backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.75em',
-                        fontWeight: sermon.isLive ? 'bold' : 'normal'
-                      }}>
-                        {sermon.isLive ? 'LIVE' : (sermon.duration || '—')}
-                      </div>
+<div style={{
+                         position: 'absolute',
+                         bottom: '8px',
+                         right: '8px',
+                         backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
+                         color: 'white',
+                         padding: '2px 6px',
+                         borderRadius: '4px',
+                         fontSize: '0.75em',
+                         fontWeight: sermon.isLive ? 'bold' : 'normal'
+                       }}>
+                         {sermon.isLive ? 'LIVE' : (sermon.duration && sermon.duration !== '—' ? sermon.duration : '—')}
+                       </div>
                     </div>
 
                     {/* YouTube-style Video Details */}
@@ -1063,19 +1063,19 @@ const Tab2: React.FC = () => {
                         }
                       }}
                     />
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '4px',
-                      right: '4px',
-                      backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
-                      color: 'white',
-                      padding: '2px 4px',
-                      borderRadius: '2px',
-                      fontSize: '0.7em',
-                      fontWeight: sermon.isLive ? 'bold' : 'normal'
-                    }}>
-                      {sermon.isLive ? 'LIVE' : (sermon.duration || '—')}
-                    </div>
+<div style={{
+                       position: 'absolute',
+                       bottom: '4px',
+                       right: '4px',
+                       backgroundColor: sermon.isLive ? '#ef4444' : 'rgba(0,0,0,0.8)',
+                       color: 'white',
+                       padding: '2px 4px',
+                       borderRadius: '2px',
+                       fontSize: '0.7em',
+                       fontWeight: sermon.isLive ? 'bold' : 'normal'
+                     }}>
+                       {sermon.isLive ? 'LIVE' : (sermon.duration && sermon.duration !== '—' ? sermon.duration : '—')}
+                     </div>
                     {currentSermon && sermon.id === currentSermon.id && (
                     <div style={{
                     position: 'absolute',
