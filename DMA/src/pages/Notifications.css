@@ -32,6 +32,19 @@
   backdrop-filter: blur(8px);
 }
 
+/* Dark mode support for Notifications page */
+[data-theme="dark"] .notif-card,
+@media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .notif-card {
+  background: rgba(30, 41, 59, 0.97);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .floating-card,
+@media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .floating-card {
+  background: rgba(30, 41, 59, 0.96);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
 /* responsive refinement */
 @media (max-width: 480px) {
   .notif-card { margin: 10px; border-radius: 16px; }

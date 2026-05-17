@@ -453,9 +453,9 @@ const Notifications: React.FC = () => {
         .yt-card{
           max-width: 720px;
           margin: 10px auto;
-          background: rgba(255,255,255,0.98);
+          background: var(--yt-card-bg, rgba(255,255,255,0.98));
           border-radius: 18px;
-          box-shadow: 0 10px 38px rgba(16,24,40,0.08);
+          box-shadow: var(--yt-card-shadow, 0 10px 38px rgba(16,24,40,0.08));
           overflow: hidden;
         }
 
@@ -473,19 +473,19 @@ const Notifications: React.FC = () => {
           align-items: center;
         }
         .yt-filter-btn{
-          border: 1px solid rgba(0,0,0,0.07);
-          background: #fff;
+          border: 1px solid var(--yt-border-color, rgba(0,0,0,0.07));
+          background: var(--yt-btn-bg, #fff);
           border-radius: 999px;
           padding: 8px 14px;
           font-weight: 700;
           font-size: 12px;
-          color: rgba(0,0,0,0.70);
+          color: var(--yt-text-secondary, rgba(0,0,0,0.70));
           cursor: pointer;
         }
         .yt-filter-btn.active{
-          background: #111827;
-          border-color: #111827;
-          color: #fff;
+          background: var(--yt-active-bg, #111827);
+          border-color: var(--yt-active-border, #111827);
+          color: var(--yt-active-text, #fff);
         }
 
 
@@ -495,10 +495,10 @@ const Notifications: React.FC = () => {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: .06em;
-          color: rgba(0,0,0,0.55);
+          color: var(--yt-section-text, rgba(0,0,0,0.55));
           text-transform: uppercase;
-          background: #fafafa;
-          border-top: 1px solid rgba(0,0,0,0.04);
+          background: var(--yt-section-bg, #fafafa);
+          border-top: 1px solid var(--yt-border-color, rgba(0,0,0,0.04));
           position: sticky;
           top: 0;
           z-index: 1;
@@ -511,22 +511,22 @@ const Notifications: React.FC = () => {
           align-items: center;
           gap: 12px;
           padding: 12px 14px;
-          border-bottom: 1px solid rgba(0,0,0,0.04);
+          border-bottom: 1px solid var(--yt-border-color, rgba(0,0,0,0.04));
           cursor: pointer;
-          background: #fff;
+          background: var(--yt-row-bg, #fff);
           position: relative;
         }
-        .yt-notif-row:hover{ background: rgba(0,0,0,0.02); }
-        .yt-notif-row:focus-visible{ outline: 2px solid #2563eb; outline-offset: -2px; }
+        .yt-notif-row:hover{ background: var(--yt-row-hover, rgba(0,0,0,0.02)); }
+        .yt-notif-row:focus-visible{ outline: 2px solid var(--primary-color, #2563eb); outline-offset: -2px; }
 
         .yt-unread-dot{
           width: 10px;
           height: 10px;
           border-radius: 999px;
-          background: #2563eb;
+          background: var(--primary-color, #2563eb);
           flex-shrink: 0;
         }
-        .yt-dot-muted{ background: transparent; border: 1px solid rgba(0,0,0,0.15); }
+        .yt-dot-muted{ background: transparent; border: 1px solid var(--yt-dot-muted-border, rgba(0,0,0,0.15)); }
 
         .yt-left{ display:flex; align-items:center; justify-content:center; }
         .yt-type-avatar{
@@ -536,9 +536,9 @@ const Notifications: React.FC = () => {
           display:flex;
           align-items:center;
           justify-content:center;
-          color:#111827;
-          background: #f3f4f6;
-          border: 1px solid rgba(0,0,0,0.06);
+          color: var(--yt-avatar-color, #111827);
+          background: var(--yt-avatar-bg, #f3f4f6);
+          border: 1px solid var(--yt-border-color, rgba(0,0,0,0.06));
         }
 
         .yt-main{ flex: 1; min-width: 0; display:flex; flex-direction:column; gap: 4px; }
@@ -547,12 +547,12 @@ const Notifications: React.FC = () => {
         .yt-title{
           font-size: 14px;
           font-weight: 900;
-          color: rgba(0,0,0,0.86);
+          color: var(--yt-title-color, rgba(0,0,0,0.86));
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .yt-notif-row.unread .yt-title{ color: rgba(0,0,0,0.95); }
+        .yt-notif-row.unread .yt-title{ color: var(--yt-title-unread, rgba(0,0,0,0.95)); }
 
         .yt-badge{
           flex-shrink: 0;
@@ -560,7 +560,7 @@ const Notifications: React.FC = () => {
           font-weight: 800;
           padding: 3px 8px;
           border-radius: 999px;
-          border: 1px solid rgba(0,0,0,0.06);
+          border: 1px solid var(--yt-badge-border, rgba(0,0,0,0.06));
         }
         .yt-badge.type-sermon{ background: rgba(245,158,11,0.18); color: #92400e; }
         .yt-badge.type-podcast{ background: rgba(99,102,241,0.18); color: #3730a3; }
@@ -571,7 +571,7 @@ const Notifications: React.FC = () => {
 
         .yt-message{
           font-size: 12.5px;
-          color: rgba(0,0,0,0.62);
+          color: var(--yt-message-color, rgba(0,0,0,0.62));
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -585,12 +585,12 @@ const Notifications: React.FC = () => {
         .yt-time{
           font-size: 11px;
           font-weight: 700;
-          color: rgba(0,0,0,0.50);
+          color: var(--yt-time-color, rgba(0,0,0,0.50));
         }
         .yt-actions{ display:flex; gap: 6px; align-items:center; }
         .yt-meta-btn{
           border: none;
-          background: rgba(0,0,0,0.04);
+          background: var(--yt-btn-bg-secondary, rgba(0,0,0,0.04));
           border-radius: 10px;
           width: 30px;
           height: 30px;
@@ -598,21 +598,21 @@ const Notifications: React.FC = () => {
           align-items:center;
           justify-content:center;
           cursor: pointer;
-          color: rgba(0,0,0,0.65);
+          color: var(--yt-icon-color, rgba(0,0,0,0.65));
         }
-        .yt-meta-btn:hover{ background: rgba(0,0,0,0.07); }
+        .yt-meta-btn:hover{ background: var(--yt-btn-hover, rgba(0,0,0,0.07)); }
         .yt-meta-btn.danger{ color: #ef4444; }
 
         .yt-chevron{
           margin-left: auto;
-          color: rgba(0,0,0,0.45);
+          color: var(--yt-chevron-color, rgba(0,0,0,0.45));
           display:flex;
           align-items:center;
           justify-content:center;
           width: 26px;
           height: 26px;
           border-radius: 13px;
-          background: rgba(0,0,0,0.03);
+          background: var(--yt-chevron-bg, rgba(0,0,0,0.03));
         }
 
         .yt-thumb{
@@ -620,8 +620,8 @@ const Notifications: React.FC = () => {
           height: 56px;
           border-radius: 16px;
           overflow:hidden;
-          background:#f3f4f6;
-          border: 1px solid rgba(0,0,0,0.05);
+          background:var(--yt-thumb-bg, #f3f4f6);
+          border: 1px solid var(--yt-border-color, rgba(0,0,0,0.05));
           flex-shrink: 0;
         }
         .yt-thumb img{
@@ -630,7 +630,7 @@ const Notifications: React.FC = () => {
           object-fit: cover;
           object-position: center;
           display:block;
-          background:#f3f4f6;
+          background:var(--yt-thumb-bg, #f3f4f6);
         }
 
         .yt-empty{
@@ -643,13 +643,13 @@ const Notifications: React.FC = () => {
         .yt-empty-icon{
           width: 86px; height: 86px;
           border-radius: 50%;
-          background: #f3f4f6;
+          background: var(--yt-empty-icon-bg, #f3f4f6);
           display:flex; align-items:center; justify-content:center;
           font-size: 36px;
-          color: rgba(0,0,0,0.55);
+          color: var(--yt-empty-icon-color, rgba(0,0,0,0.55));
         }
-        .yt-empty h2{ margin:0; font-size:20px; font-weight:900; color: rgba(0,0,0,0.86); }
-        .yt-empty p{ margin:0; font-size:14px; color: rgba(0,0,0,0.60); }
+        .yt-empty h2{ margin:0; font-size:20px; font-weight:900; color: var(--yt-empty-title, rgba(0,0,0,0.86)); }
+        .yt-empty p{ margin:0; font-size:14px; color: var(--yt-empty-text, rgba(0,0,0,0.60)); }
 
         /* responsive */
         @media (max-width: 480px){
@@ -658,6 +658,108 @@ const Notifications: React.FC = () => {
           .yt-notif-row{ padding: 11px 12px; gap: 10px; }
           .yt-title{ font-size: 13px; }
           .yt-message{ font-size: 12px; }
+        }
+
+        /* Dark mode styles */
+        [data-theme="dark"] .yt-card,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-card {
+          --yt-card-bg: rgba(30, 41, 59, 0.98);
+          --yt-card-shadow: 0 10px 38px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .yt-filter-btn,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-filter-btn {
+          --yt-border-color: rgba(255, 255, 255, 0.1);
+          --yt-btn-bg: #1e293b;
+          --yt-text-secondary: rgba(241, 245, 249, 0.7);
+        }
+
+        [data-theme="dark"] .yt-filter-btn.active,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-filter-btn.active {
+          --yt-active-bg: #6366f1;
+          --yt-active-border: #6366f1;
+          --yt-active-text: #fff;
+        }
+
+        [data-theme="dark"] .yt-section-header,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-section-header {
+          --yt-section-text: rgba(241, 245, 249, 0.6);
+          --yt-section-bg: #1a1f2c;
+          --yt-border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .yt-notif-row,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-notif-row {
+          --yt-row-bg: #1e293b;
+          --yt-row-hover: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .yt-notif-row:hover,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-notif-row:hover {
+          --yt-row-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .yt-dot-muted,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-dot-muted {
+          --yt-dot-muted-border: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .yt-type-avatar,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-type-avatar {
+          --yt-avatar-color: #f1f5f9;
+          --yt-avatar-bg: #334155;
+          --yt-border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .yt-title,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-title {
+          --yt-title-color: rgba(241, 245, 249, 0.86);
+          --yt-title-unread: rgba(241, 245, 249, 0.95);
+        }
+
+        [data-theme="dark"] .yt-message,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-message {
+          --yt-message-color: rgba(241, 245, 249, 0.62);
+        }
+
+        [data-theme="dark"] .yt-time,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-time {
+          --yt-time-color: rgba(241, 245, 249, 0.5);
+        }
+
+        [data-theme="dark"] .yt-meta-btn,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-meta-btn {
+          --yt-btn-bg-secondary: rgba(255, 255, 255, 0.1);
+          --yt-btn-hover: rgba(255, 255, 255, 0.15);
+          --yt-icon-color: rgba(241, 245, 249, 0.65);
+        }
+
+        [data-theme="dark"] .yt-chevron,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-chevron {
+          --yt-chevron-color: rgba(241, 245, 249, 0.45);
+          --yt-chevron-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .yt-thumb,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-thumb {
+          --yt-thumb-bg: #334155;
+          --yt-border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .yt-empty-icon,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-empty-icon {
+          --yt-empty-icon-bg: #334155;
+          --yt-empty-icon-color: rgba(241, 245, 249, 0.55);
+        }
+
+        [data-theme="dark"] .yt-empty h2,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-empty h2 {
+          --yt-empty-title: rgba(241, 245, 249, 0.86);
+        }
+
+        [data-theme="dark"] .yt-empty p,
+        @media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .yt-empty p {
+          --yt-empty-text: rgba(241, 245, 249, 0.6);
         }
       `}</style>
     </IonPage>
