@@ -1,2 +1,14 @@
 node_modules
 .vercel
+DMA/node_modules
+DMA/dist
+DMA/android/app/build
+DMA/android/.gradle
+DMA/android/build
+uploads/
+*.apk
+server.log
+server-error.log
+server_out.txt
+crash_log*.txt
+websocket-package.json

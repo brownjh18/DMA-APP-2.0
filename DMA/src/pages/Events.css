@@ -1,162 +1,237 @@
+/* Weekly Programs */
+.weekly-program-item {
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.weekly-program-item h4 {
+  color: var(--ion-text-color);
+}
+
+.weekly-program-item p {
+  color: var(--ion-color-medium);
+}
+
+.host-event-section {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .section-header {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .event-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .event-card:hover {
-  box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45) !important;
 }
 
 [data-theme="dark"] .event-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .event-meta {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .event-description {
-  color: #64748b !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .event-badge {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-  color: #f1f5f9 !important;
+  background-color: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .schedule-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .schedule-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .schedule-item h3 {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .schedule-item p {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .host-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .host-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .host-text {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .contact-info {
-  color: #64748b !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .decorative-bg {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+  background: var(--ios26-fill-dark) !important;
+}
+
+[data-theme="dark"] .weekly-program-item {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .weekly-program-item h4 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .weekly-program-item p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .host-event-section {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .host-event-section h3 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .host-event-section p {
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .decorative-circle {
-  background: rgba(255,255,255,0.1) !important;
+  background: var(--ios26-fill-dark) !important;
   backdrop-filter: blur(10px) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Section headers */
   .section-header {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
-  /* Event cards */
   .event-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .event-card:hover {
-    box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.45) !important;
   }
 
-  /* Event card content */
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] .event-card {
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+}
+
+[data-theme="dark"] .event-card:hover {
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45) !important;
+}
+
   .event-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .event-meta {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .event-description {
-    color: #64748b !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Event badge */
   .event-badge {
-    background-color: rgba(0, 0, 0, 0.2) !important;
-    color: #f1f5f9 !important;
+    background-color: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
-  /* Weekly schedule card */
   .schedule-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .schedule-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .schedule-item h3 {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .schedule-item p {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Host event card */
   .host-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .host-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .host-text {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .contact-info {
-    color: #64748b !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Decorative elements */
   .decorative-bg {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+    background: var(--ios26-fill-dark) !important;
+  }
+
+  .weekly-program-item {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--ios26-separator-dark);
+  }
+
+  .weekly-program-item h4 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .weekly-program-item p {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  .host-event-section {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .host-event-section h3 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .host-event-section p {
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .decorative-circle {
-    background: rgba(255,255,255,0.1) !important;
+    background: var(--ios26-fill-dark) !important;
     backdrop-filter: blur(10px) !important;
   }
 }

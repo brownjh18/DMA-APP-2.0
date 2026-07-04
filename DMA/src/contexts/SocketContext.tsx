@@ -115,23 +115,30 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [ministryUpdated, setMinistryUpdated] = useState<EventCallback>(null);
   const [ministryDeleted, setMinistryDeleted] = useState<EventCallback>(null);
 
-  useEffect(() => {
-    // Check if we're running on Vercel - Socket.IO doesn't work on Vercel free tier
-    const isVercel = import.meta.env.VITE_API_URL?.includes('vercel.app');
-    
-    if (isVercel) {
-      console.log('⚠️ Socket.IO Warning: VITE_API_URL points to Vercel which doesn\'t support persistent WebSocket connections.');
-      console.log('⚠️ Real-time notifications will not work. Consider using a different hosting provider or a push notification service like Firebase.');
-      // Still try to connect, but expect it to fail
-      // setSocket(null);
-      // setIsConnected(false);
-      // return;
-    }
+useEffect(() => {
+     const isVercel = import.meta.env.VITE_API_URL?.includes('vercel.app');
+     
+     if (isVercel) {
+       console.log('⚠️ Socket.IO: Vercel detected. Using dedicated WebSocket server for real-time notifications.');
+     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    // Remove /api suffix for socket connection
-    const socketUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
+     const apiUrl = import.meta.env.VITE_API_URL || '';
+     const explicitSocketUrl = import.meta.env.VITE_SOCKET_URL || '';
+     
+     if (explicitSocketUrl) {
+       console.log(`🔌 Connecting to dedicated WebSocket server: ${explicitSocketUrl}`);
+     } else if (apiUrl) {
+       const inferredSocketUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
+       console.log(`🔌 Using inferred socket URL: ${inferredSocketUrl}`);
+     } else {
+       console.log('🔌 No WebSocket URL configured, skipping connection');
+       return;
+     }
+     
+     const socketUrl = explicitSocketUrl || apiUrl.replace(/\/api$/, '') || window.location.origin;
     
+    console.log(`🔌 Attempting to connect socket to: ${socketUrl}`);
+
     const newSocket = io(socketUrl, {
       transports: ['polling', 'websocket'],
       reconnection: true,

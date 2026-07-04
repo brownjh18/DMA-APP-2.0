@@ -1,8 +1,8 @@
 /* Settings Page - Modern iOS-style Redesign */
 
 .settings-content {
-  --ion-background-color: #f2f2f7;
-  background: #f2f2f7;
+  --ion-background-color: var(--ios26-grouped-bg-light);
+  background: var(--ios26-grouped-bg-light);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
@@ -18,7 +18,7 @@
 .settings-header-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -26,7 +26,7 @@
 /* Profile Card */
 .settings-profile-card {
   margin: 0 16px 20px;
-  background: var(--ion-background-color, #ffffff);
+  background: var(--ios26-card-bg-light);
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   padding: 18px 16px;
@@ -65,7 +65,7 @@
 .settings-profile-name {
   font-size: 16px;
   font-weight: 700;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   margin: 0 0 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -74,7 +74,7 @@
 
 .settings-profile-email {
   font-size: 13px;
-  color: var(--ion-color-medium, #8e8e93);
+  color: #1a1a1a;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -82,7 +82,7 @@
 }
 
 .settings-profile-arrow {
-  color: #c7c7cc;
+  color: #1a1a1a;
   font-size: 18px;
   flex-shrink: 0;
 }
@@ -95,7 +95,7 @@
 .settings-section-title {
   font-size: 13px;
   font-weight: 600;
-  color: #8e8e93;
+  color: #1a1a1a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 0 4px 8px;
@@ -103,7 +103,7 @@
 }
 
 .settings-section-card {
-  background: var(--ion-background-color, #ffffff);
+  background: var(--ios26-card-bg-light);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -167,7 +167,7 @@
 .settings-item-label {
   font-size: 15px;
   font-weight: 500;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -176,13 +176,13 @@
 
 .settings-item-value {
   font-size: 13px;
-  color: var(--ion-color-medium, #8e8e93);
+  color: #1a1a1a;
   flex-shrink: 0;
   margin-right: 4px;
 }
 
 .settings-item-arrow {
-  color: #c7c7cc;
+  color: #1a1a1a;
   font-size: 14px;
   flex-shrink: 0;
 }
@@ -223,7 +223,7 @@
 
 .settings-theme-option-icon {
   font-size: 22px;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   transition: color 0.2s ease;
 }
 
@@ -234,7 +234,7 @@
 .settings-theme-option-label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   transition: color 0.2s ease;
 }
 
@@ -278,7 +278,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: white;
+  background: var(--ios26-text-primary-light);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
@@ -296,14 +296,51 @@
 
 .settings-footer-text {
   font-size: 12px;
-  color: #8e8e93;
+  color: #1a1a1a;
   margin: 0 0 4px;
 }
 
 .settings-footer-version {
   font-size: 11px;
-  color: #aeaeb2;
+  color: #1a1a1a;
   margin: 0;
+}
+
+/* Force dark text on ALL Ionic components in light mode including header */
+.settings-content {
+  --ion-text-color: #1a1a1a;
+  --ion-text-color-rgb: 26, 26, 26;
+  --ion-color-step-600: #1a1a1a;
+}
+
+.settings-content,
+.settings-section,
+.settings-section-card,
+.settings-item,
+.settings-profile-card {
+  color: #1a1a1a;
+}
+
+ion-header ion-toolbar.toolbar-ios {
+  --color: #1a1a1a !important;
+}
+
+ion-header ion-toolbar.toolbar-ios ion-button {
+  --color: #1a1a1a !important;
+  color: #1a1a1a !important;
+}
+
+ion-header ion-toolbar.toolbar-ios ion-title {
+  color: #1a1a1a !important;
+  --color: #1a1a1a !important;
+}
+
+ion-header ion-toolbar.toolbar-ios ion-icon {
+  color: #1a1a1a !important;
+}
+
+.settings-content ion-label {
+  color: #1a1a1a !important;
 }
 
 /* Detail Modal */
@@ -334,7 +371,7 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background: var(--ion-background-color, #ffffff);
+  background: var(--ios26-card-bg-light);
   border-radius: 14px 14px 0 0;
   max-height: 80vh;
   overflow-y: auto;
@@ -361,7 +398,7 @@
   font-size: 17px;
   font-weight: 700;
   margin: 0;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
 }
 
 .settings-modal-close-btn {
@@ -373,7 +410,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -386,142 +423,334 @@
   padding: 20px;
   line-height: 1.6;
   font-size: 14px;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
 }
 
 .settings-modal-body h3 {
   font-size: 15px;
   font-weight: 700;
   margin: 0 0 8px;
-  color: var(--ion-text-color, #1a1a1a);
+  color: #1a1a1a;
 }
 
 .settings-modal-body p {
   margin: 0 0 16px;
-  color: var(--ion-color-medium, #8e8e93);
+  color: #1a1a1a;
 }
 
 .settings-modal-body .last-updated {
   margin-top: 20px;
-  opacity: 0.6;
+  color: #1a1a1a;
   font-size: 12px;
 }
 
-/* Dark Mode */
+/* Dark Mode - iOS 26 */
 [data-theme="dark"] .settings-content {
-  --ion-background-color: #000000;
-  background: #000000;
+  --ion-background-color: var(--ios26-grouped-bg-dark) !important;
+  background: var(--ios26-grouped-bg-dark) !important;
+  --ion-text-color: var(--ios26-text-primary-dark) !important;
+  --ion-text-color-rgb: 255, 255, 255 !important;
+  --ion-color-step-600: var(--ios26-text-primary-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .settings-section-card {
-  background: #1c1c1e;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .settings-profile-card {
-  background: #1c1c1e;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .settings-item:not(:last-child)::after {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .settings-item:active {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .settings-theme-option {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .settings-theme-option.active {
-  background: rgba(102, 126, 234, 0.15);
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: #8b5cf6 !important;
+}
+
+[data-theme="dark"] .settings-theme-option-icon {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-theme-option.active .settings-theme-option-icon {
+  color: #8b5cf6 !important;
+}
+
+[data-theme="dark"] .settings-theme-option-label {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-theme-option.active .settings-theme-option-label {
+  color: #8b5cf6 !important;
 }
 
 [data-theme="dark"] .settings-toggle-track {
-  background: #39393d;
+  background: rgba(120, 120, 128, 0.32) !important;
 }
 
 [data-theme="dark"] .settings-toggle-track.on {
-  background: #30d158;
+  background: #30d158 !important;
 }
 
 [data-theme="dark"] .settings-modal {
-  background: #1c1c1e;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .settings-modal-handle {
-  background: #545458;
+  background: rgba(235, 235, 245, 0.24) !important;
 }
 
 [data-theme="dark"] .settings-modal-header {
-  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-bottom-color: var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-modal-header h2 {
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .settings-modal-close-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .settings-modal-close-btn:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.16) !important;
 }
 
+[data-theme="dark"] .settings-toggle-knob {
+  background: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-item-label {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-item-value {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-item-arrow {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-arrow {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-name {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-email {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-section-title {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-footer-text {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-footer-version {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-modal-body {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-modal-body h3 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-modal-body p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-content ion-button,
+[data-theme="dark"] ion-header ion-toolbar.toolbar-ios ion-button {
+  --color: var(--ios26-text-primary-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] ion-header ion-toolbar.toolbar-ios {
+  --color: var(--ios26-text-primary-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] ion-header ion-toolbar.toolbar-ios ion-title {
+  color: var(--ios26-text-primary-dark) !important;
+  --color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] ion-header ion-toolbar.toolbar-ios ion-icon {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-content ion-label {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-section {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-item {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-modal-body .last-updated {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+/* System preference fallback - iOS 26 Dark (only when user hasn't explicitly chosen light) */
 @media (prefers-color-scheme: dark) {
-  .settings-content {
-    --ion-background-color: #000000;
-    background: #000000;
+  :root:not([data-theme="light"]) .settings-content {
+    --ion-background-color: var(--ios26-grouped-bg-dark);
+    background: var(--ios26-grouped-bg-dark);
   }
 
-  .settings-section-card {
-    background: #1c1c1e;
+  :root:not([data-theme="light"]) .settings-section-card {
+    background: var(--ios26-card-bg-dark);
+    border: 1px solid var(--ios26-separator-dark);
   }
 
-  .settings-profile-card {
-    background: #1c1c1e;
+  :root:not([data-theme="light"]) .settings-profile-card {
+    background: var(--ios26-card-bg-dark);
+    border: 1px solid var(--ios26-separator-dark);
   }
 
-  .settings-item:not(:last-child)::after {
-    background: rgba(255, 255, 255, 0.12);
+  :root:not([data-theme="light"]) .settings-item:not(:last-child)::after {
+    background: var(--ios26-separator-dark);
   }
 
-  .settings-item:active {
-    background: rgba(255, 255, 255, 0.06);
+  :root:not([data-theme="light"]) .settings-item:active {
+    background: var(--ios26-fill-dark);
   }
 
-  .settings-theme-option {
-    background: rgba(255, 255, 255, 0.06);
+  :root:not([data-theme="light"]) .settings-theme-option {
+    background: var(--ios26-fill-dark);
   }
 
-  .settings-theme-option.active {
-    background: rgba(102, 126, 234, 0.15);
+  :root:not([data-theme="light"]) .settings-theme-option.active {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #8b5cf6;
   }
 
-  .settings-toggle-track {
-    background: #39393d;
+  :root:not([data-theme="light"]) .settings-theme-option-icon {
+    color: var(--ios26-text-primary-dark);
   }
 
-  .settings-toggle-track.on {
+  :root:not([data-theme="light"]) .settings-theme-option.active .settings-theme-option-icon {
+    color: #8b5cf6;
+  }
+
+  :root:not([data-theme="light"]) .settings-theme-option-label {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-theme-option.active .settings-theme-option-label {
+    color: #8b5cf6;
+  }
+
+  :root:not([data-theme="light"]) .settings-toggle-track {
+    background: rgba(120, 120, 128, 0.32);
+  }
+
+  :root:not([data-theme="light"]) .settings-toggle-track.on {
     background: #30d158;
   }
 
-  .settings-modal {
-    background: #1c1c1e;
+  :root:not([data-theme="light"]) .settings-modal {
+    background: var(--ios26-card-bg-dark);
+    border: 1px solid var(--ios26-separator-dark);
   }
 
-  .settings-modal-handle {
-    background: #545458;
+  :root:not([data-theme="light"]) .settings-modal-handle {
+    background: rgba(235, 235, 245, 0.24);
   }
 
-  .settings-modal-header {
-    border-bottom-color: rgba(255, 255, 255, 0.12);
+  :root:not([data-theme="light"]) .settings-modal-header {
+    border-bottom-color: var(--ios26-separator-dark);
   }
 
-  .settings-modal-close-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+  :root:not([data-theme="light"]) .settings-modal-close-btn {
+    background: var(--ios26-fill-dark);
+    color: var(--ios26-text-primary-dark);
   }
 
-  .settings-modal-close-btn:active {
-    background: rgba(255, 255, 255, 0.15);
+  :root:not([data-theme="light"]) .settings-modal-close-btn:active {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  :root:not([data-theme="light"]) .settings-toggle-knob {
+    background: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-item-label {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-item-value {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-item-arrow {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-arrow {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-name {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-email {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-section-title {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-footer-text {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-footer-version {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-modal-body {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-modal-body h3 {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-modal-body p {
+    color: var(--ios26-text-secondary-dark);
   }
 }

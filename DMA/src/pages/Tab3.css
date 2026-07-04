@@ -29,9 +29,34 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
+  color: var(--ios26-text-primary-light);
 }
 
-/* Devotion card - iOS glass */
+/* Dark mode section title */
+[data-theme="dark"] .section-title h2 {
+  color: var(--ios26-text-primary-dark);
+}
+
+/* Devotion list item */
+.devotion-list-item {
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+[data-theme="dark"] .devotion-list-item {
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+/* Devotion card - iOS 26 style */
 .devotion-card {
   position: relative;
   border-radius: var(--card-radius, 18px);
@@ -39,10 +64,9 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 200px;
-  box-shadow: 0 12px 30px rgba(20,20,40,0.06);
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.06);
-  backdrop-filter: blur(10px) saturate(120%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
 }
 
 /* subtle background image */
@@ -61,7 +85,7 @@
   position: relative;
   z-index: 2;
   padding: 18px;
-  color: white;
+  color: var(--ion-text-color, #1a1a1a);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -78,7 +102,7 @@
 
 /* Frosted glass date badge */
 .devotion-date-frosted {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ios26-glass-bg-light);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 8px 14px;
@@ -87,9 +111,9 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  color: var(--ion-text-color, #1a1a1a);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .devotion-date-frosted ion-icon {
@@ -101,23 +125,23 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ios26-glass-bg-light);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: white;
+  color: var(--ion-color-primary, #007aff);
 }
 
 .frosted-read-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--ios26-glass-strong-light);
   transform: scale(1.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .frosted-read-btn:active {
@@ -126,7 +150,7 @@
 
 .frosted-read-btn ion-icon {
   font-size: 24px;
-  color: white;
+  color: var(--ion-color-primary, #007aff);
 }
 
 .devotion-label {
@@ -197,11 +221,10 @@
 .stat-item {
   text-align: center;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
-  backdrop-filter: blur(10px);
+  background: var(--ios26-card-bg-light);
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--ios26-separator-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   margin: 8px;
 }
 
@@ -255,16 +278,16 @@
 
 .category-chips ion-chip {
   flex-shrink: 0;
-  --background: rgba(255,255,255,0.8);
-  --color: #374151;
+  --background: rgba(120, 120, 128, 0.12);
+  --color: var(--ion-text-color, #1a1a1a);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid rgba(120, 120, 128, 0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .category-chips .chip-selected {
   --background: #667eea;
-  --color: white;
+  --color: var(--ios26-text-primary-dark);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
@@ -300,7 +323,7 @@
   position: relative;
   z-index: 2;
   padding: 20px;
-  color: white;
+  color: var(--ion-text-color, #1a1a1a);
   display: flex;
   flex-direction: column;
   min-height: 380px;
@@ -327,11 +350,11 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 16px;
-  color: white !important;
+  color: var(--ios26-text-primary-light) !important;
   font-size: 13px;
   font-weight: 600;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: var(--ios26-fill-light);
+  border: 1px solid var(--ios26-separator-light);
 }
 
 .progress-indicator {
@@ -445,7 +468,7 @@
   font-size: 15px;
   line-height: 1.6;
   margin: 0;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255,255,255,0.98);
 }
 
 .scripture-footer {
@@ -454,7 +477,7 @@
 
 .scripture-reference {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.85);
   font-weight: 500;
   font-style: normal;
 }
@@ -496,14 +519,14 @@
   --border-radius: 8px;
   --padding-start: 12px;
   --padding-end: 12px;
-  --border-color: rgba(255,255,255,0.3);
-  --color: white;
+  --border-color: rgba(0, 0, 0, 0.15);
+  --color: var(--ion-text-color, #1a1a1a);
   font-weight: 600;
   font-size: 14px;
 }
 
 .share-action-btn {
-  --color: rgba(255,255,255,0.8);
+  --color: var(--ion-text-color, #1a1a1a);
   --padding-start: 10px;
   --padding-end: 10px;
 }
@@ -622,13 +645,13 @@
 .devotion-scripture {
   font-size: 14px;
   font-style: italic;
-  color: #667eea;
+  color: #4f46e5;
   margin: 0 0 12px 0;
 }
 
 .devotion-preview {
   font-size: 14px;
-  color: #4b5563;
+  color: #374151;
   line-height: 1.5;
   margin: 0;
 }
@@ -678,8 +701,8 @@
 
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .devotion-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.2));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .devotion-media {
@@ -695,24 +718,23 @@
 }
 
 [data-theme="dark"] .verse-text {
-  color: white;
+  color: var(--ios26-text-secondary-dark);
   opacity: 0.95;
 }
 
 [data-theme="dark"] .devotion-summary {
-  color: white;
-  opacity: 0.95;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .devotion-date-frosted {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: white;
 }
 
 [data-theme="dark"] .frosted-read-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: white;
 }
 
@@ -721,666 +743,407 @@
 }
 
 [data-theme="dark"] .devotion-label {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .devotion-date {
-  background: rgba(30, 41, 59, 0.9);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ios26-fill-dark);
+  color: var(--ios26-text-secondary-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .devotion-verse h3 {
-  color: #ffffff;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .verse-text {
-  color: #e2e8f0;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .devotion-summary {
-  color: #cbd5e1;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .cta-btn {
   --color: #ffffff;
-  --border-color: rgba(255, 255, 255, 0.4);
+  --border-color: var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .devotion-card-enhanced {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .category-indicator {
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ios26-fill-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .progress-bar {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ios26-fill-dark);
 }
 
 [data-theme="dark"] .devotion-date-badge {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ios26-fill-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .devotion-content-container {
-  background: rgba(30, 41, 59, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--ios26-fill-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .secondary-action-btn {
-  --border-color: rgba(255, 255, 255, 0.4);
-  --color: #f9fafb;
+  --border-color: var(--ios26-separator-dark);
+  --color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .share-action-btn {
-  --color: rgba(255, 255, 255, 0.6);
+  --color: rgba(255, 255, 255, 0.7);
 }
 
 [data-theme="dark"] .series-badge {
-  --background: rgba(102, 126, 234, 0.3);
-  --color: #93c5fd;
-  border: 1px solid rgba(102, 126, 234, 0.4);
+  --background: rgba(99, 102, 241, 0.24);
+  --color: #8ec5ff;
+  border: 1px solid rgba(99, 102, 241, 0.36);
 }
 
 [data-theme="dark"] .reading-time {
-  color: #9ca3af;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .stat-item {
-  background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .category-section {
-  background: linear-gradient(135deg, rgba(30,41,59,0.3), rgba(30,41,59,0.1));
+  background: transparent;
 }
 
 [data-theme="dark"] .category-header h2 {
-  color: #f9fafb;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .category-header p {
-  color: #9ca3af;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .category-chips ion-chip {
-  --background: rgba(30,41,59,0.6);
-  --color: #e5e7eb;
-  border: 1px solid rgba(255,255,255,0.1);
+  --background: var(--ios26-fill-dark);
+  --color: var(--ios26-text-primary-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .section-header h2 {
-  color: #f9fafb;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .section-header p {
-  color: #9ca3af;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .devotion-card-modern {
-  --background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-  border: 1px solid rgba(255,255,255,0.1);
+  --background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .devotion-title {
-  color: #f9fafb;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .devotion-preview {
-  color: #d1d5db;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .devotion-date {
-  color: #9ca3af;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .empty-state {
-  background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .empty-state h3 {
-  color: #e5e7eb;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .empty-state p {
-  color: #9ca3af;
+  color: var(--ios26-text-secondary-dark);
 }
 
-/* Dark mode support - System preference fallback */
-@media (prefers-color-scheme: dark) {
-  /* Today's Devotion card - ensure text visibility */
-  .devotion-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.2));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .devotion-media {
-    filter: brightness(0.35) contrast(0.85);
-  }
-
-  .devotion-content {
-    color: white;
-  }
-
-  .devotion-verse h3 {
-    color: white;
-  }
-
-  .verse-text {
-    color: white;
-    opacity: 0.95;
-  }
-
-  .devotion-summary {
-    color: white;
-    opacity: 0.95;
-  }
-
-  /* Frosted glass date badge - Dark mode */
-  .devotion-date-frosted {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-  }
-
-  /* Frosted glass read button - Dark mode */
-  .frosted-read-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: white;
-  }
-
-  .frosted-read-btn ion-icon {
-    color: white;
-  }
-
-  .devotion-label {
-    color: #f1f5f9;
-  }
-
-  .devotion-date {
-    background: rgba(30, 41, 59, 0.9);
-    color: #e2e8f0;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .devotion-verse h3 {
-    color: #ffffff;
-  }
-
-  .verse-text {
-    color: #e2e8f0;
-  }
-
-  .devotion-summary {
-    color: #cbd5e1;
-  }
-
-  .cta-btn {
-    --color: #ffffff;
-    --border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  .devotion-card-enhanced {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .category-indicator {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .progress-bar {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .devotion-date-badge {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .devotion-content-container {
-    background: rgba(30, 41, 59, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .secondary-action-btn {
-    --border-color: rgba(255, 255, 255, 0.4);
-    --color: #f9fafb;
-  }
-
-  .share-action-btn {
-    --color: rgba(255, 255, 255, 0.6);
-  }
-
-  .series-badge {
-    --background: rgba(102, 126, 234, 0.3);
-    --color: #93c5fd;
-    border: 1px solid rgba(102, 126, 234, 0.4);
-  }
-
-  .reading-time {
-    color: #9ca3af;
-  }
-
-  .stat-item {
-    background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-
-  .category-section {
-    background: linear-gradient(135deg, rgba(30,41,59,0.3), rgba(30,41,59,0.1));
-  }
-
-  .category-header h2 {
-    color: #f9fafb;
-  }
-
-  .category-header p {
-    color: #9ca3af;
-  }
-
-  .category-chips ion-chip {
-    --background: rgba(30,41,59,0.6);
-    --color: #e5e7eb;
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-
-  .section-header h2 {
-    color: #f9fafb;
-  }
-
-  .section-header p {
-    color: #9ca3af;
-  }
-
-  .devotion-card-modern {
-    --background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-
-  .devotion-title {
-    color: #f9fafb;
-  }
-
-  .devotion-preview {
-    color: #d1d5db;
-  }
-
-  .devotion-date {
-    color: #9ca3af;
-  }
-
-  .empty-state {
-    background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6));
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-
-  .empty-state h3 {
-    color: #e5e7eb;
-  }
-
-  .empty-state p {
-    color: #9ca3af;
-  }
+.devotion-content-text {
+  color: var(--ion-color-medium);
 }
 
-/* Responsive Design */
-@media (max-width: 576px) {
-  .devotion-card-enhanced {
-    min-height: 340px;
-  }
-
-  .devotion-card-enhanced .devotion-content {
-    padding: 16px;
-    min-height: 340px;
-  }
-
-  .devotion-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .devotion-category-info {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .progress-indicator {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 3px;
-  }
-
-  .progress-bar {
-    width: 70px;
-  }
-
-  .devotion-title {
-    font-size: 18px;
-    margin-bottom: 12px;
-  }
-
-  .scripture-block,
-  .reflection-block,
-  .prayer-block {
-    margin-bottom: 12px;
-  }
-
-  .devotion-content-container {
-    padding: 12px;
-  }
-
-  .scripture-text,
-  .reflection-text,
-  .prayer-text {
-    font-size: 13px;
-  }
-
-  .devotion-actions {
-    gap: 6px;
-  }
-
-  .primary-action-btn {
-    min-width: 120px;
-  }
-
-  .section-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .stat-item {
-    margin: 4px;
-    padding: 12px;
-  }
-
-  .stat-number {
-    font-size: 20px;
-  }
-
-  .devotion-card-content {
-    padding: 16px;
-  }
+.meta-white,
+.hero-title-white,
+.ios18-header,
+.ios18-header *,
+.ios18-header h1,
+.ios18-header h2,
+.ios18-header h3,
+.ios18-header p,
+.ios18-header span,
+.ios18-title,
+.ios18-title *,
+ion-content.ios18-style h1.ios18-title {
+  color: white !important;
+  -webkit-text-fill-color: white !important;
 }
 
-/* iOS 18 Style Full Devotion Page */
-.ios18-style {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+[data-theme="dark"] .devotion-content-text {
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.ios18-header {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  padding: 20px 16px 24px 16px;
-  position: sticky;
+/* Dark mode - Hero Devotion Card */
+[data-theme="dark"] .devotion-hero {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .devotion-hero:hover {
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .devotion-hero-overlay {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+[data-theme="dark"] .devotion-hero-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .devotion-hero-panel {
+  border-top: none;
+}
+
+[data-theme="dark"] .devotion-hero-cta {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .devotion-hero-cta:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.todays-text-area {
+  --ion-text-color: #0f172a;
+}
+
+[data-theme="dark"] .todays-text-area {
+  --ion-text-color: #ffffff;
+}
+
+/* Hero Devotion Card - Compact Professional Design */
+.devotion-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 210px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s ease;
+}
+
+.devotion-hero:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.devotion-hero:active {
+  transform: translateY(-1px);
+  transition-duration: 0.12s;
+}
+
+/* Background image layer */
+.devotion-hero-bg {
+  position: absolute;
   top: 0;
-  z-index: 10;
-  backdrop-filter: blur(20px);
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.ios18-header-content {
-  max-width: 600px;
-  margin: 0 auto;
+.devotion-hero:hover .devotion-hero-bg {
+  transform: scale(1.03);
 }
 
-.ios18-category-chip {
+/* Gradient overlay */
+.devotion-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.85) 100%);
+}
+
+/* Scripture badge - top left */
+.devotion-hero-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 6px 12px;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 20px;
-  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 11px;
   font-weight: 600;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-}
-
-.ios18-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 16px 0;
-  line-height: 1.2;
-  letter-spacing: -0.5px;
-}
-
-.ios18-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.ios18-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.ios18-content {
-  padding: 20px 16px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.ios18-card {
-  background: transparent;
-  border-radius: 24px;
-  margin-bottom: 20px;
-  box-shadow: none;
-  border: none;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.ios18-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.12);
-}
-
-.ios18-card:last-child {
-  margin-bottom: 120px;
-}
-
-.ios18-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 20px 16px 20px;
-}
-
-.ios18-icon-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.scripture-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.reflection-icon {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+.devotion-hero-badge ion-icon {
+  font-size: 11px;
+  opacity: 0.9;
 }
 
-.prayer-icon {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.ios18-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  letter-spacing: -0.3px;
-}
-
-.ios18-card-content {
-  padding: 0 20px 20px 20px;
-}
-
-.ios18-scripture-text,
-.ios18-reflection-text,
-.ios18-prayer-text {
-  font-size: 16px;
-  line-height: 1.7;
-  color: #374151;
-  margin: 0 0 12px 0;
-}
-
-.ios18-scripture-text {
-  font-style: italic;
-}
-
-.ios18-prayer-text {
-  font-style: italic;
-}
-
-.ios18-scripture-ref {
-  text-align: right;
-  font-size: 14px;
-  color: #667eea;
-  font-weight: 600;
-  margin-top: 8px;
-}
-
-.ios18-action-bar {
-  position: fixed;
+/* Bottom glass panel */
+.devotion-hero-panel {
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0,0,0,0.05);
-  padding: 16px 20px;
-  z-index: 100;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-}
-
-.ios18-action-buttons {
+  z-index: 4;
+  padding: 28px 18px 16px;
   display: flex;
-  gap: 12px;
-  max-width: 600px;
-  margin: 0 auto;
+  flex-direction: column;
 }
 
-.ios18-action-btn {
-  flex: 1;
+/* Accent gradient line */
+.devotion-hero-accent {
+  width: 28px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #667eea, #a78bfa);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+/* Meta row (date + day) */
+.devotion-hero-meta {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 16px;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.devotion-hero-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
   font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  color: inherit;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.ios18-save-btn {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #374151;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.devotion-hero-date ion-icon {
+  font-size: 10px;
+  opacity: 0.8;
 }
 
-.ios18-save-btn:hover {
-  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-  transform: translateY(-1px);
+.devotion-hero-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.ios18-share-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.devotion-hero-daylabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Title */
+.devotion-hero-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
   color: white;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.2px;
 }
 
-.ios18-share-btn:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-  transform: translateY(-1px);
+/* Content preview */
+.devotion-hero-preview {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  color: rgba(255, 255, 255, 0.75);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* iOS 18 Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .ios18-style {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  }
+/* CTA Button */
+.devotion-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-  .ios18-header {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    border-bottom-color: rgba(255,255,255,0.1);
-  }
+.devotion-hero-cta:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 
-  .ios18-title {
-    color: #f1f5f9;
-  }
+.devotion-hero-cta:active {
+  transform: translateX(1px) scale(0.98);
+}
 
-  .ios18-meta-item {
-    color: #94a3b8;
-  }
+.devotion-hero-cta ion-icon {
+  font-size: 13px;
+  transition: transform 0.3s ease;
+}
 
-  .ios18-card {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
-
-  .ios18-card-title {
-    color: #f1f5f9;
-  }
-
-  .ios18-scripture-text,
-  .ios18-reflection-text,
-  .ios18-prayer-text {
-    color: #e2e8f0;
-  }
-
-  .ios18-scripture-ref {
-    color: #93c5fd;
-  }
-
-  .ios18-action-bar {
-    background: rgba(30,41,59,0.95);
-    border-top-color: rgba(255,255,255,0.1);
-  }
-
-  .ios18-save-btn {
-    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-    color: #e2e8f0;
-  }
-
-  .ios18-save-btn:hover {
-    background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
-  }
+.devotion-hero-cta:hover ion-icon {
+  transform: translateX(2px);
 }
 
 /* iOS 18 Responsive */

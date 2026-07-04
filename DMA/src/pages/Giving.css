@@ -1,180 +1,171 @@
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .giving-header {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .giving-title {
-  color: #f1f5f9 !important;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .giving-subtitle {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .giving-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .card-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .card-description {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .amount-button {
-  background: rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #f1f5f9 !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .amount-button.selected {
-  background: rgba(0, 0, 0, 0.8) !important;
-  color: #f1f5f9 !important;
+  background: rgba(99, 102, 241, 0.24) !important;
+  color: #8ec5ff !important;
 }
 
 [data-theme="dark"] .custom-input {
-  background: rgba(255,255,255,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: #f1f5f9 !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .custom-input::placeholder {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .donate-button {
-  background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 [data-theme="dark"] .history-card {
-  background: #000000 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .history-item {
-  border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  border-bottom: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .history-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .history-meta {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .impact-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .impact-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .impact-text {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Header section */
   .giving-header {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .giving-title {
-    color: #f1f5f9 !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .giving-subtitle {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Giving options */
   .giving-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .card-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .card-description {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Amount buttons */
   .amount-button {
-    background: rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #f1f5f9 !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .amount-button.selected {
-    background: rgba(0, 0, 0, 0.8) !important;
-    color: #f1f5f9 !important;
+    background: rgba(99, 102, 241, 0.24) !important;
+    color: #8ec5ff !important;
   }
 
-  /* Custom amount input */
   .custom-input {
-    background: rgba(255,255,255,0.05) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #f1f5f9 !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .custom-input::placeholder {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Donate button */
   .donate-button {
-    background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
   }
 
-  /* Giving history */
   .history-card {
-    background: #000000 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .history-item {
-    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    border-bottom: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .history-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .history-meta {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Impact section */
   .impact-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .impact-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .impact-text {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 }

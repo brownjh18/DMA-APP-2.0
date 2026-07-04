@@ -30,25 +30,25 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
-  const history = useHistory();
-  const location = useLocation();
-  const { logout } = useContext(AuthContext);
+   const history = useHistory();
+   const location = useLocation();
+   const { logout } = useContext(AuthContext);
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+   const isActive = (path: string) => {
+     return location.pathname === path;
+   };
 
-  const navigateTo = (path: string) => {
-    history.push(path);
-    onClose();
-  };
+   const navigateTo = (path: string) => {
+     history.push(path);
+     onClose();
+   };
 
-  const handleLogout = () => {
-    logout();
-    onClose();
-  };
+   const handleLogout = () => {
+     logout();
+     onClose();
+   };
 
-  return (
+   return (
     <>
       {/* INLINE CSS */}
       <style>{`
@@ -289,41 +289,47 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
                 <h3>{user.name}</h3>
                 <p>{user.role === 'admin' ? 'Admin' : user.role === 'moderator' ? 'Moderator' : 'Member'}</p>
               </div>
-            </>
-          ) : (
-            <div className="signin-section">
-              <IonIcon icon={personCircleOutline} style={{ fontSize: '2.5em', color: 'var(--ion-text-color)' }} />
-              <IonButton
-                fill="outline"
-                size="default"
-                onClick={() => navigateTo('/signin')}
-                style={{ fontSize: '0.9em' }}
-              >
-                Sign In
-              </IonButton>
-            </div>
-          )}
+</>
+           ) : (
+             <div className="signin-section">
+               <IonIcon icon={personCircleOutline} style={{ fontSize: '2.5em', color: 'var(--ion-text-color)' }} />
+               <IonButton
+                 fill="outline"
+                 size="default"
+                 onClick={() => {
+                   onClose();
+                   history.push({
+                     pathname: '/signin',
+                     state: { from: location }
+                   });
+                 }}
+                 style={{ fontSize: '0.9em' }}
+               >
+                 Sign In
+               </IonButton>
+             </div>
+           )}
         </div>
 
         {/* Navigation List */}
         <div className="nav-list">
-          <div
-            className="nav-item"
-            onClick={() => navigateTo('/profile')}
-            style={isActive('/profile') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
-          >
-            <IonIcon icon={personCircleOutline} style={isActive('/profile') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/profile') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Profile</span>
-          </div>
+<div
+              className="nav-item"
+              onClick={() => navigateTo('/profile')}
+              style={isActive('/profile') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+            >
+              <IonIcon icon={personCircleOutline} style={isActive('/profile') ? { color: '#3b82f6' } : {}} />
+              <span style={isActive('/profile') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Profile</span>
+            </div>
 
-          <div
-            className="nav-item"
-            onClick={() => navigateTo('/favorites')}
-            style={isActive('/favorites') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
-          >
-            <IonIcon icon={heartOutline} style={isActive('/favorites') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/favorites') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Favorites</span>
-          </div>
+<div
+              className="nav-item"
+              onClick={() => navigateTo('/favorites')}
+              style={isActive('/favorites') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
+            >
+              <IonIcon icon={heartOutline} style={isActive('/favorites') ? { color: '#3b82f6' } : {}} />
+              <span style={isActive('/favorites') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Favorites</span>
+            </div>
 
           <div
             className="nav-item"

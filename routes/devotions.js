@@ -205,9 +205,7 @@ router.post('/', [
 
     await devotion.populate('createdBy', 'name');
 
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('devotion:created', { devotion });
+    console.log('✅ Devotion created:', devotion._id);
 
     res.status(201).json({
       message: 'Devotion created successfully',
@@ -257,10 +255,6 @@ router.put('/:id', [
       return res.status(404).json({ error: 'Devotion not found' });
     }
 
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('devotion:updated', { devotion });
-
     res.json({
       message: 'Devotion updated successfully',
       devotion
@@ -295,10 +289,6 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     // Delete the devotion from database
     await Devotion.findByIdAndDelete(req.params.id);
-
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('devotion:deleted', { id: req.params.id });
 
     res.json({ message: 'Devotion deleted successfully' });
   } catch (error) {

@@ -314,8 +314,6 @@ router.post('/', upload.any(), async (req, res) => {
       status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount
     };
 
-    const io = req.app.get('io');
-    io.emit('podcast:created', { podcast: formattedPodcast });
     res.status(201).json({ message: 'Podcast created successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast creation error:', error);
@@ -415,8 +413,6 @@ router.put('/:id', (req, res, next) => {
       status: podcast.isPublished ? 'published' : 'draft', listens: podcast.viewCount
     };
 
-    const io = req.app.get('io');
-    io.emit('podcast:updated', { podcast: formattedPodcast });
     res.json({ message: 'Podcast updated successfully', podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast update error:', error);
@@ -482,9 +478,6 @@ router.delete('/:id', async (req, res) => {
     // Delete the podcast from database
     await Sermon.findByIdAndDelete(req.params.id);
 
-    const io = req.app.get('io');
-    io.emit('podcast:deleted', { id: req.params.id });
-    
     res.json({ message: 'Podcast deleted successfully' });
   } catch (error) {
     console.error('Podcast deletion error:', error);

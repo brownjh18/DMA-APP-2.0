@@ -71,65 +71,65 @@
 
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .event-detail-header {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: linear-gradient(135deg, rgba(28, 28, 30, 0.85), rgba(44, 44, 46, 0.78)) !important;
 }
 
 [data-theme="dark"] .event-detail-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .event-detail-meta {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .event-detail-description {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .event-detail-section h2 {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .event-detail-card {
-  background: #000000 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .event-detail-footer {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   .event-detail-header {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: linear-gradient(135deg, rgba(28, 28, 30, 0.85), rgba(44, 44, 46, 0.78)) !important;
   }
 
   .event-detail-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .event-detail-meta {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .event-detail-description {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .event-detail-section h2 {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .event-detail-card {
-    background: #000000 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .event-detail-footer {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 }
 

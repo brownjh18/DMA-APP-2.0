@@ -189,7 +189,7 @@ const FullDevotion: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios">
+        <IonToolbar className="toolbar-ios" style={{ '--color': 'white' } as any}>
           {/* Back Button */}
           <div
             onClick={() => history.goBack()}
@@ -239,7 +239,8 @@ const FullDevotion: React.FC = () => {
           backgroundColor: '#1a1a2e',
           position: 'relative',
           minHeight: '150px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          color: 'white'
         }}>
           <img
             src={getDevotionThumbnailUrl(devotion.thumbnailUrl)}
@@ -275,17 +276,17 @@ const FullDevotion: React.FC = () => {
             backdropFilter: 'blur(2px)',
             zIndex: 1
           }} />
-          <div className="ios18-header-content" style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px' }}>
+          <div className="ios18-header-content" style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px', color: 'white' }}>
             <div className="details" style={{ textAlign: 'center' }}>
-              <h1 className="ios18-title" style={{ color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: '1.5em', margin: 0 }}>{devotion.title}</h1>
+              <h1 className="ios18-title hero-title-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: '1.5em', margin: 0, color: '#ffffff' }}>{devotion.title}</h1>
               <div className="ios18-meta" style={{ display: 'flex', justifyContent: 'center', gap: '25px', marginTop: '20px', fontSize: '0.9em' }}>
                 <div className="ios18-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <IonIcon icon={calendar} style={{ color: 'white', fontSize: '1em' }} />
-                  <span style={{ color: 'white' }}>{formatDate(devotion.date)}</span>
+                  <span className="meta-white">{formatDate(devotion.date)}</span>
                 </div>
                 <div className="ios18-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <IonIcon icon={time} style={{ color: 'white', fontSize: '1em' }} />
-                  <span style={{ color: 'white' }}>5 min read</span>
+                  <span className="meta-white">5 min read</span>
                 </div>
               </div>
             </div>

@@ -4,11 +4,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const { createServer } = require('http');
 const multer = require('multer');
 const cron = require('node-cron');
 const passport = require('passport');
-const http = require('http');
-const { Server } = require('socket.io');
 require('dotenv').config();
 
 // Validate critical environment variables
@@ -47,56 +46,27 @@ const contactRoutes = require('./routes/contacts');
 const searchRoutes = require('./routes/search');
 const commentsRoutes = require('./routes/comments');
 const youtubeRoutes = require('./routes/youtube');
+
 const app = express();
 
 // Treat routes with and without trailing slashes as the same
 app.set('strict routing', false);
 app.set('case sensitive routing', false);
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Allow all for now
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true
-  }
-});
-// Vercel automatically sets PORT, use it or default to 3000
+// PORT for Vercel (they set it automatically)
 const PORT = process.env.PORT || 3000;
 
-// Make io accessible to routes
-app.set('io', io);
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log('🔌 Client connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
-  });
-});
+// Note: Socket.IO has been moved to websocket-server.js for Oracle Cloud Always Free hosting
+// This allows Vercel to handle API routes efficiently while the WS server maintains persistent connections
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 60 * 60 * 1000, // 15 minutes in production, 1 hour in development
-  max: process.env.NODE_ENV === 'production' ? 5000 : 5000, // limit each IP to 5000 requests per windowMs in production, 5000 in development
+  windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 60 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 5000 : 5000,
   message: 'Too many requests from this IP, please try again later.'
 });
 
-// Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-app.use(limiter);
-// CORS configuration - support multiple origins for web app and Capacitor mobile app
+// CORS configuration
 const allowedOrigins = [
   'https://dovechurchapp.vercel.app',
   'https://dove-church-frontend.vercel.app',
@@ -110,17 +80,13 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
     if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list or if CORS_ORIGIN env var allows it
     if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN) {
       callback(null, true);
     } else if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow anyway for debugging - change to callback(new Error('Not allowed by CORS')) for strict mode
+      callback(null, true);
     }
   },
   credentials: true,
@@ -128,6 +94,11 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
 };
 
+// Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(limiter);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb', parameterLimit: 1000000 }));
@@ -135,7 +106,7 @@ app.use(express.urlencoded({ extended: true, limit: '500mb', parameterLimit: 100
 // Passport middleware
 app.use(passport.initialize());
 
-// Multer configuration for file uploads
+// Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, 'uploads'));
@@ -148,11 +119,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 500 * 1024 * 1024, // 500MB limit for videos
-  },
+  limits: { fileSize: 500 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    // Accept video files
     if (file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
@@ -161,7 +129,6 @@ const upload = multer({
   }
 });
 
-// Separate multer for thumbnails
 const thumbnailStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, 'uploads/thumbnails');
@@ -178,9 +145,7 @@ const thumbnailStorage = multer.diskStorage({
 
 const thumbnailUpload = multer({
   storage: thumbnailStorage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit for thumbnails
-  },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -190,7 +155,7 @@ const thumbnailUpload = multer({
   }
 });
 
-// Static files for uploads
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/videos', express.static(path.join(__dirname, 'uploads/videos')));
 app.use('/uploads/videos/thumbnails', express.static(path.join(__dirname, 'uploads/videos/thumbnails')));
@@ -200,10 +165,9 @@ app.use('/uploads/thumbnails', express.static(path.join(__dirname, 'uploads/thum
 // Serve static files from the React app build directory
 app.use(express.static(path.join(__dirname, '../DMA/dist')));
 
-// Database connection with retry logic
+// Database connection
 const connectDB = async () => {
   try {
-    // Use the connection string that works
     const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/?appName=Cluster1';
     
     await mongoose.connect(mongoUri, {
@@ -220,16 +184,12 @@ const connectDB = async () => {
   }
 };
 
-// Initial connection
 connectDB();
-
-// Create default admin user after database is connected
 mongoose.connection.once('open', async () => {
   console.log('📦 Database connection opened, creating default admin user...');
   await createDefaultAdminUser();
 });
 
-// Handle successful reconnection
 mongoose.connection.on('connected', () => {
   console.log('✅ Mongoose connected to MongoDB');
 });
@@ -242,18 +202,15 @@ mongoose.connection.on('disconnected', () => {
   console.warn('⚠️ Mongoose disconnected from MongoDB');
 });
 
-// Function to create default admin user
+// Create default admin user
 async function createDefaultAdminUser() {
   try {
     const adminEmail = 'brownjh18@gmail.com';
     const adminPassword = 'Jonah@2002';
-    const adminName = 'Admin User';
     
-    // Check if admin user already exists
     const existingAdmin = await User.findOne({ email: adminEmail });
     
     if (existingAdmin) {
-      // Update existing user to be admin if not already
       if (existingAdmin.role !== 'admin') {
         existingAdmin.role = 'admin';
         existingAdmin.isActive = true;
@@ -265,9 +222,8 @@ async function createDefaultAdminUser() {
       return;
     }
     
-    // Create new admin user
     const adminUser = new User({
-      name: adminName,
+      name: 'Admin User',
       email: adminEmail,
       password: adminPassword,
       role: 'admin',
@@ -276,55 +232,42 @@ async function createDefaultAdminUser() {
     
     await adminUser.save();
     console.log('✅ Default admin user created successfully!');
-    console.log(`   Email: ${adminEmail}`);
-    console.log(`   Password: ${adminPassword}`);
-    
   } catch (error) {
     console.error('❌ Error creating default admin user:', error.message);
   }
 }
 
-// Function to check and update ended live broadcasts
+// Check ended live broadcasts
 async function checkAndUpdateEndedBroadcasts() {
   try {
     console.log('🔍 Checking for ended live broadcasts...');
-
+    
     const now = Date.now();
     const broadcastsToUpdate = await Sermon.find({
       type: 'live_broadcast',
       isLive: true,
       $or: [
-        { broadcastEndTime: { $exists: true } }, // Already has end time
-        { broadcastStartTime: { $lt: new Date(now - 4 * 60 * 60 * 1000) } } // Started more than 4 hours ago
+        { broadcastEndTime: { $exists: true } },
+        { broadcastStartTime: { $lt: new Date(now - 4 * 60 * 60 * 1000) } }
       ]
     });
-
-    let updatedCount = 0;
+    
     for (const broadcast of broadcastsToUpdate) {
-      // Check if it should be considered ended
       let shouldEnd = false;
-
+      
       if (broadcast.broadcastEndTime) {
         shouldEnd = true;
       } else if (broadcast.broadcastStartTime) {
         const startTime = new Date(broadcast.broadcastStartTime).getTime();
-        const durationMs = now - startTime;
-        const durationHours = durationMs / (1000 * 60 * 60);
-
-        if (durationHours > 4) {
-          shouldEnd = true;
-        }
+        const durationHours = (now - startTime) / (1000 * 60 * 60);
+        if (durationHours > 4) shouldEnd = true;
       }
-
+      
       if (shouldEnd) {
         broadcast.isLive = false;
-
-        // Set broadcastEndTime if not already set
         if (!broadcast.broadcastEndTime) {
           broadcast.broadcastEndTime = new Date();
         }
-
-        // Calculate duration if not already set
         if (!broadcast.duration && broadcast.broadcastStartTime) {
           const startTime = new Date(broadcast.broadcastStartTime).getTime();
           const endTime = broadcast.broadcastEndTime.getTime();
@@ -336,39 +279,24 @@ async function checkAndUpdateEndedBroadcasts() {
             broadcast.duration = hours > 0 ? `${hours}:${mins.toString().padStart(2, '0')}:00` : `${mins}:00`;
           }
         }
-
         await broadcast.save();
-        updatedCount++;
         console.log(`✅ Ended broadcast: ${broadcast.title} (${broadcast._id})`);
       }
-    }
-
-    if (updatedCount > 0) {
-      console.log(`✅ Updated ${updatedCount} ended live broadcasts`);
-    } else {
-      console.log('✅ No ended live broadcasts found');
     }
   } catch (error) {
     console.error('❌ Error checking ended broadcasts:', error);
   }
 }
 
-// Initialize caches and schedule updates
+// Initialize
 console.log('🚀 Initializing caches...');
-liveCache.updateLiveCache(); // Initial live update
-checkAndUpdateEndedBroadcasts(); // Initial check for ended broadcasts
+liveCache.updateLiveCache();
+checkAndUpdateEndedBroadcasts();
 
-// Schedule cache updates and broadcast checks every 30 minutes
 cron.schedule("*/30 * * * *", async () => {
   console.log('⏰ Running scheduled cache update...');
   await liveCache.updateLiveCache();
   await checkAndUpdateEndedBroadcasts();
-  console.log('✅ Scheduled cache update complete');
-});
-
-// Add health check endpoint for cache status
-app.get('/api/cache-status', (req, res) => {
-  res.json(liveCache.getCacheStatus());
 });
 
 // Routes
@@ -385,56 +313,30 @@ app.use('/api/giving', givingRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/comments', commentsRoutes);
-
 app.use('/api/youtube', youtubeRoutes);
 
-// Thumbnail upload route
+// Thumbnail upload
 app.post('/api/upload/thumbnail', (req, res) => {
   thumbnailUpload.single('thumbnailFile')(req, res, async (err) => {
     try {
-      if (err) {
-        console.error('Multer error:', err);
-        return res.status(400).json({ error: err.message });
-      }
-      
-      if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-
-      console.log('Thumbnail file received:', req.file.originalname);
-      console.log('☁️ Cloud storage configured:', isCloudStorage);
+      if (err) return res.status(400).json({ error: err.message });
+      if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
       
       let thumbnailUrl = '';
       
       if (isCloudStorage && req.file.path) {
-        // Upload to Cloudinary
-        console.log('Uploading thumbnail to Cloudinary...');
         const cloudResult = await cloudStorage.uploadFile(req.file.path, {
           resource_type: 'image',
           folder: 'dove-ministries/thumbnails',
-          transformation: [
-            { width: 800, height: 600, crop: 'fill', gravity: 'auto' }
-          ]
+          transformation: [{ width: 800, height: 600, crop: 'fill', gravity: 'auto' }]
         });
         thumbnailUrl = cloudResult.secure_url;
-        console.log('Cloudinary thumbnail URL:', thumbnailUrl);
-        
-        // Clean up local file
-        try {
-          require('fs').unlinkSync(req.file.path);
-        } catch (cleanupError) {
-          console.warn('Failed to clean up local file:', cleanupError.message);
-        }
+        try { require('fs').unlinkSync(req.file.path); } catch (e) {}
       } else {
-        // Local storage
         thumbnailUrl = `/uploads/thumbnails/${req.file.filename}`;
-        console.log('Local thumbnail URL:', thumbnailUrl);
       }
-
-      res.json({
-        message: 'Thumbnail uploaded successfully',
-        thumbnailUrl: thumbnailUrl
-      });
+      
+      res.json({ message: 'Thumbnail uploaded successfully', thumbnailUrl });
     } catch (error) {
       console.error('Thumbnail upload error:', error);
       res.status(500).json({ error: 'Server error' });
@@ -444,14 +346,10 @@ app.post('/api/upload/thumbnail', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV });
 });
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -459,53 +357,34 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Catch all handler: send back React's index.html file for client-side routing
+// Catch all
 app.get('*', (req, res) => {
-  // For API routes that don't exist, return 404
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return res.status(404).json({ error: 'Route not found' });
   }
-  // For client-side routes, serve index.html
   res.sendFile(path.join(__dirname, '../DMA/dist/index.html'));
 });
 
-// Start server with graceful shutdown
-const startServer = () => {
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
-    console.log(`🔌 Socket.io enabled for real-time updates`);
-    
-    // Display network access info in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`🔗 Local: http://localhost:${PORT}`);
-    }
-  });
-};
+// Create server for Vercel
+const server = createServer(app);
 
-// Graceful shutdown handling
-const gracefulShutdown = async (signal) => {
-  console.log(`\n🛑 ${signal} received. Starting graceful shutdown...`);
-  
-  try {
-    // Close database connection
-    await mongoose.connection.close();
-    console.log('✅ Database connection closed');
-    
-    // Exit process
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Error during shutdown:', error);
-    process.exit(1);
-  }
-};
+// Start server
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
 
-// Listen for shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 SIGTERM received, shutting down...');
+  await mongoose.connection.close();
+  server.close(() => process.exit(0));
+});
 
-// Start the server
-startServer();
+process.on('SIGINT', async () => {
+  console.log('\n🛑 SIGINT received, shutting down...');
+  await mongoose.connection.close();
+  server.close(() => process.exit(0));
+});
 
 module.exports = app;

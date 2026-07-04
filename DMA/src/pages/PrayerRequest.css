@@ -1,140 +1,133 @@
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .prayer-header {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .prayer-title {
-  color: #f1f5f9 !important;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .prayer-subtitle {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .form-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .form-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .form-input {
-  background: rgba(255,255,255,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: #f1f5f9 !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .form-input::placeholder {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .submit-button {
-  background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 [data-theme="dark"] .prayer-item {
-  background: #000000 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .prayer-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .prayer-meta {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .guidelines-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .guidelines-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .guidelines-text {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Header section */
   .prayer-header {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .prayer-title {
-    color: #f1f5f9 !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .prayer-subtitle {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Form cards */
   .form-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .form-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .form-input {
-    background: rgba(255,255,255,0.05) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #f1f5f9 !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .form-input::placeholder {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Submit button */
   .submit-button {
-    background: linear-gradient(135deg, #000000 0%, #000000 100%) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
   }
 
-  /* Prayer list */
   .prayer-item {
-    background: #000000 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .prayer-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .prayer-meta {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Guidelines */
   .guidelines-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .guidelines-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .guidelines-text {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 }

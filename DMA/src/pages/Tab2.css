@@ -2,6 +2,77 @@
   animation: fadeInUp 0.6s ease-out;
 }
 
+/* Light mode explicit overrides */
+:root:not([data-theme="dark"]) .video-item {
+  background: #ffffff !important;
+  border-color: rgba(60, 60, 67, 0.12) !important;
+}
+
+:root:not([data-theme="dark"]) .video-details-section {
+  background: #f2f2f7 !important;
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .description-section {
+  background: #ffffff !important;
+  border-color: rgba(60, 60, 67, 0.12) !important;
+}
+
+:root:not([data-theme="dark"]) .video-title-large {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .channel-name {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .channel-stats {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+:root:not([data-theme="dark"]) .description-text {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+:root:not([data-theme="dark"]) .comments-title {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) h2 {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) h3 {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) h4 {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) p {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+:root:not([data-theme="dark"]) span {
+  color: inherit !important;
+}
+
+:root:not([data-theme="dark"]) .featured-sermon {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .video-item {
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .featured-sermon {
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark);
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -16,6 +87,10 @@
 /* Smooth scrolling for the entire page */
 .sermons-content {
   scroll-behavior: smooth;
+  /* Light mode variables */
+  --ion-text-color: #0f172a;
+  --ion-color-medium: rgba(71, 85, 105, 0.82);
+  --ion-item-background: #ffffff;
 }
 
 /* Video title styling - limit to 2 lines with ellipsis */
@@ -38,23 +113,113 @@
 
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .sermons-content {
-  --ion-background-color: #000000 !important;
-  background: #000000 !important;
+  --ion-text-color: var(--ios26-text-primary-dark) !important;
+  --ion-color-medium: var(--ios26-text-secondary-dark) !important;
+  --ion-item-background: var(--ios26-card-bg-dark) !important;
+  --ion-background-color: var(--ios26-grouped-bg-dark) !important;
+  background: var(--ios26-grouped-bg-dark) !important;
 }
 
 [data-theme="dark"] .video-title {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .channel-name {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .channel-stats {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .video-title-large {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .description-text {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .comments-title {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] h2 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] h3 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] h4 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] span {
+  color: inherit !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   .sermons-content {
-    --ion-background-color: #000000 !important;
-    background: #000000 !important;
+    --ion-background-color: var(--ios26-grouped-bg-dark) !important;
+    --ion-text-color: var(--ios26-text-primary-dark) !important;
+    --ion-color-medium: var(--ios26-text-secondary-dark) !important;
+    background: var(--ios26-grouped-bg-dark) !important;
   }
 
   .video-title {
-    color: #f1f5f9;
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .channel-name {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .channel-stats {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  .video-title-large {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .description-text {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  .comments-title {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  h2 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  h3 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  h4 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  p {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  span {
+    color: inherit !important;
+  }
+
+  .featured-sermon {
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark);
   }
 }
 
@@ -76,6 +241,10 @@
 .video-details-section {
   padding: 16px;
   background: var(--ion-background-color);
+}
+
+[data-theme="dark"] .video-details-section {
+  background: var(--ios26-grouped-bg-dark) !important;
 }
 
 .video-title-large {
@@ -147,6 +316,11 @@
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 16px;
+}
+
+[data-theme="dark"] .description-section {
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 .description-text {

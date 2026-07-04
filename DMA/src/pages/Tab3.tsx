@@ -202,169 +202,66 @@ const Tab3: React.FC = () => {
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
 
-        {/* TODAY'S DEVOTION - Modern Design */}
+        {/* TODAY'S DEVOTION - Hero Card */}
         {todaysDevotion && (
           <section className="section-padding">
             <div className="section-head">
               <div className="section-title">
-                <IonIcon icon={heart} style={{ color: '#ff6b6b' }} />
+                <IonIcon icon={book} style={{ color: '#667eea' }} />
                 <h2>Today's Devotion</h2>
               </div>
             </div>
 
-            {/* Modern Devotion Card */}
-            <div 
-              className="modern-devotion-card"
-              onClick={() => {
-                const devotionId = todaysDevotion.id;
-                history.push(`/full-devotion?id=${devotionId}`);
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                position: 'relative',
-                boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 15px 50px rgba(102, 126, 234, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
-              }}
+            <div
+              className="devotion-hero"
+              onClick={() => history.push(`/full-devotion?id=${todaysDevotion.id}`)}
             >
-              {/* Background Image with Overlay */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundImage: `url('${getDevotionThumbnail(todaysDevotion.thumbnailUrl)}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  opacity: 0.3,
-                  filter: 'blur(2px)',
+              <img
+                className="devotion-hero-bg"
+                src={getDevotionThumbnail(todaysDevotion.thumbnailUrl)}
+                alt={todaysDevotion.title}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/hero-evangelism.jpg';
                 }}
               />
-              
-              {/* Content */}
-              <div style={{
-                position: 'relative',
-                zIndex: 2,
-                padding: '20px',
-                color: 'white',
-              }}>
-                {/* Header with Scripture Reference */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '12px',
-                }}>
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}>
-                    <IonIcon icon={book} style={{ fontSize: '14px' }} />
-                    <span>{todaysDevotion.scripture}</span>
-                  </div>
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '22px',
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-                    <IonIcon icon={book} style={{ fontSize: '20px' }} />
-                  </div>
-                </div>
+              <div className="devotion-hero-overlay" />
 
-                {/* Title and Scripture */}
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '22px',
-                  fontWeight: '800',
-                  lineHeight: '1.3',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                }}>
-                  {todaysDevotion.title}
-                </h3>
-                
-                <p style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '15px',
-                  fontStyle: 'italic',
-                  opacity: 0.95,
-                  lineHeight: '1.5',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}>
-                  "{todaysDevotion.content}"
-                </p>
-
-                {/* Read More Button */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                }}>
-                </div>
+              <div className="devotion-hero-badge">
+                <IonIcon icon={book} />
+                <span>{todaysDevotion.scripture}</span>
               </div>
 
-              {/* Decorative Elements */}
-              <div style={{
-                position: 'absolute',
-                top: '-50px',
-                right: '-50px',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%',
-              }} />
-              <div style={{
-                position: 'absolute',
-                bottom: '-30px',
-                left: '-30px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                borderRadius: '50%',
-              }} />
+              <div className="devotion-hero-panel">
+                <div className="devotion-hero-accent" />
+                <div className="devotion-hero-meta">
+                  <span className="devotion-hero-date">
+                    <IonIcon icon={calendar} />
+                    {formatDate(todaysDevotion.date)}
+                  </span>
+                  <div className="devotion-hero-sep" />
+                  <span className="devotion-hero-daylabel">Day {todaysDevotion.day}</span>
+                </div>
+                <h3 className="devotion-hero-title">{todaysDevotion.title}</h3>
+                <p className="devotion-hero-preview">{todaysDevotion.content}</p>
+                <span className="devotion-hero-cta">
+                  Begin Reading <IonIcon icon={arrowForward} />
+                </span>
+              </div>
             </div>
           </section>
         )}
 
-        <div style={{
+        <div className="todays-text-area" style={{
           padding: '20px'
         }}>
 
 
-          {/* Devotions List */}
           <div style={{ marginBottom: '32px' }}>
             <h2 style={{
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: 'var(--ion-text-color)',
             }}>
               All Devotions
             </h2>
@@ -374,22 +271,14 @@ const Tab3: React.FC = () => {
                 {allDevotions.map(d => (
                   <div
                     key={d.id}
-                    style={{
-                      backgroundColor: 'transparent',
-                      borderRadius: '16px',
-                      border: '1px solid var(--ion-card-border-color, rgba(0,0,0,0.1))',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out'
-                    }}
+                    className="devotion-list-item"
                     onClick={() => history.push(`/full-devotion?id=${d.id}`)}
                   >
                     <div style={{ padding: '10px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                       {/* Thumbnail on the left */}
                        <div style={{
                          width: '90px',
-                         height: '140px',
+                         height: '150px',
                          borderRadius: '12px 0 0 12px',
                          overflow: 'hidden',
                          flexShrink: 0,
@@ -462,9 +351,8 @@ const Tab3: React.FC = () => {
                         </div>
 
                         {/* Content */}
-                        <div style={{
+                        <div className="devotion-content-text" style={{
                           margin: '0',
-                          color: 'var(--ion-color-medium)',
                           fontSize: '0.8em',
                           lineHeight: '1.4',
                           display: '-webkit-box',

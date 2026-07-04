@@ -1,218 +1,209 @@
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .intro-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .intro-text {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .verse-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .verse-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .verse-reference {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .ministry-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .ministry-card:hover {
-  box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45) !important;
 }
 
 [data-theme="dark"] .decorative-bg {
-  background: rgba(255,255,255,0.05) !important;
+  background: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .ministry-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .ministry-leader {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .ministry-description {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .ministry-activity-title {
-  color: #64748b !important;
+  color: var(--ios26-text-tertiary-dark) !important;
 }
 
 [data-theme="dark"] .activity-tag {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background-color: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .activity-tag-more {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-  color: #94a3b8 !important;
+  background-color: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .learn-more-btn {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  color: #f1f5f9 !important;
+  background-color: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .involved-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .involved-icon-bg {
-  background-color: rgba(255,255,255,0.2) !important;
+  background-color: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .involved-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .involved-text {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .contact-info {
-  background: rgba(255,255,255,0.1) !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .contact-info-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .contact-info-text {
-  color: rgba(255,255,255,0.9) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .decorative-circle {
-  background: rgba(255,255,255,0.1) !important;
+  background: var(--ios26-fill-dark) !important;
   backdrop-filter: blur(10px) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Introduction card */
   .intro-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .intro-text {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .verse-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .verse-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .verse-reference {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Ministry cards */
   .ministry-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .ministry-card:hover {
-    box-shadow: 0 12px 35px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.45) !important;
   }
 
-  /* Decorative background */
   .decorative-bg {
-    background: rgba(255,255,255,0.05) !important;
+    background: var(--ios26-fill-dark) !important;
   }
 
-  /* Ministry content */
   .ministry-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .ministry-leader {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .ministry-description {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .ministry-activity-title {
-    color: #64748b !important;
+    color: var(--ios26-text-tertiary-dark) !important;
   }
 
   .activity-tag {
-    background-color: rgba(0, 0, 0, 0.1) !important;
-    color: #f1f5f9 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .activity-tag-more {
-    background-color: rgba(0, 0, 0, 0.1) !important;
-    color: #94a3b8 !important;
+    background-color: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Learn more button */
   .learn-more-btn {
-    background-color: rgba(0, 0, 0, 0.8) !important;
-    color: #f1f5f9 !important;
+    background-color: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
-  /* Get involved card */
   .involved-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .involved-icon-bg {
-    background-color: rgba(255,255,255,0.2) !important;
+    background-color: var(--ios26-fill-dark) !important;
   }
 
   .involved-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .involved-text {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .contact-info {
-    background: rgba(255,255,255,0.1) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .contact-info-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .contact-info-text {
-    color: rgba(255,255,255,0.9) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Decorative elements */
   .decorative-circle {
-    background: rgba(255,255,255,0.1) !important;
+    background: var(--ios26-fill-dark) !important;
     backdrop-filter: blur(10px) !important;
   }
 }

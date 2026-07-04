@@ -6,18 +6,53 @@ http://ionicframework.com/docs/theming/ */
   --primary-color: #6366f1;
   --secondary-color: #8b5cf6;
   --accent-color: #f59e0b;
-  --background-light: #f8fafc;
-  --background-dark: rgb(45,45,45);
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  --background-light: #f2f2f7;
+  --background-dark: #0a0a0c;
+  --text-primary: #1a1a1a;
+  --text-secondary: #8e8e93;
   --border-radius: 12px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
-  /* App-wide nav background tokens (used by bottom tab bar and page headers) */
   --app-nav-bg-light: rgba(255, 255, 255, 0.95);
-  --app-nav-bg-dark: rgba(30, 41, 59, 0.95);
+  --app-nav-bg-dark: rgba(28, 28, 30, 0.92);
+
+  --liquid-app-blue: #007aff;
+  --liquid-app-teal: #12d5c8;
+  --liquid-app-pink: #ff2d75;
+  --liquid-glass: rgba(255, 255, 255, 0.28);
+  --liquid-glass-strong: rgba(255, 255, 255, 0.48);
+  --liquid-glass-border: rgba(255, 255, 255, 0.68);
+  --liquid-glass-shadow: 0 22px 56px rgba(15, 23, 42, 0.2), 0 2px 8px rgba(15, 23, 42, 0.14);
+  --liquid-glass-rim:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 1px 0 0 rgba(255, 255, 255, 0.72),
+    inset -1px 0 0 rgba(255, 255, 255, 0.22),
+    inset 0 -16px 26px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 1px rgba(7, 16, 27, 0.12);
+
+  --ios26-card-bg-light: #ffffff;
+  --ios26-card-bg-dark: #1c1c1e;
+  --ios26-card-bg-elevated-dark: #2c2c2e;
+  --ios26-grouped-bg-light: #f2f2f7;
+  --ios26-grouped-bg-dark: #000000;
+  --ios26-separator-light: rgba(60, 60, 67, 0.12);
+  --ios26-separator-dark: rgba(84, 84, 88, 0.36);
+  --ios26-text-primary-light: #1a1a1a;
+  --ios26-text-primary-dark: #ffffff;
+  --ios26-text-secondary-light: #8e8e93;
+  --ios26-text-secondary-dark: #ebebf5;
+  --ios26-text-tertiary-light: #aeaeb2;
+  --ios26-text-tertiary-dark: #98989d;
+  --ios26-fill-light: rgba(120, 120, 128, 0.2);
+  --ios26-fill-dark: rgba(120, 120, 128, 0.28);
+  --ios26-glass-bg-light: rgba(255, 255, 255, 0.72);
+  --ios26-glass-bg-dark: rgba(28, 28, 30, 0.78);
+  --ios26-glass-strong-light: rgba(255, 255, 255, 0.88);
+  --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
+  --ios26-glass-border-light: rgba(255, 255, 255, 0.68);
+  --ios26-glass-border-dark: rgba(255, 255, 255, 0.12);
 }
 
 /* Modern Sidebar Styling */
@@ -109,14 +144,148 @@ http://ionicframework.com/docs/theming/ */
   font-weight: 600;
 }
 
-/* Global Header Styles - Same transparent frosted glass as bottom nav bar */
+/* Global Header Styles */
 .global-header {
-  background: transparent;
+  background: var(--ios26-glass-strong-light);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--ios26-glass-border-light);
   border-radius: 30px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Apply same frosted glass background to all page headers matching bottom nav bar */
+ion-header::part(background),
+ion-header::part(toolbar) {
+  background: var(--app-nav-bg-light) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ios26-separator-light);
+}
+
+/* Dark theme header background */
+[data-theme="dark"] ion-header::part(background),
+[data-theme="dark"] ion-header::part(toolbar) {
+  background: var(--app-nav-bg-dark) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+ion-header.header-ios ion-toolbar,
+ion-header.header-md ion-toolbar {
+  --background: transparent !important;
+  background: transparent !important;
+  backdrop-filter: blur(40px) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+}
+
+/* Override any inline background styles on IonHeader to ensure consistency with bottom nav */
+ion-header.header-ios,
+ion-header.header-md {
+  background: transparent !important;
+}
+
+/* Frosted Glass Button Effect */
+.frosted-button {
+  background-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--ios26-glass-border-light);
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.frosted-button:hover {
+  transform: scale(1.05);
+}
+
+.frosted-button:active {
+  transform: scale(0.95);
+}
+
+.global-header ion-toolbar {
+  --background: var(--ios26-glass-strong-light);
+  --border-color: var(--ios26-separator-light);
+}
+
+/* Modern Tab Bar Styling */
+.tab-bar {
+  --background: var(--app-nav-bg-light);
+  --border: 1px solid var(--ios26-separator-light);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Ensure tab-bar uses dark token in dark theme section below (keeps overrides minimal) */
+
+.tab-button {
+  --color-selected: var(--primary-color);
+  --background-selected: var(--ios26-fill-light);
+  --border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.tab-button ion-icon {
+  transition: transform 0.2s ease;
+}
+
+.tab-button.tab-selected ion-icon {
+  transform: scale(1.1);
+}
+
+/* Solid background effect – Modern style tab bar */
+.ios-glass-tabbar {
+  --background: var(--ios26-glass-strong-light);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Layout */
+  position: fixed;
+  bottom: 13px;
+  left: 7px;
+  right: 7px;
+  z-index: 999;
+  padding: 4px 6px 4px 6px;
+  border-radius: 35px;
+
+  /* Prevent clipping on iOS */
+  overflow: hidden;
+}
+
+.ios-glass-tabbar .tab-button {
+  --color: var(--ios26-text-secondary-light);
+  --color-selected: var(--ios26-text-primary-light);
+  --background-selected: rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.72rem;
+  padding: 8px 4px;
+  min-height: 44px;
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin: 0 2px;
+  position: relative;
+}
+
+
+.ios-glass-tabbar .tab-button.ion-selected {
+  font-weight: 600;
+  transform: translateY(-2px);
+}
+
+.ios-glass-tabbar .tab-button ion-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.ios-glass-tabbar .tab-button.ion-selected ion-icon {
+  color: #007aff;
 }
 
 /* Apply same frosted glass background to all page headers matching bottom nav bar */
@@ -273,89 +442,93 @@ ion-content[fullscreen] {
   }
 }
 
-/* Dark mode support - Manual override via data-theme attribute */
+/* iOS 26 Dark Mode - matches system dark appearance */
 [data-theme="dark"] {
   --background-light: var(--background-dark);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-primary: var(--ios26-text-primary-dark);
+  --text-secondary: var(--ios26-text-secondary-dark);
+  --app-nav-bg-dark: rgba(28, 28, 30, 0.92);
+  --ios26-glass-bg-dark: rgba(28, 28, 30, 0.82);
+  --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
+  --ios26-glass-border-dark: rgba(255, 255, 255, 0.14);
 }
 
 [data-theme="dark"] .menu-content {
-  --background: linear-gradient(180deg, #1a1a2e 0%, #000000 100%);
+  --background: var(--ios26-card-bg-dark);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   border-radius: 0 16px 16px 0;
 }
 
 [data-theme="dark"] .menu-item {
-  --color: #f1f5f9;
-  --detail-icon-color: #f1f5f9;
+  --color: var(--ios26-text-primary-dark);
+  --detail-icon-color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .menu-item:hover {
-  --background: rgba(255, 255, 255, 0.1);
-  --color: #f1f5f9;
-  --detail-icon-color: #f1f5f9;
+  --background: var(--ios26-fill-dark);
+  --color: var(--ios26-text-primary-dark);
+  --detail-icon-color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .menu-item ion-icon {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .menu-section {
-  --color: #f1f5f9;
+  --color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .menu-section:hover {
-  --background: rgba(255, 255, 255, 0.1);
+  --background: var(--ios26-fill-dark);
 }
 
 [data-theme="dark"] .menu-section ion-icon {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .user-profile {
-  --background: rgba(255, 255, 255, 0.1);
+  --background: var(--ios26-fill-dark);
 }
 
 [data-theme="dark"] .user-profile h2 {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .user-profile p {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .tab-bar {
-  --background: rgba(30, 41, 59, 0.95);
-  --border: 1px solid rgba(255, 255, 255, 0.1);
+  --background: var(--app-nav-bg-dark);
+  --border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .ios-glass-tabbar {
-  --background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+  --background: var(--ios26-glass-strong-dark);
+  border: 1px solid var(--ios26-glass-border-dark);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 [data-theme="dark"] .ios-glass-tabbar .tab-button {
-  --color: #cbd5e1;
-  --color-selected: #1e293b;
-  --background-selected: #ffffff;
+  --color: var(--ios26-text-secondary-dark);
+  --color-selected: var(--ios26-text-primary-dark);
+  --background-selected: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] .ios-glass-tabbar .tab-button.ion-selected ion-icon {
-  color: #a78bfa;
+  color: var(--liquid-app-blue);
 }
 
 [data-theme="dark"] .global-header {
   background: transparent;
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--ios26-separator-dark);
   border-radius: 30px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] ion-header.header-ios ion-toolbar,
@@ -372,95 +545,124 @@ ion-content[fullscreen] {
 }
 
 [data-theme="dark"] .frosted-button {
-  background-color: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  background-color: var(--ios26-glass-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* iOS 26 Dark Mode - app backgrounds */
+[data-theme="dark"] ion-app {
+  background: #0a0a0c;
+}
+
+[data-theme="dark"] ion-content {
+  --background: #0a0a0c;
+}
+
+[data-theme="dark"] .liquid-tab-bar {
+  border-color: rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(145deg, rgba(28, 28, 30, 0.72), rgba(18, 18, 20, 0.24)),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.14), transparent 34%),
+    radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.22), transparent 44%);
+}
+
+[data-theme="dark"] .liquid-tab-button {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .liquid-tab-button.active {
+  color: #8ec5ff;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --background-light: var(--background-dark);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
+    --text-primary: var(--ios26-text-primary-dark);
+    --text-secondary: var(--ios26-text-secondary-dark);
+    --app-nav-bg-dark: rgba(28, 28, 30, 0.92);
+    --ios26-glass-bg-dark: rgba(28, 28, 30, 0.82);
+    --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
+    --ios26-glass-border-dark: rgba(255, 255, 255, 0.14);
   }
 
   :root:not([data-theme="light"]) .menu-content {
-    --background: linear-gradient(180deg, #1a1a2e 0%, #000000 100%);
+    --background: var(--ios26-card-bg-dark);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--ios26-separator-dark);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
     border-radius: 0 16px 16px 0;
   }
 
   :root:not([data-theme="light"]) .menu-item {
-    --color: #f1f5f9;
-    --detail-icon-color: #f1f5f9;
+    --color: var(--ios26-text-primary-dark);
+    --detail-icon-color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .menu-item:hover {
-    --background: rgba(255, 255, 255, 0.1);
-    --color: #f1f5f9;
-    --detail-icon-color: #f1f5f9;
+    --background: var(--ios26-fill-dark);
+    --color: var(--ios26-text-primary-dark);
+    --detail-icon-color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .menu-item ion-icon {
-    color: #f1f5f9;
+    color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .menu-section {
-    --color: #f1f5f9;
+    --color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .menu-section:hover {
-    --background: rgba(255, 255, 255, 0.1);
+    --background: var(--ios26-fill-dark);
   }
 
   :root:not([data-theme="light"]) .menu-section ion-icon {
-    color: #f1f5f9;
+    color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .user-profile {
-    --background: rgba(255, 255, 255, 0.1);
+    --background: var(--ios26-fill-dark);
   }
 
   :root:not([data-theme="light"]) .user-profile h2 {
-    color: #f1f5f9;
+    color: var(--ios26-text-primary-dark);
   }
 
   :root:not([data-theme="light"]) .user-profile p {
-    color: #94a3b8;
+    color: var(--ios26-text-secondary-dark);
   }
 
   :root:not([data-theme="light"]) .tab-bar {
-    --background: rgba(30, 41, 59, 0.95);
-    --border: 1px solid rgba(255, 255, 255, 0.1);
+    --background: var(--app-nav-bg-dark);
+    --border: 1px solid var(--ios26-separator-dark);
   }
 
   :root:not([data-theme="light"]) .ios-glass-tabbar {
-    --background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+    --background: var(--ios26-glass-strong-dark);
+    border: 1px solid var(--ios26-glass-border-dark);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
   }
 
   :root:not([data-theme="light"]) .ios-glass-tabbar .tab-button {
-    --color: #cbd5e1;
-    --color-selected: #1e293b;
-    --background-selected: #ffffff;
+    --color: var(--ios26-text-secondary-dark);
+    --color-selected: var(--ios26-text-primary-dark);
+    --background-selected: rgba(255, 255, 255, 0.12);
   }
 
   :root:not([data-theme="light"]) .ios-glass-tabbar .tab-button.ion-selected ion-icon {
-    color: #a78bfa;
+    color: var(--liquid-app-blue);
   }
 
   :root:not([data-theme="light"]) .global-header {
     background: transparent;
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--ios26-separator-dark);
     border-radius: 30px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 8px 32px rgba(0, 0, 0, 0.35);
   }
 
   :root:not([data-theme="light"]) ion-header.header-ios ion-toolbar,
@@ -477,8 +679,307 @@ ion-content[fullscreen] {
   }
 
   :root:not([data-theme="light"]) .frosted-button {
-    background-color: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+    background-color: var(--ios26-glass-bg-dark);
+    border: 1px solid var(--ios26-separator-dark);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  :root:not([data-theme="light"]) ion-header ion-toolbar,
+  :root:not([data-theme="light"]) .toolbar-ios {
+    --color: var(--ios26-text-primary-dark) !important;
+    background:
+      linear-gradient(145deg, rgba(44, 44, 46, 0.5), rgba(28, 28, 30, 0.2)),
+      radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.12), transparent 44%) !important;
+    border-color: var(--ios26-separator-dark);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  :root:not([data-theme="light"]) ion-app {
+    background: #0a0a0c;
+  }
+
+  :root:not([data-theme="light"]) ion-content {
+    --background: #0a0a0c;
+  }
+
+  :root:not([data-theme="light"]) .liquid-tab-bar {
+    border-color: rgba(255, 255, 255, 0.16);
+    background:
+      linear-gradient(145deg, rgba(28, 28, 30, 0.72), rgba(18, 18, 20, 0.24)),
+      radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.14), transparent 34%),
+      radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.22), transparent 44%);
+  }
+
+  :root:not([data-theme="light"]) .liquid-tab-button {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .liquid-tab-button.active {
+    color: #8ec5ff;
+  }
+}
+
+/* Liquid Glass app-wide foundation */
+ion-app {
+  background: var(--ios26-grouped-bg-light);
+}
+
+ion-content {
+  --background: var(--ios26-grouped-bg-light);
+}
+
+ion-header ion-toolbar,
+.toolbar-ios {
+  --background: rgba(255, 255, 255, 0.3) !important;
+  --border-color: rgba(255, 255, 255, 0.58) !important;
+  --color: #101827;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1)),
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.86), transparent 44%) !important;
+  border: 1px solid var(--liquid-glass-border);
+  box-shadow: var(--liquid-glass-rim), 0 12px 28px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(8px) saturate(210%) contrast(118%);
+  -webkit-backdrop-filter: blur(8px) saturate(210%) contrast(118%);
+}
+
+[data-theme="dark"] ion-header ion-toolbar,
+[data-theme="dark"] .toolbar-ios {
+  --color: var(--ios26-text-primary-dark) !important;
+  background:
+    linear-gradient(145deg, rgba(44, 44, 46, 0.5), rgba(28, 28, 30, 0.2)),
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.12), transparent 44%) !important;
+  border-color: var(--ios26-separator-dark);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+ion-card,
+.glass-card,
+.admin-card,
+.content-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.16)),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.78), transparent 42%);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 18px;
+  box-shadow: var(--liquid-glass-rim), 0 14px 34px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(8px) saturate(190%) contrast(112%);
+  -webkit-backdrop-filter: blur(8px) saturate(190%) contrast(112%);
+}
+
+[data-theme="dark"] ion-card,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .content-card {
+  background:
+    linear-gradient(145deg, rgba(44, 44, 46, 0.6), rgba(28, 28, 30, 0.3)),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.08), transparent 42%);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+ion-button:not(.button-clear):not(.button-outline) {
+  --border-radius: 999px;
+  --box-shadow: 0 12px 28px rgba(0, 122, 255, 0.2);
+}
+
+ion-modal::part(content),
+ion-alert .alert-wrapper,
+ion-action-sheet .action-sheet-wrapper {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.32)),
+    radial-gradient(ellipse at 22% 0%, rgba(255, 255, 255, 0.88), transparent 46%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  box-shadow: var(--liquid-glass-rim), var(--liquid-glass-shadow);
+  backdrop-filter: blur(14px) saturate(210%) contrast(116%);
+  -webkit-backdrop-filter: blur(14px) saturate(210%) contrast(116%);
+}
+
+/* iOS 26-inspired floating liquid tab bar */
+.liquid-tab-bar {
+  --active-index: 1;
+  --slot: calc((100% - 12px) / 5);
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 999;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  height: 66px;
+  padding: 6px;
+  border: 1px solid var(--liquid-glass-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
+    radial-gradient(ellipse at 16% 0%, rgba(255, 255, 255, 0.9), transparent 34%),
+    radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.2), transparent 44%),
+    radial-gradient(ellipse at 92% 18%, rgba(255, 45, 117, 0.1), transparent 30%);
+  box-shadow: none;
+  backdrop-filter: blur(7px) saturate(220%);
+  -webkit-backdrop-filter: blur(7px) saturate(220%);
+}
+
+.liquid-tab-bar::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.liquid-tab-button {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(15, 23, 42, 0.56);
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.liquid-tab-button.active {
+  color: #0057d9;
+}
+
+.liquid-tab-button.active .liquid-tab-icon {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.86))
+    drop-shadow(0 5px 10px rgba(0, 87, 217, 0.18));
+  transform: scale(1.04);
+}
+
+.liquid-tab-button:active {
+  transform: scale(0.94);
+}
+
+.liquid-tab-icon {
+  width: 25px;
+  height: 25px;
+  font-size: 25px;
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.liquid-selection-lens {
+  position: absolute;
+  z-index: 0;
+  left: calc(6px + (var(--slot) * var(--active-index)) + ((var(--slot) - 54px) / 2));
+  top: 6px;
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 28% 10%, rgba(255, 255, 255, 0.98), transparent 36%),
+    radial-gradient(ellipse at 74% 84%, rgba(0, 122, 255, 0.24), transparent 42%),
+    radial-gradient(ellipse at 18% 88%, rgba(18, 213, 200, 0.18), transparent 36%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.1));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.72),
+    inset -1px 0 0 rgba(255, 255, 255, 0.22),
+    inset 0 -14px 18px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 35, 72, 0.12),
+    0 12px 24px rgba(0, 122, 255, 0.18),
+    0 2px 7px rgba(21, 27, 38, 0.14);
+  pointer-events: none;
+  transform: scaleX(var(--lens-stretch, 1)) scaleY(var(--lens-squash, 1));
+  transition:
+    left 560ms cubic-bezier(0.2, 1.24, 0.28, 1),
+    transform 560ms cubic-bezier(0.2, 1.24, 0.28, 1),
+    border-radius 560ms cubic-bezier(0.2, 1.24, 0.28, 1);
+  backdrop-filter: blur(5px) saturate(230%) contrast(128%);
+  -webkit-backdrop-filter: blur(5px) saturate(230%) contrast(128%);
+}
+
+.liquid-selection-lens::before,
+.liquid-selection-lens::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.liquid-selection-lens::before {
+  inset: 2px;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.88), transparent 28% 62%, rgba(255, 255, 255, 0.18)),
+    repeating-radial-gradient(ellipse at 48% 48%, rgba(255, 255, 255, 0.18) 0 1px, transparent 2px 12px);
+  mix-blend-mode: screen;
+  opacity: 0.76;
+}
+
+.liquid-selection-lens::after {
+  left: 11px;
+  top: 7px;
+  width: 20px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.72);
+  filter: blur(0.6px);
+  opacity: 0.82;
+  transform: rotate(-22deg);
+}
+
+.liquid-tab-bar.is-flowing .liquid-selection-lens {
+  --lens-stretch: 1.18;
+  --lens-squash: 0.92;
+  border-radius: 24px 999px 999px 24px;
+}
+
+.liquid-tab-bar.is-settling .liquid-selection-lens {
+  --lens-stretch: 0.94;
+  --lens-squash: 1.08;
+}
+
+.content-ios,
+.sermons-content,
+.gallery-content,
+ion-content[fullscreen] {
+  --padding-bottom: 112px;
+}
+
+[data-theme="dark"] ion-app,
+:root:not([data-theme="light"]) ion-app {
+  background: #0a0a0c;
+}
+
+[data-theme="dark"] ion-content,
+:root:not([data-theme="light"]) ion-content {
+  --background: #0a0a0c;
+}
+
+[data-theme="dark"] .liquid-tab-bar,
+:root:not([data-theme="light"]) .liquid-tab-bar {
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(145deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.14)),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.22), transparent 34%),
+    radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.24), transparent 44%);
+}
+
+[data-theme="dark"] .liquid-tab-button,
+:root:not([data-theme="light"]) .liquid-tab-button {
+  color: rgba(241, 245, 249, 0.62);
+}
+
+[data-theme="dark"] .liquid-tab-button.active,
+:root:not([data-theme="light"]) .liquid-tab-button.active {
+  color: #8ec5ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-selection-lens,
+  .liquid-tab-button,
+  .liquid-tab-icon {
+    transition-duration: 1ms !important;
   }
 }

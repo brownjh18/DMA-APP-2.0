@@ -1,16 +1,206 @@
 /* Global layout */
 .content-ios {
-  --ion-background-color: #f7f8fb;
+  --ion-background-color: var(--ios26-grouped-bg-light);
   --card-radius: 18px;
+  --home-gradient-start: #667eea;
+  --home-gradient-end: #764ba2;
+  --home-card-shadow: 0 10px 40px rgba(102, 126, 234, 0.22);
+  --home-card-shadow-strong: 0 15px 50px rgba(102, 126, 234, 0.28);
+  --home-accent: #ff6b6b;
+  --home-soft-glow: rgba(255,255,255,0.18);
+  --home-soft-border: rgba(255,255,255,0.22);
+  --ion-text-color: #0f172a;
+  --ion-color-medium: rgba(71, 85, 105, 0.82);
+  --ios26-text-primary-light: rgba(15, 23, 42, 0.95);
+  --ios26-text-secondary-light: rgba(71, 85, 105, 0.78);
+  --ios26-card-bg-light: #ffffff;
+  --ios26-grouped-bg-light: #f2f2f7;
+  --ios26-separator-light: rgba(60, 60, 67, 0.12);
+  color: #0f172a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  padding-bottom: 120px; /* Account for bottom nav height + position */
+  padding-bottom: 120px;
+}
+
+/* Light mode explicit overrides */
+:root:not([data-theme="dark"]) .devotion-card {
+  background: #ffffff !important;
+  border-color: rgba(60, 60, 67, 0.12) !important;
+}
+
+:root:not([data-theme="dark"]) .devotion-card-small {
+  background: #ffffff !important;
+  border-color: rgba(60, 60, 67, 0.12) !important;
+}
+
+:root:not([data-theme="dark"]) .devotion-content,
+:root:not([data-theme="dark"]) .devotion-content-small {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .devotion-verse .verse-text {
+  color: #475569 !important;
+}
+
+:root:not([data-theme="dark"]) .quick-action-card {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .program-popover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .program-popover-content {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) h1,
+:root:not([data-theme="dark"]) h2,
+:root:not([data-theme="dark"]) h3,
+:root:not([data-theme="dark"]) h4 {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) p {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+.section-title--highlight ion-icon {
+  color: var(--home-accent);
+}
+
+.about-card {
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 35px rgba(84, 104, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.82));
+  border: 1px solid rgba(255,255,255,0.7);
+}
+
+.about-card-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.about-card-icon {
+  font-size: 2.5em;
+  color: var(--ion-color-primary);
+  margin-bottom: 12px;
+}
+
+.about-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--ion-text-color);
+}
+
+.about-card-text {
+  margin: 0 0 20px 0;
+  color: var(--ion-color-medium);
+  line-height: 1.6;
+  font-size: 0.95em;
+  text-align: center;
+}
+
+.about-cta {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  --border-radius: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium);
+  width: 100%;
+}
+
+.empty-state ion-icon {
+  font-size: 3em;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+.quick-action-open-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ion-color-primary), rgba(99, 102, 241, 0.9));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: all 0.2s ease;
+}
+
+.quick-action-card:hover .quick-action-open-btn {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.quick-action-arrow {
+  color: #94a3b8;
+  font-size: 16px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.quick-action-card:hover .quick-action-arrow {
+  transform: translateX(3px);
+  color: var(--ion-color-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium);
+  width: 100%;
+}
+
+.empty-state ion-icon {
+  font-size: 3em;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.program-popover-header {
+  background: linear-gradient(135deg, var(--program-color, var(--home-gradient-start)) 0%, var(--program-color, rgba(102, 126, 234, 0.8))cc 100%);
+}
+
+.program-popover-header .program-popover-icon ion-icon,
+.program-popover-header .program-popover-close ion-icon {
+  color: rgb(0, 0, 0);
+}
+
+.program-popover-info-row ion-icon {
+  color: var(--program-color, var(--ion-color-primary));
+}
+
+.program-popover-cta {
+  --background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)), rgba(99, 102, 241, 0.9));
+  --border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
 /* Toolbar */
 .toolbar-ios {
-  backdrop-filter: blur(8px);
-  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.5));
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  background: var(--ios26-card-bg-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .title-ios {
   font-weight: 700;
@@ -48,24 +238,24 @@
 }
 .section-title ion-icon {
   font-size: 20px;
-  color: #667eea;
+  color: var(--ion-color-primary, #007aff);
 }
 .section-title h2 {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: var(--ion-text-color, #1a1a1a);
+  color: rgba(15, 23, 42, 0.95);
 }
 .view-all-link {
   font-size: 13px;
-  color: var(--ion-color-primary, #667eea);
+  color: var(--ion-color-primary, #007aff);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-/* Devotion card - iOS glass */
+/* Devotion card - iOS 26 style */
 .devotion-card {
   position: relative;
   border-radius: var(--card-radius);
@@ -73,10 +263,9 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 200px;
-  box-shadow: 0 12px 30px rgba(20,20,40,0.06);
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.06);
-  backdrop-filter: blur(10px) saturate(120%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
 }
 
 /* subtle background image */
@@ -85,7 +274,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.45) contrast(0.9);
+  filter: brightness(0.55) contrast(0.95);
   transform: scale(1.03);
   z-index: 0;
 }
@@ -95,7 +284,7 @@
   position: relative;
   z-index: 2;
   padding: 18px;
-  color: white;
+  color: var(--ion-text-color, #1a1a1a);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -112,7 +301,7 @@
 
 /* Frosted glass date badge */
 .devotion-date-frosted {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ios26-glass-bg-light);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 8px 14px;
@@ -121,9 +310,9 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  color: var(--ion-text-color, #1a1a1a);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .devotion-date-frosted ion-icon {
@@ -135,23 +324,23 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ios26-glass-bg-light);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: white;
+  color: var(--ion-color-primary, #007aff);
 }
 
 .frosted-read-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--ios26-glass-strong-light);
   transform: scale(1.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .frosted-read-btn:active {
@@ -160,7 +349,7 @@
 
 .frosted-read-btn ion-icon {
   font-size: 24px;
-  color: white;
+  color: var(--ion-color-primary, #007aff);
 }
 
 /* verse */
@@ -173,7 +362,8 @@
 .verse-text {
   margin: 0;
   font-style: italic;
-  opacity: 0.95;
+  color: #1e293b;
+  opacity: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -221,9 +411,9 @@
   min-width: 280px;
   flex: 0 0 280px;
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(20,20,40,0.06);
-  border: 1px solid rgba(20,20,40,0.03);
+  background: var(--ios26-card-bg-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--ios26-separator-light);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -232,7 +422,7 @@
   transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
 }
 .sermon-card:active,
-.sermon-card:focus { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(20,20,40,0.12); }
+.sermon-card:focus { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14); }
 
 .sermon-thumb-wrap { position: relative; height: 120px; overflow: hidden; }
 .sermon-thumb {
@@ -245,17 +435,42 @@
   position: absolute;
   right: 10px;
   bottom: 10px;
-  background: rgba(0,0,0,0.72);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.sermon-live-badge,
+.sermon-duration-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.sermon-status-badge {
+  font-size: 0.65em;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.sermon-status-badge--live {
+  background: rgba(239, 68, 68, 0.92);
+  color: white;
+  animation: pulse 2.5s infinite alternate;
+}
+
+.sermon-status-badge--duration {
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+}
+
 .sermon-play-overlay {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -263,7 +478,7 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#fff;
+  color: var(--ios26-text-primary-dark);
 }
 .sermon-info {
   padding: 12px;
@@ -277,7 +492,7 @@
 .sermon-meta {
   margin-top: 8px;
   font-size: 12px;
-  color: #7a7a86;
+  color: rgba(71, 85, 105, 0.82);
   display:flex;
   gap: 8px;
   align-items:center;
@@ -316,20 +531,9 @@
   left: 0;
   right: 0;
   height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--ion-background-color));
+  background: linear-gradient(to bottom, transparent, var(--ios26-grouped-bg-light));
   pointer-events: none;
   z-index: 1;
-}
-
-/* Dark mode blur fade for podcasts */
-[data-theme="dark"] .podcasts-row::after {
-  background: linear-gradient(to bottom, transparent, #000000);
-}
-
-@media (prefers-color-scheme: dark) {
-  .podcasts-row::after {
-    background: linear-gradient(to bottom, transparent, #000000);
-  }
 }
 
 /* Podcast cards */
@@ -337,9 +541,9 @@
   min-width: 160px;
   flex: 0 0 75px;
   border-radius: 30px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(20,20,40,0.06);
-  border: 1px solid rgba(20,20,40,0.03);
+  background: var(--ios26-card-bg-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--ios26-separator-light);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -352,7 +556,7 @@
 .podcast-card:active,
 .podcast-card:focus {
   transform: translateY(-4px);
-  box-shadow: 0 18px 40px rgba(20,20,40,0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
 }
 
 .podcast-thumb-wrap {
@@ -389,7 +593,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--ios26-text-primary-dark);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -411,7 +615,7 @@
   font-size: 14px;
   font-weight: 700;
   line-height: 1.25;
-  color: #1a1a1a;
+  color: rgba(15, 23, 42, 0.92);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -421,7 +625,7 @@
 .podcast-meta {
   margin: 0;
   font-size: 12px;
-  color: #7a7a86;
+  color: rgba(71, 85, 105, 0.78);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -462,56 +666,49 @@
   left: 0;
   right: 0;
   height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--ion-background-color));
+  background: linear-gradient(to bottom, transparent, var(--ios26-grouped-bg-light));
   pointer-events: none;
   z-index: 1;
 }
 
-/* Dark mode blur fade */
-[data-theme="dark"] .quick-actions-grid::after {
-  background: linear-gradient(to bottom, transparent, #000000);
-}
-
-@media (prefers-color-scheme: dark) {
-  .quick-actions-grid::after {
-    background: linear-gradient(to bottom, transparent, #000000);
-  }
-}
-
-.quick-action-card {
+ .quick-action-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: transparent;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
   transition: all 0.2s ease;
   cursor: pointer;
-}
+ }
 
 .quick-action-card:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.quick-action-card:active {
-  background: rgba(0, 0, 0, 0.06);
-  transform: scale(0.995);
+  background: rgba(248, 250, 252, 0.95);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .quick-action-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)) 0%, var(--program-color, var(--ion-color-primary)) 100%);
 }
 
 .quick-action-icon ion-icon {
   font-size: 16px;
-  color: #ffffff;
+  color: white;
+}
+
+.quick-action-card:active {
+  background: rgba(148, 163, 184, 0.08);
+  transform: scale(0.994);
 }
 
 .quick-action-content {
@@ -524,14 +721,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #64748b;
+  color: rgba(71, 85, 105, 0.88);
   margin-bottom: 2px;
 }
 
 .quick-action-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--ion-text-color, #1a1a1a);
+  color: rgba(15, 23, 42, 0.92);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -539,11 +736,11 @@
   margin-bottom: 3px;
 }
 
-.quick-action-time {
+ .quick-action-time {
   display: flex;
   align-items: center;
   font-size: 11px;
-  color: var(--ion-color-medium, #64748b);
+  color: rgba(100, 116, 139, 0.7);
   font-weight: 500;
   gap: 3px;
 }
@@ -622,7 +819,7 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#fff;
+  color: #64748b;
   font-weight:800;
   font-size:16px;
   flex-shrink:0;
@@ -683,22 +880,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  background: var(--ion-color-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .update-body strong {
   font-size:16px;
   font-weight: 700;
-  color: #ffffff;
+  color: rgba(15, 23, 42, 0.92);
   display: block;
   margin-bottom: 6px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .update-body .muted {
   margin:0;
-  color:#c7d2fe;
+  color: rgba(71, 85, 105, 0.8);
   font-size:14px;
   line-height: 1.5;
   font-weight: 400;
@@ -710,10 +905,8 @@
   --inner-border-width: 0;
   border-radius: 20px;
   margin-bottom: 16px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-  backdrop-filter: blur(25px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
   align-items: flex-start;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -728,7 +921,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.08), transparent);
   transition: left 0.6s;
 }
 .event-item:hover::before {
@@ -736,8 +929,7 @@
 }
 .event-item:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
-  background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 .event-rail {
   width:12px;
@@ -745,10 +937,9 @@
   border-radius:10px;
   margin-right:20px;
   flex-shrink:0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: var(--ion-color-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .event-body {
   display:flex;
@@ -767,13 +958,12 @@
   margin:0;
   font-size:17px;
   font-weight:700;
-  color: #ffffff;
+  color: rgba(15, 23, 42, 0.92);
   line-height: 1.3;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .event-meta {
   font-size:14px;
-  color:#c7d2fe;
+  color: rgba(71, 85, 105, 0.78);
   display:flex;
   gap:20px;
   flex-direction:column;
@@ -781,28 +971,7 @@
   line-height: 1.4;
 }
 
-/* About */
-.about-card {
-  border-radius: 20px;
-  box-shadow: 0 12px 35px rgba(20,20,40,0.1);
-  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255,255,255,0.2);
-  margin-top:16px;
-  padding: 24px;
-  position: relative;
-  overflow: hidden;
-}
-.about-card::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(139, 92, 246, 0.1));
-  border-radius: 50%;
-}
+
 .stats-grid {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -857,9 +1026,9 @@
   border-radius: 20px;
   overflow: hidden;
   position: relative;
-  background: var(--ion-background-color);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.06);
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.16);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   display: flex;
@@ -868,7 +1037,7 @@
 
 .devotion-card-small:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
 }
 
 .devotion-media-small {
@@ -899,7 +1068,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  background: var(--ion-background-color);
+  background: #ffffff;
 }
 
 .devotion-top {
@@ -932,7 +1101,7 @@
 }
 
 .devotion-verse h3 {
-  color: #1a1a1a;
+  color: #111827;
   font-size: 14px;
   font-weight: 700;
   margin: 0 0 6px 0;
@@ -940,8 +1109,9 @@
   line-height: 1.3;
 }
 
+.devotion-card-small .devotion-verse .verse-text,
 .devotion-verse .verse-text {
-  color: #64748b;
+  color: #111827 !important;
   font-size: 12px;
   margin: 0;
   opacity: 1;
@@ -951,32 +1121,32 @@
 
 /* Light mode - clean white background */
 .content-ios {
-  --ion-background-color: #ffffff;
-  background: #ffffff;
+  --ion-background-color: var(--ios26-grouped-bg-light);
+  background: var(--ios26-grouped-bg-light);
 }
 
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .content-ios {
-  --ion-background-color: #000000;
-  background: #000000;
+  --ion-background-color: var(--ios26-grouped-bg-dark);
+  background: var(--ios26-grouped-bg-dark);
 }
 
 [data-theme="dark"] .toolbar-ios {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+  background: linear-gradient(180deg, rgba(28, 28, 30, 0.82), rgba(44, 44, 46, 0.78));
 }
 
 [data-theme="dark"] .section-title ion-icon {
-  color: #f1f5f9;
+  color: #8ec5ff;
 }
 
 [data-theme="dark"] .view-all-link {
-  color: #94a3b8;
+  color: #8ec5ff;
 }
 
 [data-theme="dark"] .devotion-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .devotion-content {
@@ -988,19 +1158,19 @@
 }
 
 [data-theme="dark"] .devotion-verse .verse-text {
-  color: white;
+  color: rgba(241, 245, 249, 0.94) !important;
   opacity: 0.95;
 }
 
 [data-theme="dark"] .devotion-date-frosted {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: white;
 }
 
 [data-theme="dark"] .frosted-read-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: white;
 }
 
@@ -1009,475 +1179,202 @@
 }
 
 [data-theme="dark"] .devotion-card-small {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .devotion-card-small:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .devotion-content-small {
-  /* Uses var(--ion-background-color) which is #000000 in dark mode */
+  background: var(--ios26-card-bg-dark);
 }
 
 [data-theme="dark"] .devotion-verse h3 {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .devotion-verse .verse-text {
-  color: #94a3b8;
+  color: #f1f5f9 !important;
 }
 
 [data-theme="dark"] .sermon-card {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .sermon-duration {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .sermon-play-overlay {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .sermon-meta {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .podcast-card {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .podcast-duration {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .podcast-play-overlay {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .podcast-meta {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .program-card {
-  background: linear-gradient(180deg, #1a1a1a, #1a1a1a);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .program-card:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .update-item {
-  background: #1a1a1a;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .update-item:hover {
+  background: var(--ios26-card-bg-elevated-dark);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .update-body strong {
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .update-body .muted {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .event-item {
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .event-item:hover {
+  background: var(--ios26-card-bg-elevated-dark);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .event-title {
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .event-meta {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .about-card {
-  background: #1a1a1a;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .about-card::before {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .about-card h2 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .about-card-text {
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .stat {
-  background: #1a1a1a;
+  background: var(--ios26-fill-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .stat-number {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .stat-label {
-  color: #94a3b8;
-}
-
-[data-theme="dark"] .program-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .program-name {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .program-time {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 /* Quick Actions - Dark Mode */
 [data-theme="dark"] .quick-action-card {
-  background: transparent;
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .quick-action-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--ios26-card-bg-elevated-dark);
 }
 
 [data-theme="dark"] .quick-action-card:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] .quick-action-name {
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .quick-action-time {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .quick-action-day {
-  color: #64748b;
+  color: var(--ios26-text-tertiary-dark);
 }
 
 [data-theme="dark"] .quick-action-arrow {
-  color: #64748b;
+  color: var(--ios26-text-tertiary-dark);
 }
 
 [data-theme="dark"] .quick-action-card:hover .quick-action-arrow {
-  color: #818cf8;
+  color: #8ec5ff;
 }
 
-[data-theme="dark"] .update-item {
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+[data-theme="dark"] .quick-action-open-btn {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="dark"] .update-item:hover {
-  background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+[data-theme="dark"] .section-title h2 {
+  color: var(--ios26-text-primary-dark) !important;
 }
 
-[data-theme="dark"] .update-body strong {
-  color: #ffffff;
+[data-theme="dark"] .sermon-title {
+  color: var(--ios26-text-primary-dark);
 }
 
-[data-theme="dark"] .update-body .muted {
-  color: #c7d2fe;
+[data-theme="dark"] .podcast-title {
+  color: var(--ios26-text-primary-dark);
 }
 
-[data-theme="dark"] .event-item {
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-
-[data-theme="dark"] .event-item:hover {
-  background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-
-[data-theme="dark"] .event-title {
-  color: #ffffff;
-}
-
-[data-theme="dark"] .event-meta {
-  color: #c7d2fe;
-}
-
-[data-theme="dark"] .about-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .about-card::before {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
-}
-
-[data-theme="dark"] .stat {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .stat-number {
-  color: #f1f5f9;
-}
-
-[data-theme="dark"] .stat-label {
-  color: #94a3b8;
-}
-
-[data-theme="dark"] .podcasts-row {
-  /* No special background in dark mode */
-}
-
-[data-theme="dark"] .podcast-card {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .podcast-card:active,
-[data-theme="dark"] .podcast-card:focus {
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
-}
-
-[data-theme="dark"] .podcast-play-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-/* Dark mode support - System preference fallback */
-@media (prefers-color-scheme: dark) {
-  .content-ios {
-    --ion-background-color: #000000;
-    background: #000000;
-  }
-
-  .toolbar-ios {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
-  }
-
-  .section-title ion-icon {
-    color: #f1f5f9;
-  }
-
-  .view-all-link {
-    color: #94a3b8;
-  }
-
-  .devotion-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .devotion-content {
-    color: white;
-  }
-
-  .devotion-verse h3 {
-    color: white;
-  }
-
-  .devotion-verse .verse-text {
-    color: white;
-    opacity: 0.95;
-  }
-
-  .devotion-date-frosted {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-  }
-
-  .frosted-read-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: white;
-  }
-
-  .frosted-read-btn ion-icon {
-    color: white;
-  }
-
-  /* Small devotion/sermon cards - Dark mode */
-  .devotion-card-small {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .devotion-card-small:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  }
-
-  .devotion-content-small {
-    /* Uses var(--ion-background-color) which is #000000 in dark mode */
-  }
-
-  .devotion-verse h3 {
-    color: #f1f5f9;
-  }
-
-  .devotion-verse .verse-text {
-    color: #94a3b8;
-  }
-
-  .sermon-card {
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .sermon-duration {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  .sermon-play-overlay {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  .sermon-meta {
-    color: #94a3b8;
-  }
-
-  .podcast-card {
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .podcast-duration {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  .podcast-play-overlay {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  .podcast-meta {
-    color: #94a3b8;
-  }
-
-  .program-card {
-    background: linear-gradient(180deg, #1a1a1a, #1a1a1a);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .update-item {
-    background: #1a1a1a;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .update-body .muted {
-    color: #94a3b8;
-  }
-
-  .event-meta {
-    color: #94a3b8;
-  }
-
-  .about-card {
-    background: #1a1a1a;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .stat {
-    background: #1a1a1a;
-  }
-
-  .stat-number {
-    color: #f1f5f9;
-  }
-
-  .stat-label {
-    color: #94a3b8;
-  }
-
-  /* Programs - Dark Mode */
-  .program-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  }
-
-  .program-name {
-    color: #f1f5f9;
-  }
-
-  .program-time {
-    color: #94a3b8;
-  }
-
-  /* Updates - Dark Mode */
-  .update-item {
-    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-    border: 1px solid rgba(255,255,255,0.12);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-  }
-
-  .update-item:hover {
-    background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
-  }
-
-  .update-body strong {
-    color: #ffffff;
-  }
-
-  .update-body .muted {
-    color: #c7d2fe;
-  }
-
-  /* Events - Dark Mode */
-  .event-item {
-    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-    border: 1px solid rgba(255,255,255,0.12);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-  }
-
-  .event-item:hover {
-    background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
-  }
-
-  .event-title {
-    color: #ffffff;
-  }
-
-  .event-meta {
-    color: #c7d2fe;
-  }
-
-  /* About - Dark Mode */
-  .about-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
-  }
-
-  .about-card::before {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
-  }
-
-  .stat {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .stat-number {
-    color: #f1f5f9;
-  }
-
-  .stat-label {
-    color: #94a3b8;
-  }
-
-  /* Podcasts Row - Dark Mode */
-  .podcasts-row {
-    /* No special background in dark mode */
-  }
-
-  .podcast-card {
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .podcast-card:active,
-  .podcast-card:focus {
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
-  }
-
-  .podcast-play-overlay {
-    background: rgba(0, 0, 0, 0.7);
-  }
-
-  .podcast-title {
-    color: #f1f5f9;
-  }
-
-  .podcast-meta {
-    color: #94a3b8;
-  }
+[data-theme="dark"] .podcast-meta {
+  color: var(--ios26-text-secondary-dark);
 }
 
 /* Podcasts section wrapper */
@@ -1566,9 +1463,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;
-  background: var(--ion-background-color, #ffffff);
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 24px;
-  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.14);
   animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: min(400px, calc(100% - 48px));
   max-height: 85vh;
@@ -1581,6 +1479,7 @@
   position: relative;
   border-radius: 24px 24px 0 0;
   color: white;
+  background: linear-gradient(135deg, var(--program-color, #667eea) 0%, rgba(102, 126, 234, 0.9) 100%);
 }
 
 .program-popover-close {
@@ -1600,7 +1499,7 @@
 }
 
 .program-popover-close:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.45);
   transform: scale(1.1);
 }
 
@@ -1615,8 +1514,8 @@
 .program-popover-icon {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1639,7 +1538,7 @@
   font-weight: 800;
   margin: 0;
   line-height: 1.3;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
   padding: 0 8px;
 }
 
@@ -1651,13 +1550,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 10px;
-  margin-bottom: 8px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+  margin-bottom: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--ion-text-color, #1a1a1a);
+  color: rgba(17, 24, 39, 0.85);
 }
 
 .program-popover-info-row span {
@@ -1672,7 +1571,7 @@
 .program-popover-description p {
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ion-color-medium, #64748b);
+  color: rgba(100, 116, 139, 0.85);
   margin: 0;
 }
 
@@ -1690,37 +1589,358 @@
 
 /* Dark mode popover */
 [data-theme="dark"] .program-popover {
-  background: #1a1a1a;
+  background: var(--ios26-card-bg-dark);
 }
 
 [data-theme="dark"] .program-popover-info-row {
   background: rgba(255, 255, 255, 0.06);
-  color: #f1f5f9;
+  color: var(--ios26-text-primary-dark);
 }
 
 [data-theme="dark"] .program-popover-description p {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark);
 }
 
 [data-theme="dark"] .program-popover-backdrop {
   background: rgba(0, 0, 0, 0.7);
 }
 
-@media (prefers-color-scheme: dark) {
-  .program-popover {
-    background: #1a1a1a;
-  }
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: var(--ios26-text-primary-dark) !important;
+}
 
-  .program-popover-info-row {
-    background: rgba(255, 255, 255, 0.06);
-    color: #f1f5f9;
-  }
+[data-theme="dark"] p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
 
-  .program-popover-description p {
-    color: #94a3b8;
-  }
+[data-theme="dark"] .about-card {
+  background: linear-gradient(135deg, rgba(44, 44, 46, 0.9), rgba(28, 28, 30, 0.82));
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+}
 
-  .program-popover-backdrop {
-    background: rgba(0, 0, 0, 0.7);
-  }
+[data-theme="dark"] .quick-action-card {
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .quick-action-card:hover {
+  background: var(--ios26-card-bg-elevated-dark);
+}
+
+[data-theme="dark"] .quick-action-arrow {
+  color: var(--ios26-text-tertiary-dark);
+}
+
+[data-theme="dark"] .quick-action-icon {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .program-card {
+  background: linear-gradient(135deg, rgba(44, 44, 46, 0.9), rgba(28, 28, 30, 0.75));
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .update-item {
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .update-item::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+
+[data-theme="dark"] .sermon-meta {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .podcast-title {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .podcast-meta {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .program-name {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .program-time {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .stat {
+  background: var(--ios26-fill-dark);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .stat-number {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .stat-label {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .podcasts-row::after {
+  background: linear-gradient(to bottom, transparent, var(--ios26-grouped-bg-dark));
+}
+
+[data-theme="dark"] .quick-actions-grid::after {
+  background: linear-gradient(to bottom, transparent, var(--ios26-grouped-bg-dark));
+}
+
+.home-text-area {
+  --ion-text-color: #0f172a;
+}
+
+[data-theme="dark"] .home-text-area {
+  --ion-text-color: #ffffff;
+}
+
+/* Featured Devotion Card - Editorial Style */
+/* Hero Devotion Card - Compact Professional Design */
+.devotion-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 210px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s ease;
+}
+
+.devotion-hero:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.devotion-hero:active {
+  transform: translateY(-1px);
+  transition-duration: 0.12s;
+}
+
+/* Background image layer */
+.devotion-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.devotion-hero:hover .devotion-hero-bg {
+  transform: scale(1.03);
+}
+
+/* Gradient overlay */
+.devotion-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.85) 100%);
+}
+
+/* Scripture badge - top left */
+.devotion-hero-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.devotion-hero-badge ion-icon {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* Bottom glass panel */
+.devotion-hero-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  padding: 28px 18px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Accent gradient line */
+.devotion-hero-accent {
+  width: 28px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #667eea, #a78bfa);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+/* Meta row (date + day) */
+.devotion-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.devotion-hero-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.devotion-hero-date ion-icon {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.devotion-hero-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.devotion-hero-daylabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Title */
+.devotion-hero-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+  color: white;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.2px;
+}
+
+/* Content preview */
+.devotion-hero-preview {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  color: rgba(255, 255, 255, 0.75);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* CTA Button */
+.devotion-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.devotion-hero-cta:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.devotion-hero-cta:active {
+  transform: translateX(1px) scale(0.98);
+}
+
+.devotion-hero-cta ion-icon {
+  font-size: 13px;
+  transition: transform 0.3s ease;
+}
+
+.devotion-hero-cta:hover ion-icon {
+  transform: translateX(2px);
+}
+
+/* Dark mode - Hero Devotion Card */
+[data-theme="dark"] .devotion-hero {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .devotion-hero:hover {
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .devotion-hero-overlay {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+[data-theme="dark"] .devotion-hero-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .devotion-hero-panel {
+  border-top: none;
+}
+
+[data-theme="dark"] .devotion-hero-cta {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .devotion-hero-cta:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
 }

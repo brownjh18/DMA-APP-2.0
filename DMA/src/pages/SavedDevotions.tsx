@@ -168,7 +168,7 @@ const SavedDevotions: React.FC = () => {
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat',
                       position: 'relative',
-                      height: '150px'
+                      height: '180px'
                     }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLElement;

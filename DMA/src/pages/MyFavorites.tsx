@@ -1,1245 +1,359 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useContext, useMemo, useState } from 'react';
 import {
+  IonAlert,
+  IonButton,
   IonContent,
   IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonLoading,
   IonPage,
   IonTitle,
-  IonToolbar,
-  IonCard,
-  IonCardContent,
-  IonIcon,
-  IonText,
-  IonButton,
-  IonBadge,
-  IonLoading,
-  IonAlert,
-  IonSearchbar,
-  IonLabel,
-  IonPopover,
-  IonList,
-  IonItem
+  IonToolbar
 } from '@ionic/react';
-import { addIcons } from 'ionicons';
-import { 
-  heart,
-  playCircle,
-  calendar,
-  person,
-  time,
+import {
+  arrowBack,
   book,
-  search,
+  heart,
+  personCircleOutline,
+  playCircle,
   radio,
-  trash,
-  close,
-  play,
-  eye,
-  share,
-  arrowBack
+  trash
 } from 'ionicons/icons';
-import { apiService, BACKEND_BASE_URL } from '../services/api';
-import { useHistory } from 'react-router-dom';
-import { usePlayer } from '../contexts/PlayerContext';
-import VideoPlayer from '../components/VideoPlayer';
-
-// Add icons
-addIcons({
-  heart: heart,
-  'play-circle': playCircle,
-  calendar: calendar,
-  person: person,
-  time: time,
-  book: book,
-  search: search,
-  radio: radio,
-  trash: trash,
-  close: close,
-  play: play,
-  eye: eye,
-  share: share,
-  'arrow-back': arrowBack
-});
-
-// Helper function to convert relative URLs to full backend URLs
-const getFullUrl = (url: string) => {
-  if (!url || url.trim() === '') {
-    return '/bible.JPG'; // Default fallback
-  }
-  if (url.startsWith('/uploads/')) {
-    return `${BACKEND_BASE_URL}${url}`;
-  }
-  if (url.startsWith('/uploads')) {
-    return `${BACKEND_BASE_URL}${url}`;
-  }
-  if (url.startsWith('http')) {
-    return url;
-  }
-  if (url.startsWith('/')) {
-    return `${BACKEND_BASE_URL}${url}`;
-  }
-  return url;
-};
+import { useHistory, useLocation } from 'react-router-dom';
+import { AuthContext } from '../App';
+import { apiService } from '../services/api';
 
 interface SavedSermon {
   id: string;
   title: string;
   speaker: string;
-  description: string;
-  scripture?: string;
   date: string;
-  duration: string;
-  tags?: string[];
-  thumbnailUrl?: string;
-  savedAt: string;
-  videoUrl?: string;
-  youtubeId?: string;
-  isDatabaseSermon?: boolean;
+  duration?: string;
 }
 
 interface SavedPodcast {
   id: string;
   title: string;
   speaker?: string;
-  description: string;
-  thumbnailUrl: string;
   publishedAt: string;
-  duration: string;
-  audioUrl: string;
-  savedAt: string;
+  duration?: string;
   isLive?: boolean;
 }
 
 interface SavedDevotion {
   id: string;
   title: string;
-  scripture: string;
-  content: string;
-  reflection: string;
-  prayer: string;
   date: string;
-  day: number;
-  week: number;
-  thumbnailUrl?: string;
-  savedAt: string;
+  day?: number;
 }
 
-const Saved: React.FC = () => {
+const MyFavorites: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [savedSermons, setSavedSermons] = useState<SavedSermon[]>([]);
   const [savedPodcasts, setSavedPodcasts] = useState<SavedPodcast[]>([]);
   const [savedDevotions, setSavedDevotions] = useState<SavedDevotion[]>([]);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'sermons' | 'podcasts' | 'devotions'>('sermons');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  
+
   const history = useHistory();
-  const { setCurrentMedia, setIsPlaying, isPlaying, setCurrentSermon: setPlayerCurrentSermon } = usePlayer();
-  
-  const [currentSermon, setCurrentSermon] = useState<SavedSermon | null>(null);
-  const [expandedDescription, setExpandedDescription] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
-  const [showPopover, setShowPopover] = useState(false);
-  const [popoverEvent, setPopoverEvent] = useState<MouseEvent | undefined>();
+  const location = useLocation();
+  const { isLoggedIn, user, isAuthChecking } = useContext(AuthContext);
 
   useEffect(() => {
-    // Load content on mount - always force refresh to get latest saved items
-    loadSavedContent(true);
-    
-    // Also reload when the page gains focus (user navigates back)
-    const handleFocus = () => {
-      loadSavedContent(true); // Force refresh from server
-    };
-    
-    // Listen for custom event when items are saved/removed from other pages
-    // This ensures immediate UI updates when items are saved/deleted
-    const handleSavedItemsChange = () => {
-      console.log('📢 savedItemsChanged event received - refreshing saved items');
-      // Immediately update from localStorage without waiting for API
-      const localSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
-      const localPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
-      const localDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
-      
-      console.log('📋 LocalStorage data:', {
-        sermons: localSermons.length,
-        podcasts: localPodcasts.length,
-        devotions: localDevotions.length
-      });
-      
-      // Update state immediately for instant UI feedback
-      setSavedSermons(localSermons);
-      setSavedPodcasts(localPodcasts);
-      setSavedDevotions(localDevotions);
-      
-      console.log('🔄 State updated from localStorage, now refreshing from server...');
-      // Then also refresh from server in background with force refresh
-      loadSavedContent(true);
-    };
-    
-    // Listen for storage changes (for cross-tab communication)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'savedSermons' || e.key === 'savedPodcasts' || e.key === 'savedDevotions') {
-        // Immediately update from localStorage
-        const localSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
-        const localPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
-        const localDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
-        
-        setSavedSermons(localSermons);
-        setSavedPodcasts(localPodcasts);
-        setSavedDevotions(localDevotions);
-        
-        // Also refresh from server with force refresh
-        loadSavedContent(true);
+    if (isLoggedIn) {
+      loadSavedContent();
+    } else {
+      setLoading(false);
+    }
+
+    const handleSavedItemsChanged = () => {
+      if (isLoggedIn) {
+        loadSavedContent();
       }
     };
-    
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('savedItemsChanged', handleSavedItemsChange as EventListener);
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('savedItemsChanged', handleSavedItemsChange as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
+    const handleStorage = (e: StorageEvent) => {
+      if (isLoggedIn && (e.key === 'savedSermons' || e.key === 'savedPodcasts' || e.key === 'savedDevotions')) {
+        loadSavedContent();
+      }
     };
-  }, []);
 
+    window.addEventListener('savedItemsChanged', handleSavedItemsChanged as EventListener);
+    window.addEventListener('storage', handleStorage);
 
-  const loadSavedContent = async (forceRefresh: boolean = false) => {
-    console.log('🔄 loadSavedContent called with forceRefresh:', forceRefresh);
+    return () => {
+      window.removeEventListener('savedItemsChanged', handleSavedItemsChanged as EventListener);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [isLoggedIn]);
+
+  const loadSavedContent = async () => {
     setLoading(true);
     try {
-      // First, get localStorage data as base (for demo users and offline support)
-      const localSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
-      const localPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
-      const localDevotions = JSON.parse(localStorage.getItem('savedDevotions') || '[]');
-      
-      console.log('📋 LocalStorage data loaded:', {
-        sermons: localSermons.length,
-        podcasts: localPodcasts.length,
-        devotions: localDevotions.length
-      });
-      
-      // Set local data immediately for instant UI
-      setSavedSermons(localSermons);
-      setSavedPodcasts(localPodcasts);
-      setSavedDevotions(localDevotions);
-      
-      // Then try to fetch from server and merge
-      let serverSermons: any[] = [];
-      let serverPodcasts: any[] = [];
-      let serverDevotions: any[] = [];
-      
-      try {
-        console.log('📡 Fetching saved items from server...');
-        const [sermonsRes, podcastsRes, devotionsRes] = await Promise.all([
-          apiService.getSavedSermons(forceRefresh).catch(() => ({ savedSermons: [] })),
-          apiService.getSavedPodcasts(forceRefresh).catch(() => ({ savedPodcasts: [] })),
-          apiService.getSavedDevotions(forceRefresh).catch(() => ({ savedDevotions: [] }))
-        ]);
-        
-        console.log('📥 Server response:', {
-          sermons: sermonsRes.savedSermons?.length || 0,
-          podcasts: podcastsRes.savedPodcasts?.length || 0,
-          devotions: devotionsRes.savedDevotions?.length || 0
-        });
-        
-        if (sermonsRes.savedSermons) {
-          serverSermons = sermonsRes.savedSermons.map((s: any) => ({
-            id: s._id,
-            _id: s._id,
-            title: s.title,
-            speaker: s.speaker,
-            description: s.description,
-            thumbnailUrl: s.thumbnailUrl,
-            videoUrl: s.videoUrl,
-            duration: s.duration,
-            date: s.date,
-            scripture: s.scripture,
-            series: s.series,
-            type: 'sermon',
-            savedAt: new Date().toISOString(),
-            isDatabaseSermon: true
-          }));
-        }
-        
-        if (podcastsRes.savedPodcasts) {
-          serverPodcasts = podcastsRes.savedPodcasts.map((p: any) => {
-            const podcastId = p._id || p.id;
-            if (!podcastId) {
-              console.warn('Podcast missing ID:', p);
-              return null;
-            }
-            return {
-              id: podcastId,
-              _id: podcastId,
-              title: p.title,
-              speaker: p.speaker,
-              description: p.description,
-              thumbnailUrl: p.thumbnailUrl,
-              audioUrl: p.audioUrl,
-              duration: p.duration,
-              publishedAt: p.publishedAt,
-              savedAt: new Date().toISOString()
-            };
-          }).filter((p: any) => p !== null);
-        }
-        
-        if (devotionsRes.savedDevotions) {
-          serverDevotions = devotionsRes.savedDevotions.map((d: any) => ({
-            id: d._id,
-            _id: d._id,
-            title: d.title,
-            scripture: d.scripture,
-            content: d.content,
-            reflection: d.reflection,
-            prayer: d.prayer,
-            date: d.createdAt || d.date,
-            day: d.day || 1,
-            week: 1,
-            thumbnailUrl: d.thumbnailUrl,
-            savedAt: new Date().toISOString()
-          }));
-        }
-        
-        // Merge server data with localStorage data (server takes priority for sync)
-        // Create maps for easy merging
-        const sermonMap = new Map(serverSermons.map((s: any) => [s.id, s]));
-        localSermons.forEach((s: any) => {
-          if (!sermonMap.has(s.id)) {
-            sermonMap.set(s.id, s);
-          }
-        });
-        const mergedSermons = Array.from(sermonMap.values());
-        
-        const podcastMap = new Map(serverPodcasts.map((p: any) => [p.id, p]));
-        localPodcasts.forEach((p: any) => {
-          if (!podcastMap.has(p.id)) {
-            podcastMap.set(p.id, p);
-          }
-        });
-        const mergedPodcasts = Array.from(podcastMap.values());
-        
-        const devotionMap = new Map(serverDevotions.map((d: any) => [d.id, d]));
-        localDevotions.forEach((d: any) => {
-          if (!devotionMap.has(d.id)) {
-            devotionMap.set(d.id, d);
-          }
-        });
-        const mergedDevotions = Array.from(devotionMap.values());
-        
-        console.log('💾 Merged data:', {
-          sermons: mergedSermons.length,
-          podcasts: mergedPodcasts.length,
-          devotions: mergedDevotions.length
-        });
-        
-        // Save merged data to localStorage
-        localStorage.setItem('savedSermons', JSON.stringify(mergedSermons));
-        localStorage.setItem('savedPodcasts', JSON.stringify(mergedPodcasts));
-        localStorage.setItem('savedDevotions', JSON.stringify(mergedDevotions));
-        
-        setSavedSermons(mergedSermons);
-        setSavedPodcasts(mergedPodcasts);
-        setSavedDevotions(mergedDevotions);
-        console.log('✅ State updated successfully with merged data');
-      } catch (serverError) {
-        console.warn('Server fetch failed, using localStorage data:', serverError);
-        // Keep the localStorage data that was already set
-      }
+      const [sermons, podcasts, devotions] = await Promise.all([
+        apiService.getSavedSermons(),
+        apiService.getSavedPodcasts(),
+        apiService.getSavedDevotions()
+      ]);
+      setSavedSermons(sermons);
+      setSavedPodcasts(podcasts);
+      setSavedDevotions(devotions);
     } catch (error) {
-      console.error('Error loading saved content:', error);
+      console.error('Failed to load saved content:', error);
     } finally {
       setLoading(false);
     }
   };
 
-
-  const removeSavedSermon = async (sermonId: string) => {
-    // Remove from local state
-    const updatedSermons = savedSermons.filter(s => s.id !== sermonId);
-    setSavedSermons(updatedSermons);
-    localStorage.setItem('savedSermons', JSON.stringify(updatedSermons));
-    
-    // Also remove from server
-    try {
-      await apiService.saveSermon(sermonId); // Toggle endpoint will remove it
-    } catch (error) {
-      console.warn('Failed to remove sermon from server:', error);
-    }
-    
-    // Dispatch event to notify other pages
-    window.dispatchEvent(new Event('savedItemsChanged'));
-    
-    setAlertMessage('Sermon removed from favorites');
-    setShowAlert(true);
-  };
-
-  const unsaveSermon = async (sermonId: string) => {
-    try {
-      await apiService.saveSermon(sermonId); // Toggle endpoint removes if already saved
-    } catch (error) {
-      console.warn('Failed to unsave sermon from server:', error);
-    }
-  };
-
-  const removeSavedPodcast = async (podcastId: string) => {
-    // Validate podcast ID
-    if (!podcastId || podcastId === 'undefined') {
-      console.error('removeSavedPodcast: Invalid podcast ID:', podcastId);
-      setAlertMessage('Error: Unable to remove podcast (invalid ID)');
-      setShowAlert(true);
-      return;
-    }
-    
-    console.log('Removing podcast from favorites:', podcastId);
-    
-    // Remove from local state
-    const updatedPodcasts = savedPodcasts.filter(p => p.id !== podcastId);
-    setSavedPodcasts(updatedPodcasts);
-    localStorage.setItem('savedPodcasts', JSON.stringify(updatedPodcasts));
-    
-    // Also remove from server
-    try {
-      await apiService.unsavePodcast(podcastId);
-    } catch (error) {
-      console.warn('Failed to remove podcast from server:', error);
-    }
-    
-    // Dispatch event to notify other pages
-    window.dispatchEvent(new Event('savedItemsChanged'));
-    
-    setAlertMessage('Podcast removed from favorites');
-    setShowAlert(true);
-  };
-
-  const removeSavedDevotion = async (devotionId: string) => {
-    // Remove from local state
-    const updatedDevotions = savedDevotions.filter(d => d.id !== devotionId);
-    setSavedDevotions(updatedDevotions);
-    localStorage.setItem('savedDevotions', JSON.stringify(updatedDevotions));
-    
-    // Also remove from server
-    try {
-      await apiService.saveDevotion(devotionId); // Toggle endpoint will remove it
-    } catch (error) {
-      console.warn('Failed to remove devotion from server:', error);
-    }
-    
-    // Dispatch event to notify other pages
-    window.dispatchEvent(new Event('savedItemsChanged'));
-    
-    setAlertMessage('Devotion removed from favorites');
-    setShowAlert(true);
-  };
-
-  const unsaveDevotion = async (devotionId: string) => {
-    try {
-      await apiService.saveDevotion(devotionId); // Toggle endpoint removes if already saved
-    } catch (error) {
-      console.warn('Failed to unsave devotion from server:', error);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+
+  const removeSavedSermon = async (id: string) => {
+    const updated = savedSermons.filter(item => item.id !== id);
+    setSavedSermons(updated);
+    localStorage.setItem('savedSermons', JSON.stringify(updated));
+    try {
+      await apiService.saveSermon(id);
+    } catch (error) {
+      console.warn('Failed to update sermon saved state:', error);
+    }
+    window.dispatchEvent(new Event('savedItemsChanged'));
+    setAlertMessage('Sermon removed from favorites');
+    setShowAlert(true);
   };
 
-  const currentContent = activeTab === 'sermons' ? savedSermons : activeTab === 'podcasts' ? savedPodcasts : savedDevotions;
-  const totalSermons = savedSermons.length;
-  const totalPodcasts = savedPodcasts.length;
-  const totalDevotions = savedDevotions.length;
+  const removeSavedPodcast = async (id: string) => {
+    const updated = savedPodcasts.filter(item => item.id !== id);
+    setSavedPodcasts(updated);
+    localStorage.setItem('savedPodcasts', JSON.stringify(updated));
+    try {
+      await apiService.unsavePodcast(id);
+    } catch (error) {
+      console.warn('Failed to update podcast saved state:', error);
+    }
+    window.dispatchEvent(new Event('savedItemsChanged'));
+    setAlertMessage('Podcast removed from favorites');
+    setShowAlert(true);
+  };
+
+  const removeSavedDevotion = async (id: string) => {
+    const updated = savedDevotions.filter(item => item.id !== id);
+    setSavedDevotions(updated);
+    localStorage.setItem('savedDevotions', JSON.stringify(updated));
+    try {
+      await apiService.saveDevotion(id);
+    } catch (error) {
+      console.warn('Failed to update devotion saved state:', error);
+    }
+    window.dispatchEvent(new Event('savedItemsChanged'));
+    setAlertMessage('Devotion removed from favorites');
+    setShowAlert(true);
+  };
+
+  const activeCount = useMemo(() => {
+    if (activeTab === 'sermons') return savedSermons.length;
+    if (activeTab === 'podcasts') return savedPodcasts.length;
+    return savedDevotions.length;
+  }, [activeTab, savedSermons.length, savedPodcasts.length, savedDevotions.length]);
+
+  const renderEmpty = () => (
+    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ion-text-color)', opacity: 0.7 }}>
+      <IonIcon
+        icon={activeTab === 'sermons' ? playCircle : activeTab === 'podcasts' ? radio : book}
+        style={{ fontSize: '3em', color: 'var(--ion-color-medium)', marginBottom: '16px' }}
+      />
+      <h3>No favorite {activeTab} found</h3>
+      <p>You haven't favorited any {activeTab} yet. Use the heart button on content to add them here.</p>
+    </div>
+  );
+
+
+
+
 
   return (
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} />
+          </IonButton>
           <IonTitle className="title-ios">My Favorites</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* Back Button */}
-      <div
-        onClick={() => history.goBack()}
-        style={{
-          position: 'absolute',
-          top: 'calc(var(--ion-safe-area-top) - -5px)',
-          left: 20,
-          width: 45,
-          height: 45,
-          borderRadius: 25,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 999,
-          transition: 'transform 0.2s ease'
-        }}
-        onMouseDown={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(0.8)';
-        }}
-        onMouseUp={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          setTimeout(() => {
-            target.style.transform = 'scale(1)';
-          }, 200);
-        }}
-        onMouseLeave={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(1)';
-        }}
-      >
-        <IonIcon
-          icon={arrowBack}
-          style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-            fontSize: '20px',
-          }}
-        />
-      </div>
+      <IonContent fullscreen className="content-ios">
+        <div style={{ padding: '16px', maxWidth: '720px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px', padding: '20px 0' }}>
+            <IonIcon icon={heart} style={{ fontSize: '3em', color: 'var(--ion-color-primary)', marginBottom: '12px' }} />
+            <h1 style={{ margin: '0 0 8px 0', fontSize: '1.8em', fontWeight: '700', color: 'var(--ion-text-color)' }}>
+              My Favorites
+            </h1>
+            <p style={{ margin: 0, color: 'var(--ion-text-color)', opacity: 0.7, fontSize: '1em' }}>
+              Access your favorite sermons, podcasts, and devotions
+            </p>
+          </div>
 
-      <IonContent
-        fullscreen
-        className="content-ios"
-        onIonScroll={(e) => {
-          if (!currentSermon) return;
-          const currentScroll = e.detail.scrollTop;
-          if (currentScroll > lastScroll + 10) {
-            setExpandedDescription(false);
-          } else if (currentScroll < lastScroll - 10) {
-            setExpandedDescription(true);
-          }
-          setLastScroll(currentScroll);
-        }}
-      >
-        {/* YouTube-style Video Player Section */}
-        {currentSermon && (() => {
-          console.log('Rendering video player section, currentSermon:', currentSermon);
-          return (
-          <>
-            {/* Video Player and Details Container */}
-            <div style={{ position: 'relative' }}>
-              {/* Video Player */}
-              <div style={{
-                width: '100%',
-                background: 'black',
-                position: 'relative'
-              }}>
-                {(() => {
-                  if (!(currentSermon as any).videoUrl) {
-                    return <div style={{ padding: '100px', textAlign: 'center', color: 'white' }}>Video not available</div>;
-                  }
-                  const videoUrl = getFullUrl((currentSermon as any).videoUrl);
-                  console.log('Video URL:', videoUrl, 'isDatabase:', (currentSermon as any).isDatabaseSermon);
-                  return (
-                    <VideoPlayer
-                      key={currentSermon.id}
-                      url={videoUrl}
-                      title={currentSermon.title}
-                      playing={isPlaying}
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
-                    />
-                  );
-                })()}
-              </div>
-
-              {/* Video Details Section */}
-              <div className="video-details-section" style={{ padding: '16px' }}>
-                {/* Video Title */}
-                <h1 className="video-title-large" style={{ fontSize: '1.2em', fontWeight: '600', margin: '0 0 12px 0', lineHeight: '1.3', color: 'var(--ion-text-color)' }}>
-                  {currentSermon.title}
-                </h1>
-
-                {/* Channel Info and Action Buttons */}
-                <div className="channel-info-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <div className="channel-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div>
-                      <h3 className="channel-name" style={{ fontSize: '0.8em', fontWeight: '600', margin: '0 0 2px 0', color: 'var(--ion-text-color)' }}>
-                        {currentSermon.speaker || 'Dove Ministries Africa'}
-                      </h3>
-                      <p className="channel-stats" style={{ fontSize: '0.75em', color: 'var(--ion-color-medium)', margin: 0 }}>
-                        {formatDate(currentSermon.date)}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Action Buttons next to channel info */}
-                  <div className="channel-action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* Delete Button */}
-                    <div
-                      className="channel-action-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeSavedSermon(currentSermon.id);
-                      }}
-                      style={{
-                        width: 45,
-                        height: 45,
-                        borderRadius: 25,
-                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      onMouseDown={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(0.8)';
-                      }}
-                      onMouseUp={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <IonIcon
-                        icon={trash}
-                        style={{
-                          color: '#ef4444',
-                          fontSize: '20px',
-                        }}
-                      />
-                    </div>
-                    {/* Close Button */}
-                    <div
-                      className="channel-action-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentSermon(null);
-                        setIsPlaying(false);
-                      }}
-                      style={{
-                        width: 45,
-                        height: 45,
-                        borderRadius: 25,
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      onMouseDown={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(0.8)';
-                      }}
-                      onMouseUp={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        const target = e.currentTarget as HTMLElement;
-                        target.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <IonIcon
-                        icon={close}
-                        style={{
-                          color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                          fontSize: '20px',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="description-section" style={{ 
-                  background: 'var(--ion-item-background)',
-                  borderRadius: '12px',
-                  padding: '12px',
-                  marginBottom: '16px'
-                }}>
-                  <p className="description-text" style={{ margin: 0, lineHeight: '1.5', color: 'var(--ion-text-color)', fontSize: '0.9em' }}>
-                    {(() => {
-                      const description = currentSermon.description || 'No description available.';
-                      const shouldTruncate = description.length > 150 && !expandedDescription;
-
-                      return shouldTruncate ? (
-                        <>
-                          {description.substring(0, 150)}...
-                          <button
-                            onClick={() => setExpandedDescription(true)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--ion-color-primary)',
-                              cursor: 'pointer',
-                              fontSize: '0.9em',
-                              fontWeight: '600',
-                              marginLeft: '4px',
-                              padding: '0'
-                            }}
-                          >
-                            Show more
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {description}
-                          {description.length > 150 && (
-                            <button
-                              onClick={() => setExpandedDescription(false)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--ion-color-primary)',
-                                cursor: 'pointer',
-                                fontSize: '0.9em',
-                                fontWeight: '600',
-                                marginLeft: '4px',
-                                padding: '0'
-                              }}
-                            >
-                              Show less
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-          );
-        })()}
-        
-        {/* Content below player or list when no player is active */}
-        <div style={{ padding: '16px', marginTop: currentSermon ? '0' : '0' }}>
-          {!currentSermon && (
-            <>
-              {/* Header Section */}
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '24px',
-                padding: '20px 0'
-              }}>
-                <IonIcon
-                  icon={heart}
-                  style={{
-                    fontSize: '3em',
-                    color: 'var(--ion-color-primary)',
-                    marginBottom: '12px'
-                  }}
-                />
-                <h1 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.8em',
-                  fontWeight: '700',
-                  color: 'var(--ion-text-color)'
-                }}>
-                  My Favorites
-                </h1>
-                <p style={{
-                  margin: '0',
-                  color: 'var(--ion-text-color)',
-                  opacity: 0.7,
-                  fontSize: '1em'
-                }}>
-                  Access your favorite sermons and podcasts
-                </p>
-              </div>
-
-              {/* Category Tabs - Podcast Player Style */}
-              <div style={{ maxWidth: '420px', margin: '0 auto', marginBottom: '20px' }}>
-                <div style={{
-                  display: 'flex',
-                  gap: '4px',
-                  background: 'var(--ion-item-background)',
-                  padding: '4px',
-                  borderRadius: '12px',
-                  border: '1px solid var(--ion-color-primary)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}>
-                  <div
-                    onClick={() => setActiveTab('sermons')}
-                    style={{
-                      flex: 1,
-                      padding: '10px 16px',
-                      borderRadius: '10px',
-                      fontSize: '0.85em',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: activeTab === 'sermons' ? 'var(--ion-color-primary)' : 'transparent',
-                      color: activeTab === 'sermons' ? 'white' : 'var(--ion-text-color)',
-                      textTransform: 'capitalize',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Sermons ({totalSermons})
-                  </div>
-                  <div
-                    onClick={() => setActiveTab('podcasts')}
-                    style={{
-                      flex: 1,
-                      padding: '10px 16px',
-                      borderRadius: '10px',
-                      fontSize: '0.85em',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: activeTab === 'podcasts' ? 'var(--ion-color-primary)' : 'transparent',
-                      color: activeTab === 'podcasts' ? 'white' : 'var(--ion-text-color)',
-                      textTransform: 'capitalize',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Podcasts ({totalPodcasts})
-                  </div>
-                  <div
-                    onClick={() => setActiveTab('devotions')}
-                    style={{
-                      flex: 1,
-                      padding: '10px 16px',
-                      borderRadius: '10px',
-                      fontSize: '0.85em',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: activeTab === 'devotions' ? 'var(--ion-color-primary)' : 'transparent',
-                      color: activeTab === 'devotions' ? 'white' : 'var(--ion-text-color)',
-                      textTransform: 'capitalize',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Devotions ({totalDevotions})
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Content List */}
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <IonLoading isOpen={loading} message="Loading saved content..." />
-            </div>
-          ) : currentContent.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '40px 20px',
-              color: 'var(--ion-text-color)',
-              opacity: 0.7
-            }}>
-              <IonIcon
-                icon={activeTab === 'sermons' ? playCircle : activeTab === 'podcasts' ? radio : book}
-                style={{
-                  fontSize: '3em',
-                  color: 'var(--ion-color-medium)',
-                  marginBottom: '16px'
-                }}
-              />
-              <h3>No favorite {activeTab} found</h3>
-              <p>
-                You haven't favorited any {activeTab} yet. Use the heart button on content to add them here.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '410px', margin: '0 auto' }}>
-              {activeTab === 'sermons' && (
-                // Sermons List - Same layout as Tab2.tsx
-                (currentContent as SavedSermon[]).filter(sermon => !currentSermon || sermon.id !== currentSermon.id).map((sermon) => (
-                  <div
-                    key={sermon.id}
-                    className="video-item"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      backgroundColor: 'var(--ion-background-color)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: 'none',
-                      maxWidth: '600px'
-                    }}
-                    onClick={() => {
-                      setCurrentSermon(sermon);
-                      setIsPlaying(true);
-                    }}
-                  >
-                    <div style={{ flex: '0.5', height: '80px', position: 'relative' }}>
-                      <img
-                        src={getFullUrl(sermon.thumbnailUrl || '/bible.JPG')}
-                        alt={sermon.title}
-                        style={{
-                          height: '100%',
-                          width: 'auto',
-                          aspectRatio: '16/9',
-                          objectFit: 'cover',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '8px',
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.8em'
-                      }}>
-                        {sermon.duration || '—'}
-                      </div>
-                    </div>
-                    <div style={{ flex: '1', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <div style={{ flex: 1, marginRight: '8px' }}>
-                            <h4 className="video-title" style={{ fontSize: '0.95em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                              {sermon.title}
-                            </h4>
-                            <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                              {sermon.speaker}
-                            </p>
-                          </div>
-                          <IonButton
-                            fill="clear"
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeSavedSermon(sermon.id);
-                            }}
-                            style={{
-                              margin: '0',
-                              padding: '6px',
-                              minWidth: '44px',
-                              height: '44px',
-                              '--color': '#ef4444',
-                              '--padding-start': '6px',
-                              '--padding-end': '6px',
-                              alignSelf: 'flex-start'
-                            }}
-                          >
-                            <IonIcon icon={trash} style={{ fontSize: '1.8em' }} />
-                          </IonButton>
-                        </div>
-                        <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          {formatDate(sermon.date)} • Saved {formatDate(sermon.savedAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-              {activeTab === 'podcasts' && (
-                // Podcasts List - Same layout as Tab4.tsx
-                (currentContent as SavedPodcast[]).map((podcast) => {
-                  // Safety check for podcast ID
-                  if (!podcast.id || podcast.id === 'undefined') {
-                    console.warn('Podcast in favorites list has invalid ID:', podcast);
-                    return null;
-                  }
-                  return (
-                  <div
-                    key={podcast.id}
-                    className="podcast-item"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      backgroundColor: 'var(--ion-background-color)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: 'none',
-                      maxWidth: '600px'
-                    }}
-                    onClick={() => {
-                      const podcastForPlayer = {
-                        ...podcast,
-                        viewCount: (podcast as any).viewCount || '0'
-                      };
-                      setCurrentMedia(podcastForPlayer);
-                      setIsPlaying(true);
-                      history.push('/podcast-player', { from: 'saved' });
-                    }}
-                  >
-                    <div style={{ flex: '0.5', height: '80px', position: 'relative' }}>
-                      <img
-                        src={getFullUrl(podcast.thumbnailUrl || '/bible.JPG')}
-                        alt={podcast.title}
-                        style={{
-                          height: '100%',
-                          width: 'auto',
-                          aspectRatio: '16/9',
-                          objectFit: 'cover',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '8px',
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.8em'
-                      }}>
-                        {podcast.duration}
-                      </div>
-                      <div style={{
-                        position: 'absolute',
-                        top: '8px',
-                        left: '8px',
-                        background: podcast.isLive ? 'var(--ion-color-danger)' : 'var(--ion-color-primary)',
-                        color: 'white',
-                        padding: '1px 4px',
-                        borderRadius: '4px',
-                        fontSize: '0.6em',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        backdropFilter: 'blur(10px)'
-                      }}>
-                        {podcast.isLive ? 'LIVE' : 'PODCAST'}
-                      </div>
-                    </div>
-                    <div style={{ flex: '1', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <div style={{ flex: 1, marginRight: '8px' }}>
-                            <h4 className="podcast-title" style={{ fontSize: '0.95em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                              {podcast.title}
-                            </h4>
-                            <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                              {podcast.speaker || 'Dove Ministries Africa'}
-                            </p>
-                          </div>
-                          <IonButton
-                            fill="clear"
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log('Remove podcast button clicked, ID:', podcast.id);
-                              removeSavedPodcast(podcast.id);
-                            }}
-                            style={{
-                              margin: '0',
-                              padding: '6px',
-                              minWidth: '44px',
-                              height: '44px',
-                              '--color': '#ef4444',
-                              '--padding-start': '6px',
-                              '--padding-end': '6px',
-                              alignSelf: 'flex-start'
-                            }}
-                          >
-                            <IonIcon icon={trash} style={{ fontSize: '1.8em' }} />
-                          </IonButton>
-                        </div>
-                        <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          {formatDate(podcast.publishedAt)} • Saved {formatDate(podcast.savedAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  );
-                })
-              )}
-              {activeTab === 'devotions' && (
-                // Devotions List
-                (currentContent as SavedDevotion[]).map((devotion) => (
-                  <div
-                    key={devotion.id}
-                    className="devotion-card"
-                    style={{
-                      backgroundColor: 'var(--ion-background-color)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: 'none',
-                      maxWidth: '600px'
-                    }}
-                    onClick={() => history.push(`/full-devotion?id=${devotion.id}`)}
-                  >
-                    <div style={{ position: 'relative' }}>
-                      <img
-                        src={getFullUrl((devotion.thumbnailUrl && devotion.thumbnailUrl !== '/dove.png') ? devotion.thumbnailUrl : '/hero-evangelism.jpg')}
-                        alt={devotion.title}
-                        style={{
-                          width: '100%',
-                          height: '120px',
-                          objectFit: 'cover'
-                        }}
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.dataset['triedHero']) {
-                            target.dataset['triedHero'] = 'true';
-                            target.src = '/hero-evangelism.jpg';
-                          } else {
-                            target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120"><rect fill="%23f5f5f5" width="400" height="120"/><text x="200" y="60" text-anchor="middle" dy=".3em" fill="%23999" font-size="14">Devotion</text></svg>');
-                          }
-                        }}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '8px',
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '0.8em'
-                      }}>
-                        Day {devotion.day}
-                      </div>
-                    </div>
-                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <div style={{ flex: 1, marginRight: '8px' }}>
-                            <h4 className="devotion-title" style={{ fontSize: '0.95em', fontWeight: '600', margin: '0 0 4px 0' }}>
-                              {devotion.title}
-                            </h4>
-                            <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                              {formatDate(devotion.date)}
-                            </p>
-                          </div>
-                          <IonButton
-                            fill="clear"
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeSavedDevotion(devotion.id);
-                            }}
-                            style={{
-                              margin: '0',
-                              padding: '6px',
-                              minWidth: '44px',
-                              height: '44px',
-                              '--color': '#ef4444',
-                              '--padding-start': '6px',
-                              '--padding-end': '6px',
-                              alignSelf: 'flex-start'
-                            }}
-                          >
-                            <IonIcon icon={trash} style={{ fontSize: '1.8em' }} />
-                          </IonButton>
-                        </div>
-                        <p style={{ margin: '0', fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
-                          {devotion.content.substring(0, 80)}...
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Footer Info */}
-          {(totalSermons > 0 || totalPodcasts > 0) && (
-            <div style={{
-              marginTop: '32px',
-              padding: '20px',
-              backgroundColor: 'var(--ion-color-light)',
+          <div
+            style={{
+              display: 'flex',
+              gap: '4px',
+              background: 'var(--ion-item-background)',
+              padding: '4px',
               borderRadius: '12px',
-              textAlign: 'center',
-              maxWidth: '460px',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }}>
-              <IonIcon
-                icon={heart}
-                style={{
-                  fontSize: '2em',
-                  color: 'var(--ion-color-primary)',
-                  marginBottom: '12px'
-                }}
-              />
-              <h4 style={{
-                margin: '0 0 8px 0',
-                fontSize: '1em',
+              border: '1px solid var(--ion-color-primary)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              marginBottom: '20px'
+            }}
+          >
+            <div
+              onClick={() => setActiveTab('sermons')}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontSize: '0.85em',
                 fontWeight: '600',
-                color: 'var(--ion-text-color)'
-              }}>
-                Your Favorite Content
-              </h4>
-              <p style={{
-                margin: '0',
-                fontSize: '0.9em',
-                color: 'var(--ion-text-color)',
-                opacity: 0.7,
-                lineHeight: '1.4'
-              }}>
-                You have {totalSermons} favorite sermon{totalSermons !== 1 ? 's' : ''} and {totalPodcasts} favorite podcast{totalPodcasts !== 1 ? 's' : ''}.
-                Access them anytime for offline listening.
-              </p>
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'sermons' ? 'var(--ion-color-primary)' : 'transparent',
+                color: activeTab === 'sermons' ? 'white' : 'var(--ion-text-color)',
+                textAlign: 'center'
+              }}
+            >
+              Sermons ({savedSermons.length})
             </div>
+            <div
+              onClick={() => setActiveTab('podcasts')}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontSize: '0.85em',
+                fontWeight: '600',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'podcasts' ? 'var(--ion-color-primary)' : 'transparent',
+                color: activeTab === 'podcasts' ? 'white' : 'var(--ion-text-color)',
+                textAlign: 'center'
+              }}
+            >
+              Podcasts ({savedPodcasts.length})
+            </div>
+            <div
+              onClick={() => setActiveTab('devotions')}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontSize: '0.85em',
+                fontWeight: '600',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'devotions' ? 'var(--ion-color-primary)' : 'transparent',
+                color: activeTab === 'devotions' ? 'white' : 'var(--ion-text-color)',
+                textAlign: 'center'
+              }}
+            >
+              Devotions ({savedDevotions.length})
+            </div>
+          </div>
+
+          {activeTab === 'sermons' && (
+            savedSermons.length === 0 ? (
+              renderEmpty()
+            ) : (
+              savedSermons.map((sermon) => (
+                <IonItem
+                  key={sermon.id}
+                  lines="none"
+                  style={{
+                    marginBottom: '12px',
+                    borderRadius: '12px',
+                    '--background': 'var(--ion-background-color)',
+                    border: '1px solid var(--ion-color-step-200)'
+                  }}
+                >
+                  <IonLabel>
+                    <h2 style={{ marginBottom: '4px' }}>{sermon.title}</h2>
+                    <p>{sermon.speaker} • {formatDate(sermon.date)} • {sermon.duration || '—'}</p>
+                  </IonLabel>
+                  <IonButton fill="clear" color="danger" onClick={() => removeSavedSermon(sermon.id)}>
+                    <IonIcon icon={trash} />
+                  </IonButton>
+                </IonItem>
+              ))
+            )
           )}
+
+          {activeTab === 'podcasts' && (
+            savedPodcasts.length === 0 ? (
+              renderEmpty()
+            ) : (
+              savedPodcasts.map((podcast) => (
+                <IonItem
+                  key={podcast.id}
+                  lines="none"
+                  style={{
+                    marginBottom: '12px',
+                    borderRadius: '12px',
+                    '--background': 'var(--ion-background-color)',
+                    border: '1px solid var(--ion-color-step-200)'
+                  }}
+                >
+                  <IonLabel>
+                    <h2 style={{ marginBottom: '4px' }}>{podcast.title}</h2>
+                    <p>{podcast.speaker || 'Dove Ministries Africa'} • {formatDate(podcast.publishedAt)} • {podcast.duration || '—'}</p>
+                  </IonLabel>
+                  <IonButton fill="clear" color="danger" onClick={() => removeSavedPodcast(podcast.id)}>
+                    <IonIcon icon={trash} />
+                  </IonButton>
+                </IonItem>
+              ))
+            )
+          )}
+
+          {activeTab === 'devotions' && (
+            savedDevotions.length === 0 ? (
+              renderEmpty()
+            ) : (
+              savedDevotions.map((devotion) => (
+                <IonItem
+                  key={devotion.id}
+                  lines="none"
+                  style={{
+                    marginBottom: '12px',
+                    borderRadius: '12px',
+                    '--background': 'var(--ion-background-color)',
+                    border: '1px solid var(--ion-color-step-200)'
+                  }}
+                >
+                  <IonLabel>
+                    <h2 style={{ marginBottom: '4px' }}>{devotion.title}</h2>
+                    <p>{formatDate(devotion.date)} • Day {devotion.day || 1}</p>
+                  </IonLabel>
+                  <IonButton fill="clear" color="danger" onClick={() => removeSavedDevotion(devotion.id)}>
+                    <IonIcon icon={trash} />
+                  </IonButton>
+                </IonItem>
+              ))
+            )
+          )}
+
+          <div style={{ marginTop: '32px', textAlign: 'center', color: 'var(--ion-text-color)', opacity: 0.7 }}>
+            {activeCount > 0 && (
+              <p style={{ margin: 0 }}>
+                You have {savedSermons.length} favorite sermon{savedSermons.length !== 1 ? 's' : ''},{' '}
+                {savedPodcasts.length} favorite podcast{savedPodcasts.length !== 1 ? 's' : ''}, and{' '}
+                {savedDevotions.length} favorite devotion{savedDevotions.length !== 1 ? 's' : ''}.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Popover */}
-        <IonPopover isOpen={showPopover} event={popoverEvent} onDidDismiss={() => setShowPopover(false)} side="bottom" alignment="center">
-          <div style={{
-            background: 'linear-gradient(180deg, rgba(13, 128, 163, 0.1) 0%, rgba(13, 128, 163, 0.3) 50%, rgba(13, 128, 163, 0.1) 100%)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '2px solid white',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            minWidth: '120px',
-            padding: '2px 0'
-          }}>
-            <IonList style={{ background: 'transparent', padding: '0' }}>
-              <IonItem button style={{ '--background-hover': 'rgba(255,255,255,0.1)', '--padding-start': '8px', '--inner-padding-end': '8px', minHeight: '32px' }} onClick={async () => {
-                if (currentSermon) {
-                  // Generate the shareable URL that points to the Vercel deployment
-                  const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${currentSermon.id}`;
-                  
-                  const shareData = {
-                    title: currentSermon.title,
-                    text: currentSermon.description,
-                    url: shareUrl
-                  };
-
-                  try {
-                    if (navigator.share) {
-                      await navigator.share(shareData);
-                    } else {
-                      // Fallback: copy to clipboard
-                      const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
-                      await navigator.clipboard.writeText(textToCopy);
-                      alert('Sermon details copied to clipboard!');
-                    }
-                  } catch (error) {
-                    console.error('Error sharing:', error);
-                    alert('Failed to share sermon. Please try again.');
-                  }
-                }
-                setShowPopover(false);
-              }}>
-                <IonIcon icon="share" slot="start" style={{ fontSize: '1em' }} />
-                <IonLabel style={{ fontSize: '0.85em' }}>Share</IonLabel>
-              </IonItem>
-            </IonList>
-          </div>
-        </IonPopover>
-
-        {/* Success Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
@@ -1252,4 +366,4 @@ const Saved: React.FC = () => {
   );
 };
 
-export default Saved;
+export default MyFavorites;

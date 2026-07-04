@@ -1,400 +1,378 @@
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .hero-section {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .hero-icon-bg {
-  background-color: rgba(255,255,255,0.1) !important;
+  background-color: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .hero-title {
-  color: #f1f5f9 !important;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .hero-subtitle {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .contact-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .contact-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .contact-subtitle {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .action-button {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .action-button-secondary {
-  background: rgba(255,255,255,0.1) !important;
-  color: #f1f5f9 !important;
-  border-color: rgba(255,255,255,0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+  border-color: var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .story-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .story-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .story-text {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .verse-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .verse-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .verse-reference {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .mission-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .mission-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .impact-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .impact-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .impact-number {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .impact-label {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .service-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .service-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .service-description {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .service-icon-bg {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .service-times-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .service-times-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .service-times-text {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .service-times-detail {
-  background: rgba(255,255,255,0.1) !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .join-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+  background: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .join-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .join-text {
-  color: rgba(255,255,255,0.8) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .join-button-primary {
-  background: rgba(255,255,255,0.2) !important;
-  color: #f1f5f9 !important;
-  border-color: rgba(255,255,255,0.3) !important;
+  background: var(--ios26-fill-dark) !important;
+  color: var(--ios26-text-primary-dark) !important;
+  border-color: var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .join-button-secondary {
-  color: rgba(255,255,255,0.8) !important;
-  border-color: rgba(255,255,255,0.3) !important;
+  color: var(--ios26-text-secondary-dark) !important;
+  border-color: var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .contact-info {
-  background: rgba(255,255,255,0.1) !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .contact-info-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .contact-info-text {
-  color: rgba(255,255,255,0.9) !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .footer-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .footer-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .action-item {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--ios26-fill-dark) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .action-item:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .action-icon-bg {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: var(--ios26-fill-dark) !important;
 }
 
 [data-theme="dark"] .action-text {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Hero section */
   .hero-section {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .hero-icon-bg {
-    background-color: rgba(255,255,255,0.1) !important;
+    background-color: var(--ios26-fill-dark) !important;
   }
 
   .hero-title {
-    color: #f1f5f9 !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .hero-subtitle {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Contact cards */
   .contact-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .contact-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .contact-subtitle {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Action buttons */
   .action-button {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .action-button-secondary {
-    background: rgba(255,255,255,0.1) !important;
-    color: #f1f5f9 !important;
-    border-color: rgba(255,255,255,0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
+    border-color: var(--ios26-separator-dark) !important;
   }
 
-  /* Story & mission cards */
   .story-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .story-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .story-text {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .verse-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .verse-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .verse-reference {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .mission-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .mission-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .impact-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .impact-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .impact-number {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .impact-label {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* What we do cards */
   .service-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .service-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .service-description {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .service-icon-bg {
-    background-color: rgba(0, 0, 0, 0.2) !important;
+    background-color: var(--ios26-fill-dark) !important;
   }
 
-  /* Service times card */
   .service-times-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .service-times-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .service-times-text {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .service-times-detail {
-    background: rgba(255,255,255,0.1) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
-  /* Join community card */
   .join-card {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)) !important;
+    background: var(--ios26-card-bg-dark) !important;
   }
 
   .join-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .join-text {
-    color: rgba(255,255,255,0.8) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
   .join-button-primary {
-    background: rgba(255,255,255,0.2) !important;
-    color: #f1f5f9 !important;
-    border-color: rgba(255,255,255,0.3) !important;
+    background: var(--ios26-fill-dark) !important;
+    color: var(--ios26-text-primary-dark) !important;
+    border-color: var(--ios26-separator-dark) !important;
   }
 
   .join-button-secondary {
-    color: rgba(255,255,255,0.8) !important;
-    border-color: rgba(255,255,255,0.3) !important;
+    color: var(--ios26-text-secondary-dark) !important;
+    border-color: var(--ios26-separator-dark) !important;
   }
 
   .contact-info {
-    background: rgba(255,255,255,0.1) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .contact-info-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .contact-info-text {
-    color: rgba(255,255,255,0.9) !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Footer actions */
   .footer-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .footer-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .action-item {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--ios26-fill-dark) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .action-item:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
   }
 
   .action-icon-bg {
-    background-color: rgba(0, 0, 0, 0.2) !important;
+    background-color: var(--ios26-fill-dark) !important;
   }
 
   .action-text {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 }
 

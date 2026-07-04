@@ -211,10 +211,6 @@ router.post('/', [
 
     await event.populate('createdBy', 'name');
 
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('event:created', { event });
-
     res.status(201).json({
       message: 'Event created successfully',
       event
@@ -345,10 +341,6 @@ router.put('/:id', [
       message: 'Event updated successfully',
       event
     });
-
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('event:updated', { event });
   } catch (error) {
     console.error('Event update error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -384,10 +376,6 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     await Event.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Event deleted successfully' });
-
-    // Emit real-time event to all connected clients
-    const io = req.app.get('io');
-    io.emit('event:deleted', { id: req.params.id });
   } catch (error) {
     console.error('Event deletion error:', error);
     res.status(500).json({ error: 'Server error' });

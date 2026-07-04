@@ -132,8 +132,9 @@ class ApiService {
   }
 
   private isAuthEndpoint(endpoint: string): boolean {
-    // Only match the actual auth action endpoints - login and signup should NOT trigger logout
-    // Profile and users endpoints should trigger logout on auth failure
+    // Endpoints that should NOT trigger logout on auth failure
+    // Login and signup should never trigger logout since they're auth endpoints themselves
+    // Profile endpoint should trigger logout on auth failure
     return endpoint === '/auth/login' || endpoint === '/auth/signup';
   }
 
@@ -166,9 +167,12 @@ class ApiService {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log('🌐 API Request URL:', url);
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
+
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
@@ -340,14 +344,15 @@ class ApiService {
     });
   }
 
-  async getProfile() {
-    return this.request('/auth/profile');
+  async getProfile(forceRefresh: boolean = false) {
+    return this.request('/auth/profile', {}, 0, forceRefresh);
   }
 
   async updateProfile(userData: any) {
+    const isFormData = userData instanceof FormData;
     return this.request('/auth/profile', {
       method: 'PUT',
-      body: JSON.stringify(userData),
+      body: isFormData ? userData : JSON.stringify(userData),
     });
   }
 
@@ -359,25 +364,7 @@ class ApiService {
   }
 
   async uploadProfilePicture(formData: FormData) {
-    const url = `${BACKEND_BASE_URL}/api/auth/upload-profile-picture`;
-    const headers: HeadersInit = {};
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Network error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
+    return this.upload('/auth/upload-profile-picture', formData);
   }
 
   // Sermons

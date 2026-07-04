@@ -13,7 +13,7 @@ import {
   IonLoading
 } from '@ionic/react';
 import { logIn, personCircle, mail, lockClosed, eye, eyeOff, arrowBack } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
 
 const SignIn: React.FC = () => {
@@ -23,7 +23,11 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const history = useHistory();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
+
+  // Get redirect URL from location state, or default to /tab1
+  const from = (location.state as any)?.from?.pathname || '/tab1';
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +37,8 @@ const SignIn: React.FC = () => {
 
     try {
       await login(email, password);
-      // Redirect to home page after successful login
-      history.push('/tab1');
+      // Redirect to the original destination or home page after successful login
+      history.push(from);
     } catch (err: any) {
       const errorMessage = err.message || 'Sign in failed. Please try again.';
       // Show specific message for authentication errors
@@ -88,13 +92,13 @@ const SignIn: React.FC = () => {
             target.style.transform = 'scale(1)';
           }}
         >
-          <IonIcon
-            icon={arrowBack}
-            style={{
-              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-              fontSize: '20px',
-            }}
-          />
+           <IonIcon
+             icon={arrowBack}
+             style={{
+               color: 'var(--text-primary)',
+               fontSize: '20px',
+             }}
+           />
         </div>
         <IonToolbar className="toolbar-ios">
           <IonTitle className="title-ios">Sign In</IonTitle>

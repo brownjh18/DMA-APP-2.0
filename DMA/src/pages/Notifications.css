@@ -1,51 +1,281 @@
-/* Notifications page – supports the redesigned list rows + grouped summary rows */
-
-/* page-level background */
 .notifications-page {
-  --ion-background-color: transparent;
+  --ion-background-color: var(--ios26-grouped-bg-light);
 }
 
-/* toolbar */
-::slotted(ion-toolbar) {}
+.notif-container {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 16px;
+}
 
-/* inline styles in the component already handle .notif-card, .notif-toolbar,
-   .notif-stats, .notif-rows-list, .notif-groups-list rows, badges, thumbnails etc.
-   This file is kept for structural CSS selectors and legacy fallbacks */
+.section-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ios26-text-secondary-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  margin: 16px 0;
+}
 
-/* legacy – kept so old markup doesn't break if ever re-used */
-.notif-card {
-  max-width: 660px;
-  margin: 12px auto;
-  background: var(--ion-background-color, rgba(255,255,255,0.97));
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-label {
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ios26-text-primary-light);
+}
+
+.notif-count-chip {
+  font-size: 12px;
+  font-weight: 700;
+  height: 22px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+  margin-left: -4px;
+}
+
+.notif-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ios26-glass-bg-light);
+  padding: 4px;
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ios26-glass-border-light);
+}
+
+.filter-button {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  color: var(--ios26-text-primary-light);
+  background: transparent;
+  border: none;
   border-radius: 20px;
-  box-shadow: 0 8px 36px rgba(16,24,40,0.07);
-  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
 }
 
-.floating-card {
-  max-width: 880px;
-  margin: 18px auto;
-  background: var(--ion-background-color, rgba(255,255,255,0.96));
+.filter-button.clear-button {
+  color: #eb445a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-button.filter-active {
+  background: var(--ios26-glass-strong-light);
+  color: var(--ios26-text-primary-light);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+}
+
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
   border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(16,24,40,0.08);
+  background: var(--ios26-glass-bg-light);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.notif-row:hover {
+  background: var(--ios26-glass-strong-light);
+  transform: translateY(-3px);
+}
+
+.notif-row.unread {
+  background: var(--ios26-glass-strong-light);
+  border: 1px solid var(--ios26-glass-border-light);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+}
+
+.notif-icon {
+  font-size: 28px;
+  margin-right: 16px;
+}
+
+.notif-body {
+  flex-grow: 1;
+}
+
+.notif-message {
+  font-size: 15px;
+  color: var(--ios26-text-primary-light);
+  margin: 0 0 4px;
+}
+
+.notif-title {
+  font-weight: 700;
+}
+
+.notif-time {
+  font-size: 13px;
+  color: var(--ios26-text-secondary-light);
+}
+
+.notif-thumbnail {
+  width: 64px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 12px;
   overflow: hidden;
-  backdrop-filter: blur(8px);
+  flex-shrink: 0;
 }
 
-/* Dark mode support for Notifications page */
-[data-theme="dark"] .notif-card,
-@media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .notif-card {
-  background: rgba(30, 41, 59, 0.97);
-  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.2);
+.notif-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-[data-theme="dark"] .floating-card,
-@media (prefers-color-scheme: dark) :root:not([data-theme="light"]) .floating-card {
-  background: rgba(30, 41, 59, 0.96);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+.notif-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
 }
 
-/* responsive refinement */
-@media (max-width: 480px) {
-  .notif-card { margin: 10px; border-radius: 16px; }
+.notif-action-button {
+  --color: var(--ios26-text-secondary-light);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.notif-row:hover .notif-action-button,
+.notif-row:focus-within .notif-action-button {
+  opacity: 1;
+}
+
+/* Dark Mode - iOS 26 */
+[data-theme="dark"] .notifications-page {
+  --ion-background-color: var(--ios26-grouped-bg-dark);
+}
+
+[data-theme="dark"] .notif-toolbar {
+  background: var(--ios26-glass-bg-dark);
+  border-color: var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .notif-row {
+  background: var(--ios26-card-bg-dark);
+  border-color: var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .notif-row:hover {
+  background: var(--ios26-card-bg-elevated-dark);
+}
+
+[data-theme="dark"] .notif-row.unread {
+  background: var(--ios26-card-bg-elevated-dark);
+  border-color: var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .notif-filters {
+  background: var(--ios26-fill-dark);
+  border-color: var(--ios26-separator-dark);
+}
+
+[data-theme="dark"] .filter-button {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .filter-button.clear-button {
+  color: #ff4961;
+}
+
+[data-theme="dark"] .filter-button.filter-active {
+  background: var(--ios26-fill-dark);
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .section-divider,
+[data-theme="dark"] .notif-message,
+[data-theme="dark"] .notif-time,
+[data-theme="dark"] .notif-action-button {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .section-label {
+  color: var(--ios26-text-primary-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  .notifications-page {
+    --ion-background-color: var(--ios26-grouped-bg-dark);
+  }
+
+  .notif-toolbar {
+    background: var(--ios26-glass-bg-dark);
+    border-color: var(--ios26-separator-dark);
+  }
+
+  .notif-row {
+    background: var(--ios26-card-bg-dark);
+    border-color: var(--ios26-separator-dark);
+  }
+
+  .notif-row:hover {
+    background: var(--ios26-card-bg-elevated-dark);
+  }
+
+  .notif-row.unread {
+    background: var(--ios26-card-bg-elevated-dark);
+    border-color: var(--ios26-separator-dark);
+  }
+
+  .notif-filters {
+    background: var(--ios26-fill-dark);
+    border-color: var(--ios26-separator-dark);
+  }
+
+  .filter-button {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  .filter-button.clear-button {
+    color: #ff4961;
+  }
+
+  .filter-button.filter-active {
+    background: var(--ios26-fill-dark);
+    color: var(--ios26-text-primary-dark);
+  }
+
+  .section-divider,
+  .notif-message,
+  .notif-time,
+  .notif-action-button {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  .section-label {
+    color: var(--ios26-text-primary-dark);
+  }
 }

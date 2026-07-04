@@ -49,15 +49,50 @@
   100% { transform: translateX(100%); }
 }
 
+/* Light mode explicit overrides */
+:root:not([data-theme="dark"]) .podcast-item {
+  background: #ffffff !important;
+  border: 1px solid rgba(60, 60, 67, 0.12) !important;
+  border-radius: 12px;
+}
+
+:root:not([data-theme="dark"]) .podcast-title {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .podcast-meta {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+:root:not([data-theme="dark"]) h1,
+:root:not([data-theme="dark"]) h2,
+:root:not([data-theme="dark"]) h3,
+:root:not([data-theme="dark"]) h4 {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) p {
+  color: rgba(71, 85, 105, 0.82) !important;
+}
+
+:root:not([data-theme="dark"]) span {
+  color: inherit !important;
+}
+
 /* Smooth scrolling for the entire page */
 .podcasts-content {
   scroll-behavior: smooth;
   background: linear-gradient(135deg, var(--ion-background-color) 0%, rgba(var(--ion-color-primary-rgb), 0.02) 100%);
+  /* Light mode variables */
+  --ion-text-color: #0f172a;
+  --ion-color-medium: rgba(71, 85, 105, 0.82);
+  --ion-background-color: #f2f2f7;
 }
 
 /* Podcast title styling - limit to 2 lines with ellipsis */
 .podcast-title {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -166,40 +201,42 @@
 
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .podcasts-content {
-  --ion-background-color: #0f0f0f !important;
-  background: linear-gradient(135deg, #0f0f0f 0%, rgba(59, 130, 246, 0.03) 100%) !important;
+  --ion-text-color: var(--ios26-text-primary-dark) !important;
+  --ion-color-medium: var(--ios26-text-secondary-dark) !important;
+  --ion-background-color: var(--ios26-grouped-bg-dark) !important;
+  background: var(--ios26-grouped-bg-dark) !important;
+}
+
+[data-theme="dark"] .podcast-item {
+  background: var(--ios26-card-bg-dark) !important;
+  border: 1px solid var(--ios26-separator-dark);
 }
 
 [data-theme="dark"] .podcast-title {
-  color: #f8fafc;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .podcast-meta {
-  color: #94a3b8;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .podcast-item:hover {
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--ios26-separator-dark);
 }
 
-/* Dark mode support - System preference fallback */
-@media (prefers-color-scheme: dark) {
-  .podcasts-content {
-    --ion-background-color: #0f0f0f !important;
-    background: linear-gradient(135deg, #0f0f0f 0%, rgba(59, 130, 246, 0.03) 100%) !important;
-  }
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: var(--ios26-text-primary-dark) !important;
+}
 
-  .podcast-title {
-    color: #f8fafc;
-  }
+[data-theme="dark"] p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
 
-  .podcast-meta {
-    color: #94a3b8;
-  }
-
-  .podcast-item:hover {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  }
+[data-theme="dark"] span {
+  color: inherit !important;
 }
 
 /* Podcast thumbnail styling - 16:9 aspect ratio */
@@ -259,6 +296,38 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .podcasts-content {
+    --ion-text-color: var(--ios26-text-primary-dark) !important;
+    --ion-color-medium: var(--ios26-text-secondary-dark) !important;
+    --ion-background-color: var(--ios26-grouped-bg-dark) !important;
+    background: var(--ios26-grouped-bg-dark) !important;
+  }
+
+  .podcast-item {
+    background: var(--ios26-card-bg-dark) !important;
+    border: 1px solid var(--ios26-separator-dark);
+  }
+
+  .podcast-title {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  .podcast-meta {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--ios26-text-primary-dark) !important;
+  }
+
+  p {
+    color: var(--ios26-text-secondary-dark) !important;
+  }
+
+  span {
+    color: inherit !important;
+  }
+
   .podcast-skeleton {
     background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
     background-size: 200% 100%;

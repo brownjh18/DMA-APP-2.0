@@ -605,7 +605,7 @@ const Tab2: React.FC = () => {
                     <IonIcon
                       icon={isSermonSaved(currentSermon.id) ? heart : heartOutline}
                       style={{
-                        color: isSermonSaved(currentSermon.id) ? '#ef4444' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'),
+                         color: isSermonSaved(currentSermon.id) ? '#ef4444' : 'var(--text-primary)',
                         fontSize: '20px',
                       }}
                     />
@@ -648,12 +648,12 @@ const Tab2: React.FC = () => {
                     }}
                   >
                     <IonIcon
-                      icon={close}
-                      style={{
-                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                        fontSize: '20px',
-                      }}
-                    />
+                       icon={close}
+                       style={{
+                         color: 'var(--text-primary)',
+                         fontSize: '20px',
+                       }}
+                     />
                   </div>
                 </div>
               </div>

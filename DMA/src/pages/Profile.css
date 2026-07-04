@@ -1,308 +1,185 @@
-/* Dark mode support - Manual override via data-theme attribute */
-[data-theme="dark"] .profile-header {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+.profile-page {
+  --ion-background-color: var(--ios26-grouped-bg-light);
 }
 
-[data-theme="dark"] .profile-name {
-  color: #f1f5f9 !important;
+.profile-page ion-toolbar {
+  --background: var(--ion-background-color);
+  --border-width: 0;
 }
 
-[data-theme="dark"] .profile-member-since {
-  color: #94a3b8 !important;
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  padding-top: calc(var(--ion-safe-area-top) + 20px);
+  margin-bottom: 20px;
 }
 
-[data-theme="dark"] .profile-badge {
-  background-color: rgba(0, 0, 0, 0.8) !important;
+.profile-header .profile-avatar {
+  width: 140px;
+  height: 140px;
+  border: 4px solid var(--ion-color-primary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
 }
 
-[data-theme="dark"] .personal-info-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+.profile-details {
+  text-align: center;
 }
 
-[data-theme="dark"] .personal-info-title {
-  color: #f1f5f9 !important;
+.profile-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ios26-text-primary-light);
 }
 
-[data-theme="dark"] .info-item {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+.profile-email {
+  font-size: 14px;
+  color: var(--ios26-text-secondary-light);
+  margin-top: 4px;
 }
 
-[data-theme="dark"] .info-label {
-  color: #94a3b8 !important;
+.profile-options {
+  margin: 0 20px;
+  background: transparent;
 }
 
-[data-theme="dark"] .info-value {
-  color: #f1f5f9 !important;
+.profile-options ion-list-header {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ios26-text-secondary-light);
+  padding-left: 16px;
+  margin-top: 16px;
 }
 
-[data-theme="dark"] .activity-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+.profile-options ion-item {
+  --background: var(--ios26-card-bg-light);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="dark"] .activity-title {
-  color: #f1f5f9 !important;
+.profile-options ion-item ion-icon[slot="start"] {
+  color: var(--ion-color-primary);
+  margin-right: 16px;
 }
 
-[data-theme="dark"] .favorites-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+.profile-options ion-item ion-icon[slot="end"] {
+  color: var(--ios26-text-secondary-light);
 }
 
-[data-theme="dark"] .favorites-title {
-  color: #f1f5f9 !important;
+.danger-zone {
+  padding: 20px;
+  text-align: center;
 }
 
-[data-theme="dark"] .ministry-item {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+.danger-zone ion-button {
+  --border-radius: 12px;
 }
 
-[data-theme="dark"] .ministry-name {
-  color: #f1f5f9 !important;
+/* Sign In Prompt */
+.signin-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: 20px;
 }
 
-[data-theme="dark"] .actions-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+.signin-icon {
+  font-size: 60px;
+  color: var(--ion-color-primary);
+  margin-bottom: 16px;
 }
 
-[data-theme="dark"] .actions-title {
-  color: #f1f5f9 !important;
+.signin-prompt h2 {
+  font-weight: 700;
+  color: var(--ios26-text-primary-light);
 }
 
-[data-theme="dark"] .action-item {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+.signin-prompt p {
+  color: var(--ios26-text-secondary-light);
+  margin-bottom: 24px;
 }
 
-[data-theme="dark"] .action-item:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+.signin-button {
+  --border-radius: 24px;
+  font-weight: 600;
 }
 
-[data-theme="dark"] .action-icon-bg {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-theme="dark"] .action-text {
-  color: #f1f5f9 !important;
-}
-
-[data-theme="dark"] .signout-card {
-  background: #000000 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
-}
-
-[data-theme="dark"] .signout-button {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Dark mode support - System preference fallback */
+/* Dark Mode - iOS 26 */
 @media (prefers-color-scheme: dark) {
-  /* Profile header card */
-  .profile-header {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+  .profile-page {
+    --ion-background-color: var(--ios26-grouped-bg-dark);
+    --ion-background-color-step-50: var(--ios26-card-bg-dark);
   }
 
   .profile-name {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark);
   }
 
-  .profile-member-since {
-    color: #94a3b8 !important;
+  .profile-email {
+    color: var(--ios26-text-secondary-dark);
   }
 
-  .profile-badge {
-    background-color: rgba(0, 0, 0, 0.8) !important;
+  .profile-options ion-list-header {
+    color: var(--ios26-text-secondary-dark);
   }
 
-  /* Personal information card */
-  .personal-info-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+  .profile-options ion-item {
+    --background: var(--ios26-card-bg-dark);
   }
 
-  .personal-info-title {
-    color: #f1f5f9 !important;
+  .profile-options ion-item ion-icon[slot="end"] {
+    color: var(--ios26-text-secondary-dark);
   }
 
-  .info-item {
-    background-color: rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  .signin-prompt h2 {
+    color: var(--ios26-text-primary-dark);
   }
 
-  .info-label {
-    color: #94a3b8 !important;
-  }
-
-  .info-value {
-    color: #f1f5f9 !important;
-  }
-
-  /* Activity summary card */
-  .activity-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-  }
-
-  .activity-title {
-    color: #f1f5f9 !important;
-  }
-
-  /* Favorite ministries card */
-  .favorites-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-  }
-
-  .favorites-title {
-    color: #f1f5f9 !important;
-  }
-
-  .ministry-item {
-    background-color: rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  }
-
-  .ministry-name {
-    color: #f1f5f9 !important;
-  }
-
-  /* Quick actions card */
-  .actions-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-  }
-
-  .actions-title {
-    color: #f1f5f9 !important;
-  }
-
-  .action-item {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  }
-
-  .action-item:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
-  }
-
-  .action-icon-bg {
-    background-color: rgba(0, 0, 0, 0.8) !important;
-  }
-
-  .action-text {
-    color: #f1f5f9 !important;
-  }
-
-  /* Sign out card */
-  .signout-card {
-    background: #000000 !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-  }
-
-  .signout-button {
-    background-color: rgba(0, 0, 0, 0.8) !important;
+  .signin-prompt p {
+    color: var(--ios26-text-secondary-dark);
   }
 }
 
-/* Responsive Design */
-@media (max-width: 576px) {
- .profile-header {
-   margin: 8px 16px;
-   padding: 16px;
- }
+[data-theme="dark"] .profile-page {
+  --ion-background-color: var(--ios26-grouped-bg-dark);
+  --ion-background-color-step-50: var(--ios26-card-bg-dark);
+}
 
- .profile-name {
-   font-size: 20px;
- }
+[data-theme="dark"] .profile-name {
+  color: var(--ios26-text-primary-dark);
+}
 
- .profile-member-since {
-   font-size: 14px;
- }
+[data-theme="dark"] .profile-email {
+  color: var(--ios26-text-secondary-dark);
+}
 
- .personal-info-card {
-   margin: 8px 16px;
-   padding: 16px;
- }
+[data-theme="dark"] .profile-options ion-list-header {
+  color: var(--ios26-text-secondary-dark);
+}
 
- .personal-info-title {
-   font-size: 16px;
- }
+[data-theme="dark"] .profile-options ion-item {
+  --background: var(--ios26-card-bg-dark);
+}
 
- .info-item {
-   padding: 12px;
- }
+[data-theme="dark"] .profile-options ion-item ion-icon[slot="end"] {
+  color: var(--ios26-text-secondary-dark);
+}
 
- .info-label {
-   font-size: 14px;
- }
+[data-theme="dark"] .signin-prompt h2 {
+  color: var(--ios26-text-primary-dark);
+}
 
- .info-value {
-   font-size: 14px;
- }
-
- .activity-card {
-   margin: 8px 16px;
-   padding: 16px;
- }
-
- .activity-title {
-   font-size: 16px;
- }
-
- .favorites-card {
-   margin: 8px 16px;
-   padding: 16px;
- }
-
- .favorites-title {
-   font-size: 16px;
- }
-
- .ministry-item {
-   padding: 12px;
- }
-
- .ministry-name {
-   font-size: 14px;
- }
-
- .actions-card {
-   margin: 8px 16px;
-   padding: 16px;
- }
-
- .actions-title {
-   font-size: 16px;
- }
-
- .action-item {
-   padding: 12px;
- }
-
- .action-text {
-   font-size: 14px;
- }
-
- .signout-card {
-   margin: 8px 16px;
-   padding: 16px;
- }
+[data-theme="dark"] .signin-prompt p {
+  color: var(--ios26-text-secondary-dark);
 }

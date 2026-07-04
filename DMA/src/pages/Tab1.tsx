@@ -850,9 +850,9 @@ const Tab1: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Home</IonTitle>
-          <div slot="end" style={{ display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
-            <NotificationBell onClick={() => history.push('/notifications')} />
-          </div>
+          <IonButton slot="end" fill="clear" routerLink="/notifications">
+            <NotificationBell />
+          </IonButton>
         </IonToolbar>
       </IonHeader>
 
@@ -860,158 +860,57 @@ const Tab1: React.FC = () => {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
-        {/* FOR YOU - DEVOTION - Modern Design */}
+        {/* FOR YOU - DEVOTION - Hero Card */}
         {todaysDevotion && (
           <section className="section-padding">
             <div className="section-head">
-              <div className="section-title">
-                <IonIcon icon={heart} style={{ color: '#ff6b6b' }} />
+              <div className="section-title section-title--highlight">
+                <IonIcon icon={heart} />
                 <h2>{getTimeBasedGreeting()}</h2>
               </div>
             </div>
 
-            {/* Modern Devotion Card */}
-            <div 
-              className="modern-devotion-card"
-              onClick={() => {
-                const devotionId = todaysDevotion.id;
-                history.push(`/full-devotion?id=${devotionId}`);
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                position: 'relative',
-                boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 15px 50px rgba(102, 126, 234, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
-              }}
+            <div
+              className="devotion-hero"
+              onClick={() => history.push(`/full-devotion?id=${todaysDevotion.id}`)}
             >
-              {/* Background Image with Overlay */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundImage: `url('${getDevotionThumbnail(todaysDevotion.thumbnailUrl)}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  opacity: 0.3,
-                  filter: 'blur(2px)',
+              <img
+                className="devotion-hero-bg"
+                src={getDevotionThumbnail(todaysDevotion.thumbnailUrl)}
+                alt={todaysDevotion.title}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/hero-evangelism.jpg';
                 }}
               />
-              
-              {/* Content */}
-              <div style={{
-                position: 'relative',
-                zIndex: 2,
-                padding: '20px',
-                color: 'white',
-              }}>
-                {/* Header with Scripture Reference */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '12px',
-                }}>
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}>
-                    <IonIcon icon={book} style={{ fontSize: '14px' }} />
-                    <span>{todaysDevotion.scripture}</span>
-                  </div>
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '22px',
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-                    <IonIcon icon={book} style={{ fontSize: '20px' }} />
-                  </div>
-                </div>
+              <div className="devotion-hero-overlay" />
 
-                {/* Title and Scripture */}
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '22px',
-                  fontWeight: '800',
-                  lineHeight: '1.3',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                }}>
-                  {todaysDevotion.title}
-                </h3>
-                
-                <p style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '15px',
-                  fontStyle: 'italic',
-                  opacity: 0.95,
-                  lineHeight: '1.5',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}>
-                  "{todaysDevotion.content}"
-                </p>
-
-                {/* Read More Button */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                }}>
-                </div>
+              <div className="devotion-hero-badge">
+                <IonIcon icon={book} />
+                <span>{todaysDevotion.scripture}</span>
               </div>
 
-              {/* Decorative Elements */}
-              <div style={{
-                position: 'absolute',
-                top: '-50px',
-                right: '-50px',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%',
-              }} />
-              <div style={{
-                position: 'absolute',
-                bottom: '-30px',
-                left: '-30px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                borderRadius: '50%',
-              }} />
+              <div className="devotion-hero-panel">
+                <div className="devotion-hero-accent" />
+                <div className="devotion-hero-meta">
+                  <span className="devotion-hero-date">
+                    <IonIcon icon={calendar} />
+                    {todaysDevotion.date ? formatDate(todaysDevotion.date) : ''}
+                  </span>
+                  <div className="devotion-hero-sep" />
+                  <span className="devotion-hero-daylabel">Day {todaysDevotion.day}</span>
+                </div>
+                <h3 className="devotion-hero-title">{todaysDevotion.title}</h3>
+                <p className="devotion-hero-preview">{todaysDevotion.content}</p>
+                <span className="devotion-hero-cta">
+                  Begin Reading <IonIcon icon={arrowForward} />
+                </span>
+              </div>
             </div>
           </section>
         )}
 
         {/* WEEKLY PROGRAMS - Modern Quick Actions */}
+        <div className="home-text-area">
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
@@ -1032,11 +931,12 @@ const Tab1: React.FC = () => {
                 onClick={() => handleProgramClick(p)}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="quick-action-icon" style={{ background: `linear-gradient(135deg, ${p.color} 0%, ${p.color}cc 100%)` }}>
-                  <IonIcon icon={calendar} style={{ color: 'white', fontSize: '20px' }} />
+                <div className="quick-action-accent" style={{ ['--program-color' as any]: p.color }} />
+                <div className="quick-action-icon" style={{ ['--program-color' as any]: p.color }}>
+                  <IonIcon icon={calendar} />
                 </div>
                 <div className="quick-action-content">
-                  <div className="quick-action-day" style={{ color: p.color }}>{p.day}</div>
+                  <div className="quick-action-day">{p.day}</div>
                   <div className="quick-action-name">{p.program}</div>
                   <div className="quick-action-time">
                     <IonIcon icon={time} style={{ fontSize: '12px', marginRight: '4px' }} />
@@ -1098,41 +998,14 @@ const Tab1: React.FC = () => {
                         aria-hidden
                       />
                       {video.isLive ? (
-                        <div className="sermon-live-badge" style={{
-                          position: 'absolute',
-                          bottom: '10px',
-                          right: '10px'
-                        }}>
-                          <IonBadge
-                            style={{
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              fontSize: '0.6em',
-                              fontWeight: 'bold',
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              animation: 'pulse 2s infinite'
-                            }}
-                          >
+                        <div className="sermon-live-badge">
+                          <IonBadge className="sermon-status-badge sermon-status-badge--live">
                             LIVE
                           </IonBadge>
                         </div>
                       ) : video.duration && video.duration !== '—' && video.duration !== 'LIVE' && (
-                        <div className="sermon-duration-badge" style={{
-                          position: 'absolute',
-                          bottom: '10px',
-                          right: '10px'
-                        }}>
-                          <IonBadge
-                            style={{
-                              backgroundColor: 'rgba(0,0,0,0.85)',
-                              color: '#fff',
-                              fontSize: '0.6em',
-                              fontWeight: 'bold',
-                              padding: '4px 8px',
-                              borderRadius: '4px'
-                            }}
-                          >
+                        <div className="sermon-duration-badge">
+                          <IonBadge className="sermon-status-badge sermon-status-badge--duration">
                             {video.duration}
                           </IonBadge>
                         </div>
@@ -1174,7 +1047,7 @@ const Tab1: React.FC = () => {
                             handleVideoClick(video);
                           }}
                         >
-                          <IonIcon icon={play} style={{ color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000', fontSize: '18px' }} />
+                          <IonIcon icon={play} style={{ color: 'var(--text-primary)', fontSize: '18px' }} />
                         </div>
                       </div>
                     </div>
@@ -1270,7 +1143,7 @@ const Tab1: React.FC = () => {
                           handlePodcastClick(podcast);
                         }}
                       >
-                        <IonIcon icon={play} style={{ color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000', fontSize: '18px' }} />
+                        <IonIcon icon={play} style={{ color: 'var(--text-primary)', fontSize: '18px' }} />
                       </div>
                     </div>
                   </article>
@@ -1341,13 +1214,8 @@ const Tab1: React.FC = () => {
                 </article>
               ))
             ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
-                color: 'var(--ion-color-medium)',
-                width: '100%'
-              }}>
-                <IonIcon icon={calendar} style={{ fontSize: '3em', marginBottom: '16px', opacity: 0.5 }} />
+              <div className="empty-state">
+                <IonIcon icon={calendar} />
                 <p>No upcoming events at this time.</p>
               </div>
             )}
@@ -1418,13 +1286,8 @@ const Tab1: React.FC = () => {
                 </article>
               ))
             ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
-                color: 'var(--ion-color-medium)',
-                width: '100%'
-              }}>
-                <IonIcon icon={people} style={{ fontSize: '3em', marginBottom: '16px', opacity: 0.5 }} />
+              <div className="empty-state">
+                <IonIcon icon={people} />
                 <p>No ministries available at this time.</p>
               </div>
             )}
@@ -1433,53 +1296,17 @@ const Tab1: React.FC = () => {
 
         {/* ABOUT DOVE CHURCH */}
         <section className="section-padding">
-          <div style={{
-            backgroundColor: 'var(--ion-background-color)',
-            borderRadius: '16px',
-            padding: '24px',
-            boxShadow: '0 4px 12px rgba(161, 117, 117, 0.1)',
-            border: '1px solid var(--ion-color-step-200)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <IonIcon
-                icon={informationCircle}
-                style={{
-                  fontSize: '2.5em',
-                  color: 'var(--ion-color-primary)',
-                  marginBottom: '12px'
-                }}
-              />
-              <h2 style={{
-                margin: '0 0 8px 0',
-                fontSize: '1.5em',
-                fontWeight: '700',
-                color: 'var(--ion-text-color)'
-              }}>
-                About Dove Church
-              </h2>
+          <div className="about-card">
+            <div className="about-card-header">
+              <IonIcon icon={informationCircle} className="about-card-icon" />
+              <h2>About Dove Church</h2>
             </div>
 
-            <p style={{
-              margin: '0 0 20px 0',
-              color: 'var(--ion-color-medium)',
-              lineHeight: '1.6',
-              fontSize: '0.95em',
-              textAlign: 'center'
-            }}>
+            <p className="about-card-text">
               Transforming lives through faith, community, and service across Africa since 2005.
             </p>
 
-            <IonButton 
-              onClick={() => history.push('/tab5')}
-              style={{
-                width: '100%',
-                height: '48px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '16px',
-                backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '12px'
-              }}>
+            <IonButton onClick={() => history.push('/tab5')} className="about-cta">
               <IonIcon icon={arrowForward} slot="end" />
               Know More
             </IonButton>
@@ -1495,24 +1322,24 @@ const Tab1: React.FC = () => {
               onClick={closePopover}
             />
             {/* Popover card */}
-            <div className="program-popover">
-              <div className="program-popover-header" style={{ background: `linear-gradient(135deg, ${selectedProgram.color} 0%, ${selectedProgram.color}cc 100%)` }}>
+            <div className="program-popover" style={{ ['--program-color' as any]: selectedProgram.color }}>
+              <div className="program-popover-header">
                 <div className="program-popover-close" onClick={closePopover}>
                   <IonIcon icon={close} />
                 </div>
                 <div className="program-popover-icon">
-                  <IonIcon icon={calendar} style={{ color: 'white', fontSize: '28px' }} />
+                  <IonIcon icon={calendar} style={{ fontSize: '28px' }} />
                 </div>
                 <div className="program-popover-day">{selectedProgram.day}</div>
                 <h3 className="program-popover-title">{selectedProgram.program}</h3>
               </div>
               <div className="program-popover-body">
                 <div className="program-popover-info-row">
-                  <IonIcon icon={time} style={{ fontSize: '16px', color: selectedProgram.color }} />
+                  <IonIcon icon={time} style={{ fontSize: '16px' }} />
                   <span>{selectedProgram.time}</span>
                 </div>
                 <div className="program-popover-info-row">
-                  <IonIcon icon={location} style={{ fontSize: '16px', color: selectedProgram.color }} />
+                  <IonIcon icon={location} style={{ fontSize: '16px' }} />
                   <span>{selectedProgram.location}</span>
                 </div>
                 <div className="program-popover-description">
@@ -1522,13 +1349,6 @@ const Tab1: React.FC = () => {
                   <IonButton
                     expand="block"
                     className="program-popover-cta"
-                    style={{
-                      '--background': `linear-gradient(135deg, ${selectedProgram.color}, ${selectedProgram.color}cc)`,
-                      '--border-radius': '12px',
-                      fontWeight: '600',
-                      fontSize: '14px',
-                      marginTop: '8px'
-                    } as any}
                     onClick={() => {
                       closePopover();
                       history.push('/events#weekly-programs');
@@ -1541,6 +1361,7 @@ const Tab1: React.FC = () => {
             </div>
           </>
         )}
+      </div>
       </IonContent>
     </IonPage>
   );

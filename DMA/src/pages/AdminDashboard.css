@@ -1,65 +1,62 @@
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .dashboard-card {
-  background: rgba(30, 41, 59, 0.8) !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+  border: 1px solid var(--ios26-separator-dark) !important;
 }
 
 [data-theme="dark"] .card-title {
-  color: #f1f5f9 !important;
+  color: var(--ios26-text-primary-dark) !important;
 }
 
 [data-theme="dark"] .card-content {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .stat-number {
-  color: #60a5fa !important;
+  color: #8ec5ff !important;
 }
 
 [data-theme="dark"] .stat-label {
-  color: #94a3b8 !important;
+  color: var(--ios26-text-secondary-dark) !important;
 }
 
 [data-theme="dark"] .action-button {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3) !important;
+  background: linear-gradient(135deg, #007aff 0%, #0057d9 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.28) !important;
 }
 
 [data-theme="dark"] .content-row {
-  background-color: rgba(34, 34, 34, 0.781);
+  background-color: var(--ios26-card-bg-dark);
 }
 
 /* Dark mode support - System preference fallback */
 @media (prefers-color-scheme: dark) {
-  /* Dashboard cards */
   .dashboard-card {
-    background: rgba(30, 41, 59, 0.8) !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: var(--ios26-card-bg-dark) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    border: 1px solid var(--ios26-separator-dark) !important;
   }
 
   .card-title {
-    color: #f1f5f9 !important;
+    color: var(--ios26-text-primary-dark) !important;
   }
 
   .card-content {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Stats */
   .stat-number {
-    color: #60a5fa !important;
+    color: #8ec5ff !important;
   }
 
   .stat-label {
-    color: #94a3b8 !important;
+    color: var(--ios26-text-secondary-dark) !important;
   }
 
-  /* Buttons */
   .action-button {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3) !important;
+    background: linear-gradient(135deg, #007aff 0%, #0057d9 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.28) !important;
   }
 }
 
