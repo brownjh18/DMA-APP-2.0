@@ -3,6 +3,7 @@ import { heart, people, book, radio, chatbubble, musicalNotes, informationCircle
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BACKEND_BASE_URL, apiService } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 import './Ministries.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -17,6 +18,7 @@ const Ministries: React.FC = () => {
   const [ministries, setMinistries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const history = useHistory();
+  const { isDarkMode } = useSettings();
 
   useEffect(() => {
     console.log('Ministries component mounted, fetching data from API');
@@ -103,8 +105,10 @@ const Ministries: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          
-          <IonTitle className="title-ios">Ministries</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Ministries</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -148,7 +152,7 @@ const Ministries: React.FC = () => {
         <IonIcon
           icon={arrowBack}
           style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            color: isDarkMode ? '#ffffff' : '#000000',
             fontSize: '20px',
           }}
         />

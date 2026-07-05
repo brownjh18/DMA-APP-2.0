@@ -4,6 +4,7 @@ import { book, heart, flame, play, arrowForward, calendar, time, arrowBack } fro
 import { useHistory, useLocation } from 'react-router-dom';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
+import { useSettings } from '../contexts/SettingsContext';
 import './Tab3.css';
 
 interface Devotion {
@@ -37,6 +38,7 @@ const FullDevotion: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
   const { isLoggedIn } = useContext(AuthContext);
+  const { isDarkMode } = useSettings();
   const [devotion, setDevotion] = useState<Devotion | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -165,7 +167,7 @@ const FullDevotion: React.FC = () => {
                 icon={arrowBack}
                 style={{
                   fontSize: '1.2em',
-                  color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'
+                  color: isDarkMode ? '#ffffff' : '#000000'
                 }}
               />
             </div>
@@ -189,46 +191,11 @@ const FullDevotion: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ '--color': 'white' } as any}>
-          {/* Back Button */}
-          <div
-            onClick={() => history.goBack()}
-            style={{
-              position: 'absolute',
-              left: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                fontSize: '1.2em',
-                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'
-              }}
-            />
-          </div>
-
-          <IonTitle className="title-ios">Full Devotion</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Full Devotion</IonTitle>
         </IonToolbar>
       </IonHeader>
 

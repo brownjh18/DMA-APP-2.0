@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
 import './PrayerRequest.css';
+import { useSettings } from '../contexts/SettingsContext';
 
 const PrayerRequest: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [request, setRequest] = useState('');
@@ -55,8 +57,10 @@ const PrayerRequest: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          
-          <IonTitle className="title-ios">Prayer Request</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Prayer Request</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -100,7 +104,7 @@ const PrayerRequest: React.FC = () => {
         <IonIcon
           icon={arrowBack}
           style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            color: isDarkMode ? '#ffffff' : '#000000',
             fontSize: '20px',
           }}
         />

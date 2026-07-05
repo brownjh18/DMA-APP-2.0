@@ -3,6 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardC
 import { useHistory } from 'react-router-dom';
 import { calendar, location, time, people, arrowBack } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 import './Events.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -15,6 +16,7 @@ const getFullUrl = (url: string) => {
 
 const Events: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,8 +101,10 @@ const Events: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          
-          <IonTitle className="title-ios">Events</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Events</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -144,7 +148,7 @@ const Events: React.FC = () => {
         <IonIcon
           icon={arrowBack}
           style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            color: isDarkMode ? '#ffffff' : '#000000',
             fontSize: '20px',
           }}
         />

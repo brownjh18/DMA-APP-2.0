@@ -3,12 +3,14 @@ import { useHistory } from 'react-router-dom';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonText, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { call, mail, location, time, people, heart, book, radio, calendar, cash, chatbubble, camera, informationCircle, chevronBack, arrowBack } from 'ionicons/icons';
 import { BACKEND_BASE_URL } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Tab5: React.FC = () => {
   const [contactInfo, setContactInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const history = useHistory();
+  const { isDarkMode } = useSettings();
 
   useEffect(() => {
     loadContactInfo();
@@ -41,7 +43,10 @@ const Tab5: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">About & Contact</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>About & Contact</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -85,7 +90,7 @@ const Tab5: React.FC = () => {
         <IonIcon
           icon={arrowBack}
           style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            color: isDarkMode ? '#ffffff' : '#000000',
             fontSize: '20px',
           }}
         />

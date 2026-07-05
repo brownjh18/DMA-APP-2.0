@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
-import BackButton from '../components/BackButton';
-
 import {
   IonContent,
   IonHeader,
@@ -29,6 +27,7 @@ import {
   shieldOutline,
   alertCircle,
   musicalNotes,
+  arrowBack,
   download,
   cloudUpload,
   flash,
@@ -1182,19 +1181,11 @@ const AdminGoLive: React.FC = () => {
       <FloatingOrbs />
 
       <IonHeader translucent>
-        <BackButton />
-        <IonToolbar style={{ background: 'transparent' }}>
-          <IonTitle style={{ textAlign: 'center' }}>
-            <span style={{
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontSize: '20px'
-            }}>
-              Go Live
-            </span>
-          </IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Go Live</IonTitle>
           <IonButton fill="clear" slot="end" style={{ marginRight: '12px' }}>
             <IonIcon icon={settings} style={{ color: 'var(--ion-text-color)', opacity: 0.5 }} />
           </IonButton>

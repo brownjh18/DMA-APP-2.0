@@ -11,13 +11,14 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonAlert,
-  IonActionSheet,
   IonFab,
   IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../components/BackButton';
+import AdminPopover from '../components/AdminPopover';
 import {
   add,
   trash,
@@ -39,7 +40,9 @@ import {
 import apiService from '../services/api';
 import { useNetwork } from '../contexts/NetworkContext';
 import { AuthContext } from '../App';
-import './Tab4.css';
+import './AdminManager.css';
+
+const PAGE_SIZE = 20;
 
 const AdminUserManager: React.FC = () => {
   const history = useHistory();
@@ -56,11 +59,10 @@ const AdminUserManager: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [sortBy, setSortBy] = useState<string>('date');
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
 
-  // Protected admin email
   const protectedAdminEmail = 'brownjh18@gmail.com';
 
-  // Helper function to clear API cache for users
   const clearUsersCache = () => {
     try {
       const keys = Object.keys(localStorage);
@@ -75,7 +77,6 @@ const AdminUserManager: React.FC = () => {
     }
   };
 
-  // Utility function to handle API errors gracefully
   const handleApiError = (error: any, action: string) => {
     console.error(`Error ${action}:`, error);
     
@@ -84,13 +85,12 @@ const AdminUserManager: React.FC = () => {
       clearUsersCache();
       sessionStorage.setItem('usersNeedRefresh', 'true');
       setTimeout(() => loadUsers(true), 1000);
-      return true; // Error was handled
+      return true;
     }
     
-    return false; // Error was not handled, show generic message
+    return false;
   };
 
-  // Check if user data might be stale and needs refresh
   const isDataStale = () => {
     try {
       const cacheKeys = Object.keys(localStorage).filter(key => 
@@ -102,7 +102,7 @@ const AdminUserManager: React.FC = () => {
         if (cached) {
           const parsed = JSON.parse(cached);
           const age = Date.now() - parsed.timestamp;
-          const maxAge = 5 * 60 * 1000; // 5 minutes
+          const maxAge = 5 * 60 * 1000;
           
           if (age > maxAge) {
             console.log(`📅 Cache data is stale (${Math.round(age / 1000 / 60)} minutes old), will refresh`);
@@ -117,7 +117,6 @@ const AdminUserManager: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check if refresh is needed on component mount
     const needsRefresh = sessionStorage.getItem('usersNeedRefresh') === 'true';
     const staleData = isDataStale();
     const shouldRefresh = needsRefresh || staleData;
@@ -195,6 +194,7 @@ const AdminUserManager: React.FC = () => {
   };
 
   const handleRefresh = async (event: CustomEvent) => {
+    setDisplayCount(PAGE_SIZE);
     await loadUsers();
     event.detail.complete();
   };
@@ -403,12 +403,10 @@ const AdminUserManager: React.FC = () => {
     setShowActionSheet(true);
   };
 
-  // Helper to check if user is protected admin
   const isProtectedAdmin = (user: any) => {
     return user.email === protectedAdminEmail;
   };
 
-  // Calculate stats
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.isActive).length;
   const inactiveUsers = users.filter(u => !u.isActive).length;
@@ -424,7 +422,6 @@ const AdminUserManager: React.FC = () => {
   const getFilteredUsers = () => {
     let filtered = users;
     
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(u => 
@@ -433,7 +430,6 @@ const AdminUserManager: React.FC = () => {
       );
     }
 
-    // Apply filter
     if (filterBy === 'active') {
       filtered = filtered.filter(u => u.isActive === true);
     } else if (filterBy === 'inactive') {
@@ -442,7 +438,6 @@ const AdminUserManager: React.FC = () => {
       filtered = filtered.filter(u => u.role === 'admin');
     }
 
-    // Apply sorting
     let sorted = [...filtered];
     switch (sortBy) {
       case 'date':
@@ -462,374 +457,178 @@ const AdminUserManager: React.FC = () => {
     return sorted;
   };
 
+  const allFiltered = getFilteredUsers();
+  const displayedUsers = allFiltered.slice(0, displayCount);
+  const hasMore = displayCount < allFiltered.length;
+
+  const handleInfiniteScroll = async (ev: CustomEvent<void>) => {
+    setTimeout(() => {
+      setDisplayCount(prev => prev + PAGE_SIZE);
+      (ev.target as HTMLIonInfiniteScrollElement).complete();
+    }, 300);
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
-        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">User Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadUsers(true)} style={{ marginRight: '8px' }}>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>User Manager</IonTitle>
+          <IonButton fill="clear" slot="end" onClick={() => loadUsers(true)}>
             <IonIcon icon={settings} />
           </IonButton>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent />
+        </IonRefresher>
 
-          {/* Stats Modules - Modern Compact Horizontal Cards */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
-              {statsModules.map((mod, i) => (
-                <div key={i} onClick={() => {
-                  if (mod.name === 'Total Users') setFilterBy('all');
-                  else if (mod.name === 'Active') setFilterBy(filterBy === 'active' ? 'all' : 'active');
-                  else if (mod.name === 'Inactive') setFilterBy(filterBy === 'inactive' ? 'all' : 'inactive');
-                  else if (mod.name === 'Admins') setFilterBy(filterBy === 'admins' ? 'all' : 'admins');
-                }} style={{
-                  minWidth: '140px',
-                  flex: '0 0 auto',
-                  padding: '12px 16px',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  border: `1px solid ${mod.color}20`,
-                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 2px 8px ${mod.color}10`
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
-                  e.currentTarget.style.borderColor = `${mod.color}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}20`;
-                }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      background: mod.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: `0 2px 8px ${mod.color}30`
-                    }}>
-                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
+        <div className="am-page">
+
+          <div className="am-stats">
+            {statsModules.map((mod, i) => (
+              <div key={i} className="am-stat-pill" onClick={() => {
+                if (mod.name === 'Total Users') setFilterBy('all');
+                else if (mod.name === 'Active') setFilterBy(filterBy === 'active' ? 'all' : 'active');
+                else if (mod.name === 'Inactive') setFilterBy(filterBy === 'inactive' ? 'all' : 'inactive');
+                else if (mod.name === 'Admins') setFilterBy(filterBy === 'admins' ? 'all' : 'admins');
+              }}>
+                <div className="am-stat-dot" style={{ background: mod.color }} />
+                <div className="am-stat-data">
+                  <span className="am-stat-num" style={{ color: mod.color }}>{mod.val}</span>
+                  <span className="am-stat-txt">{mod.name}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
-          {/* Search Bar */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              marginBottom: filterBy !== 'all' ? '12px' : '0'
-            }}>
-              <div style={{
-                flex: 1,
-                position: 'relative',
-                background: 'var(--ion-card-background)',
-                borderRadius: 14,
-                border: '1px solid var(--ion-color-step-200)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-              }}>
-                <IonIcon 
-                  icon={search} 
-                  style={{
-                    position: 'absolute',
-                    left: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--ion-color-primary)',
-                    fontSize: '18px'
-                  }} 
-                />
+          <div className="am-section">
+            <div className="am-search">
+              <div className="am-search-box">
+                <IonIcon icon={search} />
                 <input
                   type="text"
                   placeholder="Search users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 14px 14px 44px',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: 'var(--ion-text-color)',
-                    fontSize: '0.95em'
-                  }}
                 />
               </div>
             </div>
 
-            {/* Active Filter Badge */}
             {filterBy !== 'all' && (
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--ion-color-step-200)',
-                padding: '6px 12px',
-                borderRadius: 20,
-                marginBottom: '8px'
-              }}>
-                <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.8em', fontWeight: '500' }}>
+              <div className="am-filter-badge">
+                <span className="am-filter-badge-text">
                   Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
-                </IonText>
-                <div 
-                  onClick={() => setFilterBy('all')}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '2px'
-                  }}
-                >
+                </span>
+                <div className="am-filter-badge-close" onClick={() => setFilterBy('all')}>
                   <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Users List */}
-          <div>
-            {getFilteredUsers().length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: 'var(--ion-color-medium)',
-                opacity: 0.6
-              }}>
-                <IonIcon icon={people} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
-                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No users found</p>
-                <p style={{ fontSize: '14px', margin: 0 }}>
-                  {searchQuery || filterBy !== 'all' 
-                    ? 'Try adjusting your search or filters' 
-                    : 'No users have been registered yet'}
-                </p>
-              </div>
-            ) : (
-              getFilteredUsers().map((user) => (
+          {loading && users.length === 0 ? (
+            <div className="am-loading">
+              <div className="am-loading-spinner" />
+              <p>Loading users...</p>
+            </div>
+          ) : allFiltered.length === 0 ? (
+            <div className="am-empty">
+              <IonIcon icon={people} />
+              <p className="am-empty-title">No users found</p>
+              <p className="am-empty-text">
+                {searchQuery || filterBy !== 'all' 
+                  ? 'Try adjusting your search or filters' 
+                  : 'No users have been registered yet'}
+              </p>
+            </div>
+          ) : (
+            <div className="am-list">
+              {displayedUsers.map((user) => (
                 <div
                   key={user._id || user.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px',
-                    borderRadius: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: 'var(--ion-card-background)',
-                    border: '1px solid var(--ion-color-step-200)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '10px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#6366f140';
-                    e.currentTarget.style.background = '#6366f108';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px #6366f120';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
-                    e.currentTarget.style.background = 'var(--ion-card-background)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="am-card"
                   onClick={(e) => handleOptionsClick(user, e)}
                 >
-                  {/* Left accent line */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '3px',
-                    height: '100%',
-                    background: user.isActive ? '#10b981' : '#ef4444',
-                    opacity: 0.8
-                  }} />
+                  <div className={`am-accent ${user.role === 'admin' ? 'amber' : user.isActive ? 'green' : 'red'}`} />
 
-                  {/* Avatar */}
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    position: 'relative',
-                    background: user.role === 'admin'
-                      ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                      : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IonIcon icon={person} style={{ fontSize: '28px', color: 'white', opacity: 0.9 }} />
+                  <div
+                    className="am-avatar"
+                    style={user.role === 'admin' ? { background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' } : undefined}
+                  >
+                    <IonIcon icon={person} className="am-avatar-icon" />
                   </div>
 
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  <div className="am-content">
+                    <div className="am-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {user.name || 'Untitled'}
-                      </p>
+                      </span>
                       {user.role === 'admin' && (
-                        <div style={{
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          fontSize: '10px',
-                          fontWeight: '500',
-                          background: '#f59e0b20',
-                          color: '#f59e0b',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          Admin
-                        </div>
+                        <span className="am-status admin">Admin</span>
                       )}
                       {isProtectedAdmin(user) && (
-                        <div style={{
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          fontSize: '10px',
-                          fontWeight: '500',
-                          background: '#ffd70020',
-                          color: '#d4a017',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          Owner
-                        </div>
+                        <span className="am-status owner">Owner</span>
                       )}
                     </div>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user.email}
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                    <p className="am-subtitle">{user.email}</p>
+                    <div className="am-meta">
+                      <p className="am-meta-item">
+                        <IonIcon icon={calendar} />
                         {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                       {user.lastLogin && (
-                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <IonIcon icon={checkmarkCircle} style={{ fontSize: '12px' }} />
+                        <p className="am-meta-item">
+                          <IonIcon icon={checkmarkCircle} />
                           Last: {new Date(user.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Action buttons with status badge above */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    {/* Status Badge - positioned above action buttons */}
-                    <div style={{
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      background: user.isActive ? '#10b98120' : '#ef444420',
-                      color: user.isActive ? '#10b981' : '#ef4444',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </div>
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="am-actions">
+                    <span className={`am-status ${isProtectedAdmin(user) ? 'owner' : user.role === 'admin' ? 'admin' : user.isActive ? 'active' : 'inactive'}`}>
+                      {isProtectedAdmin(user) ? 'Owner' : user.role === 'admin' ? 'Admin' : user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <div className="am-btns">
                       <div
+                        className={`am-btn toggle ${!user.isActive ? 'inactive' : ''}`}
                         onClick={(e) => { e.stopPropagation(); toggleActive(user._id || user.id); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: user.isActive ? '#10b98115' : '#ef444415',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = user.isActive ? '#10b98125' : '#ef444425'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = user.isActive ? '#10b98115' : '#ef444415'}
                       >
-                        <IonIcon 
-                          icon={user.isActive ? eyeOff : eye} 
-                          style={{ fontSize: '16px', color: user.isActive ? '#10b981' : '#ef4444' }} 
-                        />
+                        <IonIcon icon={user.isActive ? eyeOff : eye} />
                       </div>
                       <div
+                        className="am-btn role"
                         onClick={(e) => { e.stopPropagation(); openRoleModal(user); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: '#f59e0b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f59e0b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#f59e0b15'}
                       >
-                        <IonIcon icon={shield} style={{ fontSize: '16px', color: '#f59e0b' }} />
+                        <IonIcon icon={shield} />
                       </div>
                       <div
+                        className="am-btn more"
                         onClick={(e) => { e.stopPropagation(); handleOptionsClick(user, e); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: '#64748b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
                       >
-                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                        <IonIcon icon={ellipsisVertical} />
                       </div>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
 
-          {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
-            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Admin Panel v2.0
-            </IonText>
+              <IonInfiniteScroll onIonInfinite={handleInfiniteScroll} disabled={!hasMore}>
+                <IonInfiniteScrollContent />
+              </IonInfiniteScroll>
+            </div>
+          )}
+
+          <div className="am-footer">
+            <IonText>Dove Church • Admin Panel v2.0</IonText>
           </div>
         </div>
 
-        {/* FAB for adding new user */}
         <IonFab
           horizontal="end"
           vertical="bottom"
@@ -846,7 +645,6 @@ const AdminUserManager: React.FC = () => {
           </IonFabButton>
         </IonFab>
 
-        {/* General Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
@@ -855,7 +653,6 @@ const AdminUserManager: React.FC = () => {
           buttons={['OK']}
         />
 
-        {/* Role Change Modal */}
         <IonAlert
           isOpen={showRoleModal}
           onDidDismiss={() => {
@@ -864,7 +661,6 @@ const AdminUserManager: React.FC = () => {
           }}
           header={`Change Role for ${selectedUser?.name}`}
           message="Select the new role for this user:"
-          cssClass="rounded-alert"
           inputs={[
             {
               name: 'role',
@@ -906,12 +702,12 @@ const AdminUserManager: React.FC = () => {
           ]}
         />
 
-        {/* Action Sheet */}
-        <IonActionSheet
+        {/* Action Popover */}
+        <AdminPopover
           isOpen={showActionSheet}
           onDidDismiss={() => setShowActionSheet(false)}
           header={selectedUser?.name || 'User Options'}
-          buttons={[
+          options={[
             {
               text: 'Edit',
               icon: create,
@@ -954,55 +750,11 @@ const AdminUserManager: React.FC = () => {
             {
               text: 'Cancel',
               icon: arrowBack,
-              role: 'cancel'
+              role: 'cancel',
+              handler: () => {}
             }
           ]}
         />
-
-        {loading && users.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: 'var(--ion-color-medium)',
-            opacity: 0.6
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              border: '3px solid var(--ion-color-step-200)',
-              borderTop: '3px solid var(--ion-color-primary)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px'
-            }} />
-            <p style={{ fontSize: '14px', margin: 0 }}>Loading users...</p>
-          </div>
-        ) : null}
-
-        <style>{`
-          .rounded-alert .alert-wrapper {
-            border-radius: 16px !important;
-            background: var(--ion-card-background) !important;
-          }
-          .rounded-alert .alert-head {
-            background: var(--ion-card-background) !important;
-          }
-          .rounded-alert .alert-message {
-            color: var(--ion-text-color) !important;
-            opacity: 0.7 !important;
-          }
-          .rounded-alert {
-            --backdrop-opacity: 0.7;
-          }
-          .rounded-alert::part(backdrop) {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </IonContent>
     </IonPage>
   );

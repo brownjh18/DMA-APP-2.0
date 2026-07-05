@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { book, heart, flame, play, arrowForward, calendar, time, arrowBack, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface SavedDevotion {
   id: string;
@@ -20,6 +21,7 @@ interface SavedDevotion {
 
 const SavedDevotions: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
   const [savedDevotions, setSavedDevotions] = useState<SavedDevotion[]>([]);
 
   useEffect(() => {
@@ -100,45 +102,10 @@ const SavedDevotions: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          {/* Back Button */}
-          <div
-            onClick={() => history.goBack()}
-            style={{
-              position: 'absolute',
-              left: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                fontSize: '1.2em',
-                color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000'
-              }}
-            />
-          </div>
-
-          <IonTitle className="title-ios">Saved Devotions</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Saved Devotions</IonTitle>
         </IonToolbar>
       </IonHeader>
 

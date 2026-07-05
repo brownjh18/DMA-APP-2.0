@@ -1,7 +1,9 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge } from '@ionic/react';
-import { play, time, removeCircle, videocam } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
+import { play, time, removeCircle, videocam, arrowBack } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 
 const WatchHistory: React.FC = () => {
+  const history = useHistory();
   // Mock watch history data
   const watchHistory = [
     {
@@ -91,7 +93,10 @@ const WatchHistory: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">Watch History</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Watch History</IonTitle>
         </IonToolbar>
       </IonHeader>
 

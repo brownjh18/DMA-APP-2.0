@@ -17,7 +17,7 @@ import {
   IonButtons,
   IonBackButton,
 } from '@ionic/react';
-import { camera, checkmarkCircle, person, call } from 'ionicons/icons';
+import { camera, checkmarkCircle, person, call, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
@@ -220,11 +220,11 @@ const EditProfile: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/profile" />
-          </IonButtons>
-          <IonTitle>Edit Profile</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Edit Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
 

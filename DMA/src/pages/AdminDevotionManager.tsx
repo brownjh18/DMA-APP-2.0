@@ -12,13 +12,15 @@ import {
   IonRefresherContent,
   IonLoading,
   IonAlert,
-  IonActionSheet,
   IonFab,
   IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import BackButton from '../components/BackButton';
+import AdminPopover from '../components/AdminPopover';
 import {
   add,
   create,
@@ -40,7 +42,9 @@ import {
 } from 'ionicons/icons';
 import { useSocket } from '../contexts/SocketContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
-import './Tab4.css';
+import './AdminManager.css';
+
+const PAGE_SIZE = 20;
 
 const AdminDevotionManager: React.FC = () => {
   const history = useHistory();
@@ -57,6 +61,7 @@ const AdminDevotionManager: React.FC = () => {
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
   
   // Default thumbnail for devotions when no custom thumbnail is uploaded
   const DEFAULT_DEVOTION_THUMBNAIL = '/hero-evangelism.jpg';
@@ -345,6 +350,13 @@ const AdminDevotionManager: React.FC = () => {
     setFilterBy(statType === 'published' || statType === 'draft' ? statType : 'all');
   };
 
+  const handleInfiniteScroll = async (ev: CustomEvent) => {
+    setTimeout(() => {
+      setDisplayCount(prev => prev + PAGE_SIZE);
+      (ev.target as HTMLIonInfiniteScrollElement).complete();
+    }, 300);
+  };
+
   // Calculate stats
   const totalDevotions = devotions.length;
   const publishedDevotions = devotions.filter(d => d.status === 'publish').length;
@@ -375,6 +387,8 @@ const AdminDevotionManager: React.FC = () => {
       filtered = filtered.filter(d => d.status === 'publish');
     } else if (filterBy === 'draft') {
       filtered = filtered.filter(d => d.status === 'draft');
+    } else if (filterBy === 'featured') {
+      filtered = filtered.filter(d => d.isFeatured);
     }
 
     // Apply sorting
@@ -402,243 +416,99 @@ const AdminDevotionManager: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const sortedDevotions = getSortedAndFilteredDevotions();
+  const displayedDevotions = sortedDevotions.slice(0, displayCount);
+  const hasMore = displayCount < sortedDevotions.length;
+
   return (
     <IonPage>
       <IonHeader translucent>
         <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">Devotion Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadDevotions(true)} style={{ marginRight: '8px' }}>
+          <IonTitle className="nd-title">Devotion Manager</IonTitle>
+          <IonButton fill="clear" slot="end" onClick={() => loadDevotions(true)}>
             <IonIcon icon={settings} />
           </IonButton>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+        <div className="am-page">
+          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+            <IonRefresherContent />
+          </IonRefresher>
 
-          {/* Stats Modules - Modern Compact Horizontal Cards */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
-              {statsModules.map((mod, i) => (
-                <div key={i} onClick={() => {
-                  if (mod.name === 'Total Devotions') setFilterBy('all');
-                  else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
-                  else if (mod.name === 'Drafts') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
-                  else if (mod.name === 'Featured') setFilterBy('featured');
-                }} style={{
-                  minWidth: '140px',
-                  flex: '0 0 auto',
-                  padding: '12px 16px',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  border: `1px solid ${mod.color}20`,
-                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 2px 8px ${mod.color}10`
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
-                  e.currentTarget.style.borderColor = `${mod.color}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}20`;
-                }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      background: mod.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: `0 2px 8px ${mod.color}30`
-                    }}>
-                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
+          {/* Stats Modules */}
+          <div className="am-stats">
+            {statsModules.map((mod, i) => (
+              <div key={i} className="am-stat-pill" onClick={() => {
+                if (mod.name === 'Total Devotions') setFilterBy('all');
+                else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
+                else if (mod.name === 'Drafts') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
+                else if (mod.name === 'Featured') setFilterBy('featured');
+              }}>
+                <div className="am-stat-dot" style={{ background: mod.color }} />
+                <div className="am-stat-data">
+                  <span className="am-stat-num" style={{ color: mod.color }}>{mod.val}</span>
+                  <span className="am-stat-txt">{mod.sub}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* Search Bar */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              marginBottom: filterBy !== 'all' ? '12px' : '0'
-            }}>
-              <div style={{
-                flex: 1,
-                position: 'relative',
-                background: 'var(--ion-card-background)',
-                borderRadius: 14,
-                border: '1px solid var(--ion-color-step-200)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-              }}>
-                <IonIcon 
-                  icon={search} 
-                  style={{
-                    position: 'absolute',
-                    left: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--ion-color-primary)',
-                    fontSize: '18px'
-                  }} 
-                />
-                <input
-                  type="text"
-                  placeholder="Search devotions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 14px 14px 44px',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: 'var(--ion-text-color)',
-                    fontSize: '0.95em'
-                  }}
-                />
-              </div>
+          <div className="am-search">
+            <div className="am-search-box">
+              <IonIcon icon={search} />
+              <input
+                type="text"
+                placeholder="Search devotions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-
-            {/* Active Filter Badge */}
-            {filterBy !== 'all' && (
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--ion-color-step-200)',
-                padding: '6px 12px',
-                borderRadius: 20,
-                marginBottom: '8px'
-              }}>
-                <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.8em', fontWeight: '500' }}>
-                  Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
-                </IonText>
-                <div 
-                  onClick={() => setFilterBy('all')}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '2px'
-                  }}
-                >
-                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
-                </div>
-              </div>
-            )}
           </div>
 
+          {/* Active Filter Badge */}
+          {filterBy !== 'all' && (
+            <div className="am-filter-badge">
+              <span className="am-filter-badge-text">
+                Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
+              </span>
+              <div className="am-filter-badge-close" onClick={() => setFilterBy('all')}>
+                <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
+              </div>
+            </div>
+          )}
+
           {/* Devotions List */}
-          <div>
-            {getSortedAndFilteredDevotions().length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: 'var(--ion-color-medium)',
-                opacity: 0.6
-              }}>
-                <IonIcon icon={book} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
-                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No devotions found</p>
-                <p style={{ fontSize: '14px', margin: 0 }}>
+          <div className="am-list">
+            {displayedDevotions.length === 0 ? (
+              <div className="am-empty">
+                <IonIcon icon={book} />
+                <p className="am-empty-title">No devotions found</p>
+                <p className="am-empty-text">
                   {searchQuery || filterBy !== 'all' 
                     ? 'Try adjusting your search or filters' 
                     : 'Start by adding your first devotion'}
                 </p>
               </div>
             ) : (
-              getSortedAndFilteredDevotions().map((devotion) => (
+              displayedDevotions.map((devotion) => (
                 <div
                   key={devotion._id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px',
-                    borderRadius: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: 'var(--ion-card-background)',
-                    border: '1px solid var(--ion-color-step-200)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '10px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#8b5cf640';
-                    e.currentTarget.style.background = '#8b5cf608';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px #8b5cf620';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
-                    e.currentTarget.style.background = 'var(--ion-card-background)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="am-card"
                   onClick={() => openEditPage(devotion)}
                 >
                   {/* Left accent line */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '3px',
-                    height: '100%',
-                    background: devotion.status === 'publish' ? '#10b981' : '#f59e0b',
-                    opacity: 0.8
-                  }} />
+                  <div className={`am-accent ${devotion.status === 'publish' ? 'green' : 'amber'}`} />
 
                   {/* Thumbnail */}
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    position: 'relative',
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
+                  <div className="am-thumb">
                     <img 
                       src={devotion.thumbnailUrl || DEFAULT_DEVOTION_THUMBNAIL} 
                       alt={devotion.title || 'Devotion'}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0
-                      }}
                       onError={(e) => {
-                        // If custom thumbnail fails, show default image
                         if (devotion.thumbnailUrl && !failedThumbnails.has(devotion._id)) {
                           (e.target as HTMLImageElement).src = DEFAULT_DEVOTION_THUMBNAIL;
                           setFailedThumbnails(prev => new Set(prev).add(devotion._id));
@@ -646,118 +516,57 @@ const AdminDevotionManager: React.FC = () => {
                       }}
                     />
                     {devotion.isFeatured && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '-4px',
-                        right: '-4px',
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '50%',
-                        background: '#ec4899',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '2px solid var(--ion-card-background)',
-                        zIndex: 1
-                      }}>
+                      <div className="am-thumb-badge" style={{ top: '2px', right: '2px', bottom: 'auto', left: 'auto', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ec4899', border: '2px solid var(--ion-card-background)' }}>
                         <IonIcon icon={star} style={{ fontSize: '8px', color: 'white' }} />
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {devotion.title || 'Untitled'}
-                      </p>
-                    </div>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="am-content">
+                    <p className="am-title">{devotion.title || 'Untitled'}</p>
+                    <p className="am-subtitle">
                       {devotion.content ? devotion.content.substring(0, 80) + (devotion.content.length > 80 ? '...' : '') : 'No description'}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <IonIcon icon={book} style={{ fontSize: '12px' }} />
+                    <div className="am-meta">
+                      <p className="am-meta-item">
+                        <IonIcon icon={book} />
                         {devotion.scripture || 'No scripture'}
                       </p>
                     </div>
                   </div>
 
                   {/* Action buttons with status badge above */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    {/* Status Badge - positioned above action buttons */}
-                    <div style={{
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      background: devotion.status === 'publish' ? '#10b98120' : '#f59e0b20',
-                      color: devotion.status === 'publish' ? '#10b981' : '#f59e0b',
-                      whiteSpace: 'nowrap'
-                    }}>
+                  <div className="am-actions">
+                    {/* Status Badge */}
+                    <div className={`am-status ${devotion.status === 'publish' ? 'published' : 'draft'}`}>
                       {devotion.status === 'publish' ? 'Published' : 'Draft'}
                     </div>
                     {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="am-btns">
                       <div
+                        className={`am-btn toggle ${devotion.status !== 'publish' ? 'inactive' : ''}`}
                         onClick={(e) => { e.stopPropagation(); toggleStatus(devotion._id); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: devotion.status === 'publish' ? '#10b98115' : '#f59e0b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = devotion.status === 'publish' ? '#10b98125' : '#f59e0b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = devotion.status === 'publish' ? '#10b98115' : '#f59e0b15'}
                       >
                         <IonIcon 
                           icon={devotion.status === 'publish' ? eyeOff : eye} 
-                          style={{ fontSize: '16px', color: devotion.status === 'publish' ? '#10b981' : '#f59e0b' }} 
+                          style={{ color: devotion.status === 'publish' ? '#10b981' : '#f59e0b' }}
                         />
                       </div>
                       <div
+                        className={`am-btn featured ${devotion.isFeatured ? 'active' : ''}`}
                         onClick={(e) => { e.stopPropagation(); toggleFeatured(devotion._id); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: devotion.isFeatured ? '#ec489915' : '#64748b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = devotion.isFeatured ? '#ec489925' : '#64748b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = devotion.isFeatured ? '#ec489915' : '#64748b15'}
                       >
                         <IonIcon 
                           icon={star} 
-                          style={{ fontSize: '16px', color: devotion.isFeatured ? '#ec4899' : 'var(--ion-color-medium)' }} 
+                          style={{ color: devotion.isFeatured ? '#f59e0b' : 'var(--ion-color-medium)' }}
                         />
                       </div>
                       <div
+                        className="am-btn more"
                         onClick={(e) => { e.stopPropagation(); openActionSheet(devotion); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: '#64748b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
                       >
-                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                        <IonIcon icon={ellipsisVertical} style={{ color: 'var(--ion-color-medium)' }} />
                       </div>
                     </div>
                   </div>
@@ -766,11 +575,16 @@ const AdminDevotionManager: React.FC = () => {
             )}
           </div>
 
+          {/* Infinite Scroll */}
+          {hasMore && (
+            <IonInfiniteScroll onIonInfinite={handleInfiniteScroll}>
+              <IonInfiniteScrollContent />
+            </IonInfiniteScroll>
+          )}
+
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
-            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Admin Panel v2.0
-            </IonText>
+          <div className="am-footer">
+            <IonText>Dove Church • Admin Panel v2.0</IonText>
           </div>
         </div>
 
@@ -813,12 +627,12 @@ const AdminDevotionManager: React.FC = () => {
         buttons={['OK']}
       />
 
-      {/* Action Sheet */}
-      <IonActionSheet
+      {/* Action Popover */}
+      <AdminPopover
         isOpen={showActionSheet}
         onDidDismiss={() => setShowActionSheet(false)}
         header={selectedDevotion?.title || 'Devotion Options'}
-        buttons={[
+        options={[
           {
             text: 'Edit',
             icon: create,
@@ -851,37 +665,18 @@ const AdminDevotionManager: React.FC = () => {
           {
             text: 'Cancel',
             icon: arrowBack,
-            role: 'cancel'
+            role: 'cancel',
+            handler: () => {}
           }
         ]}
       />
 
-      {loading && devotions.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          color: 'var(--ion-color-medium)',
-          opacity: 0.6
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid var(--ion-color-step-200)',
-            borderTop: '3px solid var(--ion-color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
-          <p style={{ fontSize: '14px', margin: 0 }}>Loading devotions...</p>
+      {loading && devotions.length === 0 && (
+        <div className="am-loading">
+          <div className="am-loading-spinner" />
+          <p>Loading devotions...</p>
         </div>
-      ) : null}
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      )}
     </IonPage>
   );
 };

@@ -112,7 +112,7 @@ const Settings: React.FC = () => {
           >
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios">Settings</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Settings</IonTitle>
         </IonToolbar>
       </IonHeader>
 

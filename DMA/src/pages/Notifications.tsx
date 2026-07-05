@@ -5,9 +5,9 @@ import {
   IonToolbar,
   IonButton,
   IonIcon,
-  IonChip,
   IonContent,
-  IonTitle
+  IonTitle,
+  IonText
 } from '@ionic/react';
 import {
   arrowBack,
@@ -18,14 +18,13 @@ import {
   calendar,
   radio,
   chatbubble,
-  informationCircle,
-  chevronForward,
-  ellipsisVertical
+  informationCircle
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
+import './AdminManager.css';
 import './Notifications.css';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -50,17 +49,17 @@ function getTypeMeta(type: string, contentType?: string) {
   const t = (contentType || type) as string;
   switch (t) {
     case 'sermon':
-      return { icon: playCircle, label: 'Sermon', badgeClass: 'type-sermon', color: '#6366f1' };
+      return { icon: playCircle, label: 'Sermon', color: '#6366f1' };
     case 'podcast':
-      return { icon: radio, label: 'Podcast', badgeClass: 'type-podcast', color: '#f59e0b' };
+      return { icon: radio, label: 'Podcast', color: '#f59e0b' };
     case 'devotion':
-      return { icon: book, label: 'Devotion', badgeClass: 'type-devotion', color: '#10b981' };
+      return { icon: book, label: 'Devotion', color: '#10b981' };
     case 'event':
-      return { icon: calendar, label: 'Event', badgeClass: 'type-event', color: '#ec4899' };
+      return { icon: calendar, label: 'Event', color: '#ec4899' };
     case 'prayer':
-      return { icon: chatbubble, label: 'Prayer', badgeClass: 'type-prayer', color: '#3b82f6' };
+      return { icon: chatbubble, label: 'Prayer', color: '#3b82f6' };
     default:
-      return { icon: informationCircle, label: 'General', badgeClass: 'type-general', color: '#6b7280' };
+      return { icon: informationCircle, label: 'General', color: '#6b7280' };
   }
 }
 
@@ -79,22 +78,12 @@ function getDefaultThumb(type: string) {
   }
 }
 
-/**
- * Thumbnails coming from the backend may be:
- * - absolute URLs
- * - already-rooted paths: "/uploads/x.jpg"
- * - relative-ish paths: "uploads/x.jpg" or "assets/x.jpg"
- * Normalize so <img src> always points to a valid URL.
- */
 function normalizeThumbUrl(url?: unknown) {
   if (typeof url !== 'string') return '';
   const trimmed = url.trim();
   if (!trimmed) return '';
-
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   if (trimmed.startsWith('/')) return trimmed;
-
-  // Treat other strings as relative to the site root
   return `/${trimmed}`;
 }
 
@@ -109,8 +98,8 @@ function getYouTubeSectionLabel(createdAt: string) {
   if (d >= startYesterday && d < startToday) return 'Yesterday';
 
   const startThisWeek = new Date(startToday);
-  const day = startThisWeek.getDay(); // 0=Sun..6=Sat
-  const diffToMonday = (day + 6) % 7; // monday as start
+  const day = startThisWeek.getDay();
+  const diffToMonday = (day + 6) % 7;
   startThisWeek.setDate(startThisWeek.getDate() - diffToMonday);
 
   if (d >= startThisWeek) return 'This week';
@@ -119,12 +108,10 @@ function getYouTubeSectionLabel(createdAt: string) {
 
 function NotifRow({
   notification,
-  onClick,
-  onRemove
+  onClick
 }: {
   notification: any;
   onClick: () => void;
-  onRemove: (id: string) => void;
 }) {
   const typeMeta = getTypeMeta(notification.type, notification.data?.contentType);
   const isUnread = !notification.read;
@@ -132,64 +119,32 @@ function NotifRow({
   const thumbnailUrl = thumbFromData || getDefaultThumb(notification.type);
 
   return (
-    <div className={`notif-row ${isUnread ? 'unread' : ''}`} onClick={onClick}>
+    <div className={`am-card notif-row ${isUnread ? 'unread' : ''}`} onClick={onClick}>
+      <div className={`am-accent ${isUnread ? 'blue' : 'green'}`} />
       <div className="notif-icon">
-        <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color }} />
+        <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color, fontSize: '22px' }} />
       </div>
-      <div className="notif-body">
-        <p className="notif-message">
-          <span className="notif-title">{notification.title}:</span> {notification.message}
+      <div className="am-content">
+        <p className="am-title" style={{ whiteSpace: 'normal', lineHeight: '1.4' }}>
+          {notification.title}
         </p>
-        <span className="notif-time">{formatTime(notification.createdAt)}</span>
+        <p className="am-subtitle" style={{ whiteSpace: 'normal', lineHeight: '1.3' }}>
+          {notification.message}
+        </p>
+        <div className="am-meta">
+          <span className="am-meta-item">
+            {formatTime(notification.createdAt)}
+          </span>
+          <span className="am-meta-item" style={{ color: typeMeta.color }}>
+            {typeMeta.label}
+          </span>
+        </div>
       </div>
-      <div className="notif-thumbnail">
-        {thumbnailUrl && <img src={thumbnailUrl} alt="Notification thumbnail" />}
-      </div>
-    </div>
-  );
-}
-
-function SectionHeader({
-  label,
-  unreadCount,
-  filterUnread,
-  onSetFilter,
-  onClearAll,
-  showClear
-}: {
-  label: string;
-  unreadCount: number;
-  filterUnread: boolean;
-  onSetFilter: (filter: boolean) => void;
-  onClearAll: () => void;
-  showClear: boolean;
-}) {
-  return (
-    <div className="section-divider">
-      <div className="section-header-left">
-        <span className="section-label">{label}</span>
-        {unreadCount > 0 && <IonChip className="notif-count-chip">{unreadCount}</IonChip>}
-      </div>
-      <div className="notif-filters">
-        <button
-          className={`filter-button ${!filterUnread ? 'filter-active' : ''}`}
-          onClick={() => onSetFilter(false)}
-        >
-          All
-        </button>
-        <button
-          className={`filter-button ${filterUnread ? 'filter-active' : ''}`}
-          onClick={() => onSetFilter(true)}
-        >
-          Unread
-        </button>
-        {showClear && (
-          <button className="filter-button clear-button" onClick={onClearAll}>
-            <IonIcon icon={trash} />
-            Clear
-          </button>
-        )}
-      </div>
+      {thumbnailUrl && (
+        <div className="notif-thumbnail">
+          <img src={thumbnailUrl} alt="" />
+        </div>
+      )}
     </div>
   );
 }
@@ -213,7 +168,7 @@ const Notifications: React.FC = () => {
     return [...filtered].sort((a: any, b: any) => {
       const ra = a.read ? 1 : 0;
       const rb = b.read ? 1 : 0;
-      if (ra !== rb) return ra - rb; // unread first
+      if (ra !== rb) return ra - rb;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [filtered]);
@@ -227,6 +182,13 @@ const Notifications: React.FC = () => {
     }
     return out;
   }, [sorted]);
+
+  const totalUnread = notifList.filter((n: any) => !n.read).length;
+
+  const stats = [
+    { label: 'Total', value: notifList.length, color: '#6366f1' },
+    { label: 'Unread', value: totalUnread, color: '#3b82f6' },
+  ];
 
   async function handleClick(n: any) {
     markAsRead(n.id);
@@ -288,68 +250,107 @@ const Notifications: React.FC = () => {
     }
   }
 
-  if (sorted.length === 0) {
-    return (
-      <IonPage className="notifications-page">
-        <IonHeader translucent>
-          <IonToolbar>
-            <IonButton fill="clear" slot="start" onClick={() => history.goBack()}>
-              <IonIcon icon={arrowBack} />
-            </IonButton>
-            <IonTitle>Notifications</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent fullscreen>
-          <div className="yt-empty">
-            <div className="yt-empty-icon">
-              <IonIcon icon={notificationsIcon} />
-            </div>
-            <h2>All caught up</h2>
-            <p>No notifications yet. New content will appear here.</p>
-          </div>
-        </IonContent>
-      </IonPage>
-    );
-  }
-
   return (
-    <IonPage className="notifications-page">
+    <IonPage>
       <IonHeader translucent>
-        <IonToolbar>
-          <IonButton fill="clear" slot="start" onClick={() => history.goBack()}>
-            <IonIcon icon={arrowBack} />
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-
-          <IonTitle>Notifications</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Notifications</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="notifications-page">
-        <div className="notif-container">
-          {Object.entries(sections).map(([label, notifs]) =>
-            notifs.length > 0 ? (
-              <div key={label} className="notif-section">
-                <SectionHeader
-                  label={label}
-                  unreadCount={label === 'Today' ? unreadCount : 0}
-                  filterUnread={filterUnread}
-                  onSetFilter={setFilterUnread}
-                  onClearAll={clearAll}
-                  showClear={notifList.length > 0 && label === 'Today'}
-                />
-                <div className="notif-list">
-                  {notifs.map((n: any) => (
-                    <NotifRow
-                      key={n.id}
-                      notification={n}
-                      onClick={() => handleClick(n)}
-                      onRemove={removeNotification}
-                    />
-                  ))}
+      <IonContent fullscreen className="content-ios">
+        <div className="am-page">
+
+          {/* Stats */}
+          <div className="am-stats">
+            {stats.map((stat, i) => (
+              <div key={i} className="am-stat-pill">
+                <div className="am-stat-dot" style={{ background: stat.color }} />
+                <div className="am-stat-data">
+                  <span className="am-stat-num" style={{ color: stat.color }}>{stat.value}</span>
+                  <span className="am-stat-txt">{stat.label}</span>
                 </div>
               </div>
-            ) : null
-          )}
+            ))}
+          </div>
+
+          {/* Filter Actions */}
+          <div className="am-section">
+            <div className="am-section-header">
+              <h2 className="am-section-title">Notifications</h2>
+              {notifList.length > 0 && (
+                <button
+                  className="am-action-chip"
+                  onClick={clearAll}
+                  style={{ '--chip-color': '#ef4444' } as React.CSSProperties}
+                >
+                  <div className="am-action-icon">
+                    <IonIcon icon={trash} />
+                  </div>
+                  <span>Clear all</span>
+                </button>
+              )}
+            </div>
+            <div className="notif-filters-bar">
+              <button
+                className={`notif-filter-btn ${!filterUnread ? 'active' : ''}`}
+                onClick={() => setFilterUnread(false)}
+              >
+                All
+              </button>
+              <button
+                className={`notif-filter-btn ${filterUnread ? 'active' : ''}`}
+                onClick={() => setFilterUnread(true)}
+              >
+                Unread {totalUnread > 0 && `(${totalUnread})`}
+              </button>
+            </div>
+          </div>
+
+          {/* Notification List */}
+          <div className="am-section">
+            {sorted.length === 0 ? (
+              <div className="am-empty">
+                <IonIcon icon={notificationsIcon} />
+                <p className="am-empty-title">All caught up</p>
+                <p className="am-empty-text">
+                  {filterUnread
+                    ? 'No unread notifications'
+                    : 'No notifications yet. New content will appear here.'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {Object.entries(sections).map(([label, notifs]) =>
+                  notifs.length > 0 ? (
+                    <div key={label} className="notif-section">
+                      <div className="notif-section-header">
+                        <span className="notif-section-label">{label}</span>
+                        <span className="am-stat-txt">{notifs.length}</span>
+                      </div>
+                      <div className="am-list">
+                        {notifs.map((n: any) => (
+                          <NotifRow
+                            key={n.id}
+                            notification={n}
+                            onClick={() => handleClick(n)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="am-footer">
+            <IonText>Dove Church &bull; Admin Panel v2.0</IonText>
+          </div>
         </div>
       </IonContent>
     </IonPage>

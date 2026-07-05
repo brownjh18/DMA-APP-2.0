@@ -8,25 +8,18 @@ import {
   IonButton,
   IonButtons,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonTextarea,
-  IonSelect,
-  IonSelectOption,
   IonText,
   IonLoading,
   IonAlert
 } from '@ionic/react';
 import {
   save,
-  cardOutline,
-  person,
-  calendar,
-  cash,
-  arrowBack
+  cardOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import BackButton from '../components/BackButton';
+import './AdminForm.css';
+import './AdminDashboard.css';
 
 const AddDonation: React.FC = () => {
   const history = useHistory();
@@ -84,7 +77,6 @@ const AddDonation: React.FC = () => {
         setAlertMessage('Donation recorded successfully!');
         setShowAlert(true);
 
-        // Navigate back after success
         setTimeout(() => {
           history.push('/admin/giving');
         }, 1500);
@@ -105,52 +97,9 @@ const AddDonation: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios">
-            <div
-              onClick={() => history.goBack()}
-              style={{
-                position: 'absolute',
-                top: 'calc(var(--ion-safe-area-top) - -5px)',
-                left: 20,
-                width: 45,
-                height: 45,
-                borderRadius: 25,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 999,
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseDown={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                target.style.transform = 'scale(0.8)';
-              }}
-              onMouseUp={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                setTimeout(() => {
-                  target.style.transform = 'scale(1)';
-                }, 200);
-              }}
-              onMouseLeave={(e) => {
-                const target = e.currentTarget as HTMLElement;
-                target.style.transform = 'scale(1)';
-              }}
-            >
-              <IonIcon
-                icon={arrowBack}
-                style={{
-                  color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-                  fontSize: '20px',
-                }}
-              />
-            </div>
-            <IonTitle className="title-ios">Add Donation</IonTitle>
+        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
+          <BackButton />
+          <IonTitle className="nd-title">Add Donation</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
               <IonIcon icon={save} />
@@ -160,130 +109,74 @@ const AddDonation: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '12px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <IonIcon
-              icon={cardOutline}
-              style={{
-                fontSize: '3em',
-                color: 'var(--ion-color-primary)',
-                marginBottom: '16px'
-              }}
-            />
-            <h1 style={{
-              margin: '0 0 8px 0',
-              fontSize: '1.8em',
-              fontWeight: '700',
-              color: 'var(--ion-text-color)'
-            }}>
-              Record New Donation
-            </h1>
-            <p style={{
-              margin: '0',
-              color: 'var(--ion-text-color)',
-              opacity: 0.7,
-              fontSize: '1em'
-            }}>
-              Add a new donation record
-            </p>
+        <div className="af-page">
+          <div className="af-section">
+            <div className="af-card" style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'var(--ion-color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <IonIcon icon={cardOutline} style={{ color: '#fff', fontSize: '28px' }} />
+              </div>
+              <h1 className="nd-title" style={{ margin: '0 0 6px 0', fontSize: '22px' }}>Record New Donation</h1>
+              <p style={{ margin: '0', color: 'var(--ion-color-medium)', fontSize: '14px' }}>Add a new donation record</p>
+            </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Donor Name *</IonLabel>
-              <IonInput
-                value={formData.donorName}
-                onIonChange={(e) => handleInputChange('donorName', e.detail.value!)}
-                placeholder="Enter donor's full name"
-              />
-            </IonItem>
+          <div className="af-section">
+            <div className="af-card">
+              <div className="af-field">
+                <label className="af-label">Donor Name <span className="af-required">*</span></label>
+                <input type="text" className="af-input" value={formData.donorName} onChange={(e) => handleInputChange('donorName', e.target.value)} placeholder="Enter donor's full name" />
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Donation Amount *</IonLabel>
-              <IonInput
-                type="number"
-                value={formData.amount}
-                onIonChange={(e) => handleInputChange('amount', e.detail.value!)}
-                placeholder="Enter amount (e.g., 50000)"
-              />
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Donation Amount <span className="af-required">*</span></label>
+                <input type="number" className="af-input" value={formData.amount} onChange={(e) => handleInputChange('amount', e.target.value)} placeholder="Enter amount (e.g., 50000)" />
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Date *</IonLabel>
-              <IonInput
-                type="date"
-                value={formData.date}
-                onIonChange={(e) => handleInputChange('date', e.detail.value!)}
-              />
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Date <span className="af-required">*</span></label>
+                <input type="date" className="af-input" value={formData.date} onChange={(e) => handleInputChange('date', e.target.value)} />
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Payment Method</IonLabel>
-              <IonSelect
-                value={formData.paymentMethod}
-                onIonChange={(e) => handleInputChange('paymentMethod', e.detail.value)}
-                placeholder="Select payment method"
-              >
-                <IonSelectOption value="cash">Cash</IonSelectOption>
-                <IonSelectOption value="bank_transfer">Bank Transfer</IonSelectOption>
-                <IonSelectOption value="mobile_money">Mobile Money</IonSelectOption>
-                <IonSelectOption value="check">Check</IonSelectOption>
-                <IonSelectOption value="online">Online Payment</IonSelectOption>
-              </IonSelect>
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Payment Method</label>
+                <select className="af-input af-select" value={formData.paymentMethod} onChange={(e) => handleInputChange('paymentMethod', e.target.value)}>
+                  <option value="">Select payment method</option>
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="mobile_money">Mobile Money</option>
+                  <option value="check">Check</option>
+                  <option value="online">Online Payment</option>
+                </select>
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Purpose</IonLabel>
-              <IonInput
-                value={formData.purpose}
-                onIonChange={(e) => handleInputChange('purpose', e.detail.value!)}
-                placeholder="e.g., Building Fund, Missions, General"
-              />
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Purpose</label>
+                <input type="text" className="af-input" value={formData.purpose} onChange={(e) => handleInputChange('purpose', e.target.value)} placeholder="e.g., Building Fund, Missions, General" />
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Status</IonLabel>
-              <IonSelect
-                value={formData.status}
-                onIonChange={(e) => handleInputChange('status', e.detail.value)}
-              >
-                <IonSelectOption value="completed">Completed</IonSelectOption>
-                <IonSelectOption value="pending">Pending</IonSelectOption>
-                <IonSelectOption value="failed">Failed</IonSelectOption>
-              </IonSelect>
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Status</label>
+                <select className="af-input af-select" value={formData.status} onChange={(e) => handleInputChange('status', e.target.value)}>
+                  <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
 
-            <IonItem style={{ marginBottom: '16px', '--border-radius': '12px' }}>
-              <IonLabel position="stacked">Additional Notes</IonLabel>
-              <IonTextarea
-                value={formData.notes}
-                onIonChange={(e) => handleInputChange('notes', e.detail.value!)}
-                placeholder="Any additional notes or reference information"
-                rows={3}
-              />
-            </IonItem>
+              <div className="af-field">
+                <label className="af-label">Additional Notes</label>
+                <textarea className="af-input af-textarea" value={formData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Any additional notes or reference information" rows={3} />
+              </div>
+            </div>
           </div>
 
-          <IonButton
-            expand="block"
-            onClick={handleSave}
-            disabled={loading}
-            style={{
-              height: '48px',
-              borderRadius: '24px',
-              fontWeight: '600',
-              backgroundColor: 'var(--ion-color-primary)',
-              '--border-radius': '24px'
-            }}
-          >
-            <IonIcon icon={save} slot="start" />
+          <button onClick={handleSave} disabled={loading} className="af-submit">
+            <IonIcon icon={save} style={{ fontSize: '18px', marginRight: '8px' }} />
             Save Donation
-          </IonButton>
+          </button>
 
-          <div style={{ textAlign: 'center', marginTop: '32px' }}>
-            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.9em' }}>
-              Dove Church - Giving Management
-            </IonText>
+          <div className="af-footer">
+            <IonText>Dove Church - Giving Management</IonText>
           </div>
         </div>
 

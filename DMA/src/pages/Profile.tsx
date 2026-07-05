@@ -80,11 +80,11 @@ const Profile: React.FC = () => {
   return (
     <IonPage className="profile-page">
       <IonHeader translucent>
-        <IonToolbar>
-          <IonButton slot="start" fill="clear" onClick={goBack}>
-            <IonIcon icon={arrowBack} />
+        <IonToolbar className="toolbar-ios">
+          <IonButton slot="start" fill="clear" onClick={goBack} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle>Profile</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
 

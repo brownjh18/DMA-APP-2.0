@@ -12,13 +12,15 @@ import {
   IonRefresherContent,
   IonLoading,
   IonAlert,
-  IonActionSheet,
   IonFab,
   IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import BackButton from '../components/BackButton';
+import AdminPopover from '../components/AdminPopover';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
   add,
@@ -37,7 +39,10 @@ import {
   settings,
   checkmarkCircle
 } from 'ionicons/icons';
-import './Tab4.css';
+import './AdminManager.css';
+import './AdminDashboard.css';
+
+const PAGE_SIZE = 20;
 
 const AdminEventManager: React.FC = () => {
   const history = useHistory();
@@ -52,8 +57,8 @@ const AdminEventManager: React.FC = () => {
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
-  
-  // Default thumbnail for events when no custom thumbnail is uploaded
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+
   const DEFAULT_EVENT_THUMBNAIL = '/hero-evangelism.jpg';
 
   useEffect(() => {
@@ -159,7 +164,6 @@ const AdminEventManager: React.FC = () => {
     setShowActionSheet(true);
   };
 
-  // Calculate stats
   const totalEvents = events.length;
   const publishedEvents = events.filter(e => e.isPublished).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
@@ -209,147 +213,71 @@ const AdminEventManager: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const handleInfiniteScroll = (e: any) => {
+    setTimeout(() => {
+      setDisplayCount(prev => prev + PAGE_SIZE);
+      e.target.complete();
+    }, 300);
+  };
+
+  const sortedAndFiltered = getSortedAndFilteredEvents();
+  const displayedEvents = sortedAndFiltered.slice(0, displayCount);
+
   return (
     <IonPage>
       <IonHeader translucent>
         <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">Event Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadEvents(true)} style={{ marginRight: '8px' }}>
+          <IonTitle className="nd-title">Event Manager</IonTitle>
+          <IonButton fill="clear" slot="end" onClick={() => loadEvents(true)}>
             <IonIcon icon={settings} />
           </IonButton>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+        <div className="am-page">
 
           {/* Stats Modules */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
-              {statsModules.map((mod, i) => (
-                <div key={i} onClick={() => {
+          <div className="am-stats">
+            {statsModules.map((mod, i) => (
+              <div
+                key={i}
+                className="am-stat-pill"
+                onClick={() => {
                   if (mod.name === 'Total Events') setFilterBy('all');
                   else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
-                }} style={{
-                  minWidth: '140px',
-                  flex: '0 0 auto',
-                  padding: '12px 16px',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  border: `1px solid ${mod.color}20`,
-                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
-                  e.currentTarget.style.borderColor = `${mod.color}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}20`;
-                }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      background: mod.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: `0 2px 8px ${mod.color}30`
-                    }}>
-                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
+              >
+                <div className="am-stat-dot" style={{ background: mod.color }} />
+                <div className="am-stat-data">
+                  <span className="am-stat-num" style={{ color: mod.color }}>{mod.val}</span>
+                  <span className="am-stat-txt">{mod.sub}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* Search Bar */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              marginBottom: filterBy !== 'all' ? '12px' : '0'
-            }}>
-              <div style={{
-                flex: 1,
-                position: 'relative',
-                background: 'var(--ion-card-background)',
-                borderRadius: 14,
-                border: '1px solid var(--ion-color-step-200)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-              }}>
-                <IonIcon 
-                  icon={search} 
-                  style={{
-                    position: 'absolute',
-                    left: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--ion-color-primary)',
-                    fontSize: '18px'
-                  }} 
-                />
+          <div className="am-section">
+            <div className="am-search">
+              <div className="am-search-box">
+                <IonIcon icon={search} />
                 <input
                   type="text"
                   placeholder="Search events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 14px 14px 44px',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: 'var(--ion-text-color)',
-                    fontSize: '0.95em'
-                  }}
                 />
               </div>
             </div>
 
             {filterBy !== 'all' && (
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--ion-color-step-200)',
-                padding: '6px 12px',
-                borderRadius: 20,
-                marginBottom: '8px'
-              }}>
-                <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.8em', fontWeight: '500' }}>
+              <div className="am-filter-badge">
+                <span className="am-filter-badge-text">
                   Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
-                </IonText>
-                <div 
-                  onClick={() => setFilterBy('all')}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '2px'
-                  }}
-                >
+                </span>
+                <div className="am-filter-badge-close" onClick={() => setFilterBy('all')}>
                   <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
                 </div>
               </div>
@@ -357,90 +285,32 @@ const AdminEventManager: React.FC = () => {
           </div>
 
           {/* Events List */}
-          <div>
-            {getSortedAndFilteredEvents().length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: 'var(--ion-color-medium)',
-                opacity: 0.6
-              }}>
-                <IonIcon icon={calendar} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
-                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No events found</p>
-                <p style={{ fontSize: '14px', margin: 0 }}>
+          <div className="am-list">
+            {displayedEvents.length === 0 ? (
+              <div className="am-empty">
+                <IonIcon icon={calendar} />
+                <p className="am-empty-title">No events found</p>
+                <p className="am-empty-text">
                   {searchQuery || filterBy !== 'all' 
                     ? 'Try adjusting your search or filters' 
                     : 'Start by adding your first event'}
                 </p>
               </div>
             ) : (
-              getSortedAndFilteredEvents().map((event) => (
+              displayedEvents.map((event) => (
                 <div
                   key={event._id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px',
-                    borderRadius: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: 'var(--ion-card-background)',
-                    border: '1px solid var(--ion-color-step-200)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '10px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#f59e0b40';
-                    e.currentTarget.style.background = '#f59e0b08';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px #f59e0b20';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
-                    e.currentTarget.style.background = 'var(--ion-card-background)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="am-card"
                   onClick={() => openEditPage(event)}
                 >
                   {/* Left accent line */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '3px',
-                    height: '100%',
-                    background: event.isPublished ? '#10b981' : '#f59e0b',
-                    opacity: 0.8
-                  }} />
+                  <div className={`am-accent ${event.isPublished ? 'green' : 'amber'}`} />
 
                   {/* Thumbnail */}
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    position: 'relative',
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
+                  <div className="am-thumb">
                     <img 
                       src={event.imageUrl ? (event.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${event.imageUrl}` : event.imageUrl) : DEFAULT_EVENT_THUMBNAIL} 
                       alt={event.title || 'Event'}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0
-                      }}
                       onError={(e) => {
                         if (event.imageUrl && !failedThumbnails.has(event._id)) {
                           (e.target as HTMLImageElement).src = DEFAULT_EVENT_THUMBNAIL;
@@ -451,79 +321,42 @@ const AdminEventManager: React.FC = () => {
                   </div>
 
                   {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {event.title || 'Untitled'}
-                      </p>
-                    </div>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="am-content">
+                    <p className="am-title">
+                      {event.title || 'Untitled'}
+                    </p>
+                    <p className="am-subtitle">
                       {event.organizer || 'Dove Church'}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <IonIcon icon={calendar} style={{ fontSize: '12px' }} />
+                    <div className="am-meta">
+                      <p className="am-meta-item">
+                        <IonIcon icon={calendar} />
                         {event.date ? formatDate(event.date) : 'No date'}
                       </p>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <IonIcon icon={people} style={{ fontSize: '12px' }} />
+                      <p className="am-meta-item">
+                        <IonIcon icon={people} />
                         {event.attendees}/{event.capacity}
                       </p>
                     </div>
                   </div>
 
-                  {/* Action buttons with status badge above */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <div style={{
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      background: event.isPublished ? '#10b98120' : '#f59e0b20',
-                      color: event.isPublished ? '#10b981' : '#f59e0b',
-                      whiteSpace: 'nowrap'
-                    }}>
+                  {/* Action buttons with status badge */}
+                  <div className="am-actions">
+                    <div className={`am-status ${event.isPublished ? 'published' : 'draft'}`}>
                       {event.isPublished ? 'Published' : 'Draft'}
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="am-btns">
                       <div
+                        className={`am-btn toggle ${event.isPublished ? '' : 'inactive'}`}
                         onClick={(e) => { e.stopPropagation(); toggleStatus(event._id); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: event.isPublished ? '#10b98115' : '#f59e0b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = event.isPublished ? '#10b98125' : '#f59e0b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = event.isPublished ? '#10b98115' : '#f59e0b15'}
                       >
-                        <IonIcon 
-                          icon={event.isPublished ? eyeOff : eye} 
-                          style={{ fontSize: '16px', color: event.isPublished ? '#10b981' : '#f59e0b' }} 
-                        />
+                        <IonIcon icon={event.isPublished ? eyeOff : eye} />
                       </div>
                       <div
+                        className="am-btn more"
                         onClick={(e) => { e.stopPropagation(); openActionSheet(event); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: '#64748b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
                       >
-                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                        <IonIcon icon={ellipsisVertical} />
                       </div>
                     </div>
                   </div>
@@ -533,11 +366,16 @@ const AdminEventManager: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
-            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
-              Dove Church • Admin Panel v2.0
-            </IonText>
+          <div className="am-footer">
+            <IonText>Dove Church • Admin Panel v2.0</IonText>
           </div>
+
+          {/* Infinite Scroll */}
+          {displayedEvents.length < sortedAndFiltered.length && (
+            <IonInfiniteScroll onIonInfinite={handleInfiniteScroll}>
+              <IonInfiniteScrollContent />
+            </IonInfiniteScroll>
+          )}
         </div>
 
         {/* FAB for adding new event */}
@@ -567,12 +405,12 @@ const AdminEventManager: React.FC = () => {
         buttons={['OK']}
       />
 
-      {/* Action Sheet */}
-      <IonActionSheet
+      {/* Action Popover */}
+      <AdminPopover
         isOpen={showActionSheet}
         onDidDismiss={() => setShowActionSheet(false)}
         header={selectedEvent?.title || 'Event Options'}
-        buttons={[
+        options={[
           {
             text: 'Edit',
             icon: create,
@@ -598,37 +436,18 @@ const AdminEventManager: React.FC = () => {
           {
             text: 'Cancel',
             icon: arrowBack,
-            role: 'cancel'
+            role: 'cancel',
+            handler: () => {}
           }
         ]}
       />
 
       {loading && events.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          color: 'var(--ion-color-medium)',
-          opacity: 0.6
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid var(--ion-color-step-200)',
-            borderTop: '3px solid var(--ion-color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
-          <p style={{ fontSize: '14px', margin: 0 }}>Loading events...</p>
+        <div className="am-loading">
+          <div className="am-loading-spinner" />
+          <p>Loading events...</p>
         </div>
       ) : null}
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </IonPage>
   );
 };

@@ -8,15 +8,15 @@ import {
   IonButton,
   IonIcon,
   IonText,
-  IonLoading,
   IonAlert,
-  IonActionSheet,
   IonFab,
   IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../components/BackButton';
+import AdminPopover from '../components/AdminPopover';
 import {
   add,
   create,
@@ -33,7 +33,9 @@ import {
   checkmarkCircle
 } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
-import './Tab4.css';
+import './AdminManager.css';
+
+const PAGE_SIZE = 20;
 
 const AdminMinistryManager: React.FC = () => {
   const history = useHistory();
@@ -48,8 +50,8 @@ const AdminMinistryManager: React.FC = () => {
   const [filterBy, setFilterBy] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
-  
-  // Default thumbnail for ministries when no custom thumbnail is uploaded
+  const [displayedCount, setDisplayedCount] = useState(PAGE_SIZE);
+
   const DEFAULT_MINISTRY_THUMBNAIL = '/hero-evangelism.jpg';
 
   useEffect(() => {
@@ -152,7 +154,6 @@ const AdminMinistryManager: React.FC = () => {
     setShowActionSheet(true);
   };
 
-  // Calculate stats
   const totalMinistries = ministries.length;
   const activeMinistries = ministries.filter(m => m.isPublished).length;
   const totalMembers = ministries.reduce((sum, m) => sum + m.members, 0);
@@ -197,12 +198,24 @@ const AdminMinistryManager: React.FC = () => {
     return sorted;
   };
 
+  const allSorted = getSortedAndFilteredMinistries();
+  const visibleMinistries = allSorted.slice(0, displayedCount);
+  const hasMore = displayedCount < allSorted.length;
+
+  const handleInfiniteScroll = async (ev: any) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setDisplayedCount(prev => Math.min(prev + PAGE_SIZE, allSorted.length));
+    (ev as any).target.complete();
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
-        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">Ministry Manager</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Ministry Manager</IonTitle>
           <IonButton fill="clear" slot="end" onClick={() => loadMinistries(true)} style={{ marginRight: '8px' }}>
             <IonIcon icon={settings} />
           </IonButton>
@@ -210,225 +223,83 @@ const AdminMinistryManager: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+        <div className="am-page">
 
           {/* Stats Modules */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
-              {statsModules.map((mod, i) => (
-                <div key={i} onClick={() => {
+          <div className="am-stats">
+            {statsModules.map((mod, i) => (
+              <div
+                key={i}
+                className="am-stat-pill"
+                style={{ '--chip-color': mod.color } as any}
+                onClick={() => {
                   if (mod.name === 'Total Ministries') setFilterBy('all');
                   else if (mod.name === 'Active') setFilterBy(filterBy === 'active' ? 'all' : 'active');
-                }} style={{
-                  minWidth: '140px',
-                  flex: '0 0 auto',
-                  padding: '12px 16px',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  border: `1px solid ${mod.color}20`,
-                  background: `linear-gradient(135deg, ${mod.color}08 0%, ${mod.color}03 100%)`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 2px 8px ${mod.color}10`
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${mod.color}25`;
-                  e.currentTarget.style.borderColor = `${mod.color}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 2px 8px ${mod.color}10`;
-                  e.currentTarget.style.borderColor = `${mod.color}20`;
-                }}
+              >
+                <div
+                  className="am-action-icon"
+                  style={{ background: mod.color }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      background: mod.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: `0 2px 8px ${mod.color}30`
-                    }}>
-                      <IonIcon icon={mod.icon} style={{ fontSize: '16px', color: 'white' }} />
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ion-text-color)', opacity: 0.7 }}>{mod.name}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '22px', fontWeight: '700', color: mod.color, lineHeight: '1.1' }}>{mod.val}</span>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: 'var(--ion-text-color)', opacity: 0.5 }}>{mod.sub}</p>
-                  </div>
+                  <IonIcon icon={mod.icon} />
                 </div>
-              ))}
-            </div>
+                <div className="am-stat-data">
+                  <span className="am-stat-num" style={{ color: mod.color }}>{mod.val}</span>
+                  <span className="am-stat-txt">{mod.sub}</span>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Search Bar */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              marginBottom: filterBy !== 'all' ? '12px' : '0'
-            }}>
-              <div style={{
-                flex: 1,
-                position: 'relative',
-                background: 'var(--ion-card-background)',
-                borderRadius: 14,
-                border: '1px solid var(--ion-color-step-200)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-              }}>
-                <IonIcon 
-                  icon={search} 
-                  style={{
-                    position: 'absolute',
-                    left: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--ion-color-primary)',
-                    fontSize: '18px'
-                  }} 
-                />
-                <input
-                  type="text"
-                  placeholder="Search ministries..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 14px 14px 44px',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: 'var(--ion-text-color)',
-                    fontSize: '0.95em'
-                  }}
-                />
-              </div>
+          <div className="am-search">
+            <div className="am-search-box">
+              <IonIcon icon={search} />
+              <input
+                type="text"
+                placeholder="Search ministries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-
-            {filterBy !== 'all' && (
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--ion-color-step-200)',
-                padding: '6px 12px',
-                borderRadius: 20,
-                marginBottom: '8px'
-              }}>
-                <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.6, fontSize: '0.8em', fontWeight: '500' }}>
-                  Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
-                </IonText>
-                <div 
-                  onClick={() => setFilterBy('all')}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '2px'
-                  }}
-                >
-                  <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
-                </div>
-              </div>
-            )}
           </div>
 
+          {filterBy !== 'all' && (
+            <div className="am-filter-badge">
+              <span className="am-filter-badge-text">
+                Filter: {filterBy.charAt(0).toUpperCase() + filterBy.slice(1)}
+              </span>
+              <div className="am-filter-badge-close" onClick={() => setFilterBy('all')}>
+                <IonIcon icon={closeIcon} style={{ fontSize: '14px' }} />
+              </div>
+            </div>
+          )}
+
           {/* Ministries List */}
-          <div>
-            {getSortedAndFilteredMinistries().length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: 'var(--ion-color-medium)',
-                opacity: 0.6
-              }}>
-                <IonIcon icon={people} style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.3 }} />
-                <p style={{ fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>No ministries found</p>
-                <p style={{ fontSize: '14px', margin: 0 }}>
+          <div className="am-list">
+            {visibleMinistries.length === 0 ? (
+              <div className="am-empty">
+                <IonIcon icon={people} />
+                <p className="am-empty-title">No ministries found</p>
+                <p className="am-empty-text">
                   {searchQuery || filterBy !== 'all' 
                     ? 'Try adjusting your search or filters' 
                     : 'Start by adding your first ministry'}
                 </p>
               </div>
             ) : (
-              getSortedAndFilteredMinistries().map((ministry) => (
+              visibleMinistries.map((ministry) => (
                 <div
                   key={ministry._id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px',
-                    borderRadius: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: 'var(--ion-card-background)',
-                    border: '1px solid var(--ion-color-step-200)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '10px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#6366f140';
-                    e.currentTarget.style.background = '#6366f108';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px #6366f120';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--ion-color-step-200)';
-                    e.currentTarget.style.background = 'var(--ion-card-background)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="am-card"
                   onClick={() => openEditPage(ministry)}
                 >
-                  {/* Left accent line */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '3px',
-                    height: '100%',
-                    background: ministry.isPublished ? '#10b981' : '#f59e0b',
-                    opacity: 0.8
-                  }} />
+                  <div className={`am-accent ${ministry.isPublished ? 'green' : 'amber'}`} />
 
-                  {/* Thumbnail */}
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    position: 'relative',
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
+                  <div className="am-thumb">
                     <img 
                       src={ministry.imageUrl ? (ministry.imageUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${ministry.imageUrl}` : ministry.imageUrl) : DEFAULT_MINISTRY_THUMBNAIL} 
                       alt={ministry.name || 'Ministry'}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0
-                      }}
                       onError={(e) => {
                         if (ministry.imageUrl && !failedThumbnails.has(ministry._id)) {
                           (e.target as HTMLImageElement).src = DEFAULT_MINISTRY_THUMBNAIL;
@@ -438,76 +309,40 @@ const AdminMinistryManager: React.FC = () => {
                     />
                   </div>
 
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {ministry.name || 'Untitled'}
-                      </p>
-                    </div>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--ion-color-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="am-content">
+                    <p className="am-title">
+                      {ministry.name || 'Untitled'}
+                    </p>
+                    <p className="am-subtitle">
                       {ministry.leader || 'Dove Church'}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-color-medium)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <IonIcon icon={people} style={{ fontSize: '12px' }} />
+                    <div className="am-meta">
+                      <p className="am-meta-item">
+                        <IonIcon icon={people} />
                         {ministry.members} members
                       </p>
                     </div>
                   </div>
 
-                  {/* Action buttons with status badge above */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <div style={{
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      background: ministry.isPublished ? '#10b98120' : '#f59e0b20',
-                      color: ministry.isPublished ? '#10b981' : '#f59e0b',
-                      whiteSpace: 'nowrap'
-                    }}>
+                  <div className="am-actions">
+                    <span className={`am-status ${ministry.isPublished ? 'active' : 'inactive'}`}>
                       {ministry.isPublished ? 'Active' : 'Inactive'}
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    </span>
+                    <div className="am-btns">
                       <div
+                        className={`am-btn toggle ${ministry.isPublished ? '' : 'inactive'}`}
                         onClick={(e) => { e.stopPropagation(); toggleStatus(ministry._id); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: ministry.isPublished ? '#10b98115' : '#f59e0b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = ministry.isPublished ? '#10b98125' : '#f59e0b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = ministry.isPublished ? '#10b98115' : '#f59e0b15'}
                       >
                         <IonIcon 
-                          icon={ministry.isPublished ? eyeOff : eye} 
-                          style={{ fontSize: '16px', color: ministry.isPublished ? '#10b981' : '#f59e0b' }} 
+                          icon={ministry.isPublished ? eyeOff : eye}
+                          style={{ color: ministry.isPublished ? '#10b981' : '#f59e0b' }}
                         />
                       </div>
                       <div
+                        className="am-btn more"
                         onClick={(e) => { e.stopPropagation(); openActionSheet(ministry); }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          background: '#64748b15',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#64748b25'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#64748b15'}
                       >
-                        <IonIcon icon={ellipsisVertical} style={{ fontSize: '16px', color: 'var(--ion-color-medium)' }} />
+                        <IonIcon icon={ellipsisVertical} />
                       </div>
                     </div>
                   </div>
@@ -516,9 +351,17 @@ const AdminMinistryManager: React.FC = () => {
             )}
           </div>
 
+          {/* Infinite Scroll */}
+          <IonInfiniteScroll
+            onIonInfinite={handleInfiniteScroll}
+            disabled={!hasMore}
+          >
+            <IonInfiniteScrollContent loadingText="Loading more ministries..." />
+          </IonInfiniteScroll>
+
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--ion-color-step-200)' }}>
-            <IonText style={{ color: 'var(--ion-text-color)', opacity: 0.4, fontSize: '11px' }}>
+          <div className="am-footer">
+            <IonText>
               Dove Church • Admin Panel v2.0
             </IonText>
           </div>
@@ -551,12 +394,12 @@ const AdminMinistryManager: React.FC = () => {
         buttons={['OK']}
       />
 
-      {/* Action Sheet */}
-      <IonActionSheet
+      {/* Action Popover */}
+      <AdminPopover
         isOpen={showActionSheet}
         onDidDismiss={() => setShowActionSheet(false)}
         header={selectedMinistry?.name || 'Ministry Options'}
-        buttons={[
+        options={[
           {
             text: 'Edit',
             icon: create,
@@ -582,37 +425,18 @@ const AdminMinistryManager: React.FC = () => {
           {
             text: 'Cancel',
             icon: arrowBack,
-            role: 'cancel'
+            role: 'cancel',
+            handler: () => {}
           }
         ]}
       />
 
       {loading && ministries.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          color: 'var(--ion-color-medium)',
-          opacity: 0.6
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid var(--ion-color-step-200)',
-            borderTop: '3px solid var(--ion-color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
+        <div className="am-loading">
+          <div className="am-loading-spinner" />
           <p style={{ fontSize: '14px', margin: 0 }}>Loading ministries...</p>
         </div>
       ) : null}
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </IonPage>
   );
 };

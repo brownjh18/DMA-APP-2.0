@@ -31,6 +31,9 @@ import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import BackButton from '../components/BackButton';
 import { AuthContext } from '../App';
+import { useSettings } from '../contexts/SettingsContext';
+import './AdminForm.css';
+import './AdminDashboard.css';
 
 interface RouteParams {
   id: string;
@@ -45,46 +48,10 @@ const EditMinistry: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const { isDarkMode } = useSettings();
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
-
-  const colors = isDarkMode ? {
-    bg: 'transparent', text: '#fff', textSecondary: 'rgba(255,255,255,0.7)', textMuted: 'rgba(255,255,255,0.4)',
-    textLight: 'rgba(255,255,255,0.6)', inputBg: 'rgba(255,255,255,0.08)', inputBorder: 'rgba(255,255,255,0.15)',
-    cardBg: 'rgba(255,255,255,0.08)', cardBorder: 'rgba(255,255,255,0.1)', tabBg: 'rgba(255,255,255,0.05)',
-    dropzoneBg: 'rgba(255,255,255,0.03)', dropzoneBorder: 'rgba(255,255,255,0.3)', dropzoneHoverBorder: 'rgba(255,255,255,0.5)',
-    dropzoneHoverBg: 'rgba(255,255,255,0.06)', buttonBg: 'rgba(255,255,255,0.15)', buttonBorder: 'rgba(255,255,255,0.2)',
-    buttonHoverBg: 'rgba(255,255,255,0.25)', error: '#f87171', success: '#22c55e', successBg: 'rgba(34,197,94,0.15)',
-    successBorder: 'rgba(34,197,94,0.3)', warning: '#f59e0b', warningBg: 'rgba(245,158,11,0.15)',
-    danger: '#ef4444', dangerBg: 'rgba(239,68,68,0.2)', dangerHoverBg: 'rgba(239,68,68,0.3)',
-    primary: '#667eea', primaryShadow: 'rgba(102,126,234,0.2)', footer: 'rgba(255,255,255,0.4)',
-    heroText: '#fff', heroSubtext: 'rgba(255,255,255,0.85)', iconBg: 'rgba(255,255,255,0.1)',
-    iconBgLight: 'rgba(255,255,255,0.2)', videoCardBg: 'rgba(34,197,94,0.2)', loadingBg: 'rgba(255,255,255,0.2)',
-    alertBg: 'rgba(30,30,40,0.95)', alertShadow: 'rgba(0,0,0,0.5)', alertBtn: '#667eea',
-    scrollbarThumb: 'rgba(255,255,255,0.2)', scrollbarThumbHover: 'rgba(255,255,255,0.3)',
-  } : {
-    bg: '#f8fafc', text: '#1e293b', textSecondary: '#475569', textMuted: '#94a3b8', textLight: '#64748b',
-    inputBg: '#ffffff', inputBorder: '#e2e8f0', cardBg: '#ffffff', cardBorder: '#e2e8f0', tabBg: '#f1f5f9',
-    dropzoneBg: '#f8fafc', dropzoneBorder: '#cbd5e1', dropzoneHoverBorder: '#667eea', dropzoneHoverBg: '#eef2ff',
-    buttonBg: '#e2e8f0', buttonBorder: '#cbd5e1', buttonHoverBg: '#cbd5e1', error: '#dc2626', success: '#16a34a',
-    successBg: 'rgba(22,163,74,0.1)', successBorder: 'rgba(22,163,74,0.3)', warning: '#d97706', warningBg: 'rgba(217,119,6,0.1)',
-    danger: '#dc2626', dangerBg: 'rgba(220,38,38,0.1)', dangerHoverBg: 'rgba(220,38,38,0.15)', primary: '#6366f1',
-    primaryShadow: 'rgba(99,102,241,0.2)', footer: '#94a3b8', heroText: '#fff', heroSubtext: 'rgba(255,255,255,0.9)',
-    iconBg: 'rgba(255,255,255,0.2)', iconBgLight: 'rgba(255,255,255,0.3)', videoCardBg: 'rgba(22,163,74,0.1)',
-    loadingBg: 'rgba(99,102,241,0.1)', alertBg: '#ffffff', alertShadow: 'rgba(0,0,0,0.15)', alertBtn: '#6366f1',
-    scrollbarThumb: '#cbd5e1', scrollbarThumbHover: '#94a3b8',
-  };
 
   useEffect(() => {
     if (!isLoggedIn || !isAdmin) {
@@ -96,9 +63,11 @@ const EditMinistry: React.FC = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '16px' }}>
-            <IonSpinner name="crescent" color="primary" />
-            <IonText color="medium"><p style={{ fontSize: '14px' }}>Checking permissions...</p></IonText>
+          <div className="af-loading">
+            <div className="af-loading-spinner" />
+            <IonText color="medium">
+              <p>Checking permissions...</p>
+            </IonText>
           </div>
         </IonContent>
       </IonPage>
@@ -214,85 +183,68 @@ const EditMinistry: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar style={{ '--border-width': '0px' }}>
+        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
           <BackButton />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
-            <IonTitle style={{ color: isDarkMode ? '#fff' : colors.text, fontWeight: '600', fontSize: '18px', letterSpacing: '-0.3px', textAlign: 'center' }}>
-              Edit Ministry
-            </IonTitle>
-          </div>
+          <IonTitle className="nd-title" style={{ textAlign: 'center' }}>
+            Edit Ministry
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="ion-padding" style={{ background: isDarkMode ? 'transparent' : colors.bg }}>
-        {/* Hero Section */}
+      <IonContent fullscreen className="ion-padding af-page">
         <div style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-          borderRadius: '24px', padding: '32px 24px', marginBottom: '24px',
-          position: 'relative', overflow: 'hidden', boxShadow: '0 20px 60px rgba(102,126,234,0.3)'
+          borderRadius: '24px',
+          padding: '32px 24px',
+          marginBottom: '24px',
+          textAlign: 'center'
         }}>
-          <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }} />
-          <div style={{ position: 'absolute', bottom: '-30px', left: '-30px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }} />
-          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-              <IonIcon icon={people} style={{ color: '#fff', fontSize: '32px' }} />
+          <IonIcon icon={people} style={{ color: '#fff', fontSize: '32px', marginBottom: '12px' }} />
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#fff' }}>
+            Edit Ministry
+          </h1>
+          <p style={{ margin: '0', color: 'rgba(255, 255, 255, 0.85)', fontSize: '14px' }}>
+            Update ministry details and settings
+          </p>
+        </div>
+
+        <div className="af-section">
+          <div className="af-toggle-row">
+            <span className="af-toggle-label">Active</span>
+            <div
+              className={`af-toggle ${formData.status === 'active' ? 'active' : ''}`}
+              onClick={() => handleInputChange('status', formData.status === 'active' ? 'inactive' : 'active')}
+            >
+              <div className="af-toggle-knob" />
             </div>
-            <h1 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#fff', letterSpacing: '-0.5px' }}>Edit Ministry</h1>
-            <p style={{ margin: '0', color: 'rgba(255,255,255,0.85)', fontSize: '14px', fontWeight: '400' }}>Update ministry details and settings</p>
           </div>
         </div>
 
-        {/* Status Toggle */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : colors.tabBg, borderRadius: '16px', padding: '4px' }}>
-          <button onClick={() => handleInputChange('status', 'active')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: '12px', border: 'none',
-            background: formData.status === 'active' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
-            color: formData.status === 'active' ? '#fff' : (isDarkMode ? 'rgba(255,255,255,0.6)' : colors.textLight),
-            fontSize: '14px', fontWeight: formData.status === 'active' ? '600' : '400', cursor: 'pointer',
-            transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-          }}>
-            <IonIcon icon={checkmarkCircle} style={{ fontSize: '16px' }} /> Active
-          </button>
-          <button onClick={() => handleInputChange('status', 'inactive')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: '12px', border: 'none',
-            background: formData.status === 'inactive' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
-            color: formData.status === 'inactive' ? '#fff' : (isDarkMode ? 'rgba(255,255,255,0.6)' : colors.textLight),
-            fontSize: '14px', fontWeight: formData.status === 'inactive' ? '600' : '400', cursor: 'pointer',
-            transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-          }}>
-            <IonIcon icon={informationCircle} style={{ fontSize: '16px' }} /> Inactive
-          </button>
-        </div>
+        <div className="af-section">
+          <h2 className="af-section-title">Ministry Details</h2>
+          <div className="af-card">
+            <div className="af-field">
+              <label className="af-label">
+                Ministry Name <span className="af-required">*</span>
+              </label>
+              <input
+                type="text"
+                className="af-input"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter ministry name"
+              />
+            </div>
 
-        {/* Form Fields */}
-        <div style={{
-          background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.cardBg,
-          backdropFilter: isDarkMode ? 'blur(20px)' : 'none',
-          borderRadius: '20px', padding: '24px', marginBottom: '24px',
-          border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : `1px solid ${colors.cardBorder}`,
-          boxShadow: isDarkMode ? 'none' : '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)'
-        }}>
-          {/* Ministry Name */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Ministry Name <span style={{ color: colors.error }}>*</span>
-            </label>
-            <input type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Enter ministry name"
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-              onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-              onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-          </div>
-
-          {/* Category */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Category <span style={{ color: colors.error }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}
-                style={{ width: '100%', padding: '14px 16px', paddingRight: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                  background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+            <div className="af-field">
+              <label className="af-label">
+                Category <span className="af-required">*</span>
+              </label>
+              <select
+                className="af-input af-select"
+                value={formData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+              >
                 <option value="">Select category</option>
                 <option value="worship">Worship Ministry</option>
                 <option value="youth">Youth Ministry</option>
@@ -302,154 +254,144 @@ const EditMinistry: React.FC = () => {
                 <option value="married-couples">Married Couples Ministry</option>
                 <option value="other">Other</option>
               </select>
-              <IonIcon icon={briefcase} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px', pointerEvents: 'none' }} />
             </div>
-          </div>
 
-          {/* Leader */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Ministry Leader <span style={{ color: colors.error }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input type="text" value={formData.leader} onChange={(e) => handleInputChange('leader', e.target.value)} placeholder="Enter leader's name"
-                style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                  background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-              <IonIcon icon={person} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
-            </div>
-          </div>
-
-          {/* Description */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Description <span style={{ color: colors.error }}>*</span>
-            </label>
-            <textarea value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder="Describe the ministry's purpose and activities" rows={4}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', transition: 'all 0.2s ease' }}
-              onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-              onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-          </div>
-
-          {/* Meeting Schedule */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Meeting Schedule
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input type="text" value={formData.meetingSchedule} onChange={(e) => handleInputChange('meetingSchedule', e.target.value)} placeholder="e.g., Sunday 9:00 AM"
-                style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                  background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-              <IonIcon icon={calendar} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
-            </div>
-          </div>
-
-          {/* End Time */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              End Time
-            </label>
-            <input type="time" value={formData.endTime} onChange={(e) => handleInputChange('endTime', e.target.value)}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-              onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-              onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-          </div>
-
-          {/* Location */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Location
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input type="text" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)} placeholder="Meeting location"
-                style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                  background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-              <IonIcon icon={locationIcon} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
-            </div>
-          </div>
-
-          {/* Contact Email and Phone Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Contact Email
+            <div className="af-field">
+              <label className="af-label">
+                Ministry Leader <span className="af-required">*</span>
               </label>
-              <div style={{ position: 'relative' }}>
-                <input type="email" value={formData.contactEmail} onChange={(e) => handleInputChange('contactEmail', e.target.value)} placeholder="Email for inquiries"
-                  style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                    background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                  onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-                <IonIcon icon={mail} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
+              <input
+                type="text"
+                className="af-input"
+                value={formData.leader}
+                onChange={(e) => handleInputChange('leader', e.target.value)}
+                placeholder="Enter leader's name"
+              />
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">
+                Description <span className="af-required">*</span>
+              </label>
+              <textarea
+                className="af-input af-textarea"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Describe the ministry's purpose and activities"
+                rows={4}
+              />
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">Meeting Schedule</label>
+              <input
+                type="text"
+                className="af-input"
+                value={formData.meetingSchedule}
+                onChange={(e) => handleInputChange('meetingSchedule', e.target.value)}
+                placeholder="e.g., Sunday 9:00 AM"
+              />
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">End Time</label>
+              <input
+                type="time"
+                className="af-input"
+                value={formData.endTime}
+                onChange={(e) => handleInputChange('endTime', e.target.value)}
+              />
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">Location</label>
+              <input
+                type="text"
+                className="af-input"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder="Meeting location"
+              />
+            </div>
+
+            <div className="af-row">
+              <div className="af-field">
+                <label className="af-label">Contact Email</label>
+                <input
+                  type="email"
+                  className="af-input"
+                  value={formData.contactEmail}
+                  onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                  placeholder="Email for inquiries"
+                />
+              </div>
+              <div className="af-field">
+                <label className="af-label">Contact Phone</label>
+                <input
+                  type="tel"
+                  className="af-input"
+                  value={formData.contactPhone}
+                  onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                  placeholder="Phone for inquiries"
+                />
               </div>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Contact Phone
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input type="tel" value={formData.contactPhone} onChange={(e) => handleInputChange('contactPhone', e.target.value)} placeholder="Phone for inquiries"
-                  style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                    background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                  onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-                <IonIcon icon={call} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
-              </div>
+
+            <div className="af-field">
+              <label className="af-label">Member Count</label>
+              <input
+                type="number"
+                className="af-input"
+                value={formData.memberCount}
+                onChange={(e) => handleInputChange('memberCount', e.target.value)}
+                placeholder="Approximate number of members"
+              />
             </div>
           </div>
+        </div>
 
-          {/* Member Count */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Member Count
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input type="number" value={formData.memberCount} onChange={(e) => handleInputChange('memberCount', e.target.value)} placeholder="Approximate number of members"
-                style={{ width: '100%', padding: '14px 16px', paddingLeft: '44px', borderRadius: '12px', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder}`,
-                  background: isDarkMode ? 'rgba(255,255,255,0.08)' : colors.inputBg, color: isDarkMode ? '#fff' : colors.text, fontSize: '15px', outline: 'none', transition: 'all 0.2s ease' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = `0 0 0 3px ${colors.primaryShadow}`; }}
-                onBlur={(e) => { e.target.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.15)' : colors.inputBorder; e.target.style.boxShadow = 'none'; }} />
-              <IonIcon icon={peopleOutline} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: isDarkMode ? 'rgba(255,255,255,0.5)' : colors.textMuted, fontSize: '18px' }} />
-            </div>
-          </div>
-
-          {/* Thumbnail Upload */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Ministry Thumbnail
-            </label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleThumbnailSelect} style={{ display: 'none' }} />
+        <div className="af-section">
+          <h2 className="af-section-title">Ministry Thumbnail</h2>
+          <div className="af-card">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailSelect}
+              style={{ display: 'none' }}
+            />
             {!thumbnailPreview && !currentThumbnailUrl ? (
-              <div onClick={() => fileInputRef.current?.click()}
-                style={{ border: `2px dashed ${isDarkMode ? 'rgba(255,255,255,0.3)' : colors.dropzoneBorder}`, borderRadius: '16px', padding: '32px 24px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease', background: isDarkMode ? 'rgba(255,255,255,0.03)' : colors.dropzoneBg }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.5)' : colors.dropzoneHoverBorder; e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.06)' : colors.dropzoneHoverBg; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.3)' : colors.dropzoneBorder; e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.03)' : colors.dropzoneBg; }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: isDarkMode ? 'rgba(255,255,255,0.1)' : colors.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                  <IonIcon icon={image} style={{ color: isDarkMode ? '#fff' : colors.textSecondary, fontSize: '24px' }} />
-                </div>
-                <p style={{ margin: '0 0 4px 0', color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, fontSize: '14px', fontWeight: '500' }}>Upload thumbnail image</p>
-                <p style={{ margin: '0', color: isDarkMode ? 'rgba(255,255,255,0.4)' : colors.textMuted, fontSize: '12px' }}>Optional • Max 5MB • JPG, PNG, WebP</p>
+              <div
+                className="af-upload"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <IonIcon icon={image} className="af-upload-icon" />
+                <p className="af-upload-text">Upload thumbnail image</p>
+                <p className="af-upload-hint">Optional • Max 5MB • JPG, PNG, WebP</p>
               </div>
             ) : (
-              <div style={{ borderRadius: '16px', overflow: 'hidden', background: isDarkMode ? 'rgba(255,255,255,0.05)' : colors.inputBg, border: `2px solid ${isDarkMode ? 'rgba(102,126,234,0.3)' : colors.primary}` }}>
-                <img src={thumbnailPreview || currentThumbnailUrl} alt="Thumbnail preview" style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
-                <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <img
+                  src={thumbnailPreview || currentThumbnailUrl}
+                  alt="Thumbnail preview"
+                  className="af-upload-preview"
+                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <IonIcon icon={image} style={{ color: colors.primary, fontSize: '16px' }} />
-                    <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : colors.textSecondary, fontSize: '13px' }}>Current thumbnail</span>
+                    <IonIcon icon={image} style={{ color: 'var(--ion-color-primary)', fontSize: '16px' }} />
+                    <span className="af-upload-text">Current thumbnail</span>
                   </div>
-                  <button onClick={() => { setThumbnailPreview(null); setCurrentThumbnailUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                    style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', background: isDarkMode ? 'rgba(239,68,68,0.2)' : colors.dangerBg, color: colors.danger, fontSize: '12px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = isDarkMode ? 'rgba(239,68,68,0.3)' : colors.dangerHoverBg; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = isDarkMode ? 'rgba(239,68,68,0.2)' : colors.dangerBg; }}>
-                    <IonIcon icon={closeCircle} style={{ fontSize: '14px' }} /> Remove
+                  <button
+                    className="af-submit af-submit-danger"
+                    style={{ width: 'auto', padding: '8px 16px', fontSize: '13px' }}
+                    onClick={() => {
+                      setThumbnailPreview(null);
+                      setCurrentThumbnailUrl('');
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                  >
+                    <IonIcon icon={closeCircle} style={{ fontSize: '14px', marginRight: '4px' }} />
+                    Remove
                   </button>
                 </div>
               </div>
@@ -457,45 +399,41 @@ const EditMinistry: React.FC = () => {
           </div>
         </div>
 
-        {/* Save Button */}
-        <button onClick={handleSave} disabled={loading}
-          style={{ width: '100%', padding: '16px 32px', borderRadius: '16px', border: 'none',
-            background: loading ? (isDarkMode ? 'rgba(255,255,255,0.2)' : colors.loadingBg) : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-            color: '#fff', fontSize: '16px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: loading ? 'none' : '0 8px 32px rgba(102,126,234,0.4), 0 2px 8px rgba(102,126,234,0.2)',
-            transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)', opacity: loading ? 0.6 : 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', letterSpacing: '0.3px', position: 'relative', overflow: 'hidden' }}
-          onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(102,126,234,0.5), 0 4px 12px rgba(102,126,234,0.3)'; } }}
-          onMouseLeave={(e) => { if (!loading) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(102,126,234,0.4), 0 2px 8px rgba(102,126,234,0.2)'; } }}
-          onMouseDown={(e) => { if (!loading) { e.currentTarget.style.transform = 'scale(0.98)'; } }}>
+        <button
+          className="af-submit"
+          onClick={handleSave}
+          disabled={loading}
+        >
           {loading ? (
-            <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span>Updating Ministry...</span></>
+            <>
+              <IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} />
+              <span>Updating Ministry...</span>
+            </>
           ) : (
-            <><IonIcon icon={save} style={{ fontSize: '20px' }} /><span>Update Ministry</span></>
+            <>
+              <IonIcon icon={save} style={{ fontSize: '20px', marginRight: '8px' }} />
+              <span>Update Ministry</span>
+            </>
           )}
         </button>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '32px', marginBottom: '20px' }}>
-          <IonText style={{ color: isDarkMode ? 'rgba(255,255,255,0.4)' : colors.footer, fontSize: '12px' }}>Dove Church • Ministry Management System</IonText>
+        <div className="af-footer">
+          <IonText>Dove Church • Ministry Management System</IonText>
         </div>
 
-        <IonLoading isOpen={loading} message="Updating ministry..." duration={0} />
-        <IonAlert isOpen={showAlert} onDidDismiss={() => setShowAlert(false)} header={alertHeader} message={alertMessage} buttons={[{ text: 'OK', role: 'cancel' }]} cssClass="modern-alert" />
+        <IonLoading
+          isOpen={loading}
+          message="Updating ministry..."
+          duration={0}
+        />
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={[{ text: 'OK', role: 'cancel' }]}
+        />
       </IonContent>
-
-      <style>{`
-        .modern-alert { --background: ${colors.alertBg}; --color: ${isDarkMode ? '#fff' : colors.text}; --border-radius: 16px; --box-shadow: 0 20px 60px ${colors.alertShadow}; }
-        .modern-alert .alert-title { font-weight: 600; font-size: 18px; }
-        .modern-alert .alert-message { font-size: 14px; line-height: 1.5; }
-        .modern-alert .alert-button { color: ${colors.alertBtn}; font-weight: 600; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${colors.scrollbarThumb}; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: ${colors.scrollbarThumbHover}; }
-        input:focus, textarea:focus, select:focus { transition: all 0.2s ease; }
-        button:active { transition: all 0.1s ease; }
-      `}</style>
     </IonPage>
   );
 };

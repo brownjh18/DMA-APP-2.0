@@ -3,9 +3,11 @@ import { useHistory } from 'react-router-dom';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonItem, IonLabel, IonInput, IonTextarea } from '@ionic/react';
 import { cash, card, phonePortrait, location, heart, informationCircle, arrowBack } from 'ionicons/icons';
 import './Giving.css';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Giving: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
 
   const givingOptions = [
     {
@@ -41,8 +43,10 @@ const Giving: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          
-          <IonTitle className="title-ios">Giving</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Giving</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -86,7 +90,7 @@ const Giving: React.FC = () => {
         <IonIcon
           icon={arrowBack}
           style={{
-            color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+            color: isDarkMode ? '#ffffff' : '#000000',
             fontSize: '20px',
           }}
         />

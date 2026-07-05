@@ -1,7 +1,9 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge } from '@ionic/react';
-import { book, time, removeCircle, library } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
+import { book, time, removeCircle, library, arrowBack } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 
 const ReadingHistory: React.FC = () => {
+  const history = useHistory();
   // Mock reading history data
   const readingHistory = [
     {
@@ -62,7 +64,10 @@ const ReadingHistory: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">Reading History</IonTitle>
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Reading History</IonTitle>
         </IonToolbar>
       </IonHeader>
 
