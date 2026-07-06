@@ -33,6 +33,7 @@ import { apiService } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
+import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface RouteParams {

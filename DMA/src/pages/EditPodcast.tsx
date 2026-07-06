@@ -11,6 +11,7 @@ import { apiService, API_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
+import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface PodcastData {
