@@ -25,11 +25,12 @@ import {
   person,
   peopleOutline,
   time,
-  briefcase
+  briefcase,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
-import BackButton from '../components/BackButton';
+
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';

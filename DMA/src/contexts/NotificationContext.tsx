@@ -73,12 +73,27 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('notifications', JSON.stringify(notifications));
+    try {
+      const serialized = JSON.stringify(notifications);
+      // Limit stored notifications to avoid quota issues (keep last 30)
+      const trimmed = notifications.length > 30 ? notifications.slice(0, 30) : notifications;
+      localStorage.setItem('notifications', JSON.stringify(trimmed));
+    } catch (e) {
+      console.warn('Failed to save notifications to localStorage:', e);
+      // If storage is full, clear old notifications
+      try {
+        localStorage.removeItem('notifications');
+      } catch (_) {}
+    }
   }, [notifications]);
 
   // Save cache to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('contentCache', JSON.stringify(cachedContent));
+    try {
+      localStorage.setItem('contentCache', JSON.stringify(cachedContent));
+    } catch (e) {
+      console.warn('Failed to save content cache to localStorage:', e);
+    }
   }, [cachedContent]);
 
   // Show local notification on device

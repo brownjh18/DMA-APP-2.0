@@ -1,151 +1,91 @@
+/* ============================================
+   Notifications Page
+   ============================================ */
+
 .notifications-page {
   --ion-background-color: var(--ios26-grouped-bg-light);
 }
 
-.notif-container {
-  max-width: 850px;
-  margin: 0 auto;
-  padding: 16px;
+/* Filter bar */
+.notif-filters-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px 4px 16px;
 }
 
-.section-divider {
+.notif-filters-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.notif-filters-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ios26-text-secondary-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 8px 16px;
-  margin: 16px 0;
+  gap: 8px;
+  width: max-content;
 }
 
-.section-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.section-label {
-  font-size: 18px;
-  font-weight: 800;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--ios26-text-primary-light);
-}
-
-.notif-count-chip {
-  font-size: 12px;
-  font-weight: 700;
-  height: 22px;
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --background: var(--ion-color-primary);
-  --color: var(--ion-color-primary-contrast);
-  margin-left: -4px;
-}
-
-.notif-filters {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--ios26-glass-bg-light);
-  padding: 4px;
-  border-radius: 24px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--ios26-glass-border-light);
-}
-
-.filter-button {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 14px;
-  color: var(--ios26-text-primary-light);
-  background: transparent;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  outline: none;
-}
-
-.filter-button.clear-button {
-  color: #eb445a;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.filter-button.filter-active {
-  background: var(--ios26-glass-strong-light);
-  color: var(--ios26-text-primary-light);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
-}
-
-
-.notif-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.notif-row {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: var(--ios26-glass-bg-light);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--ios26-glass-border-light);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.notif-row:hover {
-  background: var(--ios26-glass-strong-light);
-  transform: translateY(-3px);
-}
-
-.notif-row.unread {
-  background: var(--ios26-glass-strong-light);
-  border: 1px solid var(--ios26-glass-border-light);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
-}
-
-.notif-icon {
-  font-size: 28px;
-  margin-right: 16px;
-}
-
-.notif-body {
-  flex-grow: 1;
-}
-
-.notif-message {
-  font-size: 15px;
-  color: var(--ios26-text-primary-light);
-  margin: 0 0 4px;
-}
-
-.notif-title {
-  font-weight: 700;
-}
-
-.notif-time {
+.notif-filter-btn {
+  font-family: inherit;
   font-size: 13px;
-  color: var(--ios26-text-secondary-light);
+  font-weight: 600;
+  padding: 8px 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: max-content;
+  color: var(--ion-text-color);
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+.notif-filter-btn.active {
+  background: var(--ion-color-primary);
+  color: white;
+  border-color: var(--ion-color-primary);
+}
+
+/* Section headers */
+.notif-section {
+  margin-bottom: 20px;
+}
+
+.notif-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.notif-section-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ion-text-color);
+}
+
+/* Notification icon */
+.notif-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+/* Thumbnail */
 .notif-thumbnail {
-  width: 64px;
-  height: 44px;
+  width: 56px;
+  height: 40px;
   margin-left: auto;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -156,126 +96,32 @@
   object-fit: cover;
 }
 
-.notif-actions {
-  display: flex;
-  align-items: center;
-  margin-left: 16px;
+/* Unread indicator */
+.notif-row.unread {
+  border-left: 3px solid #3b82f6;
 }
 
-.notif-action-button {
-  --color: var(--ios26-text-secondary-light);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.notif-row:hover .notif-action-button,
-.notif-row:focus-within .notif-action-button {
-  opacity: 1;
-}
-
-/* Dark Mode - iOS 26 */
+/* Dark Mode */
 [data-theme="dark"] .notifications-page {
   --ion-background-color: var(--ios26-grouped-bg-dark);
 }
 
-[data-theme="dark"] .notif-toolbar {
-  background: var(--ios26-glass-bg-dark);
-  border-color: var(--ios26-separator-dark);
+[data-theme="dark"] .notif-filter-btn {
+  background: #1c1c1e;
+  border-color: rgba(84, 84, 88, 0.36);
+  color: #ffffff;
 }
 
-[data-theme="dark"] .notif-row {
-  background: var(--ios26-card-bg-dark);
-  border-color: var(--ios26-separator-dark);
+[data-theme="dark"] .notif-filter-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 
-[data-theme="dark"] .notif-row:hover {
-  background: var(--ios26-card-bg-elevated-dark);
+[data-theme="dark"] .notif-icon {
+  background: #1c1c1e;
+  border-color: rgba(84, 84, 88, 0.36);
 }
 
-[data-theme="dark"] .notif-row.unread {
-  background: var(--ios26-card-bg-elevated-dark);
-  border-color: var(--ios26-separator-dark);
-}
-
-[data-theme="dark"] .notif-filters {
-  background: var(--ios26-fill-dark);
-  border-color: var(--ios26-separator-dark);
-}
-
-[data-theme="dark"] .filter-button {
-  color: var(--ios26-text-primary-dark);
-}
-
-[data-theme="dark"] .filter-button.clear-button {
-  color: #ff4961;
-}
-
-[data-theme="dark"] .filter-button.filter-active {
-  background: var(--ios26-fill-dark);
-  color: var(--ios26-text-primary-dark);
-}
-
-[data-theme="dark"] .section-divider,
-[data-theme="dark"] .notif-message,
-[data-theme="dark"] .notif-time,
-[data-theme="dark"] .notif-action-button {
-  color: var(--ios26-text-primary-dark);
-}
-
-[data-theme="dark"] .section-label {
-  color: var(--ios26-text-primary-dark);
-}
-
-@media (prefers-color-scheme: dark) {
-  .notifications-page {
-    --ion-background-color: var(--ios26-grouped-bg-dark);
-  }
-
-  .notif-toolbar {
-    background: var(--ios26-glass-bg-dark);
-    border-color: var(--ios26-separator-dark);
-  }
-
-  .notif-row {
-    background: var(--ios26-card-bg-dark);
-    border-color: var(--ios26-separator-dark);
-  }
-
-  .notif-row:hover {
-    background: var(--ios26-card-bg-elevated-dark);
-  }
-
-  .notif-row.unread {
-    background: var(--ios26-card-bg-elevated-dark);
-    border-color: var(--ios26-separator-dark);
-  }
-
-  .notif-filters {
-    background: var(--ios26-fill-dark);
-    border-color: var(--ios26-separator-dark);
-  }
-
-  .filter-button {
-    color: var(--ios26-text-primary-dark);
-  }
-
-  .filter-button.clear-button {
-    color: #ff4961;
-  }
-
-  .filter-button.filter-active {
-    background: var(--ios26-fill-dark);
-    color: var(--ios26-text-primary-dark);
-  }
-
-  .section-divider,
-  .notif-message,
-  .notif-time,
-  .notif-action-button {
-    color: var(--ios26-text-primary-dark);
-  }
-
-  .section-label {
-    color: var(--ios26-text-primary-dark);
-  }
+[data-theme="dark"] .notif-section-label {
+  color: #ffffff;
 }

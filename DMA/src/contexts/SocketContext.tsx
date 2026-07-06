@@ -124,26 +124,24 @@ useEffect(() => {
 
      const apiUrl = import.meta.env.VITE_API_URL || '';
      const explicitSocketUrl = import.meta.env.VITE_SOCKET_URL || '';
+     const fallbackUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
      
-     if (explicitSocketUrl) {
-       console.log(`🔌 Connecting to dedicated WebSocket server: ${explicitSocketUrl}`);
-     } else if (apiUrl) {
-       const inferredSocketUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
-       console.log(`🔌 Using inferred socket URL: ${inferredSocketUrl}`);
-     } else {
+     // Try explicit URL first, fall back to API backend
+     const socketUrl = explicitSocketUrl || fallbackUrl;
+     
+     if (!socketUrl) {
        console.log('🔌 No WebSocket URL configured, skipping connection');
        return;
      }
-     
-     const socketUrl = explicitSocketUrl || apiUrl.replace(/\/api$/, '') || window.location.origin;
-    
-    console.log(`🔌 Attempting to connect socket to: ${socketUrl}`);
+
+     console.log(`🔌 Attempting to connect socket to: ${socketUrl}`);
 
     const newSocket = io(socketUrl, {
       transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 2000,
+      timeout: 10000,
     });
 
     newSocket.on('connect', () => {
@@ -157,7 +155,30 @@ useEffect(() => {
     });
 
     newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.warn('Socket connection error:', error.message);
+      // If explicit URL fails and we haven't tried fallback yet
+      if (socketUrl === explicitSocketUrl && fallbackUrl !== explicitSocketUrl) {
+        console.log(`🔌 Falling back to API backend: ${fallbackUrl}`);
+        newSocket.disconnect();
+        const fallbackSocket = io(fallbackUrl, {
+          transports: ['polling', 'websocket'],
+          reconnection: true,
+          reconnectionAttempts: 3,
+          reconnectionDelay: 2000,
+          timeout: 10000,
+        });
+        fallbackSocket.on('connect', () => {
+          console.log('🔌 Fallback socket connected:', fallbackSocket.id);
+          setIsConnected(true);
+        });
+        fallbackSocket.on('disconnect', () => {
+          setIsConnected(false);
+        });
+        fallbackSocket.on('connect_error', (err) => {
+          console.warn('Fallback socket also failed:', err.message);
+        });
+        setSocket(fallbackSocket);
+      }
     });
 
     setSocket(newSocket);

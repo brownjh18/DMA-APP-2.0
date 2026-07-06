@@ -100,39 +100,6 @@
   color: var(--ios26-text-secondary-dark) !important;
 }
 
-/* Dark mode support - System preference fallback */
-@media (prefers-color-scheme: dark) {
-  .event-detail-header {
-    background: linear-gradient(135deg, rgba(28, 28, 30, 0.85), rgba(44, 44, 46, 0.78)) !important;
-  }
-
-  .event-detail-title {
-    color: var(--ios26-text-primary-dark) !important;
-  }
-
-  .event-detail-meta {
-    color: var(--ios26-text-secondary-dark) !important;
-  }
-
-  .event-detail-description {
-    color: var(--ios26-text-secondary-dark) !important;
-  }
-
-  .event-detail-section h2 {
-    color: var(--ios26-text-primary-dark) !important;
-  }
-
-  .event-detail-card {
-    background: var(--ios26-card-bg-dark) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
-    border: 1px solid var(--ios26-separator-dark) !important;
-  }
-
-  .event-detail-footer {
-    color: var(--ios26-text-secondary-dark) !important;
-  }
-}
-
 /* Responsive adjustments */
 @media (max-width: 576px) {
   .event-detail-title {

@@ -38,6 +38,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showFallback, setShowFallback] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const startTimeRef = useRef(startTime);
+  const playStartRef = useRef<number>(0);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  onTimeUpdateRef.current = onTimeUpdate;
 
   // Determine video type and source
   const isLocalVideo = url && url.startsWith('/uploads/');
@@ -99,11 +103,39 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [playing, isLocalVideo]);
 
+  // Track YouTube playback position via elapsed time estimation
+  useEffect(() => {
+    if (!isYouTube || !playing) return;
+    // Use current saved position as the base, not original startTime
+    startTimeRef.current = startTimeRef.current || startTime;
+    playStartRef.current = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - playStartRef.current) / 1000;
+      const estimatedPosition = startTimeRef.current + elapsed;
+      if (onTimeUpdateRef.current) onTimeUpdateRef.current(estimatedPosition);
+    }, 2000);
+    return () => {
+      clearInterval(interval);
+      // On cleanup (pause/unmount), update startTimeRef to current estimated position
+      const elapsed = (Date.now() - playStartRef.current) / 1000;
+      startTimeRef.current = startTimeRef.current + elapsed;
+    };
+  }, [isYouTube, playing]);
+
+  // Update startTimeRef when prop changes
+  useEffect(() => {
+    startTimeRef.current = startTime;
+    if (playing) {
+      playStartRef.current = Date.now();
+    }
+  }, [startTime, playing]);
+
   // Seek to startTime for local videos
   const handleLoadedData = () => {
     if (videoRef.current && startTime > 0) {
       videoRef.current.currentTime = startTime;
     }
+    playStartRef.current = Date.now();
     setIsLoading(false);
   };
 
@@ -135,6 +167,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               mini={true}
               miniWidth={miniWidth}
               miniHeight={miniHeight}
+              startTime={startTime}
             />
           ) : (
             // Fallback for non-YouTube external videos
@@ -292,6 +325,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             onPlay={onPlay}
             onPause={onPause}
             fullScreen={fullScreen}
+            startTime={startTime}
           />
         ) : isEmbeddableExternal ? (
           // HTML5 video for Cloudinary and other embeddable external videos

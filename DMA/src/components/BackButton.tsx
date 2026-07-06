@@ -2,6 +2,7 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface BackButtonProps {
   onClick?: () => void;
@@ -10,6 +11,7 @@ interface BackButtonProps {
 
 const BackButton: React.FC<BackButtonProps> = ({ onClick, style = {} }) => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
 
   const handleClick = () => {
     if (onClick) {
@@ -19,9 +21,6 @@ const BackButton: React.FC<BackButtonProps> = ({ onClick, style = {} }) => {
     }
   };
 
-  // Detect dark mode
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
   return (
     <div
       onClick={handleClick}
@@ -44,10 +43,14 @@ const BackButton: React.FC<BackButtonProps> = ({ onClick, style = {} }) => {
         width: 45,
         height: 45,
         borderRadius: 25,
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))'
+          : 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.2)',
+        border: isDarkMode
+          ? '1px solid rgba(255,255,255,0.15)'
+          : '1px solid rgba(255,255,255,0.2)',
         boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
         display: 'flex',
         alignItems: 'center',

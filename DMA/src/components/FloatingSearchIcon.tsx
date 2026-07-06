@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IonIcon, IonBadge, IonPopover, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonText, IonChip, IonSpinner, IonSearchbar } from '@ionic/react';
-import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close, notifications } from 'ionicons/icons';
+import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useSettings } from '../contexts/SettingsContext';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import './FloatingSearchIcon.css';
 
@@ -34,6 +35,9 @@ const FloatingSearchIcon: React.FC = () => {
   const location = useLocation();
   const { setCurrentMedia, setIsPlaying, setCurrentSermon, isPlaying, currentSermon, currentMedia } = usePlayer();
   const { unreadCount } = useNotifications();
+  const { isDarkMode } = useSettings();
+  const prevUnreadCount = useRef(unreadCount);
+  const [isSwinging, setIsSwinging] = useState(false);
 
   // Check for live broadcasts and YouTube live streams periodically with rate limiting and caching
   useEffect(() => {
@@ -119,6 +123,17 @@ const FloatingSearchIcon: React.FC = () => {
       window.removeEventListener('liveBroadcastUpdate', handleLiveBroadcastUpdate);
     };
   }, []);
+
+  // Trigger bell swing when new notifications arrive
+  useEffect(() => {
+    if (unreadCount > prevUnreadCount.current) {
+      setIsSwinging(true);
+      const timer = setTimeout(() => setIsSwinging(false), 1600);
+      prevUnreadCount.current = unreadCount;
+      return () => clearTimeout(timer);
+    }
+    prevUnreadCount.current = unreadCount;
+  }, [unreadCount]);
 
   // Debounced search function
   const performSearch = useCallback(async (query: string, filter: string = 'all') => {
@@ -299,73 +314,101 @@ const FloatingSearchIcon: React.FC = () => {
           </div>
         )}
 
-        {/* Notification Bell Button */}
+        {/* Notification Bell Button - Minimal Redesign */}
         <div
           className="floating-notification-button"
           onClick={(e) => {
             e.stopPropagation();
-            // Navigate directly to notifications page
-            history.push('/notifications');
+            if (location.pathname === '/notifications') {
+              history.goBack();
+            } else {
+              history.push('/notifications');
+            }
           }}
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
             right: 65,
-            width: 45,
-            height: 45,
-            borderRadius: 25,
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            width: 44,
+            height: 44,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: 10000,
-            transition: 'transform 0.2s ease',
-            overflow: 'visible'
+            transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            overflow: 'visible',
           }}
         >
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
-            pointerEvents: 'none',
-            borderRadius: '25px'
-          }} />
-          <IonIcon
-            icon={notifications}
+          {/* Custom SVG Bell Icon */}
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={isSwinging ? 'notification-bell-svg' : ''}
             style={{
-              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-              fontSize: '20px',
+              transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',
             }}
-          />
+          >
+            <path
+              d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+              stroke={unreadCount > 0
+                ? (isDarkMode ? '#7EB1FF' : '#3478F6')
+                : (isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.65)')}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: 'stroke 0.3s ease' }}
+            />
+            <path
+              d="M13.73 21a2 2 0 0 1-3.46 0"
+              stroke={unreadCount > 0
+                ? (isDarkMode ? '#7EB1FF' : '#3478F6')
+                : (isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.65)')}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: 'stroke 0.3s ease' }}
+            />
+            {unreadCount > 0 && (
+              <circle
+                cx="17"
+                cy="4"
+                r="3.5"
+                fill="#FF3B30"
+                className="notification-dot-pulse"
+              />
+            )}
+          </svg>
           {unreadCount > 0 && (
-            <div
+            <span
+              className="notification-count"
               style={{
                 position: 'absolute',
-                top: 2,
-                right: 4,
+                top: 0,
+                right: -2,
                 minWidth: 18,
                 height: 18,
-                backgroundColor: '#ef4444',
-                borderRadius: 10,
+                borderRadius: 9,
+                background: '#FF3B30',
+                color: '#fff',
+                fontSize: 11,
+                fontWeight: 700,
+                fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '0 4px',
-                boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
-                fontWeight: 600,
-                fontSize: 10
+                boxShadow: '0 1px 4px rgba(255, 59, 48, 0.4)',
+                lineHeight: 1,
+                border: '2px solid ' + (isDarkMode ? 'rgba(0,0,0,0.9)' : '#fff'),
               }}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
-            </div>
+            </span>
           )}
         </div>
 
@@ -373,52 +416,54 @@ const FloatingSearchIcon: React.FC = () => {
         <div
           className="floating-search-button"
           onClick={(e) => {
-            const target = e.currentTarget as HTMLElement;
-            target.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-              target.style.transform = 'scale(1)';
-            }, 200);
+            e.stopPropagation();
             handleSearchClick();
           }}
           style={{
-            position: 'absolute',
-            top: 'calc(var(--ion-safe-area-top) - 18px)',
-            right: 10,
-            width: 45,
-            height: 45,
-            borderRadius: 25,
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            position: 'fixed',
+            top: 'calc(var(--ion-safe-area-top) + 4px)',
+            right: 16,
+            width: 44,
+            height: 44,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: 999,
-            transition: 'transform 0.2s ease',
-            overflow: 'hidden'
+            transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          {/* Frosted glass overlay */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
-            pointerEvents: 'none',
-            borderRadius: '25px'
-          }} />
-          <IonIcon
-            icon={search}
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
             style={{
-              color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
-              fontSize: '20px',
+              transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',
             }}
-          />
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="7"
+              stroke={isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.65)'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{ transition: 'stroke 0.3s ease' }}
+            />
+            <line
+              x1="16.5"
+              y1="16.5"
+              x2="21"
+              y2="21"
+              stroke={isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.65)'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{ transition: 'stroke 0.3s ease' }}
+            />
+          </svg>
         </div>
       </div>
 

@@ -81,12 +81,3 @@
   color: var(--ios26-text-secondary-dark);
 }
 
-@media (prefers-color-scheme: dark) {
-  .input-item {
-    --background: var(--ios26-card-bg-dark);
-  }
-
-  .user-email {
-    color: var(--ios26-text-secondary-dark);
-  }
-}

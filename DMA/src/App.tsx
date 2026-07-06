@@ -179,13 +179,13 @@ import { NotificationProvider } from './contexts/NotificationContext';
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
 import MiniPlayer from './components/MiniPlayer';
+import SermonMiniPlayer from './components/SermonMiniPlayer';
 import AudioPlayer from './components/AudioPlayer';
 import FloatingSearchIcon from './components/FloatingSearchIcon';
 import OfflineIndicator from './components/OfflineIndicator';
 import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
-import BottomFadeEffect from './components/BottomFadeEffect';
 import NotificationListener from './components/NotificationListener';
 import './components/FloatingSearchIcon.css';
 import Tab1 from './pages/Tab1';
@@ -898,9 +898,9 @@ const App: React.FC = () => {
                   <RootRedirect isAuthChecking={isAuthChecking} />
                 </Route>
               </IonRouterOutlet>
-              <BottomFadeEffect />
               <BottomNavBar onSidebarToggle={() => setIsSidebarOpen(true)} />
               <MiniPlayer />
+              <SermonMiniPlayer />
               <FloatingSearchIcon />
               <ProgressOverlay />
               </IonReactRouter>

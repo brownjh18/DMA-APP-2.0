@@ -38,6 +38,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface SearchResult {
   id: string;
@@ -59,6 +60,7 @@ const Search: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const history = useHistory();
   const location = useLocation();
+  const { isDarkMode } = useSettings();
 
   // Auto-focus search input when page loads
   useEffect(() => {
@@ -171,23 +173,61 @@ const Search: React.FC = () => {
   ];
 
   return (
-    <IonPage className="search-page" style={{ backgroundColor: '#ffffff' }}>
+    <IonPage className="search-page">
       <style>{`
         .search-page {
-          background: #ffffff !important;
-          --ion-background-color: #ffffff !important;
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
+          --ion-background-color: ${isDarkMode ? '#000000' : '#ffffff'} !important;
         }
         .search-page .ion-page {
-          background: #ffffff !important;
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
         }
         .search-page > div {
-          background: #ffffff !important;
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
         }
-        @media (prefers-color-scheme: dark) {
-          .search-page {
-            background: #000000 !important;
-            --ion-background-color: #000000 !important;
-          }
+        .header-searchbar {
+          background: ${isDarkMode ? '#2c2c2e' : 'var(--ion-color-step-50, #f5f5f7)'} !important;
+          border-color: ${isDarkMode ? '#3a3a3c' : 'var(--ion-color-step-100, #e5e5e5)'} !important;
+        }
+        .header-searchbar input {
+          color: ${isDarkMode ? '#ffffff' : 'var(--ion-text-color, #1c1c1e)'} !important;
+        }
+        .search-page-content {
+          --ion-background-color: ${isDarkMode ? '#000000' : '#ffffff'} !important;
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
+        }
+        .search-page-content .ion-page {
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
+        }
+        .search-page-container {
+          background: ${isDarkMode ? '#000000' : '#ffffff'} !important;
+        }
+        .filter-chip {
+          --background: ${isDarkMode ? '#2c2c2e' : '#f5f5f7'};
+          --color: ${isDarkMode ? '#ffffff' : '#1c1c1e'};
+          --border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 8px 16px;
+          height: 36px;
+          --padding-start: 16px;
+          --padding-end: 16px;
+          margin: 0;
+          transition: all 0.2s ease;
+        }
+        .filter-chip.selected {
+          --background: #007aff;
+          --color: #ffffff;
+        }
+        .search-result-item {
+          --padding-start: 12px;
+          --inner-padding-end: 12px;
+          --background: transparent;
+          border-bottom: 1px solid ${isDarkMode ? 'rgba(84, 84, 88, 0.36)' : 'var(--ion-color-step-100)'};
+          margin-bottom: 8px;
+        }
+        .search-result-item:last-child {
+          border-bottom: none;
         }
       `}</style>
       <IonHeader translucent>
@@ -209,13 +249,13 @@ const Search: React.FC = () => {
             flex: 1,
             display: 'flex',
             alignItems: 'center',
-            background: 'var(--ion-color-step-50, #f5f5f7)',
+            background: isDarkMode ? '#2c2c2e' : 'var(--ion-color-step-50, #f5f5f7)',
             borderRadius: '12px',
             padding: '0 12px',
             height: '40px',
             marginRight: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            border: '1px solid var(--ion-color-step-100, #e5e5e5)'
+            boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
+            border: `1px solid ${isDarkMode ? '#3a3a3c' : 'var(--ion-color-step-100, #e5e5e5)'}`
           }} className="header-searchbar">
             <IonIcon 
               icon={search} 
@@ -237,7 +277,7 @@ const Search: React.FC = () => {
                 background: 'transparent',
                 padding: '8px',
                 fontSize: '15px',
-                color: 'var(--ion-text-color, #1c1c1e)',
+                color: isDarkMode ? '#ffffff' : 'var(--ion-text-color, #1c1c1e)',
                 outline: 'none',
                 fontFamily: 'inherit',
                 minWidth: '0'
@@ -263,95 +303,17 @@ const Search: React.FC = () => {
               />
             )}
           </div>
-          <style>{`
-            @media (prefers-color-scheme: dark) {
-              .header-searchbar {
-                background: #2c2c2e !important;
-                border-color: #3a3a3c !important;
-              }
-              .header-searchbar input {
-                color: #ffffff !important;
-              }
-            }
-          `}</style>
         </IonToolbar>
       </IonHeader>
 
       <IonContent 
         className="search-page-content"
         style={{ 
-          '--ion-background-color': '#ffffff !important',
-          background: '#ffffff !important'
+          '--ion-background-color': isDarkMode ? '#000000 !important' : '#ffffff !important',
+          background: isDarkMode ? '#000000 !important' : '#ffffff !important'
         }}
       >
-        <style>{`
-          .search-page-content {
-            --ion-background-color: #ffffff !important;
-            background: #ffffff !important;
-          }
-          
-          .search-page-content .ion-page {
-            background: #ffffff !important;
-          }
-          
-          .search-page-container {
-            background: #ffffff !important;
-          }
-          
-          @media (prefers-color-scheme: dark) {
-            .search-page-content {
-              --ion-background-color: #000000;
-              background: #000000;
-            }
-            .search-page-content .ion-page {
-              background: #000000 !important;
-            }
-            .search-page-container {
-              background: #000000 !important;
-            }
-          }
-          
-          /* Filter chips modern styling */
-          .filter-chip {
-            --background: #f5f5f7;
-            --color: #1c1c1e;
-            --border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 8px 16px;
-            height: 36px;
-            --padding-start: 16px;
-            --padding-end: 16px;
-            margin: 0;
-            transition: all 0.2s ease;
-          }
-          
-          .filter-chip.selected {
-            --background: #007aff;
-            --color: #ffffff;
-          }
-          
-          @media (prefers-color-scheme: dark) {
-            .filter-chip {
-              --background: #2c2c2e;
-              --color: #ffffff;
-            }
-          }
-          
-          /* Search result card styling */
-          .search-result-item {
-            --padding-start: 12px;
-            --inner-padding-end: 12px;
-            --background: transparent;
-            border-bottom: 1px solid var(--ion-color-step-100);
-            margin-bottom: 8px;
-          }
-          
-          .search-result-item:last-child {
-            border-bottom: none;
-          }
-        `}</style>
-        <div style={{ padding: '16px', background: '#ffffff !important' }} className="search-page-container">
+        <div style={{ padding: '16px', background: isDarkMode ? '#000000 !important' : '#ffffff !important' }} className="search-page-container">
 
           {/* Filter Chips */}
           <div style={{ marginTop: '16px', marginBottom: '16px' }}>
@@ -360,20 +322,21 @@ const Search: React.FC = () => {
             </IonText>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {filters.map((filter) => (
-                <IonChip
-                  key={filter.value}
-                  color={selectedFilter === filter.value ? 'primary' : 'medium'}
-                  onClick={() => handleFilterChange(filter.value)}
-                  style={{ 
-                    cursor: 'pointer',
-                    fontWeight: selectedFilter === filter.value ? '600' : '400',
-                    background: selectedFilter === filter.value ? 'var(--ion-color-primary)' : 'var(--ion-color-step-50, #f5f5f7)',
-                    borderRadius: '20px',
-                    padding: '8px 16px',
-                    height: '36px',
-                    margin: 0
-                  }}
-                >
+                  <IonChip
+                    key={filter.value}
+                    color={selectedFilter === filter.value ? 'primary' : 'medium'}
+                    onClick={() => handleFilterChange(filter.value)}
+                    style={{ 
+                      cursor: 'pointer',
+                      fontWeight: selectedFilter === filter.value ? '600' : '400',
+                      background: selectedFilter === filter.value ? 'var(--ion-color-primary)' : (isDarkMode ? '#2c2c2e' : 'var(--ion-color-step-50, #f5f5f7)'),
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      height: '36px',
+                      margin: 0,
+                      color: selectedFilter === filter.value ? '#ffffff' : (isDarkMode ? '#ffffff' : undefined)
+                    }}
+                  >
                   <IonLabel style={{ fontSize: '14px' }}>{filter.label}</IonLabel>
                 </IonChip>
               ))}
@@ -409,20 +372,20 @@ const Search: React.FC = () => {
                           gap: '16px',
                           padding: '12px',
                           marginBottom: '12px',
-                          background: 'var(--ion-background-color, #ffffff)',
+                          background: isDarkMode ? '#1c1c1e' : 'var(--ion-background-color, #ffffff)',
                           borderRadius: '16px',
-                          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                          boxShadow: isDarkMode ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)',
                           cursor: 'pointer',
                           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                          border: '1px solid var(--ion-color-step-100, #e5e5e5)'
+                          border: `1px solid ${isDarkMode ? 'rgba(84, 84, 88, 0.36)' : 'var(--ion-color-step-100, #e5e5e5)'}`
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+                          e.currentTarget.style.boxShadow = isDarkMode ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 20px rgba(0,0,0,0.1)';
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+                          e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)';
                         }}
                       >
                         {/* Thumbnail */}
@@ -479,13 +442,13 @@ const Search: React.FC = () => {
                         </div>
 
                         <IonLabel style={{ flex: 1, margin: '0 12px' }}>
-                          <h2 style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>{result.title}</h2>
-                          <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.85em', marginBottom: '4px' }}>
+                          <h2 style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px', color: isDarkMode ? '#ffffff' : undefined }}>{result.title}</h2>
+                          <p style={{ color: isDarkMode ? '#98989d' : 'var(--ion-color-medium)', fontSize: '0.85em', marginBottom: '4px' }}>
                             {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                           </p>
                           {result.description && (
                             <p style={{
-                              color: 'var(--ion-color-medium)',
+                              color: isDarkMode ? '#98989d' : 'var(--ion-color-medium)',
                               fontSize: '0.8em',
                               lineHeight: '1.4',
                               display: '-webkit-box',
@@ -498,7 +461,7 @@ const Search: React.FC = () => {
                             </p>
                           )}
                           {result.date && (
-                            <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.75em' }}>
+                            <p style={{ color: isDarkMode ? '#98989d' : 'var(--ion-color-medium)', fontSize: '0.75em' }}>
                               {new Date(result.date).toLocaleDateString()}
                             </p>
                           )}

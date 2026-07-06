@@ -1,0 +1,754 @@
+/* ============================================
+   Admin Manager - Shared Base Styles
+   Used by all admin list management pages
+   ============================================ */
+
+/* --- Page Container --- */
+.am-page {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+/* ============================================
+   Stats Row
+   ============================================ */
+.am-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.am-stats::-webkit-scrollbar {
+  display: none;
+}
+
+.am-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  min-width: 120px;
+  flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.am-stat-pill:active {
+  transform: scale(0.97);
+}
+
+.am-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.am-stat-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.am-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.am-stat-txt {
+  font-size: 10px;
+  font-weight: 500;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================
+   Sections
+   ============================================ */
+.am-section {
+  margin-bottom: 28px;
+}
+
+.am-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.am-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+
+/* ============================================
+   Quick Actions - Horizontal Scroll
+   ============================================ */
+.am-actions-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.am-actions-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.am-action-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 10px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ios26-separator-light);
+  background: var(--ios26-card-bg-light);
+  color: #1c1c1e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.am-action-chip:active {
+  transform: scale(0.96);
+  background: color-mix(in srgb, var(--chip-color) 8%, var(--ios26-card-bg-light));
+}
+
+.am-action-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chip-color);
+}
+
+.am-action-icon ion-icon {
+  font-size: 14px;
+  color: white;
+}
+
+/* ============================================
+   Search Bar
+   ============================================ */
+.am-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.am-search-box {
+  flex: 1;
+  position: relative;
+  background: var(--ios26-card-bg-light);
+  border-radius: 14px;
+  border: 1px solid var(--ios26-separator-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.am-search-box ion-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ion-color-primary);
+  font-size: 18px;
+}
+
+.am-search-box input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ion-text-color);
+  font-size: 0.95em;
+  font-family: inherit;
+}
+
+/* Active Filter Badge */
+.am-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.am-filter-badge-text {
+  color: var(--ion-text-color);
+  opacity: 0.6;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.am-filter-badge-close {
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* ============================================
+   List
+   ============================================ */
+.am-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.am-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.am-card:active {
+  transform: scale(0.98);
+}
+
+/* Left accent line */
+.am-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.am-accent.green { background: #10b981; }
+.am-accent.amber { background: #f59e0b; }
+.am-accent.red { background: #ef4444; }
+.am-accent.blue { background: #3b82f6; }
+.am-accent.purple { background: #8b5cf6; }
+
+/* Thumbnail */
+.am-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.am-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.am-thumb-icon {
+  font-size: 24px;
+  color: white;
+  opacity: 0.7;
+}
+
+.am-thumb-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Avatar (for users) */
+.am-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.am-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.am-avatar-icon {
+  font-size: 28px;
+  color: white;
+}
+
+/* Content */
+.am-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.am-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.am-subtitle {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.am-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.am-meta-item {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.am-meta-item ion-icon {
+  font-size: 12px;
+}
+
+/* Actions */
+.am-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.am-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.am-status.published, .am-status.active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.am-status.draft, .am-status.inactive {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.am-status.admin {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+
+.am-status.owner {
+  background: rgba(236, 72, 153, 0.12);
+  color: #ec4899;
+}
+
+.am-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.am-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.am-btn ion-icon {
+  font-size: 16px;
+}
+
+.am-btn.toggle {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.am-btn.toggle:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.am-btn.toggle.inactive {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.am-btn.toggle.inactive:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.am-btn.more {
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.am-btn.more:hover {
+  background: rgba(100, 116, 139, 0.15);
+}
+
+.am-btn.role {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.am-btn.role:hover {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.am-btn.featured {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.am-btn.featured:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.am-btn.featured.active {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.am-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+  opacity: 0.6;
+}
+
+.am-empty ion-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.am-empty-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.am-empty-text {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ============================================
+   Loading
+   ============================================ */
+.am-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+  opacity: 0.6;
+}
+
+.am-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ios26-separator-light);
+  border-top: 3px solid var(--ion-color-primary);
+  border-radius: 50%;
+  animation: am-spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes am-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.am-footer {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ios26-separator-light);
+}
+
+.am-footer ion-text {
+  color: #aeaeb2;
+  font-size: 11px;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+
+/* Page background */
+[data-theme="dark"] .am-page {
+  color: #ffffff !important;
+}
+
+/* Stat pills */
+[data-theme="dark"] .am-stat-pill {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .am-stat-num {
+  color: inherit !important;
+}
+
+[data-theme="dark"] .am-stat-txt {
+  color: #98989d !important;
+}
+
+/* Section titles */
+[data-theme="dark"] .am-section-title {
+  color: #ffffff !important;
+}
+
+/* Quick action chips */
+[data-theme="dark"] .am-action-chip {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .am-action-chip:active {
+  background: color-mix(in srgb, var(--chip-color) 12%, #1c1c1e) !important;
+}
+
+[data-theme="dark"] .am-action-icon ion-icon {
+  color: #ffffff !important;
+}
+
+/* Search */
+[data-theme="dark"] .am-search-box {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .am-search-box ion-icon {
+  color: #6366f1 !important;
+}
+
+[data-theme="dark"] .am-search-box input {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .am-filter-badge {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .am-filter-badge-text {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .am-filter-badge-close {
+  color: #98989d !important;
+}
+
+/* List cards */
+[data-theme="dark"] .am-card {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .am-card:active {
+  background: color-mix(in srgb, #6366f1 10%, #1c1c1e) !important;
+}
+
+[data-theme="dark"] .am-title {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .am-subtitle {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .am-meta-item {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .am-status.published,
+[data-theme="dark"] .am-status.active {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .am-status.draft,
+[data-theme="dark"] .am-status.inactive {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .am-status.admin {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8 !important;
+}
+
+[data-theme="dark"] .am-status.owner {
+  background: rgba(236, 72, 153, 0.2) !important;
+  color: #f472b6 !important;
+}
+
+[data-theme="dark"] .am-btn.toggle {
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+[data-theme="dark"] .am-btn.toggle.inactive {
+  background: rgba(245, 158, 11, 0.15) !important;
+}
+
+[data-theme="dark"] .am-btn.more {
+  background: rgba(100, 116, 139, 0.15) !important;
+}
+
+[data-theme="dark"] .am-btn.more ion-icon {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .am-btn.role {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="dark"] .am-btn.featured {
+  background: rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Empty state */
+[data-theme="dark"] .am-empty {
+  color: #98989d !important;
+}
+
+/* Loading */
+[data-theme="dark"] .am-loading-spinner {
+  border-color: rgba(84, 84, 88, 0.36) !important;
+  border-top-color: #6366f1 !important;
+}
+
+/* Footer */
+[data-theme="dark"] .am-footer {
+  border-top-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .am-footer ion-text {
+  color: #98989d !important;
+}
+
+/* Toolbar / Header */
+[data-theme="dark"] .toolbar-ios ion-icon {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] ion-button[fill="clear"] {
+  --color: #ffffff !important;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 576px) {
+  .am-page {
+    padding: 12px;
+  }
+
+  .am-stat-pill {
+    gap: 6px;
+    padding: 10px 12px;
+    min-width: 100px;
+  }
+
+  .am-stat-num {
+    font-size: 16px;
+  }
+
+  .am-action-chip {
+    padding: 8px 14px 8px 8px;
+    font-size: 12px;
+  }
+
+  .am-action-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .am-action-icon ion-icon {
+    font-size: 12px;
+  }
+
+  .am-thumb, .am-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .am-title {
+    font-size: 13px;
+  }
+
+  .am-subtitle {
+    font-size: 11px;
+  }
+
+  .am-meta-item {
+    font-size: 11px;
+  }
+}

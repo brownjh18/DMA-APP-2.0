@@ -93,10 +93,10 @@ const EditProfile: React.FC = () => {
     }
   }, [authUser, user]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | null | undefined) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value || ''
     }));
   };
 
@@ -113,8 +113,8 @@ const EditProfile: React.FC = () => {
   };
 
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
+    console.log('🔵 handleSave called, formData:', formData);
 
     if (!formData.name) {
       setError('Name is required');
@@ -127,16 +127,55 @@ const EditProfile: React.FC = () => {
     setSuccess('');
 
     try {
-      const data = new FormData();
-      data.append('name', formData.name);
-      data.append('phone', formData.phone);
+      let profilePictureUrl = user?.profilePicture || null;
+
+      // Convert image to base64 data URL if selected (avoids CORS issues with Vercel upload endpoint)
       if (selectedImage) {
-        data.append('profilePicture', selectedImage);
+        console.log('📤 Converting image to base64...');
+        try {
+          const base64Url = await new Promise<string>((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const maxSize = 400;
+              let { width, height } = img;
+              if (width > maxSize || height > maxSize) {
+                if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
+                else { width = Math.round(width * maxSize / height); height = maxSize; }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('Failed to load image for resize'));
+            img.src = URL.createObjectURL(selectedImage);
+          });
+          profilePictureUrl = base64Url;
+          console.log('✅ Image resized and converted, size:', Math.round(base64Url.length / 1024), 'KB');
+        } catch (imgErr: any) {
+          console.error('Image conversion failed (non-blocking):', imgErr);
+        }
       }
 
-      const response = await apiService.updateProfile(data);
-      
-      const updatedUserData = response.user || {};
+      // Build update payload — only send changed fields
+      const updatePayload: Record<string, any> = {
+        name: formData.name,
+        phone: formData.phone || '',
+      };
+      if (profilePictureUrl && profilePictureUrl !== user?.profilePicture) {
+        updatePayload.profilePicture = profilePictureUrl;
+      }
+
+      console.log('📤 Calling updateProfile with payload:', { ...updatePayload, profilePicture: updatePayload.profilePicture ? '[base64...]' : undefined });
+      const response = await apiService.updateProfile(updatePayload);
+      console.log('✅ updateProfile response:', response);
+
+      // Use the full user data from response, falling back to current state
+      const updatedUserData = {
+        ...user,
+        ...(response.user || {}),
+      };
 
       // Update global user state with the latest data
       updateUser(updatedUserData);
@@ -172,6 +211,7 @@ const EditProfile: React.FC = () => {
       }, 1500);
 
     } catch (err: any) {
+      console.error('Profile save error:', err);
       setError(err.message || 'Failed to update profile. Please try again.');
       setShowAlert(true);
     } finally {
@@ -233,7 +273,7 @@ const EditProfile: React.FC = () => {
           <div className="avatar-section">
             <IonAvatar className="profile-avatar">
               <img
-                src={imagePreview || (user?.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : `https://i.pravatar.cc/150?img=12&u=${encodeURIComponent(user?.email || 'default')}`)}
+                src={imagePreview || (user?.profilePicture ? (user.profilePicture.startsWith('data:') ? user.profilePicture : `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}`) : `https://i.pravatar.cc/150?img=12&u=${encodeURIComponent(user?.email || 'default')}`)}
                 alt="Profile Preview"
               />
             </IonAvatar>
@@ -249,7 +289,7 @@ const EditProfile: React.FC = () => {
           </div>
           <p className="user-email">{user.email}</p>
 
-          <form onSubmit={handleSave} className="form-section">
+          <div className="form-section">
             <IonItem lines="none" className="input-item">
               <IonIcon icon={person} slot="start" />
               <IonInput
@@ -273,17 +313,16 @@ const EditProfile: React.FC = () => {
 
             <IonButton
               expand="block"
-              type="submit"
+              onClick={handleSave}
               className="save-button"
               disabled={saving}
             >
               <IonIcon icon={checkmarkCircle} slot="start" />
               {saving ? 'Saving...' : 'Save Changes'}
             </IonButton>
-          </form>
+          </div>
         </div>
 
-        <IonLoading isOpen={saving} message="Saving..." />
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}

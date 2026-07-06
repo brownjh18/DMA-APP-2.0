@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { isPodcast } from '../utils/mediaUtils';
 
 // Custom event for skip operations
@@ -54,16 +54,112 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(() => {
+    // Restore current media from localStorage
+    try {
+      const saved = localStorage.getItem('player_currentMedia');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [isPlaying, setIsPlaying] = useState(() => {
+    // Auto-play if we have saved media (resume from where we left off)
+    try {
+      const saved = localStorage.getItem('player_currentMedia');
+      return saved ? true : false;
+    } catch { return false; }
+  });
 
   const [sourcePage, setSourcePage] = useState<string | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
 
-  // Store playback positions per media item
-  const [playbackPositions, setPlaybackPositions] = useState<Record<string, number>>({});
+  // Store playback positions per media item — persisted to localStorage
+  const [playbackPositions, setPlaybackPositions] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('player_positions');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  // Persist currentMedia to localStorage
+  useEffect(() => {
+    if (currentMedia) {
+      localStorage.setItem('player_currentMedia', JSON.stringify(currentMedia));
+    } else {
+      localStorage.removeItem('player_currentMedia');
+    }
+  }, [currentMedia]);
+
+  // Persist playback positions to localStorage (debounced)
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      localStorage.setItem('player_positions', JSON.stringify(playbackPositions));
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [playbackPositions]);
+
+  // Periodically save current position to localStorage (for YouTube where onTimeUpdate doesn't fire)
+  useEffect(() => {
+    if (!isPlaying || !currentMedia) return;
+    const interval = setInterval(() => {
+      if (currentTime > 0 && currentMedia) {
+        setPlaybackPositions(prev => ({
+          ...prev,
+          [currentMedia.id]: currentTime
+        }));
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isPlaying, currentMedia, currentTime]);
+
+  // Save position immediately when pausing or when media changes
+  const prevMediaRef = useRef<MediaItem | null>(null);
+  useEffect(() => {
+    // When media changes, save position of the previous media
+    if (prevMediaRef.current && prevMediaRef.current.id !== currentMedia?.id) {
+      if (currentTime > 0) {
+        setPlaybackPositions(prev => ({
+          ...prev,
+          [prevMediaRef.current!.id]: currentTime
+        }));
+      }
+    }
+    prevMediaRef.current = currentMedia;
+  }, [currentMedia]);
+
+  // Save position when pausing
+  useEffect(() => {
+    if (!isPlaying && currentMedia && currentTime > 0) {
+      setPlaybackPositions(prev => ({
+        ...prev,
+        [currentMedia.id]: currentTime
+      }));
+    }
+  }, [isPlaying]);
+
+  // Listen for forced save events (e.g., before page unload)
+  useEffect(() => {
+    const handleForceSave = () => {
+      if (currentMedia && currentTime > 0) {
+        const updated = { ...playbackPositions, [currentMedia.id]: currentTime };
+        setPlaybackPositions(updated);
+        // Write directly to localStorage immediately (bypass debounce)
+        localStorage.setItem('player_positions', JSON.stringify(updated));
+      }
+    };
+    const handleBeforeUnload = () => {
+      handleForceSave();
+    };
+    window.addEventListener('save-playback-position', handleForceSave);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('save-playback-position', handleForceSave);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentMedia, currentTime, playbackPositions]);
 
   // Backward compatibility - derive currentSermon from currentMedia
   const currentSermon = currentMedia && !isPodcast(currentMedia) ? currentMedia : null;

@@ -41,6 +41,12 @@
   margin-top: 4px;
 }
 
+.profile-phone {
+  font-size: 14px;
+  color: var(--ios26-text-secondary-light);
+  margin-top: 2px;
+}
+
 .profile-options {
   margin: 0 20px;
   background: transparent;
@@ -115,42 +121,6 @@
   font-weight: 600;
 }
 
-/* Dark Mode - iOS 26 */
-@media (prefers-color-scheme: dark) {
-  .profile-page {
-    --ion-background-color: var(--ios26-grouped-bg-dark);
-    --ion-background-color-step-50: var(--ios26-card-bg-dark);
-  }
-
-  .profile-name {
-    color: var(--ios26-text-primary-dark);
-  }
-
-  .profile-email {
-    color: var(--ios26-text-secondary-dark);
-  }
-
-  .profile-options ion-list-header {
-    color: var(--ios26-text-secondary-dark);
-  }
-
-  .profile-options ion-item {
-    --background: var(--ios26-card-bg-dark);
-  }
-
-  .profile-options ion-item ion-icon[slot="end"] {
-    color: var(--ios26-text-secondary-dark);
-  }
-
-  .signin-prompt h2 {
-    color: var(--ios26-text-primary-dark);
-  }
-
-  .signin-prompt p {
-    color: var(--ios26-text-secondary-dark);
-  }
-}
-
 [data-theme="dark"] .profile-page {
   --ion-background-color: var(--ios26-grouped-bg-dark);
   --ion-background-color-step-50: var(--ios26-card-bg-dark);
@@ -161,6 +131,10 @@
 }
 
 [data-theme="dark"] .profile-email {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .profile-phone {
   color: var(--ios26-text-secondary-dark);
 }
 

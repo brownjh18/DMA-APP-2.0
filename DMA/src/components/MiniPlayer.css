@@ -127,32 +127,32 @@
   background-color: var(--ios26-fill-dark);
 }
 
-@media (prefers-color-scheme: dark) {
-  .mini-player {
-    background: var(--ios26-glass-bg-dark);
-    border: 1px solid var(--ios26-separator-dark);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
+/* Dark mode support */
+[data-theme="dark"] .mini-player {
+  background: var(--ios26-glass-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
 
-  .mini-player-progress {
-    background-color: var(--ios26-fill-dark);
-  }
+[data-theme="dark"] .mini-player-progress {
+  background-color: var(--ios26-fill-dark);
+}
 
-  .mini-player-title {
-    color: var(--ios26-text-primary-dark);
-  }
+[data-theme="dark"] .mini-player-title {
+  color: var(--ios26-text-primary-dark);
+}
 
-  .mini-player-subtitle {
-    color: var(--ios26-text-secondary-dark);
-  }
+[data-theme="dark"] .mini-player-subtitle {
+  color: var(--ios26-text-secondary-dark);
+}
 
-  .mini-player-control-btn,
-  .mini-player-close-btn {
-    color: var(--ios26-text-primary-dark);
-  }
+[data-theme="dark"] .mini-player-control-btn,
+[data-theme="dark"] .mini-player-close-btn {
+  color: var(--ios26-text-primary-dark);
+}
 
-  .mini-player-control-btn:hover,
-  .mini-player-close-btn:hover {
-    background-color: var(--ios26-fill-dark);
-  }
+[data-theme="dark"] .mini-player-control-btn:hover,
+[data-theme="dark"] .mini-player-close-btn:hover {
+  background-color: var(--ios26-fill-dark);
+}
 }

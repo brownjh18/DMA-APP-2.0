@@ -1,0 +1,229 @@
+/* ============================================
+   Admin Popover - Centered Action Menu
+   Used by all admin management pages
+   ============================================ */
+
+/* --- Overlay --- */
+.ap-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: ap-fade-in 0.2s ease;
+}
+
+@keyframes ap-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Popover Container --- */
+.ap-popover {
+  width: 90%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: ap-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ap-scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* --- Header --- */
+.ap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ap-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1c1e;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 36px);
+}
+
+.ap-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f2f2f7;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.ap-close-btn:active {
+  background: #e5e5ea;
+}
+
+.ap-close-btn ion-icon {
+  font-size: 16px;
+  color: #636366;
+}
+
+/* --- Options List --- */
+.ap-options {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* --- Option Button --- */
+.ap-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: left;
+}
+
+.ap-option:active {
+  background: #f2f2f7;
+}
+
+.ap-option-icon {
+  font-size: 20px;
+  color: #007aff;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.ap-option-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: #1c1c1e;
+  letter-spacing: -0.2px;
+}
+
+/* Destructive */
+.ap-destructive .ap-option-icon {
+  color: #ff3b30;
+}
+
+.ap-destructive .ap-option-text {
+  color: #ff3b30;
+  font-weight: 500;
+}
+
+.ap-destructive:active {
+  background: rgba(255, 59, 48, 0.08);
+}
+
+/* Cancel */
+.ap-cancel {
+  margin-top: 4px;
+  border-top: 1px solid #f0f0f0;
+  border-radius: 12px;
+  justify-content: center;
+  padding: 14px 16px;
+}
+
+.ap-cancel .ap-option-icon {
+  color: #8e8e93;
+}
+
+.ap-cancel .ap-option-text {
+  color: #8e8e93;
+  font-weight: 500;
+}
+
+.ap-cancel:active {
+  background: #f2f2f7;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+.ap-dark .ap-popover {
+  background: #2c2c2e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ap-dark .ap-header {
+  border-bottom-color: #3a3a3c;
+}
+
+.ap-dark .ap-title {
+  color: #ffffff !important;
+}
+
+.ap-dark .ap-close-btn {
+  background: #3a3a3c;
+}
+
+.ap-dark .ap-close-btn:active {
+  background: #48484a;
+}
+
+.ap-dark .ap-close-btn ion-icon {
+  color: #98989d !important;
+}
+
+.ap-dark .ap-option:active {
+  background: #3a3a3c !important;
+}
+
+.ap-dark .ap-option-icon {
+  color: #0a84ff !important;
+}
+
+.ap-dark .ap-option-text {
+  color: #ffffff !important;
+}
+
+.ap-dark .ap-destructive .ap-option-icon {
+  color: #ff453a !important;
+}
+
+.ap-dark .ap-destructive .ap-option-text {
+  color: #ff453a !important;
+}
+
+.ap-dark .ap-destructive:active {
+  background: rgba(255, 69, 58, 0.15) !important;
+}
+
+.ap-dark .ap-cancel {
+  border-top-color: #3a3a3c;
+}
+
+.ap-dark .ap-cancel .ap-option-icon {
+  color: #98989d !important;
+}
+
+.ap-dark .ap-cancel .ap-option-text {
+  color: #98989d !important;
+}
+
+.ap-dark .ap-cancel:active {
+  background: #3a3a3c !important;
+}

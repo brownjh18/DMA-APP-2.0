@@ -14,10 +14,11 @@ import {
 } from '@ionic/react';
 import {
   save,
-  cardOutline
+  cardOutline,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../components/BackButton';
+
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -97,9 +98,9 @@ const AddDonation: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title">Add Donation</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}><IonIcon icon={arrowBack} style={{ fontSize: '22px' }} /></IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add Donation</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleSave} disabled={loading}>
               <IonIcon icon={save} />

@@ -6,6 +6,7 @@ import {
   IonTitle,
   IonToolbar,
   IonIcon,
+  IonButton,
   IonLoading,
   IonAlert,
   IonText,
@@ -29,7 +30,6 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
-import BackButton from '../components/BackButton';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';

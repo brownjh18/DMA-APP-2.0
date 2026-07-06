@@ -156,13 +156,32 @@ const Notifications: React.FC = () => {
   const { setCurrentSermon, setIsPlaying, setCurrentMedia } = usePlayer();
 
   const [filterUnread, setFilterUnread] = useState(false);
+  const [filterType, setFilterType] = useState<string>('all');
+
+  const typeFilters = [
+    { value: 'all', label: 'All' },
+    { value: 'sermon', label: 'Sermons' },
+    { value: 'podcast', label: 'Podcasts' },
+    { value: 'devotion', label: 'Devotions' },
+    { value: 'event', label: 'Events' },
+    { value: 'ministry', label: 'Ministry' },
+    { value: 'other', label: 'Others' },
+  ];
 
   const filtered = useMemo(() => {
     return notifList.filter((n: any) => {
       if (filterUnread && n.read) return false;
+      if (filterType !== 'all') {
+        const t = n.type || n.data?.type || '';
+        if (filterType === 'other') {
+          if (['sermon', 'podcast', 'devotion', 'event', 'ministry'].includes(t)) return false;
+        } else if (t !== filterType) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [notifList, filterUnread]);
+  }, [notifList, filterUnread, filterType]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a: any, b: any) => {
@@ -184,11 +203,6 @@ const Notifications: React.FC = () => {
   }, [sorted]);
 
   const totalUnread = notifList.filter((n: any) => !n.read).length;
-
-  const stats = [
-    { label: 'Total', value: notifList.length, color: '#6366f1' },
-    { label: 'Unread', value: totalUnread, color: '#3b82f6' },
-  ];
 
   async function handleClick(n: any) {
     markAsRead(n.id);
@@ -264,19 +278,6 @@ const Notifications: React.FC = () => {
       <IonContent fullscreen className="content-ios">
         <div className="am-page">
 
-          {/* Stats */}
-          <div className="am-stats">
-            {stats.map((stat, i) => (
-              <div key={i} className="am-stat-pill">
-                <div className="am-stat-dot" style={{ background: stat.color }} />
-                <div className="am-stat-data">
-                  <span className="am-stat-num" style={{ color: stat.color }}>{stat.value}</span>
-                  <span className="am-stat-txt">{stat.label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Filter Actions */}
           <div className="am-section">
             <div className="am-section-header">
@@ -294,19 +295,18 @@ const Notifications: React.FC = () => {
                 </button>
               )}
             </div>
-            <div className="notif-filters-bar">
-              <button
-                className={`notif-filter-btn ${!filterUnread ? 'active' : ''}`}
-                onClick={() => setFilterUnread(false)}
-              >
-                All
-              </button>
-              <button
-                className={`notif-filter-btn ${filterUnread ? 'active' : ''}`}
-                onClick={() => setFilterUnread(true)}
-              >
-                Unread {totalUnread > 0 && `(${totalUnread})`}
-              </button>
+            <div className="notif-filters-scroll">
+              <div className="notif-filters-bar">
+                {typeFilters.map((f) => (
+                  <button
+                    key={f.value}
+                    className={`notif-filter-btn ${filterType === f.value ? 'active' : ''}`}
+                    onClick={() => setFilterType(f.value)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

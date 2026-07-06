@@ -523,18 +523,7 @@
   border-radius: 4px;
 }
 
-/* Blur fade effect at the bottom */
-.podcasts-row::after {
-  content: '';
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--ios26-grouped-bg-light));
-  pointer-events: none;
-  z-index: 1;
-}
+
 
 /* Podcast cards */
 .podcast-card {

@@ -29,7 +29,6 @@ import {
   IonThumbnail,
   useIonViewWillEnter,
 } from '@ionic/react';
-import NotificationBell from '../components/NotificationBell';
 import {
   playCircle,
   play,
@@ -850,9 +849,6 @@ const Tab1: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Home</IonTitle>
-          <IonButton slot="end" fill="clear" routerLink="/notifications">
-            <NotificationBell />
-          </IonButton>
         </IonToolbar>
       </IonHeader>
 

@@ -16,9 +16,9 @@ import {
   radio,
   image,
   videocam,
-  closeCircle
+  closeCircle,
+  arrowBack
 } from 'ionicons/icons';
-import BackButton from '../components/BackButton';
 import './AdminForm.css';
 import './AdminDashboard.css';
 

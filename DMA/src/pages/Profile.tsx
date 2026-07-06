@@ -92,13 +92,14 @@ const Profile: React.FC = () => {
         <div className="profile-header">
           <IonAvatar className="profile-avatar">
             <img
-              src={user.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : 'https://i.pravatar.cc/150?img=12'}
+              src={user.profilePicture ? (user.profilePicture.startsWith('data:') ? user.profilePicture : `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}`) : 'https://i.pravatar.cc/150?img=12'}
               alt="User Avatar"
             />
           </IonAvatar>
           <div className="profile-details">
             <h1 className="profile-name">{user.name}</h1>
             <p className="profile-email">{user.email}</p>
+            {user.phone && <p className="profile-phone">{user.phone}</p>}
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  IonButton,
   IonIcon,
   IonLoading,
   IonAlert,
@@ -17,11 +18,12 @@ import {
   closeCircle,
   image,
   informationCircle,
-  star
+  star,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
-import BackButton from '../components/BackButton';
+
 import { AuthContext } from '../App';
 import './AdminForm.css';
 import './AdminDashboard.css';
@@ -221,9 +223,9 @@ const AddDevotion: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title">Add Devotion</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}><IonIcon icon={arrowBack} style={{ fontSize: '22px' }} /></IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add Devotion</IonTitle>
         </IonToolbar>
       </IonHeader>
 

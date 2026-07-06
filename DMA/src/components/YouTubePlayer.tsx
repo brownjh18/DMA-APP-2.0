@@ -11,6 +11,7 @@ interface YouTubePlayerProps {
   miniWidth?: number;
   miniHeight?: number;
   fullScreen?: boolean;
+  startTime?: number;
 }
 
 const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
@@ -22,7 +23,8 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   mini = false,
   miniWidth = 40,
   miniHeight = 40,
-  fullScreen = false
+  fullScreen = false,
+  startTime = 0
 }) => {
   const [showFallback, setShowFallback] = useState(false);
 
@@ -118,8 +120,8 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         backgroundColor: '#000'
       }}>
         <iframe
-          key={`mini-youtube-${url}-${Date.now()}`}
-          src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&mute=1`}
+          key={`mini-youtube-${url}`}
+          src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&mute=1${startTime > 0 ? `&start=${Math.floor(startTime)}` : ''}`}
           width="100%"
           height="100%"
           style={{ borderRadius: '10px', border: 'none' }}
@@ -186,8 +188,8 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   return (
     <div style={containerStyle}>
       <iframe
-        key={`youtube-${url}-${Date.now()}`}
-        src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`}
+        key={`youtube-${url}`}
+        src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3${startTime > 0 ? `&start=${Math.floor(startTime)}` : ''}`}
         width="100%"
         height="100%"
         style={playerStyle}

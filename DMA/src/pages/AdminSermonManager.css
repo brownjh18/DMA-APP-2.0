@@ -1,0 +1,670 @@
+/* ============================================
+   Sermon Manager - Dashboard Style
+   ============================================ */
+
+/* --- Page Container --- */
+.sm-page {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+/* ============================================
+   Stats Row
+   ============================================ */
+.sm-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.sm-stats::-webkit-scrollbar {
+  display: none;
+}
+
+.sm-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  min-width: 120px;
+  flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sm-stat-pill:active {
+  transform: scale(0.97);
+}
+
+.sm-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sm-stat-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sm-stat-txt {
+  font-size: 10px;
+  font-weight: 500;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================
+   Sections
+   ============================================ */
+.sm-section {
+  margin-bottom: 28px;
+}
+
+.sm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sm-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+
+/* ============================================
+   Quick Actions - Horizontal Scroll
+   ============================================ */
+.sm-actions-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.sm-actions-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.sm-action-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 10px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ios26-separator-light);
+  background: var(--ios26-card-bg-light);
+  color: #1c1c1e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.sm-action-chip:active {
+  transform: scale(0.96);
+  background: color-mix(in srgb, var(--chip-color) 8%, var(--ios26-card-bg-light));
+}
+
+.sm-action-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chip-color);
+}
+
+.sm-action-icon ion-icon {
+  font-size: 14px;
+  color: white;
+}
+
+/* ============================================
+   Search Bar
+   ============================================ */
+.sm-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sm-search-box {
+  flex: 1;
+  position: relative;
+  background: var(--ios26-card-bg-light);
+  border-radius: 14px;
+  border: 1px solid var(--ios26-separator-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sm-search-box ion-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ion-color-primary);
+  font-size: 18px;
+}
+
+.sm-search-box input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ion-text-color);
+  font-size: 0.95em;
+  font-family: inherit;
+}
+
+/* Active Filter Badge */
+.sm-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.sm-filter-badge-text {
+  color: var(--ion-text-color);
+  opacity: 0.6;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.sm-filter-badge-close {
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* ============================================
+   Sermon List
+   ============================================ */
+.sm-sermon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sm-sermon-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.sm-sermon-card:active {
+  transform: scale(0.98);
+}
+
+/* Left accent line */
+.sm-sermon-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.sm-sermon-accent.published {
+  background: #10b981;
+}
+
+.sm-sermon-accent.draft {
+  background: #f59e0b;
+}
+
+/* Thumbnail */
+.sm-sermon-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sm-sermon-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.sm-sermon-duration {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Content */
+.sm-sermon-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sm-sermon-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sm-sermon-speaker {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sm-sermon-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sm-sermon-date {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sm-sermon-date ion-icon {
+  font-size: 12px;
+}
+
+/* Actions */
+.sm-sermon-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sm-sermon-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sm-sermon-status.published {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.sm-sermon-status.draft {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.sm-sermon-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.sm-sermon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sm-sermon-btn ion-icon {
+  font-size: 16px;
+}
+
+.sm-sermon-btn.toggle {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.sm-sermon-btn.toggle:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.sm-sermon-btn.toggle.draft {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.sm-sermon-btn.toggle.draft:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.sm-sermon-btn.more {
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.sm-sermon-btn.more:hover {
+  background: rgba(100, 116, 139, 0.15);
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.sm-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+  opacity: 0.6;
+}
+
+.sm-empty ion-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.sm-empty-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.sm-empty-text {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ============================================
+   Loading
+   ============================================ */
+.sm-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+  opacity: 0.6;
+}
+
+.sm-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ios26-separator-light);
+  border-top: 3px solid var(--ion-color-primary);
+  border-radius: 50%;
+  animation: sm-spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes sm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.sm-footer {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ios26-separator-light);
+}
+
+.sm-footer ion-text {
+  color: #aeaeb2;
+  font-size: 11px;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+
+/* Page background */
+[data-theme="dark"] .sm-page {
+  color: #ffffff !important;
+}
+
+/* Stat pills */
+[data-theme="dark"] .sm-stat-pill {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .sm-stat-num {
+  color: inherit !important;
+}
+
+[data-theme="dark"] .sm-stat-txt {
+  color: #98989d !important;
+}
+
+/* Section titles */
+[data-theme="dark"] .sm-section-title {
+  color: #ffffff !important;
+}
+
+/* Quick action chips */
+[data-theme="dark"] .sm-action-chip {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sm-action-chip:active {
+  background: color-mix(in srgb, var(--chip-color) 12%, #1c1c1e) !important;
+}
+
+[data-theme="dark"] .sm-action-icon ion-icon {
+  color: #ffffff !important;
+}
+
+/* Search */
+[data-theme="dark"] .sm-search-box {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .sm-search-box ion-icon {
+  color: #6366f1 !important;
+}
+
+[data-theme="dark"] .sm-search-box input {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sm-filter-badge {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .sm-filter-badge-text {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .sm-filter-badge-close {
+  color: #98989d !important;
+}
+
+/* Sermon list */
+[data-theme="dark"] .sm-sermon-card {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .sm-sermon-card:active {
+  background: color-mix(in srgb, #6366f1 10%, #1c1c1e) !important;
+}
+
+[data-theme="dark"] .sm-sermon-title {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sm-sermon-speaker {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .sm-sermon-date {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .sm-sermon-status.published {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .sm-sermon-status.draft {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .sm-sermon-btn.toggle {
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+[data-theme="dark"] .sm-sermon-btn.toggle.draft {
+  background: rgba(245, 158, 11, 0.15) !important;
+}
+
+[data-theme="dark"] .sm-sermon-btn.more {
+  background: rgba(100, 116, 139, 0.15) !important;
+}
+
+[data-theme="dark"] .sm-sermon-btn.more ion-icon {
+  color: #98989d !important;
+}
+
+/* Empty state */
+[data-theme="dark"] .sm-empty {
+  color: #98989d !important;
+}
+
+/* Loading */
+[data-theme="dark"] .sm-loading-spinner {
+  border-color: rgba(84, 84, 88, 0.36) !important;
+  border-top-color: #6366f1 !important;
+}
+
+/* Footer */
+[data-theme="dark"] .sm-footer {
+  border-top-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .sm-footer ion-text {
+  color: #98989d !important;
+}
+
+/* Toolbar / Header */
+[data-theme="dark"] .toolbar-ios ion-icon {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] ion-button[fill="clear"] {
+  --color: #ffffff !important;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 576px) {
+  .sm-page {
+    padding: 12px;
+  }
+
+  .sm-stat-pill {
+    gap: 6px;
+    padding: 10px 12px;
+    min-width: 100px;
+  }
+
+  .sm-stat-num {
+    font-size: 16px;
+  }
+
+  .sm-action-chip {
+    padding: 8px 14px 8px 8px;
+    font-size: 12px;
+  }
+
+  .sm-action-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sm-action-icon ion-icon {
+    font-size: 12px;
+  }
+
+  .sm-sermon-thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .sm-sermon-title {
+    font-size: 13px;
+  }
+
+  .sm-sermon-speaker {
+    font-size: 11px;
+  }
+
+  .sm-sermon-date {
+    font-size: 11px;
+  }
+}

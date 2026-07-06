@@ -364,7 +364,8 @@ router.put('/profile', authenticateToken, [
 
     const updates = {};
     if (req.body.name) updates.name = req.body.name;
-    if (req.body.phone) updates.phone = req.body.phone;
+    if (req.body.phone !== undefined) updates.phone = req.body.phone;
+    if (req.body.profilePicture) updates.profilePicture = req.body.profilePicture;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,

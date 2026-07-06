@@ -1,10 +1,11 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonActionSheet } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { play, eye, share, heart, heartOutline, radio, pause, ellipsisVertical, time, musicalNote, calendar } from 'ionicons/icons';
+import { play, eye, share, heart, heartOutline, radio, pause, ellipsisVertical, time, musicalNote, calendar, close } from 'ionicons/icons';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
+import AdminPopover from '../components/AdminPopover';
 
 import './Tab4.css';
 
@@ -673,24 +674,21 @@ const Tab4: React.FC = () => {
           )}
         </div>
 
-        {/* Action Sheet for podcast options */}
-        <IonActionSheet
+        {/* Action Popover for podcast options */}
+        <AdminPopover
           isOpen={showActionSheet}
           onDidDismiss={() => {
             setShowActionSheet(false);
             setSelectedPodcast(null);
           }}
-          header={`Options for "${selectedPodcast?.title}"`}
-          buttons={[
+          header={selectedPodcast?.title || 'Podcast Options'}
+          options={[
             {
               text: isPodcastSaved(selectedPodcast?.id || '') ? 'Unsave' : 'Save',
               icon: isPodcastSaved(selectedPodcast?.id || '') ? heart : heartOutline,
               handler: () => {
                 if (selectedPodcast && selectedPodcast.id) {
-                  console.log('ActionSheet: Toggling save for podcast:', selectedPodcast.id);
                   toggleSavePodcast(selectedPodcast, { stopPropagation: () => {} } as any);
-                } else {
-                  console.error('ActionSheet: selectedPodcast is null or has no ID:', selectedPodcast);
                 }
               }
             },
@@ -699,20 +697,16 @@ const Tab4: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedPodcast) {
-                  // Generate the shareable URL that points to the Vercel deployment
                   const shareUrl = `https://dove-church-app.vercel.app/podcast-player?id=${selectedPodcast.id}`;
-                  
                   const shareData = {
                     title: selectedPodcast.title,
                     text: selectedPodcast.description,
                     url: shareUrl
                   };
-
                   try {
                     if (navigator.share) {
                       await navigator.share(shareData);
                     } else {
-                      // Fallback: copy to clipboard
                       const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
                       await navigator.clipboard.writeText(textToCopy);
                       alert('Podcast details copied to clipboard!');
@@ -726,7 +720,9 @@ const Tab4: React.FC = () => {
             },
             {
               text: 'Cancel',
-              role: 'cancel'
+              icon: close,
+              role: 'cancel',
+              handler: () => {}
             }
           ]}
         />

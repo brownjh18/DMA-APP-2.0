@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -86,7 +86,7 @@ interface Sermon {
 const FullSermonPlayer: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
-  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition } = usePlayer();
 
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -99,6 +99,14 @@ const FullSermonPlayer: React.FC = () => {
 
   const sermon = currentMedia && !isPodcast(currentMedia) ? currentMedia : null;
   const [deviceVolumeSupported, setDeviceVolumeSupported] = useState(false);
+
+  // Memoize startTime so YouTube iframe src doesn't change mid-playback
+  const savedStartTime = useMemo(() => getPlaybackPosition(), [sermon?.id]);
+
+  // Stable onTimeUpdate callback
+  const stableOnTimeUpdate = useCallback((time: number) => {
+    savePlaybackPosition(time);
+  }, []);
 
   useEffect(() => {
     // Check for device volume control support
@@ -411,8 +419,10 @@ const FullSermonPlayer: React.FC = () => {
                 url={getFullUrl(sermon.videoUrl || sermon.streamUrl || '')}
                 title={sermon.title}
                 playing={isPlaying}
+                startTime={savedStartTime}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
+                onTimeUpdate={stableOnTimeUpdate}
                 fullScreen={true}
               />
             </div>

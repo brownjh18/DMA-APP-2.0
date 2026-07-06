@@ -1,0 +1,410 @@
+/* ============================================
+   Admin Form - Shared Styles for Add/Edit Pages
+   ============================================ */
+
+/* --- Page Container --- */
+.af-page {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+/* ============================================
+   Form Sections
+   ============================================ */
+.af-section {
+  margin-bottom: 24px;
+}
+
+.af-section-title {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+
+.af-card {
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+/* ============================================
+   Form Fields
+   ============================================ */
+.af-field {
+  margin-bottom: 16px;
+}
+
+.af-field:last-child {
+  margin-bottom: 0;
+}
+
+.af-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  margin-bottom: 6px;
+}
+
+.af-required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.af-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--ios26-grouped-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-radius: 12px;
+  color: var(--ion-text-color);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.af-input:focus {
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.af-input::placeholder {
+  color: var(--ion-color-medium);
+}
+
+.af-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.af-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e93' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.af-hint {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin-top: 4px;
+}
+
+.af-row {
+  display: flex;
+  gap: 12px;
+}
+
+.af-row .af-field {
+  flex: 1;
+}
+
+/* ============================================
+   File Upload
+   ============================================ */
+.af-upload {
+  border: 2px dashed var(--ios26-separator-light);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--ios26-grouped-bg-light);
+}
+
+.af-upload:hover {
+  border-color: var(--ion-color-primary);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.af-upload-icon {
+  font-size: 32px;
+  color: var(--ion-color-medium);
+  margin-bottom: 8px;
+}
+
+.af-upload-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ion-text-color);
+  margin: 0 0 4px 0;
+}
+
+.af-upload-hint {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+.af-upload-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.af-upload input[type="file"] {
+  display: none;
+}
+
+/* ============================================
+   Status Toggle
+   ============================================ */
+.af-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.af-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ion-text-color);
+}
+
+.af-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  background: var(--ios26-separator-light);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.af-toggle.active {
+  background: var(--ion-color-primary);
+}
+
+.af-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.af-toggle.active .af-toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ============================================
+   Submit Button
+   ============================================ */
+.af-submit {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.af-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.af-submit:active {
+  transform: scale(0.98);
+}
+
+.af-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.af-submit-secondary {
+  background: var(--ios26-card-bg-light);
+  color: var(--ion-color-primary);
+  box-shadow: none;
+  border: 1px solid var(--ios26-separator-light);
+}
+
+.af-submit-secondary:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.af-submit-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.af-submit-danger:hover {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================
+   Loading
+   ============================================ */
+.af-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+  opacity: 0.6;
+}
+
+.af-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ios26-separator-light);
+  border-top: 3px solid var(--ion-color-primary);
+  border-radius: 50%;
+  animation: af-spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes af-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.af-footer {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ios26-separator-light);
+}
+
+.af-footer ion-text {
+  color: #aeaeb2;
+  font-size: 11px;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+
+/* Page background */
+[data-theme="dark"] .af-page {
+  color: #ffffff !important;
+}
+
+/* Section titles */
+[data-theme="dark"] .af-section-title {
+  color: #ffffff !important;
+}
+
+/* Cards */
+[data-theme="dark"] .af-card {
+  background: #1c1c1e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+/* Labels */
+[data-theme="dark"] .af-label {
+  color: #ffffff !important;
+}
+
+/* Inputs */
+[data-theme="dark"] .af-input {
+  background: #2c2c2e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .af-input::placeholder {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .af-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Hints */
+[data-theme="dark"] .af-hint {
+  color: #98989d !important;
+}
+
+/* Upload */
+[data-theme="dark"] .af-upload {
+  background: #2c2c2e !important;
+  border-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .af-upload-icon {
+  color: #98989d !important;
+}
+
+[data-theme="dark"] .af-upload-text {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .af-upload-hint {
+  color: #98989d !important;
+}
+
+/* Toggle */
+[data-theme="dark"] .af-toggle {
+  background: #3a3a3c !important;
+}
+
+[data-theme="dark"] .af-toggle.active {
+  background: #6366f1 !important;
+}
+
+/* Footer */
+[data-theme="dark"] .af-footer {
+  border-top-color: rgba(84, 84, 88, 0.36) !important;
+}
+
+[data-theme="dark"] .af-footer ion-text {
+  color: #98989d !important;
+}
+
+/* Toolbar / Header */
+[data-theme="dark"] .toolbar-ios ion-icon {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] ion-button[fill="clear"] {
+  --color: #ffffff !important;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 576px) {
+  .af-page {
+    padding: 12px;
+  }
+
+  .af-card {
+    padding: 14px;
+  }
+
+  .af-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .af-submit {
+    padding: 14px;
+    font-size: 15px;
+  }
+}

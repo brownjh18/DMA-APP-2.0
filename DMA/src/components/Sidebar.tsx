@@ -88,6 +88,52 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           display: flex;
           flex-direction: column;
+          color: #1a1a1a !important;
+        }
+
+        .floating-sidebar .nav-item span,
+        .floating-sidebar .nav-item ion-icon,
+        .floating-sidebar .profile-info h3,
+        .floating-sidebar .profile-info p,
+        .floating-sidebar .close-button ion-icon,
+        .floating-sidebar .signin-section ion-icon {
+          color: #1a1a1a !important;
+        }
+
+        .floating-sidebar ion-button {
+          --color: #1a1a1a !important;
+        }
+
+        .floating-sidebar .nav-item.active span,
+        .floating-sidebar .nav-item.active ion-icon {
+          color: #3b82f6 !important;
+        }
+
+        .floating-sidebar .nav-item.active {
+          background-color: rgba(59, 130, 246, 0.2) !important;
+          border: 1px solid #3b82f6 !important;
+        }
+
+        [data-theme="dark"] .floating-sidebar {
+          color: #e5e5e5 !important;
+        }
+
+        [data-theme="dark"] .floating-sidebar .nav-item span,
+        [data-theme="dark"] .floating-sidebar .nav-item ion-icon,
+        [data-theme="dark"] .floating-sidebar .profile-info h3,
+        [data-theme="dark"] .floating-sidebar .profile-info p,
+        [data-theme="dark"] .floating-sidebar .close-button ion-icon,
+        [data-theme="dark"] .floating-sidebar .signin-section ion-icon {
+          color: #e5e5e5 !important;
+        }
+
+        [data-theme="dark"] .floating-sidebar ion-button {
+          --color: #e5e5e5 !important;
+        }
+
+        [data-theme="dark"] .floating-sidebar .nav-item.active span,
+        [data-theme="dark"] .floating-sidebar .nav-item.active ion-icon {
+          color: #60a5fa !important;
         }
 
         @media (max-width: 576px) {
@@ -160,37 +206,54 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           display: flex;
           align-items: center;
           gap: 14px;
-          padding: 12px;
+          padding: 14px;
           border-radius: 18px;
-          background: rgba(var(--ion-background-color-rgb), 0.4);
-          border: 1px solid var(--ion-color-step-150);
+          background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.12), rgba(var(--ion-color-primary-rgb), 0.04));
+          border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);
           margin-bottom: 20px;
+          transition: all 0.2s ease;
+        }
+
+        .profile-box[style*="pointer"]:hover {
+          transform: scale(1.02);
+          background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.2), rgba(var(--ion-color-primary-rgb), 0.08));
         }
 
         .profile-avatar {
-          width: 58px;
-          height: 58px;
+          width: 54px;
+          height: 54px;
           border-radius: 50%;
           border: 2px solid var(--ion-color-primary);
           background: black;
+          object-fit: cover;
+          flex-shrink: 0;
         }
 
         .profile-info {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 4px;
+          gap: 2px;
+          min-width: 0;
         }
 
         .profile-info h3 {
           margin: 0;
-          font-size: 1.1rem;
+          font-size: 1rem;
+          font-weight: 600;
+          line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
         }
 
         .profile-info p {
           margin: 0;
-          opacity: 0.7;
-          font-size: 0.85rem;
+          font-size: 0.78rem;
+          opacity: 0.6;
+          font-weight: 500;
+          letter-spacing: 0.02em;
         }
 
         .signin-section {
@@ -234,7 +297,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           padding: 12px 14px;
           border-radius: 16px;
           background: rgba(var(--ion-background-color-rgb), 0.3);
-          border: 1px solid var(--ion-color-step-200);
+          border: 1px solid #aaa !important;
           cursor: pointer;
           transition: 0.2s ease-in-out;
         }
@@ -242,6 +305,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
         .nav-item:hover {
           transform: scale(1.03);
           background: rgba(var(--ion-background-color-rgb), 0.45);
+        }
+
+        [data-theme="dark"] .nav-item {
+          border-color: rgba(255, 255, 255, 0.18) !important;
         }
 
         .nav-item ion-icon {
@@ -253,8 +320,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
           font-weight: 500;
         }
 
+        [data-theme="dark"] .floating-sidebar {
+          color: #e5e5e5;
+        }
+
         @media (prefers-color-scheme: dark) {
           .floating-sidebar {
+            color: #e5e5e5;
             border-color: rgba(255,255,255,0.18);
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
           }
@@ -271,17 +343,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
       {/* SIDEBAR CONTENT */}
       <div className={`floating-sidebar ${isOpen ? 'open' : ''}`}>
 
-        {/* Close Button */}
-        <div className="close-button" onClick={onClose}>
-          <IonIcon icon={closeOutline} />
-        </div>
-
         {/* Profile Preview */}
-        <div className="profile-box">
+        <div
+          className="profile-box"
+          style={user ? { cursor: 'pointer' } : {}}
+          onClick={() => {
+            if (user) {
+              navigateTo('/profile');
+            }
+          }}
+        >
           {user ? (
             <>
               <img
-                src={user.profilePicture ? `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}` : 'https://i.pravatar.cc/150?img=12'}
+                src={user.profilePicture ? (user.profilePicture.startsWith('data:') ? user.profilePicture : `${BACKEND_BASE_URL}${user.profilePicture}?t=${Date.now()}`) : 'https://i.pravatar.cc/150?img=12'}
                 alt="profile"
                 className="profile-avatar"
               />
@@ -291,9 +366,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
               </div>
 </>
            ) : (
-             <div className="signin-section">
-               <IonIcon icon={personCircleOutline} style={{ fontSize: '2.5em', color: 'var(--ion-text-color)' }} />
-               <IonButton
+              <div className="signin-section">
+                <IonIcon icon={personCircleOutline} style={{ fontSize: '2.5em' }} />
+                <IonButton
                  fill="outline"
                  size="default"
                  onClick={() => {
@@ -313,96 +388,78 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user }) => {
 
         {/* Navigation List */}
         <div className="nav-list">
-<div
-              className="nav-item"
-              onClick={() => navigateTo('/profile')}
-              style={isActive('/profile') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
-            >
-              <IonIcon icon={personCircleOutline} style={isActive('/profile') ? { color: '#3b82f6' } : {}} />
-              <span style={isActive('/profile') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Profile</span>
-            </div>
-
-<div
-              className="nav-item"
-              onClick={() => navigateTo('/favorites')}
-              style={isActive('/favorites') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
-            >
-              <IonIcon icon={heartOutline} style={isActive('/favorites') ? { color: '#3b82f6' } : {}} />
-              <span style={isActive('/favorites') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Favorites</span>
-            </div>
+          <div
+            className={`nav-item${isActive('/favorites') ? ' active' : ''}`}
+            onClick={() => navigateTo('/favorites')}
+          >
+            <IonIcon icon={heartOutline} />
+            <span>Favorites</span>
+          </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/events') ? ' active' : ''}`}
             onClick={() => navigateTo('/events')}
-            style={isActive('/events') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={calendarOutline} style={isActive('/events') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/events') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Events</span>
+            <IonIcon icon={calendarOutline} />
+            <span>Events</span>
           </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/ministries') ? ' active' : ''}`}
             onClick={() => navigateTo('/ministries')}
-            style={isActive('/ministries') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={peopleOutline} style={isActive('/ministries') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/ministries') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Ministries</span>
+            <IonIcon icon={peopleOutline} />
+            <span>Ministries</span>
           </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/prayer') ? ' active' : ''}`}
             onClick={() => navigateTo('/prayer')}
-            style={isActive('/prayer') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={chatbubbleEllipsesOutline} style={isActive('/prayer') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/prayer') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Prayer Request</span>
+            <IonIcon icon={chatbubbleEllipsesOutline} />
+            <span>Prayer Request</span>
           </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/giving') ? ' active' : ''}`}
             onClick={() => navigateTo('/giving')}
-            style={isActive('/giving') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={cardOutline} style={isActive('/giving') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/giving') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Giving</span>
+            <IonIcon icon={cardOutline} />
+            <span>Giving</span>
           </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/tab5') ? ' active' : ''}`}
             onClick={() => navigateTo('/tab5')}
-            style={isActive('/tab5') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={informationCircleOutline} style={isActive('/tab5') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/tab5') ? { color: '#3b82f6', fontWeight: '600' } : {}}>About & Contact</span>
+            <IonIcon icon={informationCircleOutline} />
+            <span>About & Contact</span>
           </div>
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/settings') ? ' active' : ''}`}
             onClick={() => navigateTo('/settings')}
-            style={isActive('/settings') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
-            <IonIcon icon={settingsOutline} style={isActive('/settings') ? { color: '#3b82f6' } : {}} />
-            <span style={isActive('/settings') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Settings</span>
+            <IonIcon icon={settingsOutline} />
+            <span>Settings</span>
           </div>
 
           {user && user.role === 'admin' && (
             <div
-              className="nav-item"
+              className={`nav-item${isActive('/admin') ? ' active' : ''}`}
               onClick={() => navigateTo('/admin')}
-              style={isActive('/admin') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
             >
-              <IonIcon icon={settingsOutline} style={isActive('/admin') ? { color: '#3b82f6' } : {}} />
-              <span style={isActive('/admin') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Admin Dashboard</span>
+              <IonIcon icon={settingsOutline} />
+              <span>Admin Dashboard</span>
             </div>
           )}
 
           <div
-            className="nav-item"
+            className={`nav-item${isActive('/notifications') ? ' active' : ''}`}
             onClick={() => navigateTo('/notifications')}
-            style={isActive('/notifications') ? { backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6' } : {}}
           >
             <NotificationBell size="medium" />
-            <span style={isActive('/notifications') ? { color: '#3b82f6', fontWeight: '600' } : {}}>Notifications</span>
+            <span>Notifications</span>
           </div>
 
           {user && (

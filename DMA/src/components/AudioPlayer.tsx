@@ -45,11 +45,8 @@ const AudioPlayer: React.FC = () => {
 
   // Load audio when media changes
   useEffect(() => {
-    console.log('AudioPlayer: Media changed to', currentMedia?.id, 'podcast=', podcast?.id);
-
     if (!currentMedia) {
       // Miniplayer closed - reset everything
-      console.log('AudioPlayer: Miniplayer closed, resetting refs');
       loadedPodcastIdRef.current = undefined;
       needsReloadRef.current = false;
       return;
@@ -62,11 +59,9 @@ const AudioPlayer: React.FC = () => {
     }
 
     const podcastId = currentMedia.id;
-    console.log('AudioPlayer: Checking reload - current ref=', loadedPodcastIdRef.current, 'new id=', podcastId);
 
     // Always reload when podcast changes or when needsReload is set
     if (loadedPodcastIdRef.current !== podcastId || needsReloadRef.current) {
-      console.log('AudioPlayer: Loading audio for', podcastId);
       loadedPodcastIdRef.current = podcastId;
       needsReloadRef.current = false;
 
@@ -75,7 +70,6 @@ const AudioPlayer: React.FC = () => {
         if (audioUrl) {
           audioRef.current.src = audioUrl;
           audioRef.current.load();
-          console.log('AudioPlayer: Audio source set and loaded');
         } else {
           console.error('AudioPlayer: Could not resolve audio URL for', currentMedia.audioUrl);
         }
@@ -85,25 +79,18 @@ const AudioPlayer: React.FC = () => {
 
   // Handle play/pause
   useEffect(() => {
-    console.log('AudioPlayer: isPlaying=', isPlaying, 'podcast=', podcast?.id);
-
     if (!audioRef.current || !podcast) return;
 
     const audio = audioRef.current;
 
     const playAudio = () => {
-      console.log('AudioPlayer: Attempting to play');
       const playPromise = audio.play();
       if (playPromise) {
-        playPromise.then(() => {
-          console.log('AudioPlayer: Play started successfully');
-        }).catch((error) => {
-          console.warn('AudioPlayer: Play failed, retrying...', error);
-          // Retry after a delay
+        playPromise.catch((error) => {
+          // Retry after a delay for autoplay policy
           setTimeout(() => {
             if (isPlaying) {
-              console.log('AudioPlayer: Retrying play');
-              audio.play().catch(e => console.warn('AudioPlayer: Retry failed:', e));
+              audio.play().catch(() => {});
             }
           }, 300);
         });
@@ -111,7 +98,6 @@ const AudioPlayer: React.FC = () => {
     };
 
     const pauseAudio = () => {
-      console.log('AudioPlayer: Pausing');
       audio.pause();
     };
 
@@ -136,7 +122,6 @@ const AudioPlayer: React.FC = () => {
   }, [savePlaybackPosition, setCurrentTime]);
 
   const handleEnded = useCallback(() => {
-    console.log('AudioPlayer: Playback ended');
     setIsPlaying(false);
     savePlaybackPosition(0);
   }, [setIsPlaying, savePlaybackPosition]);
@@ -147,7 +132,6 @@ const AudioPlayer: React.FC = () => {
   }, [setIsPlaying]);
 
   const handleCanPlay = useCallback(() => {
-    console.log('AudioPlayer: Can play event');
     // Force reload check on canPlay
     if (podcast && loadedPodcastIdRef.current !== podcast.id) {
       needsReloadRef.current = true;
@@ -156,35 +140,31 @@ const AudioPlayer: React.FC = () => {
 
   // Set up event listeners for skip operations
   useEffect(() => {
-    console.log('AudioPlayer: Setting up skip event listeners');
-    window.addEventListener('skip-forward', () => {
-      console.log('AudioPlayer: skipForward event received');
+    const handleSkipForward = () => {
       if (audioRef.current) {
         audioRef.current.currentTime += SKIP_SECONDS;
-        console.log('AudioPlayer: Skipped forward to', audioRef.current.currentTime);
       }
-    });
-    window.addEventListener('skip-backward', () => {
-      console.log('AudioPlayer: skipBackward event received');
+    };
+    const handleSkipBackward = () => {
       if (audioRef.current) {
         audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
-        console.log('AudioPlayer: Skipped backward to', audioRef.current.currentTime);
       }
-    });
-    window.addEventListener('audio-seek', (event: Event) => {
+    };
+    const handleSeek = (event: Event) => {
       const customEvent = event as CustomEvent<{ time: number }>;
-      console.log('AudioPlayer: seek event received with time', customEvent.detail?.time);
-      if (audioRef.current && customEvent.detail?.time !== undefined) {
+      if (audioRef.current && customEvent.detail?.time != null) {
         audioRef.current.currentTime = customEvent.detail.time;
-        console.log('AudioPlayer: Seeked to', audioRef.current.currentTime);
       }
-    });
+    };
+
+    window.addEventListener('skip-forward', handleSkipForward);
+    window.addEventListener('skip-backward', handleSkipBackward);
+    window.addEventListener('audio-seek', handleSeek);
 
     return () => {
-      console.log('AudioPlayer: Removing skip event listeners');
-      window.removeEventListener('skip-forward', () => {});
-      window.removeEventListener('skip-backward', () => {});
-      window.removeEventListener('audio-seek', () => {});
+      window.removeEventListener('skip-forward', handleSkipForward);
+      window.removeEventListener('skip-backward', handleSkipBackward);
+      window.removeEventListener('audio-seek', handleSeek);
     };
   }, []);
 
@@ -192,8 +172,6 @@ const AudioPlayer: React.FC = () => {
   if (!podcast) {
     return null;
   }
-
-  console.log('AudioPlayer: Rendering with podcast', podcast.id);
 
   return (
     <audio

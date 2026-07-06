@@ -6,11 +6,12 @@ import {
   IonText,
   IonSpinner,
   IonAlert,
-  IonActionSheet,
 } from '@ionic/react';
 import { send, trash, ellipsisVertical, chevronUp, chevronDown } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
+import { useSettings } from '../contexts/SettingsContext';
+import AdminPopover from './AdminPopover';
 
 interface Comment {
   _id: string;
@@ -41,6 +42,7 @@ const Comments: React.FC<CommentsProps> = ({ contentId, contentType }) => {
   const [isMinimized, setIsMinimized] = useState(true);
 
   const { isLoggedIn, user } = useContext(AuthContext);
+  const { isDarkMode } = useSettings();
   const sortedComments = useMemo(() => {
     return [...comments].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }, [comments]);
@@ -180,22 +182,6 @@ const Comments: React.FC<CommentsProps> = ({ contentId, contentType }) => {
     setShowActionSheet(true);
   };
 
-  const actionSheetButtons = [
-    ...(canDeleteComment(selectedComment!) ? [{
-      text: 'Delete Comment',
-      role: 'destructive' as const,
-      icon: trash,
-      handler: () => {
-        setCommentToDelete(selectedComment?._id || null);
-        setShowDeleteAlert(true);
-      },
-    }] : []),
-    {
-      text: 'Cancel',
-      role: 'cancel' as const,
-    },
-  ];
-
   return (
     <div className="comments-section">
       {isMinimized ? (
@@ -268,11 +254,28 @@ const Comments: React.FC<CommentsProps> = ({ contentId, contentType }) => {
         </div>
       )}
 
-      {/* Action Sheet for Comment Options */}
-      <IonActionSheet
+      {/* Action Popover for Comment Options */}
+      <AdminPopover
         isOpen={showActionSheet}
         onDidDismiss={() => setShowActionSheet(false)}
-        buttons={actionSheetButtons}
+        header="Comment Options"
+        options={[
+          ...(canDeleteComment(selectedComment!) ? [{
+            text: 'Delete Comment',
+            icon: trash,
+            role: 'destructive' as const,
+            handler: () => {
+              setCommentToDelete(selectedComment?._id || null);
+              setShowDeleteAlert(true);
+            },
+          }] : []),
+          {
+            text: 'Cancel',
+            icon: ellipsisVertical,
+            role: 'cancel' as const,
+            handler: () => {}
+          }
+        ]}
       />
 
       {/* Delete Confirmation Alert */}

@@ -6,6 +6,7 @@ import {
   IonTitle,
   IonToolbar,
   IonIcon,
+  IonButton,
   IonLoading,
   IonAlert,
   IonText,
@@ -23,11 +24,11 @@ import {
   person,
   documentText,
   pricetag,
-  cloudUpload
+  cloudUpload,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
-import BackButton from '../components/BackButton';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
@@ -171,11 +172,11 @@ const AddPodcast: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="title-ios" style={{ textAlign: 'center' }}>
-            <span className="nd-title">Add Podcast</span>
-          </IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add Podcast</IonTitle>
         </IonToolbar>
       </IonHeader>
 

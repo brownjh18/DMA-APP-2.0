@@ -1,12 +1,14 @@
 // @ts-nocheck
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonActionSheet } from '@ionic/react';
-import { useState, useEffect } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover } from '@ionic/react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import VideoPlayer from '../components/VideoPlayer';
 import { fetchCombinedSermons, YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
+import { useSettings } from '../contexts/SettingsContext';
+import AdminPopover from '../components/AdminPopover';
 
 import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline } from 'ionicons/icons';
 import './Tab2.css';
@@ -76,12 +78,49 @@ const Tab2: React.FC = () => {
   const location = useLocation();
   const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
+  const { isDarkMode } = useSettings();
+
+  // Mini player state
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [showMiniPlayer, setShowMiniPlayer] = useState(false);
+  const contentRef = useRef<any>(null);
+
+  // Memoize startTime so YouTube iframe src doesn't change mid-playback
+  const savedStartTime = useMemo(() => getPlaybackPosition(), [currentSermon?.id]);
+
+  // Stable onTimeUpdate callback to prevent unnecessary re-renders
+  const stableOnTimeUpdate = useCallback((time: number) => {
+    savePlaybackPosition(time);
+  }, []);
+
+  // IntersectionObserver to detect when video scrolls out of view
+  useEffect(() => {
+    const container = videoContainerRef.current;
+    if (!container || !currentSermon) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowMiniPlayer(!entry.isIntersecting);
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [currentSermon]);
 
   // Clear all caches on page load/refresh
   useEffect(() => {
     console.log('🔄 Tab2: Clearing caches on page load/refresh');
     apiService.clearCacheByType('sermons');
   }, []);
+
+  // Auto-resume playback when Tab2 mounts with a sermon already in context
+  useEffect(() => {
+    if (currentSermon && !isPlaying) {
+      setIsPlaying(true);
+    }
+  }, []); // Only on mount
 
   useEffect(() => {
     loadSermons();
@@ -208,10 +247,11 @@ const Tab2: React.FC = () => {
   }, [onSermonCreated, onSermonUpdated, onSermonDeleted]);
 
 
-  // Cleanup on component unmount
+  // Cleanup on component unmount - save playback position
   useEffect(() => {
     return () => {
-      // Component cleanup
+      // Force save position when leaving Tab2
+      window.dispatchEvent(new Event('save-playback-position'));
     };
   }, []);
 
@@ -461,7 +501,7 @@ const Tab2: React.FC = () => {
           return (
           <>
             {/* Video Player and Details Container */}
-            <div style={{ position: 'relative' }}>
+            <div ref={videoContainerRef} style={{ position: 'relative' }}>
               {/* Video Player */}
               <div style={{
                 width: '100%',
@@ -473,9 +513,9 @@ const Tab2: React.FC = () => {
                   url={getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '')}
                   title={currentSermon.title}
                   playing={isPlaying}
-                  startTime={getPlaybackPosition()}
+                  startTime={savedStartTime}
                   onPlay={() => setIsPlaying(true)}
-                  onTimeUpdate={savePlaybackPosition}
+                  onTimeUpdate={stableOnTimeUpdate}
                 />
               </div>
 
@@ -561,7 +601,7 @@ const Tab2: React.FC = () => {
                     <IonIcon
                       icon={share}
                       style={{
-                        color: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#ffffff' : '#000000',
+                        color: isDarkMode ? '#ffffff' : '#000000',
                         fontSize: '20px',
                       }}
                     />
@@ -1171,15 +1211,15 @@ const Tab2: React.FC = () => {
           </div>
         )}
 
-        {/* Action Sheet for sermon options */}
-        <IonActionSheet
+        {/* Action Popover for sermon options */}
+        <AdminPopover
           isOpen={showActionSheet}
           onDidDismiss={() => {
             setShowActionSheet(false);
             setSelectedSermonForActionSheet(null);
           }}
-          header={`Options for "${selectedSermonForActionSheet?.title}"`}
-          buttons={[
+          header={selectedSermonForActionSheet?.title || 'Sermon Options'}
+          options={[
             {
               text: selectedSermonForActionSheet && isSermonSaved(selectedSermonForActionSheet.id) ? 'Unsave' : 'Save',
               icon: selectedSermonForActionSheet && isSermonSaved(selectedSermonForActionSheet.id) ? heart : heartOutline,
@@ -1194,20 +1234,16 @@ const Tab2: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedSermonForActionSheet) {
-                  // Generate the shareable URL that points to the Vercel deployment
                   const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${selectedSermonForActionSheet.id}`;
-                  
                   const shareData = {
                     title: selectedSermonForActionSheet.title,
                     text: selectedSermonForActionSheet.description,
                     url: shareUrl
                   };
-
                   try {
                     if (navigator.share) {
                       await navigator.share(shareData);
                     } else {
-                      // Fallback: copy to clipboard
                       const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
                       await navigator.clipboard.writeText(textToCopy);
                       alert('Sermon details copied to clipboard!');
@@ -1221,10 +1257,98 @@ const Tab2: React.FC = () => {
             },
             {
               text: 'Cancel',
-              role: 'cancel'
+              icon: close,
+              role: 'cancel',
+              handler: () => {}
             }
           ]}
         />
+
+        {/* YouTube-style Mini Player */}
+        {showMiniPlayer && currentSermon && (
+          <div
+            className="sermon-mini-player"
+            onClick={() => {
+              setShowMiniPlayer(false);
+              videoContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            style={{
+              position: 'fixed',
+              bottom: '90px',
+              right: '10px',
+              width: '200px',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              zIndex: 9998,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              background: '#000',
+            }}
+          >
+            <VideoPlayer
+              key={`mini-${currentSermon.id}`}
+              url={getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '')}
+              title={currentSermon.title}
+              playing={isPlaying}
+              mini={true}
+              miniWidth={200}
+              miniHeight={112}
+              startTime={savedStartTime}
+              onPlay={() => setIsPlaying(true)}
+              onTimeUpdate={stableOnTimeUpdate}
+            />
+            {/* Mini Player Overlay */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+              padding: '20px 8px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: '#fff',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  lineHeight: '1.3',
+                }}>
+                  {currentSermon.title}
+                </p>
+              </div>
+              {/* Close button */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentSermon(null);
+                  setIsPlaying(false);
+                  setShowMiniPlayer(false);
+                }}
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <IonIcon icon={close} style={{ fontSize: '12px', color: '#fff' }} />
+              </div>
+            </div>
+          </div>
+        )}
 
       </IonContent>
     </IonPage>

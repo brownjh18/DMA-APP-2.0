@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
-  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonLoading, IonAlert, IonText, IonSpinner
+  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonLoading, IonAlert, IonText, IonSpinner
 } from '@ionic/react';
 import {
-  save, person, closeCircle, image, personOutline, mail, lockClosed, call, shield, checkmarkCircle, informationCircle
+  save, person, closeCircle, image, personOutline, mail, lockClosed, call, shield, checkmarkCircle, informationCircle, arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
-import BackButton from '../components/BackButton';
+
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
@@ -126,9 +126,9 @@ const AddUser: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title">Add User</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}><IonIcon icon={arrowBack} style={{ fontSize: '22px' }} /></IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add User</IonTitle>
         </IonToolbar>
       </IonHeader>
 

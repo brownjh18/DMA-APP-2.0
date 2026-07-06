@@ -1,16 +1,9 @@
 .floating-search-button {
-  --background: rgba(255, 255, 255, 0.1);
-  --background-activated: rgba(255, 255, 255, 0.2);
-  --background-hover: rgba(255, 255, 255, 0.15);
-  --border-radius: 50%;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  margin: 16px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.floating-search-button ion-icon {
-  color: #000000;
+.floating-search-button:active {
+  transform: scale(0.85) !important;
 }
 
 .search-backdrop {
@@ -227,103 +220,78 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .floating-search-button {
-    --background: rgba(0, 0, 0, 0.3);
-    --background-activated: rgba(0, 0, 0, 0.5);
-    --background-hover: rgba(0, 0, 0, 0.4);
-    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+[data-theme="dark"] .floating-live-button {
+  transition: all 0.3s ease;
+}
 
-  .floating-search-button ion-icon {
-    color: #ffffff;
-  }
-  
-  .floating-live-button {
-    transition: all 0.3s ease;
-  }
-  
-  .floating-live-button.blinking {
-    animation: blink 1.5s infinite;
-  }
-  
-  @keyframes blink {
-    0%, 50% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    25%, 75% {
-      opacity: 0.7;
-      transform: scale(1.05);
-    }
-  }
+[data-theme="dark"] .floating-live-button.blinking {
+  animation: blink 1.5s infinite;
+}
 
-  .search-container {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  }
+[data-theme="dark"] .search-container {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
 
-  .expanded-search-bar {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
+[data-theme="dark"] .expanded-search-bar {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
 
-  .search-input {
-    --color: #ffffff;
-    --placeholder-color: rgba(255, 255, 255, 0.7);
-  }
+[data-theme="dark"] .search-input {
+  --color: #ffffff;
+  --placeholder-color: rgba(255, 255, 255, 0.7);
+}
 
-  .search-submit-btn,
-  .search-close-btn {
-    --color: #ffffff;
-    --background-hover: rgba(255, 255, 255, 0.1);
-  }
+[data-theme="dark"] .search-submit-btn,
+[data-theme="dark"] .search-close-btn {
+  --color: #ffffff;
+  --background-hover: rgba(255, 255, 255, 0.1);
+}
 
-  .search-suggestions {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-  }
+[data-theme="dark"] .search-suggestions {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-  .suggestion-item {
-    --color: #ffffff;
-    --background-hover: rgba(255, 255, 255, 0.1);
-  }
+[data-theme="dark"] .suggestion-item {
+  --color: #ffffff;
+  --background-hover: rgba(255, 255, 255, 0.1);
+}
 
-  .suggestion-icon {
-    color: rgba(255, 255, 255, 0.7);
-  }
+[data-theme="dark"] .suggestion-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
 
-  .suggestions-title,
-  .results-title {
-    color: rgba(255, 255, 255, 0.9);
-  }
+[data-theme="dark"] .suggestions-title,
+[data-theme="dark"] .results-title {
+  color: rgba(255, 255, 255, 0.9);
+}
 
-  .back-btn {
-    --color: rgba(255, 255, 255, 0.9);
-  }
+[data-theme="dark"] .back-btn {
+  --color: rgba(255, 255, 255, 0.9);
+}
 
-  .result-item {
-    --color: #ffffff;
-    --background-hover: rgba(255, 255, 255, 0.1);
-  }
+[data-theme="dark"] .result-item {
+  --color: #ffffff;
+  --background-hover: rgba(255, 255, 255, 0.1);
+}
 
-  .result-icon {
-    color: rgba(255, 255, 255, 0.8);
-  }
+[data-theme="dark"] .result-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
 
-  .no-results {
-    --color: rgba(255, 255, 255, 0.7);
-  }
+[data-theme="dark"] .no-results {
+  --color: rgba(255, 255, 255, 0.7);
+}
 
-  .loading-item {
-    --color: rgba(255, 255, 255, 0.8);
-  }
+[data-theme="dark"] .loading-item {
+  --color: rgba(255, 255, 255, 0.8);
+}
 
-  .result-description {
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
+[data-theme="dark"] .result-description {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* New Transparent Blur Search Modal Design */
@@ -534,111 +502,90 @@
   transform: rotate(90deg);
 }
 
-/* Light mode support for transparent design */
-@media (prefers-color-scheme: light) {
-  .search-modal-transparent {
-    --background: transparent;
-    border: none;
-    box-shadow: none;
-  }
+/* Dark mode support for transparent design */
+[data-theme="dark"] .search-bar-transparent {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-  .search-modal-transparent::part(backdrop) {
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    background: transparent;
-  }
+[data-theme="dark"] .filter-chip-transparent {
+  --background: rgba(255, 255, 255, 0.2);
+  --background-activated: rgba(255, 255, 255, 0.3);
+  --color: white;
+}
 
-  .search-header-transparent {
-    background: transparent;
-    border-bottom: none;
-  }
+[data-theme="dark"] .result-card-transparent:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
-  .search-content-transparent {
-    --background: transparent;
-    background: transparent;
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-  }
+[data-theme="dark"] .result-card-title {
+  color: white;
+}
 
-  .search-bar-transparent {
-    background: transparent;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    --border-radius: 20px;
-  }
+[data-theme="dark"] .result-card-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
 
-  .filter-chips-transparent {
-    background: transparent;
-    border: none;
-  }
+[data-theme="dark"] .result-card-description {
+  color: rgba(255, 255, 255, 0.6);
+}
 
-  .filter-chip-transparent {
-    --background: rgba(0, 0, 0, 0.05);
-    --background-activated: rgba(0, 0, 0, 0.1);
-    --color: #333;
-  }
+[data-theme="dark"] .result-card-type {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
 
-  .filter-chip-transparent.active {
-    --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
-    --color: white;
-  }
+[data-theme="dark"] .no-results-icon {
+  color: rgba(255, 255, 255, 0.3);
+}
 
-  .result-card-transparent {
-    background: transparent;
-    border: none;
-  }
+[data-theme="dark"] .no-results-title {
+  color: white;
+}
 
-  .result-card-transparent:hover {
-    background: rgba(0, 0, 0, 0.06);
-  }
+[data-theme="dark"] .no-results-text {
+  color: rgba(255, 255, 255, 0.6);
+}
 
-  .result-card-title {
-    color: #333;
-    font-size: 0.95em;
-  }
+[data-theme="dark"] .close-button-transparent {
+  --color: white;
+  --background: rgba(255, 255, 255, 0.2);
+}
 
-  .result-card-subtitle {
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 0.8em;
-  }
+[data-theme="dark"] .close-button-transparent:hover {
+  --background: rgba(255, 255, 255, 0.3);
+}
 
-  .result-card-description {
-    color: rgba(0, 0, 0, 0.5);
-    font-size: 0.75em;
-  }
+/* Minimal Notification Bell */
+.floating-notification-button {
+  -webkit-tap-highlight-color: transparent;
+}
 
-  .result-card-type {
-    background: rgba(0, 0, 0, 0.08);
-    color: #333;
-  }
+.floating-notification-button:active {
+  transform: scale(0.85) !important;
+}
 
-  .loading-spinner-transparent {
-    background: transparent;
-    border: none;
-  }
+/* Bell swing animation for unread state */
+@keyframes bellSwing {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(16deg); }
+  30% { transform: rotate(-14deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+  90% { transform: rotate(-1deg); }
+}
 
-  .no-results-transparent {
-    background: transparent;
-    border: none;
-  }
+.notification-bell-svg {
+  animation: bellSwing 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+  transform-origin: top center;
+}
 
-  .no-results-icon {
-    color: rgba(0, 0, 0, 0.1);
-  }
+/* Notification dot heartbeat */
+@keyframes dotPulse {
+  0%, 100% { r: 3.5; opacity: 1; }
+  50% { r: 4; opacity: 0.85; }
+}
 
-  .no-results-title {
-    color: #333;
-  }
-
-  .no-results-text {
-    color: rgba(0, 0, 0, 0.5);
-  }
-
-  .close-button-transparent {
-    --color: #333;
-    --background: rgba(0, 0, 0, 0.1);
-  }
-
-  .close-button-transparent:hover {
-    --background: rgba(0, 0, 0, 0.15);
-  }
+.notification-dot-pulse {
+  animation: dotPulse 1.8s ease-in-out infinite;
 }
