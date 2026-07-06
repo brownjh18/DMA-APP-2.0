@@ -36,7 +36,6 @@ import {
   ellipsisVertical,
   search,
   closeCircle as closeIcon,
-  settings,
   checkmarkCircle
 } from 'ionicons/icons';
 import './AdminManager.css';
@@ -229,9 +228,7 @@ const AdminEventManager: React.FC = () => {
         <BackButton />
         <IonToolbar className="toolbar-ios">
           <IonTitle className="nd-title">Event Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadEvents(true)}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

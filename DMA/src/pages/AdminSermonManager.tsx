@@ -29,7 +29,6 @@ import {
   calendar,
   search,
   closeCircle as closeIcon,
-  settings,
   trendingUp
 } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
@@ -299,9 +298,7 @@ const AdminSermonManager: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Sermon Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadSermons(true)} style={{ marginRight: '12px' }}>
-            <IonIcon icon={settings} style={{ animation: sermonsLoading ? 'spin 1s linear infinite' : 'none' }} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

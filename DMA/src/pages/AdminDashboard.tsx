@@ -2,7 +2,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButto
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
-  people, playCircle, book, calendar, add, settings,
+  people, playCircle, book, calendar, add,
   shield, videocam, radio, mail, trendingUp, statsChart,
   person, documentText, checkmarkCircle, arrowForward, arrowBack
 } from 'ionicons/icons';
@@ -105,15 +105,7 @@ const AdminDashboard: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Dashboard</IonTitle>
-          <IonButton
-            fill="clear"
-            slot="end"
-            onClick={loadData}
-            style={{ marginRight: '12px' }}
-            disabled={isLoading}
-          >
-            <IonIcon icon={settings} style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

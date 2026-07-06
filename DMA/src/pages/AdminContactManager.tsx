@@ -18,7 +18,6 @@ import {
   people,
   search,
   closeCircle as closeIcon,
-  settings,
   checkmarkCircle
 } from 'ionicons/icons';
 import {
@@ -251,9 +250,7 @@ const AdminContactManager: React.FC = () => {
         <BackButton />
         <IonToolbar className="toolbar-ios">
           <IonTitle className="title-ios">About & Contact</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadContactInfo()} style={{ marginRight: '8px' }}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

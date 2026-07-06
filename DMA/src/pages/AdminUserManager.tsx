@@ -32,7 +32,6 @@ import {
   shield,
   search,
   closeCircle as closeIcon,
-  settings,
   create,
   eye,
   eyeOff
@@ -476,9 +475,7 @@ const AdminUserManager: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>User Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadUsers(true)}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

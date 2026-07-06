@@ -1186,9 +1186,7 @@ const AdminGoLive: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Go Live</IonTitle>
-          <IonButton fill="clear" slot="end" style={{ marginRight: '12px' }}>
-            <IonIcon icon={settings} style={{ color: 'var(--ion-text-color)', opacity: 0.5 }} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

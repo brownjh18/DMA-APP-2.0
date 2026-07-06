@@ -35,7 +35,6 @@ import {
   time,
   search,
   closeCircle as closeIcon,
-  settings,
   people,
   checkmarkCircle,
   flame
@@ -426,9 +425,7 @@ const AdminDevotionManager: React.FC = () => {
         <BackButton />
         <IonToolbar className="toolbar-ios">
           <IonTitle className="nd-title">Devotion Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadDevotions(true)}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

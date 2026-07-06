@@ -29,7 +29,6 @@ import {
   ellipsisVertical,
   search,
   closeCircle as closeIcon,
-  settings,
   checkmarkCircle
 } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
@@ -216,9 +215,7 @@ const AdminMinistryManager: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Ministry Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadMinistries(true)} style={{ marginRight: '8px' }}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 

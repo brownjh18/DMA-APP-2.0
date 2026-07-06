@@ -34,7 +34,6 @@ import {
   time,
   search,
   closeCircle as closeIcon,
-  settings,
   people,
   checkmarkCircle,
   calendar
@@ -449,9 +448,7 @@ const AdminRadioManager: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Radio Manager</IonTitle>
-          <IonButton fill="clear" slot="end" onClick={() => loadPodcasts(true)}>
-            <IonIcon icon={settings} />
-          </IonButton>
+
         </IonToolbar>
       </IonHeader>
 
