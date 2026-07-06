@@ -55,6 +55,7 @@ app.set('case sensitive routing', false);
 
 // PORT for Vercel (they set it automatically)
 const PORT = process.env.PORT || 3000;
+const isVercel = !!process.env.VERCEL;
 
 // Note: Socket.IO has been moved to websocket-server.js for Oracle Cloud Always Free hosting
 // This allows Vercel to handle API routes efficiently while the WS server maintains persistent connections
@@ -106,19 +107,9 @@ app.use(express.urlencoded({ extended: true, limit: '500mb', parameterLimit: 100
 // Passport middleware
 app.use(passport.initialize());
 
-// Multer configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Multer configuration — memory storage for Vercel serverless
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 500 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('video/')) {
@@ -129,22 +120,8 @@ const upload = multer({
   }
 });
 
-const thumbnailStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, 'uploads/thumbnails');
-    if (!require('fs').existsSync(uploadPath)) {
-      require('fs').mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'thumbnail-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
 const thumbnailUpload = multer({
-  storage: thumbnailStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -155,15 +132,11 @@ const thumbnailUpload = multer({
   }
 });
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads/videos', express.static(path.join(__dirname, 'uploads/videos')));
-app.use('/uploads/videos/thumbnails', express.static(path.join(__dirname, 'uploads/videos/thumbnails')));
-app.use('/uploads/podcasts', express.static(path.join(__dirname, 'uploads/podcasts')));
-app.use('/uploads/thumbnails', express.static(path.join(__dirname, 'uploads/thumbnails')));
-
-// Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../DMA/dist')));
+// Static files (only effective in local dev; Vercel uses Cloudinary)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  app.use(express.static(path.join(__dirname, '../DMA/dist')));
+}
 
 // Database connection
 const connectDB = async () => {
@@ -179,8 +152,10 @@ const connectDB = async () => {
     console.log(`📊 Database: ${mongoose.connection.name}`);
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    console.log('🔄 Retrying connection in 5 seconds...');
-    setTimeout(connectDB, 5000);
+    if (!isVercel) {
+      console.log('🔄 Retrying connection in 5 seconds...');
+      setTimeout(connectDB, 5000);
+    }
   }
 };
 
@@ -288,16 +263,19 @@ async function checkAndUpdateEndedBroadcasts() {
   }
 }
 
-// Initialize
-console.log('🚀 Initializing caches...');
-liveCache.updateLiveCache();
-checkAndUpdateEndedBroadcasts();
-
-cron.schedule("*/30 * * * *", async () => {
-  console.log('⏰ Running scheduled cache update...');
-  await liveCache.updateLiveCache();
-  await checkAndUpdateEndedBroadcasts();
-});
+// Initialize — skip heavy operations in Vercel serverless
+if (!isVercel) {
+  console.log('🚀 Initializing caches...');
+  liveCache.updateLiveCache();
+  checkAndUpdateEndedBroadcasts();
+  cron.schedule("*/30 * * * *", async () => {
+    console.log('⏰ Running scheduled cache update...');
+    await liveCache.updateLiveCache();
+    await checkAndUpdateEndedBroadcasts();
+  });
+} else {
+  console.log('⚡ Running in Vercel serverless — skipping cron/scheduler');
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -322,21 +300,25 @@ app.post('/api/upload/thumbnail', (req, res) => {
       if (err) return res.status(400).json({ error: err.message });
       if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
       
-      let thumbnailUrl = '';
-      
-      if (isCloudStorage && req.file.path) {
-        const cloudResult = await cloudStorage.uploadFile(req.file.path, {
-          resource_type: 'image',
-          folder: 'dove-ministries/thumbnails',
-          transformation: [{ width: 800, height: 600, crop: 'fill', gravity: 'auto' }]
-        });
-        thumbnailUrl = cloudResult.secure_url;
-        try { require('fs').unlinkSync(req.file.path); } catch (e) {}
-      } else {
-        thumbnailUrl = `/uploads/thumbnails/${req.file.filename}`;
+      if (!isCloudStorage) {
+        return res.status(500).json({ error: 'Cloud storage not configured' });
       }
-      
-      res.json({ message: 'Thumbnail uploaded successfully', thumbnailUrl });
+
+      const result = await new Promise((resolve, reject) => {
+        cloudStorage.cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'image',
+            folder: 'dove-ministries/thumbnails',
+            transformation: [{ width: 800, height: 600, crop: 'fill', gravity: 'auto' }]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+
+      res.json({ message: 'Thumbnail uploaded successfully', thumbnailUrl: result.secure_url });
     } catch (error) {
       console.error('Thumbnail upload error:', error);
       res.status(500).json({ error: 'Server error' });
@@ -357,22 +339,21 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Catch all
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-    return res.status(404).json({ error: 'Route not found' });
-  }
-  res.sendFile(path.join(__dirname, '../DMA/dist/index.html'));
+// Catch all — 404 for unmatched API routes
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Create server for Vercel
 const server = createServer(app);
 
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Start server (skip in Vercel — it handles ports automatically)
+if (!isVercel) {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
