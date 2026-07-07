@@ -54,7 +54,8 @@ app.set('case sensitive routing', false);
 const PORT = process.env.PORT || 8080;
 const isVercel = !!process.env.VERCEL;
 const isFly = !!process.env.FLY_APP_NAME;
-const isProduction = isVercel || isFly;
+const isRender = !!process.env.RENDER;
+const isProduction = isVercel || isFly || isRender;
 
 const limiter = rateLimit({
   windowMs: isProduction ? 15 * 60 * 1000 : 60 * 60 * 1000,
