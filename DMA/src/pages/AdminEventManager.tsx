@@ -19,7 +19,6 @@ import {
   useIonViewWillEnter
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../components/BackButton';
 import AdminPopover from '../components/AdminPopover';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import {
@@ -225,10 +224,11 @@ const AdminEventManager: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="nd-title">Event Manager</IonTitle>
-
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Event Manager</IonTitle>
         </IonToolbar>
       </IonHeader>
 

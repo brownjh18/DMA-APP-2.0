@@ -20,7 +20,6 @@ import {
   arrowBack
 } from 'ionicons/icons';
 import './AdminForm.css';
-import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface LiveBroadcastData {
@@ -219,9 +218,11 @@ const EditLiveBroadcast: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title">Edit Live Broadcast</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Edit Live Broadcast</IonTitle>
         </IonToolbar>
       </IonHeader>
 

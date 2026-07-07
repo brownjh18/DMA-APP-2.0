@@ -22,14 +22,14 @@ import {
   film,
   location as locationIcon,
   call,
-  people
+  people,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
-import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface RouteParams {
@@ -314,9 +314,11 @@ const EditEvent: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title">Edit Event</IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Edit Event</IonTitle>
         </IonToolbar>
       </IonHeader>
 

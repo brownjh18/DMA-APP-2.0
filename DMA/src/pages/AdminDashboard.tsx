@@ -35,13 +35,14 @@ const AdminDashboard: React.FC = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sermons, devotions, events, ministries, podcasts, users] = await Promise.all([
+      const [sermons, devotions, events, ministries, podcasts, users, prayers] = await Promise.all([
         apiService.getSermonStats().catch(() => ({ stats: { total: 0, published: 0, totalViews: 0 } })),
         apiService.getDevotions({ limit: 50 }).catch(() => ({ devotions: [] })),
         apiService.getEvents({ limit: 50 }).catch(() => ({ events: [] })),
         apiService.getMinistries({ limit: 50 }).catch(() => ({ ministries: [] })),
         apiService.getPodcasts({ limit: 50 }).catch(() => ({ podcasts: [] })),
-        apiService.getUsers({ limit: 50 }).catch(() => ({ users: [] }))
+        apiService.getUsers({ limit: 50 }).catch(() => ({ users: [] })),
+        apiService.getPrayerRequestStats().catch(() => ({ stats: { pending: 0 } }))
       ]);
 
       const eventsData = events.events || [];
@@ -56,7 +57,7 @@ const AdminDashboard: React.FC = () => {
         ministries: { total: ministries.ministries?.length || 0 },
         podcasts: { total: podcasts.podcasts?.length || 0, published: podcasts.podcasts?.filter((p: any) => p.isPublished).length || 0 },
         users: { total: users.users?.length || 0, active: users.users?.filter((u: any) => u.isActive).length || 0 },
-        prayers: { pending: 0 }
+        prayers: { pending: prayers.stats?.pending || 0 }
       };
 
       setData(newData);

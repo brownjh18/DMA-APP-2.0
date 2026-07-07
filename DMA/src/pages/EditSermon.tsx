@@ -21,7 +21,8 @@ import {
   link,
   checkmarkCircle,
   film,
-  warning
+  warning,
+  arrowBack
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
@@ -29,7 +30,6 @@ import { apiService } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
-import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface RouteParams {
@@ -391,13 +391,11 @@ const EditSermon: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent', '--border-width': '0px' } as any}>
-          <BackButton />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
-            <IonTitle className="nd-title" style={{ textAlign: 'center' }}>
-              Edit Sermon
-            </IonTitle>
-          </div>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Edit Sermon</IonTitle>
         </IonToolbar>
       </IonHeader>
 

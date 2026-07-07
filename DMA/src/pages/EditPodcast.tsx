@@ -4,14 +4,13 @@ import {
 } from '@ionic/react';
 import {
   save, radio, closeCircle, image, musicalNote, checkmarkCircle, informationCircle, time, person,
-  documentText, pricetag, cloudUpload
+  documentText, pricetag, cloudUpload, arrowBack
 } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import { apiService, API_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
-import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 interface PodcastData {
@@ -175,11 +174,11 @@ const EditPodcast: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="title-ios" style={{ textAlign: 'center' }}>
-            <span className="nd-title">Edit Podcast</span>
-          </IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Edit Podcast</IonTitle>
         </IonToolbar>
       </IonHeader>
 

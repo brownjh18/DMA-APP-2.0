@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../components/BackButton';
 import {
   arrowBack,
   camera,
@@ -247,10 +246,11 @@ const AdminContactManager: React.FC = () => {
   return (
     <IonPage>
       <IonHeader translucent>
-        <BackButton />
         <IonToolbar className="toolbar-ios">
-          <IonTitle className="title-ios">About & Contact</IonTitle>
-
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+            <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+          </IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>About & Contact</IonTitle>
         </IonToolbar>
       </IonHeader>
 
