@@ -293,6 +293,17 @@ if (!isVercel) {
   console.log('⚡ Running in Vercel serverless — skipping cron/scheduler');
 }
 
+// Ensure DB connection before handling API requests (critical for Vercel cold starts)
+app.use('/api', async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('❌ DB connection failed for request:', error.message);
+    res.status(503).json({ error: 'Database connection failed. Please try again.' });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sermons', sermonRoutes);
@@ -360,7 +371,7 @@ app.all('/api/*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Create server for Vercel
+// Create server for local development
 const server = createServer(app);
 
 // Start server (skip in Vercel — it handles ports automatically)
@@ -383,5 +394,8 @@ process.on('SIGINT', async () => {
   await mongoose.connection.close();
   server.close(() => process.exit(0));
 });
+
+// Export Express app for Vercel serverless
+module.exports = app;
 
 module.exports = app;
