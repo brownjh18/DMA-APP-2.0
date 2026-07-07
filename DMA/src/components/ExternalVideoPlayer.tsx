@@ -125,6 +125,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
           height="100%"
           style={{ borderRadius: '10px', border: 'none' }}
           frameBorder="0"
+          referrerPolicy="strict-origin-when-cross-origin"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           onLoad={() => console.log('Mini external iframe loaded:', url)}
           onError={() => {
@@ -193,6 +194,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         height="100%"
         style={playerStyle}
         frameBorder="0"
+        referrerPolicy="strict-origin-when-cross-origin"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         onLoad={() => console.log('External iframe loaded:', url)}

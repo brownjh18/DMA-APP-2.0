@@ -214,9 +214,10 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
           height="100%"
           style={{ borderRadius: '10px', border: 'none' }}
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          onLoad={() => console.log('Mini YouTube iframe loaded:', url)}
-          onError={() => {
+        referrerPolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        onLoad={() => console.log('Mini YouTube iframe loaded:', url)}
+        onError={() => {
             console.log('Mini YouTube iframe error, showing fallback');
             setLoadError(true);
             setShowFallback(true);
@@ -278,6 +279,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         height="100%"
         style={playerStyle}
         frameBorder="0"
+        referrerPolicy="strict-origin-when-cross-origin"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         onLoad={() => console.log('YouTube iframe loaded:', url)}
