@@ -69,6 +69,7 @@ const limiter = rateLimit({
 
 // CORS configuration
 const allowedOrigins = [
+  'https://dove-church.vercel.app',
   'https://dovechurchapp.vercel.app',
   'https://dove-church-frontend.vercel.app',
   'https://localhost',

@@ -609,7 +609,8 @@ const App: React.FC = () => {
     updateUser,
     setAuthState,
     isLoggedIn,
-    isAdmin
+    isAdmin,
+    isAuthChecking
   };
 
   // PageTitleUpdater component - updates document.title based on route
