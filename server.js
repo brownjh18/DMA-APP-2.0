@@ -138,24 +138,32 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(express.static(path.join(__dirname, '../DMA/dist')));
 }
 
-// Database connection
+// Database connection — cached for Vercel serverless warm starts
+let cachedConnection = null;
+
 const connectDB = async () => {
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    return cachedConnection;
+  }
+
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/?appName=Cluster1';
     
-    await mongoose.connect(mongoUri, {
+    cachedConnection = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
     });
     
     console.log('✅ MongoDB connected successfully');
     console.log(`📊 Database: ${mongoose.connection.name}`);
+    return cachedConnection;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     if (!isVercel) {
       console.log('🔄 Retrying connection in 5 seconds...');
       setTimeout(connectDB, 5000);
     }
+    throw error;
   }
 };
 
