@@ -20,14 +20,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:5173', // Backend server on port 5173
+        target: 'http://localhost:10000', // Backend server on port 10000
         changeOrigin: true,
         secure: false,
         timeout: 60000, // 60 second timeout for file uploads
         proxyTimeout: 60000,
       },
       '/uploads': {
-        target: 'http://localhost:5173', // Backend server for media files
+        target: 'http://localhost:10000', // Backend server for media files
         changeOrigin: true,
         secure: false,
         timeout: 60000,

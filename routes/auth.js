@@ -11,22 +11,12 @@ const { profileStorage: cloudProfileStorage, isConfigured: cloudIsConfigured } =
 
 // Configure multer for profile picture uploads - use Cloudinary if available
 let profileUpload;
-if (cloudIsConfigured) {
+if (cloudIsConfigured()) {
   profileUpload = multer({ storage: cloudProfileStorage });
 } else {
-  // Fallback to disk storage if Cloudinary is not configured
-  const profileStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, './uploads');
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'profile-' + req.user.id + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-  });
-  
+  // Fallback to memory storage if Cloudinary is not configured
   profileUpload = multer({
-    storage: profileStorage,
+    storage: multer.memoryStorage(),
     limits: {
       fileSize: 10 * 1024 * 1024 // 10MB limit for profile pictures
     },

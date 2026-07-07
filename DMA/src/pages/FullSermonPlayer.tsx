@@ -414,7 +414,6 @@ const FullSermonPlayer: React.FC = () => {
               overflow: 'hidden',
               boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)'
             }}>
-              console.log('FullSermonPlayer - playing video url:', getFullUrl(sermon.videoUrl || sermon.streamUrl || ''));
               <VideoPlayer
                 url={getFullUrl(sermon.videoUrl || sermon.streamUrl || '')}
                 title={sermon.title}
