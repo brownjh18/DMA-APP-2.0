@@ -9,7 +9,7 @@ services:
       - key: MONGODB_URI
         value: "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/dmaApp?appName=Cluster1"
       - key: JWT_SECRET
-        value: "dove-church-jwt-secret-2024"
+        value: "bcadd09f9a63199da614ffc0e50aea4d3ebf94431e338b2fdad3b16a4d1410b0"
       - key: JWT_EXPIRES_IN
         value: "7d"
       - key: CORS_ORIGIN
