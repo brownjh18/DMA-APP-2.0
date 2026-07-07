@@ -30,13 +30,9 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const [loadError, setLoadError] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Extract YouTube video ID and create embed URL
   const getYouTubeEmbedUrl = useCallback((videoUrl: string): string => {
     if (!videoUrl) return '';
-
     let videoId = '';
-
-    // Handle different YouTube URL formats
     if (videoUrl.includes('youtu.be/')) {
       videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
     } else if (videoUrl.includes('youtube.com/watch?v=')) {
@@ -46,41 +42,29 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     } else if (videoUrl.includes('youtube.com/live/')) {
       videoId = videoUrl.split('live/')[1]?.split('?')[0]?.split('&')[0] || '';
     }
-
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-
+    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
     return videoUrl;
   }, []);
 
-  // Extract video ID for external link fallback
   const getYouTubeVideoId = useCallback((videoUrl: string): string => {
     if (!videoUrl) return '';
-    if (videoUrl.includes('youtu.be/')) {
-      return videoUrl.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
-    } else if (videoUrl.includes('youtube.com/watch?v=')) {
-      return videoUrl.split('v=')[1]?.split('&')[0]?.split('?')[0] || '';
-    } else if (videoUrl.includes('youtube.com/embed/')) {
-      return videoUrl.split('embed/')[1]?.split('?')[0]?.split('&')[0] || '';
-    } else if (videoUrl.includes('youtube.com/live/')) {
-      return videoUrl.split('live/')[1]?.split('?')[0]?.split('&')[0] || '';
-    }
+    if (videoUrl.includes('youtu.be/')) return videoUrl.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
+    if (videoUrl.includes('youtube.com/watch?v=')) return videoUrl.split('v=')[1]?.split('&')[0]?.split('?')[0] || '';
+    if (videoUrl.includes('youtube.com/embed/')) return videoUrl.split('embed/')[1]?.split('?')[0]?.split('&')[0] || '';
+    if (videoUrl.includes('youtube.com/live/')) return videoUrl.split('live/')[1]?.split('?')[0]?.split('&')[0] || '';
     return '';
   }, []);
 
   const videoId = getYouTubeVideoId(url);
   const embedUrl = getYouTubeEmbedUrl(url);
 
-  // Build embed params
   const buildEmbedParams = (forMini: boolean) => {
     const params = new URLSearchParams();
+    params.set('enablejsapi', '1');
     if (forMini) {
-      // Mini player: autoplay + mute (required for small previews)
       params.set('autoplay', playing ? '1' : '0');
       params.set('mute', '1');
     } else {
-      // Full player: no autoplay/mute to avoid Error 153 on restricted videos
       params.set('autoplay', '0');
     }
     params.set('modestbranding', '1');
@@ -96,7 +80,54 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const iframeSrc = `${embedUrl}?${buildEmbedParams(false)}`;
   const miniIframeSrc = `${embedUrl}?${buildEmbedParams(true)}`;
 
-  // Retry loading on error — YouTube iframes sometimes fail on first load
+  // Listen for YouTube postMessage errors (Error 153, etc.)
+  useEffect(() => {
+    if (mini || !videoId) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data !== 'string') return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'onError' || data.event === 'initialDelivery') {
+          if (data.info && data.info.errorCode) {
+            console.log('YouTube player error detected:', data.info.errorCode, data.info.reason);
+            setShowFallback(true);
+          }
+        }
+        if (data.event === 'onReady') {
+          console.log('YouTube player ready');
+        }
+      } catch {
+        // Non-JSON message, ignore
+      }
+    };
+
+    // Also detect errors by checking iframe state after a delay
+    const errorCheck = setTimeout(() => {
+      if (iframeRef.current) {
+        try {
+          const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+          if (iframeDoc) {
+            const errorEl = iframeDoc.querySelector('.ytp-error-content-wrap-reason, .ytp-error');
+            if (errorEl) {
+              console.log('YouTube error element detected in iframe');
+              setShowFallback(true);
+            }
+          }
+        } catch {
+          // Cross-origin, can't access iframe content — that's expected
+        }
+      }
+    }, 5000);
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(errorCheck);
+    };
+  }, [mini, videoId]);
+
+  // Retry loading on error
   useEffect(() => {
     if (!loadError || !videoId) return;
     const retryTimeout = setTimeout(() => {
@@ -114,7 +145,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     width: '100%',
     maxWidth: '100%',
     position: 'relative' as const,
-    paddingBottom: '56.25%', // 16:9 aspect ratio
+    paddingBottom: '56.25%',
     height: 0,
     backgroundColor: 'var(--ion-background-color)',
     borderRadius: '8px',
@@ -213,7 +244,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
           Video Unavailable
         </h3>
         <p style={{ margin: '0 0 20px 0', opacity: 0.8, fontSize: '0.9em' }}>
-          This YouTube video cannot be embedded.
+          This video cannot be embedded. Watch it on YouTube instead.
         </p>
         <button
           onClick={openOnYouTube}
