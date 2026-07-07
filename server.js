@@ -142,7 +142,7 @@ let cachedConnection = null;
 const connectDB = async () => {
   if (cachedConnection && mongoose.connection.readyState === 1) return cachedConnection;
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/?appName=Cluster1';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/test?appName=Cluster1';
     cachedConnection = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
