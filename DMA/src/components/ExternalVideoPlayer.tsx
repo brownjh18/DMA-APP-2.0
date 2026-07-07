@@ -188,7 +188,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     <div style={containerStyle}>
       <iframe
         key={`external-${url}-${Date.now()}`}
-        src={isYouTube ? `${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3` : url}
+        src={isYouTube ? `${getYouTubeEmbedUrl(url)}?autoplay=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3` : url}
         width="100%"
         height="100%"
         style={playerStyle}
