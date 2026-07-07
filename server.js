@@ -70,6 +70,7 @@ const limiter = rateLimit({
 // CORS configuration
 const allowedOrigins = [
   'https://dove-church.vercel.app',
+  'https://dove-church-backend.vercel.app',
   'https://dovechurchapp.vercel.app',
   'https://dove-church-frontend.vercel.app',
   'https://localhost',
@@ -83,17 +84,16 @@ const allowedOrigins = [
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN) {
-      callback(null, true);
-    } else if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
+    if (process.env.CORS_ORIGIN === '*') return callback(null, true);
+    if (!process.env.CORS_ORIGIN) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (process.env.CORS_ORIGIN.includes(origin)) return callback(null, true);
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+  maxAge: 86400
 };
 
 // Middleware
@@ -101,6 +101,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(limiter);
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb', parameterLimit: 1000000 }));
