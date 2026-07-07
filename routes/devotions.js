@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Devotions fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -96,7 +96,7 @@ router.get('/featured', async (req, res) => {
     res.json({ devotions });
   } catch (error) {
     console.error('Featured devotions fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -124,7 +124,7 @@ router.get('/saved', authenticateToken, async (req, res) => {
     res.json({ savedDevotions: userDoc.savedDevotions });
   } catch (error) {
     console.error('Get saved devotions error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -141,7 +141,7 @@ router.get('/:id', async (req, res) => {
     res.json({ devotion });
   } catch (error) {
     console.error('Devotion fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -261,7 +261,7 @@ router.put('/:id', [
     });
   } catch (error) {
     console.error('Devotion update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -293,7 +293,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ message: 'Devotion deleted successfully' });
   } catch (error) {
     console.error('Devotion deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -342,7 +342,7 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Save devotion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

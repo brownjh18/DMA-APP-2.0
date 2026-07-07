@@ -123,7 +123,7 @@ const PrayerRequest: React.FC = () => {
               icon={heart}
               style={{
                 fontSize: '3em',
-                color: 'var(--ion-color-primary)',
+                color: '#6366f1',
                 marginBottom: '16px'
               }}
             />
@@ -131,13 +131,13 @@ const PrayerRequest: React.FC = () => {
               margin: '0 0 8px 0',
               fontSize: '1.8em',
               fontWeight: '700',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Share Your Heart
             </h1>
             <p style={{
               margin: '0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.7,
               fontSize: '1em'
             }}>
@@ -152,20 +152,20 @@ const PrayerRequest: React.FC = () => {
               style={{
                 marginBottom: '16px',
                 borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
+                border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 '--border-radius': '12px'
               }}
               lines="none"
             >
-              <IonIcon icon={person} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonIcon icon={person} slot="start" style={{ color: '#6366f1' }} />
               <IonInput
                 type="text"
                 value={name}
                 onIonChange={(e) => setName(e.detail.value!)}
                 placeholder="Your full name"
                 required
-                style={{ color: 'var(--ion-text-color)' }}
+                style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
               />
             </IonItem>
 
@@ -174,20 +174,20 @@ const PrayerRequest: React.FC = () => {
               style={{
                 marginBottom: '16px',
                 borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
+                border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 '--border-radius': '12px'
               }}
               lines="none"
             >
-              <IonIcon icon={mail} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonIcon icon={mail} slot="start" style={{ color: '#6366f1' }} />
               <IonInput
                 type="email"
                 value={email}
                 onIonChange={(e) => setEmail(e.detail.value!)}
                 placeholder="Your email address"
                 required
-                style={{ color: 'var(--ion-text-color)' }}
+                style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
               />
             </IonItem>
 
@@ -196,20 +196,20 @@ const PrayerRequest: React.FC = () => {
               style={{
                 marginBottom: '16px',
                 borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
+                border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 '--border-radius': '12px'
               }}
               lines="none"
             >
-              <IonIcon icon={heart} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+              <IonIcon icon={heart} slot="start" style={{ color: '#6366f1' }} />
               <IonTextarea
                 value={request}
                 onIonChange={(e) => setRequest(e.detail.value!)}
                 placeholder="Share what's on your heart..."
                 rows={4}
                 required
-                style={{ color: 'var(--ion-text-color)' }}
+                style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
               />
             </IonItem>
 
@@ -219,7 +219,7 @@ const PrayerRequest: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               padding: '12px',
-              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               borderRadius: '12px'
             }}>
               <IonCheckbox
@@ -229,7 +229,7 @@ const PrayerRequest: React.FC = () => {
               />
               <IonLabel style={{ margin: 0 }}>
                 <h3 style={{ margin: '0 0 4px 0', fontSize: '1em' }}>Keep my request confidential</h3>
-                <p style={{ margin: 0, fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Your privacy is important to us</p>
+                <p style={{ margin: 0, fontSize: '0.9em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>Your privacy is important to us</p>
               </IonLabel>
             </div>
 
@@ -241,7 +241,7 @@ const PrayerRequest: React.FC = () => {
                 height: '44px',
                 borderRadius: '8px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                backgroundColor: '#6366f1',
                 '--border-radius': '8px'
               }}
             >
@@ -254,7 +254,7 @@ const PrayerRequest: React.FC = () => {
           <div style={{
             marginTop: '32px',
             textAlign: 'center',
-            backgroundColor: 'rgba(0,0,0,0.05)',
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
             padding: '20px',
             borderRadius: '12px'
           }}>
@@ -262,7 +262,7 @@ const PrayerRequest: React.FC = () => {
               margin: '0',
               fontSize: '0.9em',
               fontStyle: 'italic',
-              color: 'var(--ion-color-medium)'
+              color: isDarkMode ? '#92949c' : '#8e8e93'
             }}>
               "Be anxious for nothing, but in everything by prayer and supplication,
               with thanksgiving, let your requests be made known to God."
@@ -274,7 +274,7 @@ const PrayerRequest: React.FC = () => {
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <IonText style={{
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.6,
               fontSize: '0.8em'
             }}>
@@ -319,7 +319,7 @@ const PrayerRequest: React.FC = () => {
               />
               <h2 style={{
                 margin: '0 0 8px 0',
-                color: 'var(--ion-text-color)',
+                color: isDarkMode ? '#ffffff' : '#000000',
                 fontSize: '1.5em',
                 fontWeight: '700'
               }}>
@@ -327,7 +327,7 @@ const PrayerRequest: React.FC = () => {
               </h2>
               <p style={{
                 margin: '0',
-                color: 'var(--ion-color-medium)',
+                color: isDarkMode ? '#92949c' : '#8e8e93',
                 fontSize: '1em'
               }}>
                 Your heart has been heard
@@ -346,13 +346,13 @@ const PrayerRequest: React.FC = () => {
                     backgroundColor: 'rgba(var(--ion-background-color-rgb), 0.8)',
                     padding: '16px',
                     borderRadius: '12px',
-                    border: '1px solid var(--ion-color-step-200)',
+                    border: `1px solid ${isDarkMode ? '#3e3e42' : '#d1d1d6'}`,
                     marginBottom: '16px',
                     backdropFilter: 'blur(5px)'
                   }}>
                     <h3 style={{
                       margin: '0 0 8px 0',
-                      color: 'var(--ion-text-color)',
+                      color: isDarkMode ? '#ffffff' : '#000000',
                       fontSize: '1.1em',
                       fontWeight: '600'
                     }}>
@@ -360,7 +360,7 @@ const PrayerRequest: React.FC = () => {
                     </h3>
                     <p style={{
                       margin: '0',
-                      color: 'var(--ion-text-color)',
+                      color: isDarkMode ? '#ffffff' : '#000000',
                       lineHeight: '1.5',
                       fontSize: '0.95em'
                     }}>
@@ -377,7 +377,7 @@ const PrayerRequest: React.FC = () => {
                   }}>
                     <p style={{
                       margin: '0',
-                      color: 'var(--ion-text-color)',
+                      color: isDarkMode ? '#ffffff' : '#000000',
                       fontSize: '0.95em',
                       textAlign: 'center',
                       fontStyle: 'italic'
@@ -392,9 +392,9 @@ const PrayerRequest: React.FC = () => {
                     onClick={() => setShowModal(false)}
                     style={{
                       '--border-radius': '20px',
-                      'backgroundColor': 'var(--ion-color-primary)',
+                      'backgroundColor': '#6366f1',
                       'fontWeight': '600',
-                      'boxShadow': '0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3)'
+                      'boxShadow': '0 4px 12px rgba(99, 102, 241, 0.3)'
                     }}
                   >
                     <IonIcon icon={heart} slot="start" />

@@ -114,26 +114,8 @@ const Ministries: React.FC = () => {
 
       {/* Back Button */}
       <div
+        className="floating-back-btn"
         onClick={() => history.goBack()}
-        style={{
-          position: 'absolute',
-          top: 'calc(var(--ion-safe-area-top) - -5px)',
-          left: 20,
-          width: 45,
-          height: 45,
-          borderRadius: 25,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 999,
-          transition: 'transform 0.2s ease'
-        }}
         onMouseDown={(e) => {
           const target = e.currentTarget as HTMLElement;
           target.style.transform = 'scale(0.8)';
@@ -174,7 +156,7 @@ const Ministries: React.FC = () => {
               icon={people}
               style={{
                 fontSize: '3em',
-                color: 'var(--ion-color-primary)',
+                color: '#6366f1',
                 marginBottom: '16px'
               }}
             />
@@ -182,13 +164,13 @@ const Ministries: React.FC = () => {
               margin: '0 0 8px 0',
               fontSize: '1.8em',
               fontWeight: '700',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Our Ministries
             </h1>
             <p style={{
               margin: '0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.7,
               fontSize: '1em'
             }}>
@@ -197,15 +179,10 @@ const Ministries: React.FC = () => {
           </div>
 
           {/* Introduction */}
-          <div style={{
-            backgroundColor: 'rgba(0,0,0,0.05)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '32px'
-          }}>
+          <div className="intro-section-themed">
             <p style={{
               margin: '0 0 16px 0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               lineHeight: '1.5'
             }}>
               At Dove Ministries Africa, we believe in the power of community and specialized ministry.
@@ -216,7 +193,7 @@ const Ministries: React.FC = () => {
               fontSize: '0.9em',
               fontStyle: 'italic',
               textAlign: 'center',
-              color: 'var(--ion-color-medium)'
+              color: isDarkMode ? '#92949c' : '#8e8e93'
             }}>
               "Each of you should use whatever gift you have received to serve others..."
               <br />
@@ -230,19 +207,14 @@ const Ministries: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Ministries
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {ministries.map((ministry) => (
-                <div key={ministry.id} style={{
-                  backgroundColor: 'rgba(0,0,0,0.05)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  overflow: 'hidden'
-                }}>
+                <div key={ministry.id} className="ministry-content-card">
                   <div style={{ height: '120px', position: 'relative', overflow: 'hidden' }}>
                     <img
                       src={getMinistryImage(ministry.image, ministry.category)}
@@ -272,8 +244,8 @@ const Ministries: React.FC = () => {
                   </div>
                   <div style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <IonIcon icon={ministry.icon} style={{ color: 'var(--ion-color-primary)', fontSize: '1.2em' }} />
-                      <span style={{ fontWeight: '600', color: 'var(--ion-text-color)', fontSize: '0.9em' }}>
+                      <IonIcon icon={ministry.icon} style={{ color: '#6366f1', fontSize: '1.2em' }} />
+                      <span style={{ fontWeight: '600', color: isDarkMode ? '#ffffff' : '#000000', fontSize: '0.9em' }}>
                         {ministry.name.split(' ')[0]} Ministry
                       </span>
                     </div>
@@ -281,13 +253,13 @@ const Ministries: React.FC = () => {
                       margin: '0 0 8px 0',
                       fontSize: '1.1em',
                       fontWeight: '600',
-                      color: 'var(--ion-text-color)'
+                      color: isDarkMode ? '#ffffff' : '#000000'
                     }}>
                       {ministry.name}
                     </h3>
                     <p style={{
                       margin: '0 0 12px 0',
-                      color: 'var(--ion-color-medium)',
+                      color: isDarkMode ? '#92949c' : '#8e8e93',
                       fontSize: '0.9em',
                       lineHeight: '1.4'
                     }}>
@@ -297,7 +269,7 @@ const Ministries: React.FC = () => {
                       <div style={{
                         margin: '0 0 8px 0',
                         fontSize: '0.8em',
-                        color: 'var(--ion-color-medium)'
+                        color: isDarkMode ? '#92949c' : '#8e8e93'
                       }}>
                         <strong>Leader:</strong> {ministry.leader}
                       </div>
@@ -306,7 +278,7 @@ const Ministries: React.FC = () => {
                       <div style={{
                         margin: '0 0 8px 0',
                         fontSize: '0.8em',
-                        color: 'var(--ion-color-medium)'
+                        color: isDarkMode ? '#92949c' : '#8e8e93'
                       }}>
                         <strong>Meetings:</strong> {ministry.meetingSchedule}
                         {ministry.endTime && ` (ends ${ministry.endTime})`}
@@ -319,7 +291,7 @@ const Ministries: React.FC = () => {
                         height: '44px',
                         borderRadius: '8px',
                         fontWeight: '600',
-                        backgroundColor: 'var(--ion-color-primary)',
+                        backgroundColor: '#6366f1',
                         '--border-radius': '8px'
                       }}>
                       <IonIcon icon={ministry.icon} slot="start" />
@@ -337,20 +309,16 @@ const Ministries: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Get Involved
             </h2>
 
-            <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
-              padding: '20px',
-              borderRadius: '12px'
-            }}>
+            <div className="get-involved-themed">
               <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em' }}>Discover Your Calling</h3>
               <p style={{
                 margin: '0 0 20px 0',
-                color: 'var(--ion-text-color)',
+                color: isDarkMode ? '#ffffff' : '#000000',
                 lineHeight: '1.5',
                 fontSize: '0.9em'
               }}>
@@ -360,10 +328,10 @@ const Ministries: React.FC = () => {
 
               <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontSize: '1em' }}>Contact Information</h4>
-                <p style={{ margin: '0 0 4px 0', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.9em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>
                   <strong>Email:</strong> thesignofthedoveministries@gmail.com
                 </p>
-                <p style={{ margin: '0', fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>
+                <p style={{ margin: '0', fontSize: '0.9em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>
                   <strong>Phone:</strong> +256 772824677 | +256 700116734
                 </p>
               </div>
@@ -372,7 +340,7 @@ const Ministries: React.FC = () => {
                 height: '44px',
                 borderRadius: '8px',
                 fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
+                backgroundColor: '#6366f1',
                 '--border-radius': '8px'
               }}>
                 <IonIcon icon={people} slot="start" />
@@ -384,7 +352,7 @@ const Ministries: React.FC = () => {
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <p style={{
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.6,
               fontSize: '0.8em',
               margin: '0'

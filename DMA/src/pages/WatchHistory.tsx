@@ -1,9 +1,11 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
 import { play, time, removeCircle, videocam, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
 
 const WatchHistory: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
   // Mock watch history data
   const watchHistory = [
     {
@@ -113,7 +115,7 @@ const WatchHistory: React.FC = () => {
               icon={videocam}
               style={{
                 fontSize: '3em',
-                color: 'var(--ion-color-primary)',
+                color: '#6366f1',
                 marginBottom: '16px'
               }}
             />
@@ -121,13 +123,13 @@ const WatchHistory: React.FC = () => {
               margin: '0 0 8px 0',
               fontSize: '1.8em',
               fontWeight: '700',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Watch History
             </h1>
             <p style={{
               margin: '0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.7,
               fontSize: '1em'
             }}>
@@ -143,10 +145,10 @@ const WatchHistory: React.FC = () => {
                 <div
                   key={item.id}
                   style={{
-                    backgroundColor: 'rgba(0,0,0,0.05)',
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                     borderRadius: '12px',
                     padding: '16px',
-                    border: '1px solid var(--ion-color-step-300)',
+                    border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px'
@@ -169,14 +171,14 @@ const WatchHistory: React.FC = () => {
                       margin: '0 0 4px 0',
                       fontSize: '1em',
                       fontWeight: '600',
-                      color: 'var(--ion-text-color)'
+                      color: isDarkMode ? '#ffffff' : '#000000'
                     }}>
                       {item.title}
                     </h3>
                     <p style={{
                       margin: '0',
                       fontSize: '0.85em',
-                      color: 'var(--ion-color-medium)'
+                      color: isDarkMode ? '#92949c' : '#8e8e93'
                     }}>
                       {item.speaker} • {item.watched}/{item.duration} • {getTimeAgo(item.date)}
                     </p>
@@ -197,17 +199,17 @@ const WatchHistory: React.FC = () => {
           {/* Empty State */}
           {watchHistory.length === 0 && (
             <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               borderRadius: '12px',
               padding: '32px 20px',
               textAlign: 'center',
-              border: '1px solid var(--ion-color-step-300)'
+              border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`
             }}>
               <IonIcon
                 icon={videocam}
                 style={{
                   fontSize: '3em',
-                  color: 'var(--ion-color-primary)',
+                  color: '#6366f1',
                   marginBottom: '16px'
                 }}
               />
@@ -215,14 +217,14 @@ const WatchHistory: React.FC = () => {
                 margin: '0 0 8px 0',
                 fontSize: '1.2em',
                 fontWeight: '600',
-                color: 'var(--ion-text-color)'
+                color: isDarkMode ? '#ffffff' : '#000000'
               }}>
                 No Watch History
               </h3>
               <p style={{
                 margin: '0',
                 fontSize: '0.9em',
-                color: 'var(--ion-color-medium)',
+                color: isDarkMode ? '#92949c' : '#8e8e93',
                 lineHeight: '1.5'
               }}>
                 Start watching sermons to build your watch history and track your viewing progress.

@@ -153,7 +153,7 @@ router.get('/', async (req, res) => {
     res.json({ podcasts: formattedPodcasts, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('Podcasts fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -176,7 +176,7 @@ router.get('/saved', authenticateToken, async (req, res) => {
     res.json({ savedPodcasts: formattedSavedPodcasts });
   } catch (error) {
     console.error('Get saved podcasts error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -208,7 +208,7 @@ router.get('/:id', async (req, res) => {
     res.json({ podcast: formattedPodcast });
   } catch (error) {
     console.error('Podcast fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -446,7 +446,7 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
     res.json({ message: alreadySaved ? 'Podcast unsaved' : 'Podcast saved', saved: !alreadySaved });
   } catch (error) {
     console.error('Podcast save error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -481,7 +481,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Podcast deleted successfully' });
   } catch (error) {
     console.error('Podcast deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

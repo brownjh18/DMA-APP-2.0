@@ -1,0 +1,53 @@
+/* Sign In Page Styles */
+
+/* Theme-aware error box */
+.error-box {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+[data-theme="dark"] .error-box {
+  background-color: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.error-box-text {
+  color: #dc2626;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .error-box-text {
+  color: #fca5a5;
+}
+
+/* Theme-aware form inputs */
+.signin-input-item {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ios26-separator-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --border-radius: 12px;
+}
+
+[data-theme="dark"] .signin-input-item {
+  --background: var(--ios26-card-bg-dark);
+  border-color: var(--ios26-separator-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.signin-input-item ion-icon {
+  color: #6366f1;
+}
+
+.signin-input-item ion-input {
+  color: var(--ios26-text-primary-light);
+}
+
+[data-theme="dark"] .signin-input-item ion-input {
+  color: var(--ios26-text-primary-dark);
+}

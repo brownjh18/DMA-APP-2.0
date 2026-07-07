@@ -16,10 +16,9 @@ import { personAdd, mail, lockClosed, person, call, eye, eyeOff, arrowBack } fro
 import { useHistory } from 'react-router-dom';
 import apiService from '../services/api';
 import { AuthContext } from '../App';
-import { useSettings } from '../contexts/SettingsContext';
+import './SignUp.css';
 
 const SignUp: React.FC = () => {
-  const { isDarkMode } = useSettings();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -145,19 +144,8 @@ const SignUp: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div style={{
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
-              <IonText style={{
-                color: '#dc2626',
-                fontSize: '0.9em',
-                fontWeight: '500'
-              }}>
+            <div className="error-box">
+              <IonText className="error-box-text">
                 {error}
               </IonText>
             </div>
@@ -165,19 +153,8 @@ const SignUp: React.FC = () => {
 
           {/* Success Message */}
           {success && (
-            <div style={{
-              backgroundColor: '#d1fae5',
-              border: '1px solid #a7f3d0',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
-              <IonText style={{
-                color: '#059669',
-                fontSize: '0.9em',
-                fontWeight: '500'
-              }}>
+            <div className="success-box">
+              <IonText className="success-box-text">
                 {success}
               </IonText>
             </div>
@@ -187,13 +164,7 @@ const SignUp: React.FC = () => {
           <form onSubmit={handleSignUp}>
             {/* Name Input */}
             <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
+              className="signup-input-item"
               lines="none"
             >
               <IonIcon icon={person} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
@@ -212,13 +183,7 @@ const SignUp: React.FC = () => {
 
             {/* Email Input */}
             <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
+              className="signup-input-item"
               lines="none"
             >
               <IonIcon icon={mail} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
@@ -237,13 +202,7 @@ const SignUp: React.FC = () => {
 
             {/* Phone Input */}
             <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
+              className="signup-input-item"
               lines="none"
             >
               <IonIcon icon={call} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
@@ -261,13 +220,7 @@ const SignUp: React.FC = () => {
 
             {/* Password Input */}
             <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
+              className="signup-input-item"
               lines="none"
             >
               <IonIcon icon={lockClosed} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
@@ -298,13 +251,8 @@ const SignUp: React.FC = () => {
 
             {/* Confirm Password Input */}
             <IonItem
-              style={{
-                marginBottom: '24px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                '--border-radius': '12px'
-              }}
+              className="signup-input-item"
+              style={{ marginBottom: '24px' }}
               lines="none"
             >
               <IonIcon icon={lockClosed} slot="start" style={{ color: 'var(--ion-color-primary)' }} />

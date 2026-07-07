@@ -355,7 +355,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Sermons fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -377,7 +377,7 @@ router.get('/featured', async (req, res) => {
     res.json({ sermons });
   } catch (error) {
     console.error('Featured sermons fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -409,7 +409,7 @@ router.get('/saved', authenticateToken, async (req, res) => {
     res.json({ savedSermons });
   } catch (error) {
     console.error('Get saved sermons error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -430,7 +430,7 @@ router.get('/:id', async (req, res) => {
     res.json({ sermon });
   } catch (error) {
     console.error('Sermon fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -913,7 +913,7 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Save sermon error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -944,7 +944,7 @@ router.post('/subscribe/:channel', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Subscribe error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -978,7 +978,7 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
     });
   } catch (error) {
     console.error('Sermon stats error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

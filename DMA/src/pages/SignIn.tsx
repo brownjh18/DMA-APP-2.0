@@ -15,6 +15,7 @@ import {
 import { logIn, personCircle, mail, lockClosed, eye, eyeOff, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
+import './SignIn.css';
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -101,19 +102,8 @@ const SignIn: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div style={{
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
-              <IonText style={{
-                color: '#dc2626',
-                fontSize: '0.9em',
-                fontWeight: '500'
-              }}>
+            <div className="error-box">
+              <IonText className="error-box-text">
                 {error}
               </IonText>
             </div>
@@ -122,13 +112,7 @@ const SignIn: React.FC = () => {
           {/* Sign In Form */}
           <form onSubmit={handleSignIn}>
             <IonItem
-              style={{
-                marginBottom: '16px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                '--border-radius': '12px'
-              }}
+              className="signin-input-item"
               lines="none"
             >
               <IonIcon icon={mail} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
@@ -146,13 +130,8 @@ const SignIn: React.FC = () => {
             </IonItem>
 
             <IonItem
-              style={{
-                marginBottom: '24px',
-                borderRadius: '12px',
-                border: '1px solid var(--ion-color-step-300)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                '--border-radius': '12px'
-              }}
+              className="signin-input-item"
+              style={{ marginBottom: '24px' }}
               lines="none"
             >
               <IonIcon icon={lockClosed} slot="start" style={{ color: 'var(--ion-color-primary)' }} />

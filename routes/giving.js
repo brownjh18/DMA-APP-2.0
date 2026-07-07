@@ -51,8 +51,46 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Donations fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Donations fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// Get donation statistics (admin only)
+// NOTE: must be defined BEFORE /:id to prevent 'admin' being matched as a MongoDB ObjectId
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const totalDonations = await Donation.countDocuments();
+    const totalAmount = await Donation.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    const monthlyStats = await Donation.aggregate([
+      {
+        $match: {
+          status: 'completed',
+          createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          amount: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    res.json({
+      totalDonations,
+      totalAmount: totalAmount[0]?.total || 0,
+      monthlyStats
+    });
+  } catch (error) {
+    console.error('Donation stats error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -68,8 +106,8 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ donation });
   } catch (error) {
-    console.error('Donation fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Donation fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -116,8 +154,8 @@ router.post('/', [
       }
     });
   } catch (error) {
-    console.error('Donation creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Donation creation error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -155,8 +193,8 @@ router.put('/:id', [
       donation
     });
   } catch (error) {
-    console.error('Donation update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Donation update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -171,45 +209,8 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ message: 'Donation deleted successfully' });
   } catch (error) {
-    console.error('Donation deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get donation statistics (admin only)
-router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const totalDonations = await Donation.countDocuments();
-    const totalAmount = await Donation.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-
-    const monthlyStats = await Donation.aggregate([
-      {
-        $match: {
-          status: 'completed',
-          createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-        }
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          amount: { $sum: '$amount' },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id': 1 } }
-    ]);
-
-    res.json({
-      totalDonations,
-      totalAmount: totalAmount[0]?.total || 0,
-      monthlyStats
-    });
-  } catch (error) {
-    console.error('Donation stats error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Donation deletion error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

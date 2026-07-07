@@ -1,9 +1,11 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
 import { book, time, removeCircle, library, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
 
 const ReadingHistory: React.FC = () => {
   const history = useHistory();
+  const { isDarkMode } = useSettings();
   // Mock reading history data
   const readingHistory = [
     {
@@ -84,7 +86,7 @@ const ReadingHistory: React.FC = () => {
               icon={library}
               style={{
                 fontSize: '3em',
-                color: 'var(--ion-color-primary)',
+                color: '#6366f1',
                 marginBottom: '16px'
               }}
             />
@@ -92,13 +94,13 @@ const ReadingHistory: React.FC = () => {
               margin: '0 0 8px 0',
               fontSize: '1.8em',
               fontWeight: '700',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Reading History
             </h1>
             <p style={{
               margin: '0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.7,
               fontSize: '1em'
             }}>
@@ -115,17 +117,17 @@ const ReadingHistory: React.FC = () => {
               <div
                 key={item.id}
                 style={{
-                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                   borderRadius: '12px',
                   padding: '16px',
-                  border: '1px solid var(--ion-color-step-300)',
+                  border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px'
                 }}
               >
                 <div style={{
-                  backgroundColor: 'var(--ion-color-primary)',
+                  backgroundColor: '#6366f1',
                   width: '40px',
                   height: '40px',
                   borderRadius: '8px',
@@ -141,14 +143,14 @@ const ReadingHistory: React.FC = () => {
                     margin: '0 0 4px 0',
                     fontSize: '1em',
                     fontWeight: '600',
-                    color: 'var(--ion-text-color)'
+                    color: isDarkMode ? '#ffffff' : '#000000'
                   }}>
                     {item.title}
                   </h3>
                   <p style={{
                     margin: '0',
                     fontSize: '0.85em',
-                    color: 'var(--ion-color-medium)'
+                    color: isDarkMode ? '#92949c' : '#8e8e93'
                   }}>
                     {item.scripture} • {item.readTime} • {getTimeAgo(item.date)}
                   </p>
@@ -168,17 +170,17 @@ const ReadingHistory: React.FC = () => {
           {/* Empty State */}
           {readingHistory.length === 0 && (
             <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               borderRadius: '12px',
               padding: '32px 20px',
               textAlign: 'center',
-              border: '1px solid var(--ion-color-step-300)'
+              border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`
             }}>
               <IonIcon
                 icon={library}
                 style={{
                   fontSize: '3em',
-                  color: 'var(--ion-color-primary)',
+                  color: '#6366f1',
                   marginBottom: '16px'
                 }}
               />
@@ -186,14 +188,14 @@ const ReadingHistory: React.FC = () => {
                 margin: '0 0 8px 0',
                 fontSize: '1.2em',
                 fontWeight: '600',
-                color: 'var(--ion-text-color)'
+                color: isDarkMode ? '#ffffff' : '#000000'
               }}>
                 No Reading History
               </h3>
               <p style={{
                 margin: '0',
                 fontSize: '0.9em',
-                color: 'var(--ion-color-medium)',
+                color: isDarkMode ? '#92949c' : '#8e8e93',
                 lineHeight: '1.5'
               }}>
                 Start reading devotions to build your reading history and track your spiritual growth.
