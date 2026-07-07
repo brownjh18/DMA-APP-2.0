@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('News fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -65,7 +65,7 @@ router.get('/featured', async (req, res) => {
     res.json({ news });
   } catch (error) {
     console.error('Featured news fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -86,7 +86,7 @@ router.get('/:id', async (req, res) => {
     res.json({ article });
   } catch (error) {
     console.error('News article fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -127,7 +127,7 @@ router.post('/', [
     });
   } catch (error) {
     console.error('News article creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -168,7 +168,7 @@ router.put('/:id', [
     });
   } catch (error) {
     console.error('News article update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -184,7 +184,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ message: 'News article deleted successfully' });
   } catch (error) {
     console.error('News article deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -203,7 +203,7 @@ router.get('/meta/categories', async (req, res) => {
     res.json({ categories });
   } catch (error) {
     console.error('Categories fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -227,7 +227,7 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
     });
   } catch (error) {
     console.error('News stats error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

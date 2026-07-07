@@ -47,8 +47,8 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Ministries fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Ministries fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -64,8 +64,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({ ministry });
   } catch (error) {
-    console.error('Ministry fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Ministry fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -107,8 +107,8 @@ router.post('/', [
       ministry
     });
   } catch (error) {
-    console.error('Ministry creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Ministry creation error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -153,8 +153,8 @@ router.put('/:id', [
       ministry
     });
   } catch (error) {
-    console.error('Ministry update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Ministry update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -185,8 +185,8 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ message: 'Ministry deleted successfully' });
   } catch (error) {
-    console.error('Ministry deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Ministry deletion error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -217,8 +217,8 @@ router.patch('/:id/members', [
       ministry
     });
   } catch (error) {
-    console.error('Member count update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Member count update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -238,7 +238,7 @@ router.get('/meta/categories', async (req, res) => {
     res.json({ categories });
   } catch (error) {
     console.error('Categories fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

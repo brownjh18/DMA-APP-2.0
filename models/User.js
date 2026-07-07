@@ -59,6 +59,27 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Devotion'
   }],
+  watchHistory: [{
+    sermonId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Sermon'
+    },
+    title: { type: String, trim: true },
+    speaker: { type: String, trim: true },
+    duration: { type: String, trim: true },      // total duration e.g. "45:30"
+    watchedDuration: { type: String, trim: true }, // how far they got e.g. "35:20"
+    watchedAt: { type: Date, default: Date.now }
+  }],
+  readingHistory: [{
+    devotionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Devotion'
+    },
+    title: { type: String, trim: true },
+    scripture: { type: String, trim: true },
+    readTime: { type: String, trim: true },      // e.g. "5 min read"
+    readAt: { type: Date, default: Date.now }
+  }],
   createdAt: {
     type: Date,
     default: Date.now

@@ -96,8 +96,8 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Events fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Events fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -114,8 +114,8 @@ router.get('/upcoming', async (req, res) => {
 
     res.json({ events });
   } catch (error) {
-    console.error('Upcoming events fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Upcoming events fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -131,8 +131,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({ event });
   } catch (error) {
-    console.error('Event fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Event fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -216,8 +216,8 @@ router.post('/', [
       event
     });
   } catch (error) {
-    console.error('Event creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Event creation error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -342,8 +342,8 @@ router.put('/:id', [
       event
     });
   } catch (error) {
-    console.error('Event update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Event update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -377,8 +377,8 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
-    console.error('Event deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Event deletion error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -420,8 +420,8 @@ router.post('/:id/register', [
       }
     });
   } catch (error) {
-    console.error('Event registration error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Event registration error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

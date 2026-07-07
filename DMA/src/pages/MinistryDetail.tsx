@@ -1,12 +1,11 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonCard, IonCardContent, IonButton, IonButtons, IonText, IonLoading } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonButtons, IonText, IonLoading } from '@ionic/react';
 import { useParams, useHistory } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, location, informationCircle, arrowBack, calendar, time } from 'ionicons/icons';
+import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, informationCircle, arrowBack, calendar, time, share } from 'ionicons/icons';
 import { BACKEND_BASE_URL, apiService } from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
 import './MinistryDetail.css';
 
-// Helper function to convert relative URLs to full backend URLs
 const getFullUrl = (url: string) => {
   if (url && url.startsWith('/uploads/')) {
     return `${BACKEND_BASE_URL}${url}`;
@@ -22,130 +21,69 @@ const MinistryDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('MinistryDetail component mounted, fetching ministry with id:', id);
     fetchMinistry();
   }, [id]);
 
   const fetchMinistry = async () => {
     try {
-      console.log('Fetching ministry by id:', id);
       const foundMinistry = await apiService.getMinistry(id);
       if (foundMinistry && foundMinistry.ministry) {
-        console.log('Found ministry:', foundMinistry);
-        // Transform to match frontend structure
-        const transformedMinistry = {
-          id: foundMinistry.ministry._id,
-          category: foundMinistry.ministry.category,
-          name: foundMinistry.ministry.name,
-          icon: getIconForCategory(foundMinistry.ministry.category),
-          description: foundMinistry.ministry.description,
-          leader: foundMinistry.ministry.leader,
-          activities: foundMinistry.ministry.activities || [],
-          color: getColorForCategory(foundMinistry.ministry.category),
-          bgColor: getBgColorForCategory(foundMinistry.ministry.category),
-          longDescription: foundMinistry.ministry.description, // Use description as longDescription for now
-          meetingInfo: foundMinistry.ministry.meetingSchedule || 'Meeting schedule not specified',
-          endTime: foundMinistry.ministry.endTime || '',
-          imageUrl: foundMinistry.ministry.imageUrl,
+        const m = foundMinistry.ministry;
+        setMinistry({
+          id: m._id,
+          category: m.category,
+          name: m.name,
+          icon: getIconForCategory(m.category),
+          color: getColorForCategory(m.category),
+          description: m.description,
+          leader: m.leader,
+          meetingInfo: m.meetingSchedule || 'Meeting schedule not specified',
+          endTime: m.endTime || '',
+          imageUrl: m.imageUrl,
           contact: {
-            email: foundMinistry.ministry.contactEmail || 'info@doveministriesafrica.org',
-            phone: foundMinistry.ministry.contactPhone || '+256 772824677'
+            email: m.contactEmail || 'info@doveministriesafrica.org',
+            phone: m.contactPhone || '+256 772824677'
           }
-        };
-        setMinistry(transformedMinistry);
-      } else {
-        console.error('Failed to fetch ministry: No data returned');
+        });
       }
-    } catch (error) {
-      console.error('Error fetching ministry:', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { /* ignore */ }
+    finally { setLoading(false); }
   };
 
   const getIconForCategory = (category: string) => {
     const iconMap: { [key: string]: any } = {
-      'married-couples': heart,
-      'youth': people,
-      'children': book,
-      'evangelism': radio,
-      'intercessions': chatbubble,
-      'worship': musicalNotes
+      'married-couples': heart, 'youth': people, 'children': book,
+      'evangelism': radio, 'intercessions': chatbubble, 'worship': musicalNotes
     };
     return iconMap[category] || people;
   };
 
   const getColorForCategory = (category: string) => {
     const colorMap: { [key: string]: string } = {
-      'married-couples': '#ef4444',
-      'youth': '#f59e0b',
-      'children': '#06b6d4',
-      'evangelism': '#8b5cf6',
-      'intercessions': '#10b981',
-      'worship': '#ec4899'
+      'married-couples': '#ef4444', 'youth': '#f59e0b', 'children': '#06b6d4',
+      'evangelism': '#8b5cf6', 'intercessions': '#10b981', 'worship': '#ec4899'
     };
     return colorMap[category] || '#3b82f6';
   };
 
-  const getBgColorForCategory = (category: string) => {
-    const bgMap: { [key: string]: string } = {
-      'married-couples': 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-      'youth': 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-      'children': 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-      'evangelism': 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-      'intercessions': 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-      'worship': 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)'
+  const getGradientForCategory = (category: string) => {
+    const gradients: { [key: string]: string } = {
+      'married-couples': 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
+      'youth': 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+      'children': 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)',
+      'evangelism': 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+      'intercessions': 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+      'worship': 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)'
     };
-    return bgMap[category] || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
+    return gradients[category] || 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
   };
 
   if (loading) {
     return (
       <IonPage>
         <IonHeader translucent>
-          <div
-            onClick={() => history.goBack()}
-            style={{
-              position: 'absolute',
-              top: 'calc(var(--ion-safe-area-top) - -5px)',
-              left: 20,
-              width: 45,
-              height: 45,
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 999,
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseDown={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(0.8)';
-            }}
-            onMouseUp={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              setTimeout(() => {
-                target.style.transform = 'scale(1)';
-              }, 200);
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                color: isDarkMode ? '#ffffff' : '#000000',
-                fontSize: '20px',
-              }}
-            />
+          <div className="floating-back-btn" onClick={() => history.goBack()}>
+            <IonIcon icon={arrowBack} style={{ color: isDarkMode ? '#ffffff' : '#000000', fontSize: '20px' }} />
           </div>
           <IonToolbar className="toolbar-ios">
             <IonTitle className="title-ios">Loading...</IonTitle>
@@ -162,56 +100,19 @@ const MinistryDetail: React.FC = () => {
     return (
       <IonPage>
         <IonHeader translucent>
-          <div
-            onClick={() => history.goBack()}
-            style={{
-              position: 'absolute',
-              top: 'calc(var(--ion-safe-area-top) - -5px)',
-              left: 20,
-              width: 45,
-              height: 45,
-              borderRadius: 25,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 999,
-              transition: 'transform 0.2s ease'
-            }}
-            onMouseDown={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(0.8)';
-            }}
-            onMouseUp={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              setTimeout(() => {
-                target.style.transform = 'scale(1)';
-              }, 200);
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.transform = 'scale(1)';
-            }}
-          >
-            <IonIcon
-              icon={arrowBack}
-              style={{
-                color: isDarkMode ? '#ffffff' : '#000000',
-                fontSize: '20px',
-              }}
-            />
+          <div className="floating-back-btn" onClick={() => history.goBack()}>
+            <IonIcon icon={arrowBack} style={{ color: isDarkMode ? '#ffffff' : '#000000', fontSize: '20px' }} />
           </div>
           <IonToolbar className="toolbar-ios">
             <IonTitle className="title-ios">Ministry Not Found</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          <p>Ministry not found.</p>
+          <div className="md-empty">
+            <IonIcon icon={informationCircle} className="md-empty-icon" />
+            <h2 className="md-empty-title">Ministry Not Found</h2>
+            <p className="md-empty-text">The ministry you're looking for doesn't exist.</p>
+          </div>
         </IonContent>
       </IonPage>
     );
@@ -225,152 +126,139 @@ const MinistryDetail: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Ministry Details</IonTitle>
+          <IonButtons slot="end">
+            <IonButton fill="clear">
+              <IonIcon icon={share} />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
+
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '20px' }}>
-          {/* Ministry Image */}
-          {ministry.imageUrl && (
-            <div style={{
-              width: '100%',
-              height: '200px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              overflow: 'hidden'
-            }}>
-              <img
-                src={getFullUrl(ministry.imageUrl)}
-                alt={ministry.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => {
+        <div className="md-page">
+          {/* Hero Banner */}
+          {ministry.imageUrl ? (
+            <div className="md-hero">
+              <div
+                className="md-hero-image"
+                style={{ backgroundImage: `url(${getFullUrl(ministry.imageUrl)})` }}
+                onError={(e: any) => {
                   const target = e.currentTarget;
                   if (!target.dataset['triedDove']) {
                     target.dataset['triedDove'] = 'true';
-                    target.src = '/dove.png';
-                  } else {
-                    target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect fill="%23f5f5f5" width="400" height="200"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23999" font-size="16">Ministry Image</text></svg>');
+                    target.style.backgroundImage = 'url(/dove.png)';
                   }
                 }}
-              />
+              >
+                <div className="md-hero-gradient" />
+                <div className="md-hero-overlay">
+                  <span className="md-hero-badge" style={{ background: ministry.color + '33', color: ministry.color, borderColor: ministry.color + '44' }}>
+                    {ministry.category || 'Ministry'}
+                  </span>
+                  <h1 className="md-hero-title">{ministry.name}</h1>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="md-hero md-hero-gradient-only" style={{ background: getGradientForCategory(ministry.category) }}>
+              <div className="md-hero-overlay">
+                <span className="md-hero-badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>
+                  {ministry.category || 'Ministry'}
+                </span>
+                <h1 className="md-hero-title">{ministry.name}</h1>
+              </div>
             </div>
           )}
 
-          {/* Ministry Title and Category */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <IonIcon icon={ministry.icon} style={{ color: 'var(--ion-color-primary)', fontSize: '1.5em' }} />
-              <span style={{
-                fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: '16px',
-                fontSize: '0.85em'
-              }}>
-                {ministry.category || 'Ministry'}
-              </span>
+          {/* Stat Pills */}
+          <div className="md-stats">
+            <div className="md-stat-pill">
+              <div className="md-stat-dot" style={{ background: ministry.color }} />
+              <div>
+                <div className="md-stat-num" style={{ fontSize: '13px' }}>{ministry.leader || 'TBD'}</div>
+                <div className="md-stat-txt">Leader</div>
+              </div>
             </div>
-            <h1 style={{
-              margin: '0 0 12px 0',
-              fontSize: '1.8em',
-              fontWeight: '700',
-              color: 'var(--ion-text-color)'
-            }}>
-              {ministry.name}
-            </h1>
+            <div className="md-stat-pill">
+              <div className="md-stat-dot" style={{ background: '#f59e0b' }} />
+              <div>
+                <div className="md-stat-num" style={{ fontSize: '13px' }}>{ministry.meetingInfo}</div>
+                <div className="md-stat-txt">Schedule</div>
+              </div>
+            </div>
           </div>
 
-          {/* Ministry Details Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-            {/* About Ministry */}
-            <IonCard style={{ margin: '0', borderRadius: '12px' }}>
-              <IonCardContent style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <IonIcon icon={informationCircle} style={{ color: 'var(--ion-color-primary)' }} />
-                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>About This Ministry</span>
-                </div>
-                <p style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.1em' }}>
-                  {ministry.longDescription}
-                </p>
-              </IonCardContent>
-            </IonCard>
-
-            {/* Ministry Leader */}
-            <IonCard style={{ margin: '0', borderRadius: '12px' }}>
-              <IonCardContent style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <IonIcon icon={people} style={{ color: 'var(--ion-color-primary)' }} />
-                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Ministry Leader</span>
-                </div>
-                <p style={{ margin: '0', color: 'var(--ion-text-color)', fontSize: '1.1em' }}>
-                  {ministry.leader}
-                </p>
-              </IonCardContent>
-            </IonCard>
-
-            {/* Meeting Information */}
-            <IonCard style={{ margin: '0', borderRadius: '12px' }}>
-              <IonCardContent style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <IonIcon icon={calendar} style={{ color: 'var(--ion-color-primary)' }} />
-                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>When We Meet</span>
-                </div>
-                <p style={{ margin: '0 0 4px 0', color: 'var(--ion-text-color)', fontSize: '1.1em' }}>
-                  {ministry.meetingInfo}
-                </p>
-                {ministry.endTime && (
-                  <p style={{ margin: '0', color: 'var(--ion-color-medium)' }}>
-                    <IonIcon icon={time} style={{ marginRight: '8px' }} />
-                    Ends at: {ministry.endTime}
-                  </p>
-                )}
-              </IonCardContent>
-            </IonCard>
-
-            {/* Contact Information */}
-            <IonCard style={{ margin: '0', borderRadius: '12px' }}>
-              <IonCardContent style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <IonIcon icon={mail} style={{ color: 'var(--ion-color-primary)' }} />
-                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>Contact Information</span>
-                </div>
-                <p style={{ margin: '0 0 8px 0', color: 'var(--ion-text-color)' }}>
-                  <strong>Email:</strong> {ministry.contact.email}
-                </p>
-                <p style={{ margin: '0', color: 'var(--ion-text-color)' }}>
-                  <strong>Phone:</strong> {ministry.contact.phone}
-                </p>
-              </IonCardContent>
-            </IonCard>
+          {/* About */}
+          <div className="md-section">
+            <h3 className="md-section-title">About This Ministry</h3>
+            <div className="af-card">
+              <p className="md-description">{ministry.description}</p>
+            </div>
           </div>
 
-          {/* Call Button */}
-          <div style={{ marginBottom: '24px' }}>
-            <IonButton
-              expand="block"
-              onClick={() => window.location.href = `tel:${ministry.contact.phone}`}
-              style={{
-                height: '48px',
-                borderRadius: '24px',
-                fontWeight: '600',
-                backgroundColor: 'var(--ion-color-primary)',
-                '--border-radius': '24px'
-              }}
-            >
-              <IonIcon icon={call} slot="start" />
+          {/* Meeting Info */}
+          <div className="md-section">
+            <h3 className="md-section-title">When We Meet</h3>
+            <div className="af-card">
+              <div className="md-info-row">
+                <div className="md-info-icon" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.06))' }}>
+                  <IonIcon icon={calendar} style={{ color: '#f59e0b', fontSize: '18px' }} />
+                </div>
+                <div>
+                  <span className="md-info-label">Schedule</span>
+                  <span className="md-info-value">{ministry.meetingInfo}</span>
+                </div>
+              </div>
+              {ministry.endTime && (
+                <div className="md-info-row">
+                  <div className="md-info-icon" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.06))' }}>
+                    <IonIcon icon={time} style={{ color: '#6366f1', fontSize: '18px' }} />
+                  </div>
+                  <div>
+                    <span className="md-info-label">Ends At</span>
+                    <span className="md-info-value">{ministry.endTime}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="md-section">
+            <h3 className="md-section-title">Contact Information</h3>
+            <div className="af-card">
+              <div className="md-info-row">
+                <div className="md-info-icon" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06))' }}>
+                  <IonIcon icon={mail} style={{ color: '#10b981', fontSize: '18px' }} />
+                </div>
+                <div>
+                  <span className="md-info-label">Email</span>
+                  <span className="md-info-value">{ministry.contact.email}</span>
+                </div>
+              </div>
+              <div className="md-info-row">
+                <div className="md-info-icon" style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.06))' }}>
+                  <IonIcon icon={call} style={{ color: '#8b5cf6', fontSize: '18px' }} />
+                </div>
+                <div>
+                  <span className="md-info-label">Phone</span>
+                  <span className="md-info-value">{ministry.contact.phone}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="md-section">
+            <button className="af-submit md-call-btn" onClick={() => window.location.href = `tel:${ministry.contact.phone}`}>
+              <IonIcon icon={call} style={{ marginRight: '8px' }} />
               Call Ministry Leader
-            </IonButton>
+            </button>
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: '32px' }}>
-            <IonText style={{
-              color: 'var(--ion-text-color)',
-              opacity: 0.6,
-              fontSize: '0.9em'
-            }}>
-              Dove Ministries Africa
-            </IonText>
+          <div className="md-footer">
+            <IonText>Dove Ministries Africa</IonText>
           </div>
         </div>
       </IonContent>

@@ -1,50 +1,352 @@
-/* Dark mode support - Manual override via data-theme attribute */
-[data-theme="dark"] .ministry-header {
-  background: var(--ios26-card-bg-dark) !important;
+/* ============================================
+   MinistryDetail – Admin Dashboard Design System
+   ============================================ */
+
+/* Floating back button */
+.floating-back-btn {
+  position: absolute;
+  top: calc(var(--ion-safe-area-top) - -5px);
+  left: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.2s ease;
 }
 
-[data-theme="dark"] .ministry-title {
-  color: var(--ios26-text-primary-dark) !important;
+[data-theme="dark"] .floating-back-btn {
+  background: linear-gradient(135deg, rgba(44, 44, 46, 0.6), rgba(28, 28, 30, 0.4));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
-[data-theme="dark"] .ministry-subtitle {
-  color: var(--ios26-text-secondary-dark) !important;
+/* Page container */
+.md-page {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 100px;
 }
 
-[data-theme="dark"] .content-card {
-  background: var(--ios26-card-bg-dark) !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
-  border: 1px solid var(--ios26-separator-dark) !important;
+/* Shared admin card */
+.af-card {
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-radius: 16px;
+  padding: 16px;
 }
 
-[data-theme="dark"] .card-title {
-  color: var(--ios26-text-primary-dark) !important;
+[data-theme="dark"] .af-card {
+  background: var(--ios26-card-bg-dark);
+  border-color: var(--ios26-separator-dark);
 }
 
-[data-theme="dark"] .card-text {
-  color: var(--ios26-text-secondary-dark) !important;
+/* Gradient submit button */
+.af-submit {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-[data-theme="dark"] .activity-item {
-  background: rgba(99, 102, 241, 0.16) !important;
-  border: 1px solid rgba(99, 102, 241, 0.28) !important;
+.af-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 
-[data-theme="dark"] .activity-text {
-  color: var(--ios26-text-primary-dark) !important;
+.af-submit:active {
+  transform: scale(0.98);
 }
 
-[data-theme="dark"] .contact-card {
-  background: var(--ios26-card-bg-dark) !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
-  border: 1px solid var(--ios26-separator-dark) !important;
+[data-theme="dark"] .af-submit {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
 }
 
-[data-theme="dark"] .contact-title {
-  color: var(--ios26-text-primary-dark) !important;
+/* ---- Hero Banner ---- */
+.md-hero {
+  width: 100%;
+  height: 260px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
 }
 
-[data-theme="dark"] .contact-text {
-  color: var(--ios26-text-secondary-dark) !important;
+.md-hero-gradient-only {
+  display: flex;
+  align-items: flex-end;
 }
 
+.md-hero-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.md-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+.md-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  z-index: 2;
+}
+
+.md-hero-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.md-hero-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+/* ---- Stat Pills ---- */
+.md-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.md-stats::-webkit-scrollbar {
+  display: none;
+}
+
+.md-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  min-width: 140px;
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+.md-stat-pill:active {
+  transform: scale(0.97);
+}
+
+[data-theme="dark"] .md-stat-pill {
+  background: var(--ios26-card-bg-dark);
+  border-color: var(--ios26-separator-dark);
+}
+
+.md-stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.md-stat-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ios26-text-primary-light);
+  line-height: 1.2;
+}
+
+[data-theme="dark"] .md-stat-num {
+  color: var(--ios26-text-primary-dark);
+}
+
+.md-stat-txt {
+  font-size: 11px;
+  color: var(--ios26-text-secondary-light);
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .md-stat-txt {
+  color: var(--ios26-text-secondary-dark);
+}
+
+/* ---- Sections ---- */
+.md-section {
+  margin-bottom: 24px;
+}
+
+.md-section-title {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ios26-text-primary-light);
+}
+
+[data-theme="dark"] .md-section-title {
+  color: var(--ios26-text-primary-dark);
+}
+
+/* ---- Description ---- */
+.md-description {
+  margin: 0;
+  color: var(--ios26-text-primary-light);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+[data-theme="dark"] .md-description {
+  color: var(--ios26-text-primary-dark);
+}
+
+/* ---- Info Rows ---- */
+.md-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.md-info-row:not(:last-child) {
+  border-bottom: 1px solid var(--ios26-separator-light);
+}
+
+[data-theme="dark"] .md-info-row:not(:last-child) {
+  border-color: var(--ios26-separator-dark);
+}
+
+.md-info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.md-info-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ios26-text-secondary-light);
+  margin-bottom: 2px;
+}
+
+[data-theme="dark"] .md-info-label {
+  color: var(--ios26-text-secondary-dark);
+}
+
+.md-info-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ios26-text-primary-light);
+}
+
+[data-theme="dark"] .md-info-value {
+  color: var(--ios26-text-primary-dark);
+}
+
+/* ---- Empty State ---- */
+.md-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.md-empty-icon {
+  font-size: 64px;
+  color: var(--ios26-text-secondary-light);
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+
+[data-theme="dark"] .md-empty-icon {
+  color: var(--ios26-text-tertiary-dark);
+}
+
+.md-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ios26-text-primary-light);
+  margin: 0 0 8px 0;
+}
+
+[data-theme="dark"] .md-empty-title {
+  color: var(--ios26-text-primary-dark);
+}
+
+.md-empty-text {
+  font-size: 14px;
+  color: var(--ios26-text-secondary-light);
+  margin: 0;
+}
+
+[data-theme="dark"] .md-empty-text {
+  color: var(--ios26-text-secondary-dark);
+}
+
+/* ---- Footer ---- */
+.md-footer {
+  text-align: center;
+  margin-top: 32px;
+  padding: 16px 0;
+  font-size: 13px;
+  color: var(--ios26-text-secondary-light);
+}
+
+[data-theme="dark"] .md-footer {
+  color: var(--ios26-text-secondary-dark);
+}
+
+/* ---- Dark Mode Overrides ---- */
+[data-theme="dark"] .md-hero-gradient {
+  background: linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .md-hero {
+    height: 220px;
+    border-radius: 16px;
+  }
+  .md-hero-title {
+    font-size: 18px;
+  }
+  .md-stat-pill {
+    padding: 10px 12px;
+    min-width: 120px;
+  }
+}

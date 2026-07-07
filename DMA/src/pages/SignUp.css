@@ -1,0 +1,78 @@
+/* Sign Up Page Styles */
+
+/* Theme-aware error box */
+.error-box {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+[data-theme="dark"] .error-box {
+  background-color: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.error-box-text {
+  color: #dc2626;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .error-box-text {
+  color: #fca5a5;
+}
+
+/* Theme-aware success box */
+.success-box {
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+[data-theme="dark"] .success-box {
+  background-color: rgba(5, 150, 105, 0.15);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.success-box-text {
+  color: #059669;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .success-box-text {
+  color: #6ee7b7;
+}
+
+/* Theme-aware form inputs */
+.signup-input-item {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ios26-separator-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+}
+
+[data-theme="dark"] .signup-input-item {
+  --background: var(--ios26-card-bg-dark);
+  border-color: var(--ios26-separator-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.signup-input-item ion-icon {
+  color: #6366f1;
+}
+
+.signup-input-item ion-input {
+  color: var(--ios26-text-primary-light);
+}
+
+[data-theme="dark"] .signup-input-item ion-input {
+  color: var(--ios26-text-primary-dark);
+}

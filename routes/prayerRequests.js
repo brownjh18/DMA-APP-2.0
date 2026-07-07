@@ -27,8 +27,8 @@ router.post('/', [
       requestId: prayerRequest._id
     });
   } catch (error) {
-    console.error('Prayer request submission error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Prayer request submission error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -78,8 +78,39 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Prayer requests fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Prayer requests fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// Get prayer request statistics (admin only)
+// NOTE: this must be defined BEFORE /:id to prevent 'stats' being matched as an ID
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const total = await PrayerRequest.countDocuments();
+    const answered = await PrayerRequest.countDocuments({ isAnswered: true });
+    const pending = await PrayerRequest.countDocuments({ isAnswered: false });
+    const urgent = await PrayerRequest.countDocuments({ priority: 'urgent' });
+    const followUp = await PrayerRequest.countDocuments({ followUpNeeded: true });
+
+    // Category breakdown
+    const categoryStats = await PrayerRequest.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      stats: {
+        total,
+        answered,
+        pending,
+        urgent,
+        followUp,
+        categories: categoryStats
+      }
+    });
+  } catch (error) {
+    console.error('Prayer request stats error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -97,7 +128,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ prayerRequest });
   } catch (error) {
     console.error('Prayer request fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -143,8 +174,8 @@ router.put('/:id', [
       prayerRequest
     });
   } catch (error) {
-    console.error('Prayer request update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Prayer request update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -159,38 +190,8 @@ router.delete('/:id', authenticateToken, requireModerator, async (req, res) => {
 
     res.json({ message: 'Prayer request deleted successfully' });
   } catch (error) {
-    console.error('Prayer request deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get prayer request statistics (admin only)
-router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const total = await PrayerRequest.countDocuments();
-    const answered = await PrayerRequest.countDocuments({ isAnswered: true });
-    const pending = await PrayerRequest.countDocuments({ isAnswered: false });
-    const urgent = await PrayerRequest.countDocuments({ priority: 'urgent' });
-    const followUp = await PrayerRequest.countDocuments({ followUpNeeded: true });
-
-    // Category breakdown
-    const categoryStats = await PrayerRequest.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
-    ]);
-
-    res.json({
-      stats: {
-        total,
-        answered,
-        pending,
-        urgent,
-        followUp,
-        categories: categoryStats
-      }
-    });
-  } catch (error) {
-    console.error('Prayer request stats error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Prayer request deletion error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

@@ -42,7 +42,7 @@ router.get('/:contentId', async (req, res) => {
     });
   } catch (error) {
     console.error('Comments fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -110,7 +110,7 @@ router.post('/', authenticateToken, [
     });
   } catch (error) {
     console.error('Comment creation error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -141,7 +141,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Comment deleted successfully' });
   } catch (error) {
     console.error('Comment deletion error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

@@ -451,6 +451,33 @@ ion-content[fullscreen] {
   --ios26-glass-bg-dark: rgba(28, 28, 30, 0.82);
   --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
   --ios26-glass-border-dark: rgba(255, 255, 255, 0.14);
+
+  /* Override Ionic framework variables for dark mode */
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+  --ion-color-primary: #6366f1;
+  --ion-color-primary-rgb: 99, 102, 241;
+  --ion-color-medium: #92949c;
+  --ion-color-medium-rgb: 146, 148, 156;
+  --ion-color-step-100: #2e2e31;
+  --ion-color-step-150: #363639;
+  --ion-color-step-200: #3e3e42;
+  --ion-color-step-250: #47474b;
+  --ion-color-step-300: #535356;
+  --ion-color-step-350: #5e5e62;
+  --ion-color-step-400: #6a6a6e;
+  --ion-color-step-450: #77777a;
+  --ion-color-step-500: #858588;
+  --ion-color-step-550: #929295;
+  --ion-color-step-600: #a0a0a3;
+  --ion-color-step-650: #aeaea0;
+  --ion-color-step-700: #bcbcbf;
+  --ion-color-step-750: #cacacd;
+  --ion-color-step-800: #d9d9db;
+  --ion-color-step-850: #e7e7e9;
+  --ion-color-step-900: #f3f3f5;
+  --ion-color-step-950: #fafafc;
+  --ion-card-background: #1c1c1e;
 }
 
 [data-theme="dark"] .menu-content {
@@ -553,10 +580,17 @@ ion-content[fullscreen] {
 /* iOS 26 Dark Mode - app backgrounds */
 [data-theme="dark"] ion-app {
   background: #0a0a0c;
+  color: #ffffff;
 }
 
 [data-theme="dark"] ion-content {
   --background: #0a0a0c;
+  --color: #ffffff;
+  color: #ffffff;
+}
+
+[data-theme="dark"] ion-page {
+  color: #ffffff;
 }
 
 [data-theme="dark"] .liquid-tab-bar {
@@ -585,6 +619,33 @@ ion-content[fullscreen] {
     --ios26-glass-bg-dark: rgba(28, 28, 30, 0.82);
     --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
     --ios26-glass-border-dark: rgba(255, 255, 255, 0.14);
+
+    /* Override Ionic framework variables for dark mode */
+    --ion-text-color: #ffffff;
+    --ion-text-color-rgb: 255, 255, 255;
+    --ion-color-primary: #6366f1;
+    --ion-color-primary-rgb: 99, 102, 241;
+    --ion-color-medium: #92949c;
+    --ion-color-medium-rgb: 146, 148, 156;
+    --ion-color-step-100: #2e2e31;
+    --ion-color-step-150: #363639;
+    --ion-color-step-200: #3e3e42;
+    --ion-color-step-250: #47474b;
+    --ion-color-step-300: #535356;
+    --ion-color-step-350: #5e5e62;
+    --ion-color-step-400: #6a6a6e;
+    --ion-color-step-450: #77777a;
+    --ion-color-step-500: #858588;
+    --ion-color-step-550: #929295;
+    --ion-color-step-600: #a0a0a3;
+    --ion-color-step-650: #aeaea0;
+    --ion-color-step-700: #bcbcbf;
+    --ion-color-step-750: #cacacd;
+    --ion-color-step-800: #d9d9db;
+    --ion-color-step-850: #e7e7e9;
+    --ion-color-step-900: #f3f3f5;
+    --ion-color-step-950: #fafafc;
+    --ion-card-background: #1c1c1e;
   }
 
   :root:not([data-theme="light"]) .menu-content {
@@ -696,10 +757,17 @@ ion-content[fullscreen] {
 
   :root:not([data-theme="light"]) ion-app {
     background: #0a0a0c;
+    color: #ffffff;
   }
 
   :root:not([data-theme="light"]) ion-content {
     --background: #0a0a0c;
+    --color: #ffffff;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme="light"]) ion-page {
+    color: #ffffff;
   }
 
   :root:not([data-theme="light"]) .liquid-tab-bar {
@@ -813,11 +881,21 @@ ion-alert .alert-title {
   color: #1c1c1e !important;
 }
 
+[data-theme="dark"] ion-alert .alert-title,
+:root:not([data-theme="light"]) ion-alert .alert-title {
+  color: #ffffff !important;
+}
+
 ion-alert .alert-message {
   font-size: 14px !important;
   line-height: 1.5 !important;
   color: #636366 !important;
   padding: 4px 24px 16px !important;
+}
+
+[data-theme="dark"] ion-alert .alert-message,
+:root:not([data-theme="light"]) ion-alert .alert-message {
+  color: #98989d !important;
 }
 
 ion-alert .alert-button-group {
@@ -1036,11 +1114,19 @@ ion-content[fullscreen] {
 [data-theme="dark"] ion-app,
 :root:not([data-theme="light"]) ion-app {
   background: #0a0a0c;
+  color: #ffffff;
 }
 
 [data-theme="dark"] ion-content,
 :root:not([data-theme="light"]) ion-content {
   --background: #0a0a0c;
+  --color: #ffffff;
+  color: #ffffff;
+}
+
+[data-theme="dark"] ion-page,
+:root:not([data-theme="light"]) ion-page {
+  color: #ffffff;
 }
 
 [data-theme="dark"] .liquid-tab-bar,
@@ -1068,4 +1154,44 @@ ion-content[fullscreen] {
   .liquid-tab-icon {
     transition-duration: 1ms !important;
   }
+}
+
+/* ============================================
+   Dark Mode – Global Text & Background Overrides
+   Must be LAST to override everything above
+   ============================================ */
+[data-theme="dark"] ion-app,
+[data-theme="dark"] ion-page,
+[data-theme="dark"] ion-content {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] ion-content {
+  --background: #0a0a0c;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] label,
+[data-theme="dark"] a,
+[data-theme="dark"] strong {
+  color: inherit;
+}
+
+[data-theme="dark"] ion-text {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] ion-button {
+  --color: var(--ios26-text-primary-dark);
 }

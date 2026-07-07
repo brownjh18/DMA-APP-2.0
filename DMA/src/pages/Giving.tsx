@@ -109,7 +109,7 @@ const Giving: React.FC = () => {
               icon={heart}
               style={{
                 fontSize: '3em',
-                color: 'var(--ion-color-primary)',
+                color: '#6366f1',
                 marginBottom: '16px'
               }}
             />
@@ -117,13 +117,13 @@ const Giving: React.FC = () => {
               margin: '0 0 8px 0',
               fontSize: '1.8em',
               fontWeight: '700',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Tithe & Offertory
             </h1>
             <p style={{
               margin: '0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.7,
               fontSize: '1em'
             }}>
@@ -133,14 +133,14 @@ const Giving: React.FC = () => {
 
           {/* Introduction */}
           <div style={{
-            backgroundColor: 'rgba(0,0,0,0.05)',
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
             padding: '20px',
             borderRadius: '12px',
             marginBottom: '32px'
           }}>
             <p style={{
               margin: '0 0 16px 0',
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               lineHeight: '1.5'
             }}>
               Honor God with your tithes and bring your offerings with joy.
@@ -151,7 +151,7 @@ const Giving: React.FC = () => {
               fontSize: '0.9em',
               fontStyle: 'italic',
               textAlign: 'center',
-              color: 'var(--ion-color-medium)'
+              color: isDarkMode ? '#92949c' : '#8e8e93'
             }}>
               "Bring the whole tithe into the storehouse..."
               <br />
@@ -165,21 +165,21 @@ const Giving: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Understanding Tithe & Offertory
             </h2>
 
             <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px'
             }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: 'var(--ion-text-color)' }}>Tithe</h3>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: isDarkMode ? '#ffffff' : '#000000' }}>Tithe</h3>
               <p style={{
                 margin: '0 0 16px 0',
-                color: 'var(--ion-text-color)',
+                color: isDarkMode ? '#ffffff' : '#000000',
                 lineHeight: '1.5',
                 fontSize: '0.9em'
               }}>
@@ -190,7 +190,7 @@ const Giving: React.FC = () => {
                 margin: '0',
                 fontSize: '0.9em',
                 fontStyle: 'italic',
-                color: 'var(--ion-color-medium)'
+                color: isDarkMode ? '#92949c' : '#8e8e93'
               }}>
                 "Honor the Lord with your wealth and with the firstfruits of all your produce."
                 <br />
@@ -199,14 +199,14 @@ const Giving: React.FC = () => {
             </div>
 
             <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               padding: '20px',
               borderRadius: '12px'
             }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: 'var(--ion-text-color)' }}>Offertory</h3>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1em', color: isDarkMode ? '#ffffff' : '#000000' }}>Offertory</h3>
               <p style={{
                 margin: '0 0 16px 0',
-                color: 'var(--ion-text-color)',
+                color: isDarkMode ? '#ffffff' : '#000000',
                 lineHeight: '1.5',
                 fontSize: '0.9em'
               }}>
@@ -217,7 +217,7 @@ const Giving: React.FC = () => {
                 margin: '0',
                 fontSize: '0.9em',
                 fontStyle: 'italic',
-                color: 'var(--ion-color-medium)'
+                color: isDarkMode ? '#92949c' : '#8e8e93'
               }}>
                 "Each of you should give what you have decided in your heart to give..."
                 <br />
@@ -232,7 +232,7 @@ const Giving: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Ways to Give
             </h2>
@@ -240,19 +240,19 @@ const Giving: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {givingOptions.map((option, index) => (
                 <div key={index} style={{
-                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                   padding: '16px',
                   borderRadius: '12px',
                   border: '1px solid rgba(0,0,0,0.1)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                     <IonIcon icon={option.icon} style={{ color: option.color, fontSize: '1.5em' }} />
-                    <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>{option.method}</span>
+                    <span style={{ fontWeight: '600', color: isDarkMode ? '#ffffff' : '#000000' }}>{option.method}</span>
                   </div>
                   {option.details.map((detail, i) => (
                     <p key={i} style={{
                       margin: '0',
-                      color: 'var(--ion-color-medium)',
+                      color: isDarkMode ? '#92949c' : '#8e8e93',
                       fontSize: '0.9em',
                       lineHeight: '1.4'
                     }}>
@@ -270,7 +270,7 @@ const Giving: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Types of Giving
             </h2>
@@ -278,7 +278,7 @@ const Giving: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {givingCategories.map((category, index) => (
                 <div key={index} style={{
-                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                   padding: '16px',
                   borderRadius: '12px',
                   border: '1px solid rgba(0,0,0,0.1)',
@@ -287,7 +287,7 @@ const Giving: React.FC = () => {
                   gap: '12px'
                 }}>
                   <IonIcon icon={category.icon} style={{ color: category.color, fontSize: '1.5em' }} />
-                  <span style={{ fontWeight: '600', color: 'var(--ion-text-color)' }}>{category.name}</span>
+                  <span style={{ fontWeight: '600', color: isDarkMode ? '#ffffff' : '#000000' }}>{category.name}</span>
                 </div>
               ))}
             </div>
@@ -299,19 +299,19 @@ const Giving: React.FC = () => {
               margin: '0 0 16px 0',
               fontSize: '1.4em',
               fontWeight: '600',
-              color: 'var(--ion-text-color)'
+              color: isDarkMode ? '#ffffff' : '#000000'
             }}>
               Questions About Giving?
             </h2>
 
             <div style={{
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
               padding: '20px',
               borderRadius: '12px'
             }}>
               <p style={{
                 margin: '0 0 20px 0',
-                color: 'var(--ion-text-color)',
+                color: isDarkMode ? '#ffffff' : '#000000',
                 lineHeight: '1.5',
                 fontSize: '0.9em'
               }}>
@@ -323,15 +323,15 @@ const Giving: React.FC = () => {
                 style={{
                   marginBottom: '12px',
                   borderRadius: '8px',
-                  border: '1px solid var(--ion-color-step-300)',
+                  border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                   '--border-radius': '8px'
                 }}
                 lines="none"
               >
-                <IonIcon icon={informationCircle} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonIcon icon={informationCircle} slot="start" style={{ color: '#6366f1' }} />
                 <IonLabel>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>Email</h3>
-                  <p style={{ margin: 0, fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                  <p style={{ margin: 0, fontSize: '0.8em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>
                     thesignofthedoveministries@gmail.com
                   </p>
                 </IonLabel>
@@ -342,15 +342,15 @@ const Giving: React.FC = () => {
                 style={{
                   marginBottom: '12px',
                   borderRadius: '8px',
-                  border: '1px solid var(--ion-color-step-300)',
+                  border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                   '--border-radius': '8px'
                 }}
                 lines="none"
               >
-                <IonIcon icon={phonePortrait} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonIcon icon={phonePortrait} slot="start" style={{ color: '#6366f1' }} />
                 <IonLabel>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>Phone</h3>
-                  <p style={{ margin: 0, fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                  <p style={{ margin: 0, fontSize: '0.8em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>
                     +256 772824677 | +256 700116734
                   </p>
                 </IonLabel>
@@ -361,15 +361,15 @@ const Giving: React.FC = () => {
                 style={{
                   marginBottom: '20px',
                   borderRadius: '8px',
-                  border: '1px solid var(--ion-color-step-300)',
+                  border: `1px solid ${isDarkMode ? '#535356' : '#c7c7cc'}`,
                   '--border-radius': '8px'
                 }}
                 lines="none"
               >
-                <IonIcon icon={location} slot="start" style={{ color: 'var(--ion-color-primary)' }} />
+                <IonIcon icon={location} slot="start" style={{ color: '#6366f1' }} />
                 <IonLabel>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>Address</h3>
-                  <p style={{ margin: 0, fontSize: '0.8em', color: 'var(--ion-color-medium)' }}>
+                  <p style={{ margin: 0, fontSize: '0.8em', color: isDarkMode ? '#92949c' : '#8e8e93' }}>
                     Nfuufu Zone, Zzana-Bunamwaya, Kampala, Uganda
                   </p>
                 </IonLabel>
@@ -381,7 +381,7 @@ const Giving: React.FC = () => {
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <p style={{
-              color: 'var(--ion-text-color)',
+              color: isDarkMode ? '#ffffff' : '#000000',
               opacity: 0.6,
               fontSize: '0.8em',
               margin: '0'

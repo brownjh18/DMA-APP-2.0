@@ -171,7 +171,7 @@ router.post('/signup', [
     }
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -224,7 +224,7 @@ router.post('/register', [
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -311,7 +311,7 @@ router.post('/login', [
     }
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -337,7 +337,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
     res.json({ user: userData });
   } catch (error) {
     console.error('Profile fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -382,7 +382,7 @@ router.put('/profile', authenticateToken, [
     });
   } catch (error) {
     console.error('Profile update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -422,7 +422,7 @@ router.post('/upload-profile-picture', [
     });
   } catch (error) {
     console.error('Profile picture upload error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -457,7 +457,7 @@ router.put('/change-password', authenticateToken, [
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Password change error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -468,7 +468,7 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ users });
   } catch (error) {
     console.error('Users fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -522,7 +522,7 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     });
   } catch (error) {
     console.error('User update error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -548,7 +548,187 @@ router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) =>
     });
   } catch (error) {
     console.error('User delete error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// ── Watch History ─────────────────────────────────────────────────────────────
+
+// GET /api/auth/watch-history
+router.get('/watch-history', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('watchHistory')
+      .populate('watchHistory.sermonId', 'title speaker thumbnailUrl');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const history = [...(user.watchHistory || [])].sort(
+      (a, b) => new Date(b.watchedAt) - new Date(a.watchedAt)
+    );
+    res.json({ watchHistory: history });
+  } catch (error) {
+    console.error('Watch history fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// POST /api/auth/watch-history  – add or update an entry
+router.post('/watch-history', authenticateToken, [
+  body('sermonId').optional().isMongoId().withMessage('Invalid sermon ID'),
+  body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
+  body('speaker').optional().trim(),
+  body('duration').optional().trim(),
+  body('watchedDuration').optional().trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { sermonId, title, speaker, duration, watchedDuration } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (sermonId) {
+      const existing = user.watchHistory.find(
+        (h) => h.sermonId && h.sermonId.toString() === sermonId
+      );
+      if (existing) {
+        if (watchedDuration) existing.watchedDuration = watchedDuration;
+        existing.watchedAt = new Date();
+      } else {
+        user.watchHistory.push({ sermonId, title, speaker, duration, watchedDuration });
+      }
+    } else {
+      user.watchHistory.push({ title, speaker, duration, watchedDuration });
+    }
+
+    await user.save();
+    res.json({ message: 'Watch history updated', watchHistory: user.watchHistory });
+  } catch (error) {
+    console.error('Watch history update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// DELETE /api/auth/watch-history/:entryId  – remove one entry
+router.delete('/watch-history/:entryId', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const before = user.watchHistory.length;
+    user.watchHistory = user.watchHistory.filter(
+      (h) => h._id.toString() !== req.params.entryId
+    );
+    if (user.watchHistory.length === before) {
+      return res.status(404).json({ error: 'Watch history entry not found' });
+    }
+
+    await user.save();
+    res.json({ message: 'Entry removed from watch history' });
+  } catch (error) {
+    console.error('Watch history delete error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// DELETE /api/auth/watch-history  – clear all watch history
+router.delete('/watch-history', authenticateToken, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { $set: { watchHistory: [] } });
+    res.json({ message: 'Watch history cleared' });
+  } catch (error) {
+    console.error('Watch history clear error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// ── Reading History ────────────────────────────────────────────────────────────
+
+// GET /api/auth/reading-history
+router.get('/reading-history', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('readingHistory')
+      .populate('readingHistory.devotionId', 'title scripture thumbnailUrl');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const history = [...(user.readingHistory || [])].sort(
+      (a, b) => new Date(b.readAt) - new Date(a.readAt)
+    );
+    res.json({ readingHistory: history });
+  } catch (error) {
+    console.error('Reading history fetch error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// POST /api/auth/reading-history  – add or update an entry
+router.post('/reading-history', authenticateToken, [
+  body('devotionId').optional().isMongoId().withMessage('Invalid devotion ID'),
+  body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
+  body('scripture').optional().trim(),
+  body('readTime').optional().trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { devotionId, title, scripture, readTime } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (devotionId) {
+      const existing = user.readingHistory.find(
+        (h) => h.devotionId && h.devotionId.toString() === devotionId
+      );
+      if (existing) {
+        existing.readAt = new Date();
+      } else {
+        user.readingHistory.push({ devotionId, title, scripture, readTime });
+      }
+    } else {
+      user.readingHistory.push({ title, scripture, readTime });
+    }
+
+    await user.save();
+    res.json({ message: 'Reading history updated', readingHistory: user.readingHistory });
+  } catch (error) {
+    console.error('Reading history update error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// DELETE /api/auth/reading-history/:entryId  – remove one entry
+router.delete('/reading-history/:entryId', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const before = user.readingHistory.length;
+    user.readingHistory = user.readingHistory.filter(
+      (h) => h._id.toString() !== req.params.entryId
+    );
+    if (user.readingHistory.length === before) {
+      return res.status(404).json({ error: 'Reading history entry not found' });
+    }
+
+    await user.save();
+    res.json({ message: 'Entry removed from reading history' });
+  } catch (error) {
+    console.error('Reading history delete error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// DELETE /api/auth/reading-history  – clear all reading history
+router.delete('/reading-history', authenticateToken, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { $set: { readingHistory: [] } });
+    res.json({ message: 'Reading history cleared' });
+  } catch (error) {
+    console.error('Reading history clear error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

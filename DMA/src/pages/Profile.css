@@ -72,7 +72,7 @@
 }
 
 .profile-options ion-item ion-icon[slot="start"] {
-  color: var(--ion-color-primary);
+  color: #6366f1;
   margin-right: 16px;
 }
 
@@ -102,7 +102,7 @@
 
 .signin-icon {
   font-size: 60px;
-  color: var(--ion-color-primary);
+  color: #6366f1;
   margin-bottom: 16px;
 }
 
@@ -121,9 +121,16 @@
   font-weight: 600;
 }
 
+/* ============================================
+   Dark Mode Support
+   ============================================ */
 [data-theme="dark"] .profile-page {
   --ion-background-color: var(--ios26-grouped-bg-dark);
   --ion-background-color-step-50: var(--ios26-card-bg-dark);
+}
+
+[data-theme="dark"] .profile-header .profile-avatar {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .profile-name {
@@ -144,6 +151,7 @@
 
 [data-theme="dark"] .profile-options ion-item {
   --background: var(--ios26-card-bg-dark);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .profile-options ion-item ion-icon[slot="end"] {

@@ -30,7 +30,7 @@ router.get('/live', async (req, res) => {
     res.json(cache);
   } catch (error) {
     console.error('Get live video ID error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -87,7 +87,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Live broadcasts fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -123,7 +123,7 @@ router.get('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Live broadcast fetch error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -254,7 +254,7 @@ router.post('/start', async (req, res) => {
     });
   } catch (error) {
     console.error('Start live broadcast error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -336,7 +336,7 @@ router.post('/:id/stop', async (req, res) => {
     });
   } catch (error) {
     console.error('Stop live broadcast error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -480,7 +480,7 @@ router.post('/:id/recording', [
     });
   } catch (error) {
     console.error('Upload recording error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -612,7 +612,7 @@ router.put('/:id', [
     });
   } catch (error) {
     console.error('Update live broadcast error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -655,7 +655,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ message: 'Live broadcast deleted successfully' });
   } catch (error) {
     console.error('Delete live broadcast error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
@@ -666,7 +666,7 @@ router.post('/live/refresh', authenticateToken, requireAdmin, async (req, res) =
     res.json({ message: 'Live status refreshed successfully' });
   } catch (error) {
     console.error('Refresh live status error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

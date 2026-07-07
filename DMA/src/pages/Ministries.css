@@ -1,3 +1,39 @@
+/* Theme-aware content cards */
+.ministry-content-card {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .ministry-content-card {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--ios26-separator-dark);
+}
+
+/* Theme-aware intro/intro card */
+.intro-section-themed {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+[data-theme="dark"] .intro-section-themed {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Theme-aware get involved section */
+.get-involved-themed {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+[data-theme="dark"] .get-involved-themed {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
 /* Dark mode support - Manual override via data-theme attribute */
 [data-theme="dark"] .intro-card {
   background: var(--ios26-card-bg-dark) !important;
@@ -101,4 +137,3 @@
   background: var(--ios26-fill-dark) !important;
   backdrop-filter: blur(10px) !important;
 }
-
