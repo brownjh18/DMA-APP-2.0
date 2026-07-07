@@ -71,6 +71,7 @@ const allowedOrigins = [
   'https://dove-church-frontend.vercel.app',
   'https://dovechurchapp.vercel.app',
   'https://dove-church.fly.dev',
+  'https://dove-church.onrender.com',
   'https://localhost',
   'http://localhost',
   'http://localhost:5000',
@@ -422,7 +423,7 @@ app.post('/api/upload/thumbnail', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : isVercel ? 'vercel' : 'local' });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : isVercel ? 'vercel' : isRender ? 'render' : 'local', mongoReady: mongoose.connection.readyState, dbName: mongoose.connection.name });
 });
 
 // Error handling

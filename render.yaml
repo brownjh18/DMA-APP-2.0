@@ -7,18 +7,18 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false
+        value: "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/dmaApp"
       - key: JWT_SECRET
-        sync: false
+        value: "dove-church-jwt-secret-2024"
       - key: JWT_EXPIRES_IN
         value: "7d"
       - key: CORS_ORIGIN
         value: "*"
       - key: CLOUDINARY_CLOUD_NAME
-        sync: false
+        value: "durchmyhd"
       - key: CLOUDINARY_API_KEY
-        sync: false
+        value: "385354589753143"
       - key: CLOUDINARY_API_SECRET
-        sync: false
+        value: "F8THR1gRfU7AHKXX77c8MHzHG1c"
     healthCheckPath: /api/health
     autoDeploy: true
