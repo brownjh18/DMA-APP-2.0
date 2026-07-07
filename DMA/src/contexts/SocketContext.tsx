@@ -122,17 +122,18 @@ useEffect(() => {
        console.log('⚠️ Socket.IO: Vercel detected. Using dedicated WebSocket server for real-time notifications.');
      }
 
-     const apiUrl = import.meta.env.VITE_API_URL || '';
-     const explicitSocketUrl = import.meta.env.VITE_SOCKET_URL || '';
-     const fallbackUrl = apiUrl.replace(/\/api$/, '') || window.location.origin;
-     
-     // Try explicit URL first, fall back to API backend
-     const socketUrl = explicitSocketUrl || fallbackUrl;
-     
-     if (!socketUrl) {
-       console.log('🔌 No WebSocket URL configured, skipping connection');
-       return;
-     }
+      const isOnVercel = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+      const apiUrl = isOnVercel ? '' : (import.meta.env.VITE_API_URL || '');
+      const explicitSocketUrl = isOnVercel ? '' : (import.meta.env.VITE_SOCKET_URL || '');
+      const fallbackUrl = apiUrl.replace(/\/api$/, '') || (isOnVercel ? '' : window.location.origin);
+      
+      // Try explicit URL first, fall back to API backend
+      const socketUrl = explicitSocketUrl || fallbackUrl;
+      
+      if (!socketUrl) {
+        console.log('🔌 No WebSocket URL configured, skipping connection (Vercel: Socket.IO not available)');
+        return;
+      }
 
      console.log(`🔌 Attempting to connect socket to: ${socketUrl}`);
 

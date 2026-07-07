@@ -3,19 +3,21 @@ import { Capacitor } from '@capacitor/core';
 
 // Helper to get the development API URL based on the current network
 const getDevApiUrl = () => {
-  // If VITE_API_URL is set, use it (production)
+  // For Capacitor apps running on device/emulator, use 10.0.2.2 for Android emulator
+  if (Capacitor.isNativePlatform()) {
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+    return 'http://10.0.2.2:10000/api';
+  }
+
+  // On Vercel or any production web deployment, always use relative /api
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return '/api';
+  }
+
+  // Local development
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  
-  // For Capacitor apps running on device/emulator, use 10.0.2.2 for Android emulator
-  // Android emulator maps 10.0.2.2 to the host machine's localhost
-  // Backend runs on port 10000 when using .env
-  if (Capacitor.isNativePlatform()) {
-    return 'http://10.0.2.2:10000/api';
-  }
-  
-  // For web development, use localhost
   return 'http://localhost:10000/api';
 };
 
@@ -26,23 +28,23 @@ export { API_BASE_URL };
 // Base URL for direct backend access (for images, etc.)
 const getBackendBaseUrl = () => {
   // For Capacitor apps, use VITE_API_URL if set (production), otherwise localhost
-  if (import.meta.env.VITE_API_URL) {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    // Remove '/api' suffix to get base URL
-    const url = apiUrl.replace(/\/api$/, '');
-    console.log('🔗 Backend Base URL:', url);
-    return url;
-  }
-// For Capacitor apps running on device/emulator, use 10.0.2.2
-    if (Capacitor.isNativePlatform()) {
-      const url = 'http://10.0.2.2:10000';
-      console.log('🔗 Backend Base URL (native):', url);
-      return url;
+  if (Capacitor.isNativePlatform()) {
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL.replace(/\/api$/, '');
     }
-    // For localhost development, use direct backend URL on port 10000
-    const url = 'http://localhost:10000';
-  console.log('🔗 Backend Base URL (localhost):', url);
-  return url;
+    return 'http://10.0.2.2:10000';
+  }
+
+  // On Vercel or any production web deployment, use relative paths
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return '';
+  }
+
+  // Local development
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/api$/, '');
+  }
+  return 'http://localhost:10000';
 };
 
 export const BACKEND_BASE_URL = getBackendBaseUrl();
