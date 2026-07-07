@@ -7,7 +7,8 @@ import {
   IonIcon,
   IonContent,
   IonTitle,
-  IonText
+  IonText,
+  IonAlert,
 } from '@ionic/react';
 import {
   arrowBack,
@@ -18,12 +19,13 @@ import {
   calendar,
   radio,
   chatbubble,
-  informationCircle
+  informationCircle,
+  checkmarkDone,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { apiService, BACKEND_BASE_URL } from '../services/api';
+import { apiService } from '../services/api';
 import './AdminManager.css';
 import './Notifications.css';
 
@@ -108,55 +110,117 @@ function getYouTubeSectionLabel(createdAt: string) {
 
 function NotifRow({
   notification,
-  onClick
+  onClick,
+  onDelete,
 }: {
   notification: any;
   onClick: () => void;
+  onDelete: () => void;
 }) {
-  const typeMeta = getTypeMeta(notification.type, notification.data?.contentType);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const typeMeta = getTypeMeta(notification.type, notification.contentType || notification.data?.contentType);
   const isUnread = !notification.read;
-  const thumbFromData = normalizeThumbUrl(notification.data?.thumbnailUrl);
+  const thumbFromData = normalizeThumbUrl(notification.thumbnailUrl || notification.data?.thumbnailUrl);
   const thumbnailUrl = thumbFromData || getDefaultThumb(notification.type);
 
   return (
-    <div className={`am-card notif-row ${isUnread ? 'unread' : ''}`} onClick={onClick}>
-      <div className={`am-accent ${isUnread ? 'blue' : 'green'}`} />
-      <div className="notif-icon">
-        <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color, fontSize: '22px' }} />
-      </div>
-      <div className="am-content">
-        <p className="am-title" style={{ whiteSpace: 'normal', lineHeight: '1.4' }}>
-          {notification.title}
-        </p>
-        <p className="am-subtitle" style={{ whiteSpace: 'normal', lineHeight: '1.3' }}>
-          {notification.message}
-        </p>
-        <div className="am-meta">
-          <span className="am-meta-item">
-            {formatTime(notification.createdAt)}
-          </span>
-          <span className="am-meta-item" style={{ color: typeMeta.color }}>
-            {typeMeta.label}
-          </span>
+    <>
+      <div
+        className={`am-card notif-row ${isUnread ? 'unread' : 'read'}`}
+        onClick={onClick}
+        style={{
+          background: isUnread ? 'rgba(99,102,241,0.08)' : '#fff',
+          borderLeft: isUnread ? '3px solid #6366f1' : '3px solid #e5e7eb',
+        }}
+      >
+        <div className="notif-icon">
+          <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color, fontSize: '22px' }} />
         </div>
-      </div>
-      {thumbnailUrl && (
-        <div className="notif-thumbnail">
-          <img src={thumbnailUrl} alt="" />
+        <div className="am-content">
+          <p
+            className="am-title"
+            style={{
+              whiteSpace: 'normal',
+              lineHeight: '1.4',
+              fontWeight: isUnread ? 700 : 500,
+              color: isUnread ? '#1f2937' : '#6b7280',
+            }}
+          >
+            {notification.title}
+          </p>
+          <p
+            className="am-subtitle"
+            style={{
+              whiteSpace: 'normal',
+              lineHeight: '1.3',
+              color: isUnread ? '#374151' : '#9ca3af',
+            }}
+          >
+            {notification.message}
+          </p>
+          <div className="am-meta">
+            <span className="am-meta-item">
+              {formatTime(notification.createdAt)}
+            </span>
+            <span className="am-meta-item" style={{ color: typeMeta.color }}>
+              {typeMeta.label}
+            </span>
+          </div>
         </div>
-      )}
-    </div>
+        {thumbnailUrl && (
+          <div className="notif-thumbnail">
+            <img
+              src={thumbnailUrl}
+              alt=""
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+        <button
+          className="notif-delete-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteConfirm(true);
+          }}
+          aria-label="Delete notification"
+        >
+          <IonIcon icon={trash} style={{ fontSize: '16px', color: '#9ca3af' }} />
+        </button>
+      </div>
+      <IonAlert
+        isOpen={showDeleteConfirm}
+        onDidDismiss={() => setShowDeleteConfirm(false)}
+        header="Delete Notification"
+        message="Are you sure you want to delete this notification?"
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Delete',
+            role: 'destructive',
+            handler: onDelete,
+          },
+        ]}
+      />
+    </>
   );
 }
 
 const Notifications: React.FC = () => {
   const history = useHistory();
-  const { notifications: notifList, unreadCount, markAsRead, removeNotification, clearAll } =
-    useNotifications();
+  const {
+    notifications: notifList,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    removeNotification,
+    clearAll,
+  } = useNotifications();
   const { setCurrentSermon, setIsPlaying, setCurrentMedia } = usePlayer();
 
-  const [filterUnread, setFilterUnread] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const typeFilters = [
     { value: 'all', label: 'All' },
@@ -170,9 +234,8 @@ const Notifications: React.FC = () => {
 
   const filtered = useMemo(() => {
     return notifList.filter((n: any) => {
-      if (filterUnread && n.read) return false;
       if (filterType !== 'all') {
-        const t = n.type || n.data?.type || '';
+        const t = n.type || n.contentType || '';
         if (filterType === 'other') {
           if (['sermon', 'podcast', 'devotion', 'event', 'ministry'].includes(t)) return false;
         } else if (t !== filterType) {
@@ -181,7 +244,7 @@ const Notifications: React.FC = () => {
       }
       return true;
     });
-  }, [notifList, filterUnread, filterType]);
+  }, [notifList, filterType]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a: any, b: any) => {
@@ -202,16 +265,18 @@ const Notifications: React.FC = () => {
     return out;
   }, [sorted]);
 
-  const totalUnread = notifList.filter((n: any) => !n.read).length;
+  const getNotifId = (n: any) => n._id || n.id;
 
   async function handleClick(n: any) {
-    markAsRead(n.id);
-    const { type, sermonId, podcastId, devotionId, eventId, ministryId, prayerId, url } = n.data || {};
+    markAsRead(getNotifId(n));
+    const { type, contentId, sermonId, podcastId, devotionId, eventId, ministryId, prayerId, url } =
+      n.data || { type: n.contentType, contentId: n.contentId };
+    const targetId = contentId || sermonId || podcastId || devotionId || eventId || ministryId || prayerId;
     try {
       switch (type) {
         case 'sermon':
-          if (sermonId) {
-            const sRes = await apiService.getSermon(sermonId);
+          if (targetId) {
+            const sRes = await apiService.getSermon(targetId);
             const sermonData = (sRes as any).sermon || sRes;
             setCurrentSermon({
               id: sermonData._id || sermonData.id,
@@ -220,14 +285,14 @@ const Notifications: React.FC = () => {
               thumbnailUrl: sermonData.thumbnailUrl || sermonData.thumbnail || '/Bible.JPG',
               publishedAt: sermonData.date || sermonData.createdAt || new Date().toISOString(),
               duration: sermonData.duration || '00:00',
-              viewCount: (sermonData.viewCount || 0).toString()
+              viewCount: (sermonData.viewCount || 0).toString(),
             } as any);
-            history.push(`/tab2?videoId=${sermonId}`);
+            history.push(`/tab2?videoId=${targetId}`);
           }
           break;
         case 'podcast':
-          if (podcastId) {
-            const pdRes = await apiService.getPodcast(podcastId);
+          if (targetId) {
+            const pdRes = await apiService.getPodcast(targetId);
             const pd = (pdRes as any).podcast || pdRes;
             setCurrentMedia({
               id: pd._id || pd.id,
@@ -237,23 +302,23 @@ const Notifications: React.FC = () => {
               publishedAt: pd.publishedAt || new Date().toISOString(),
               duration: pd.duration || '00:00',
               audioUrl: pd.audioUrl || '',
-              viewCount: '0'
+              viewCount: '0',
             });
             setIsPlaying(true);
             history.push('/podcast-player');
           }
           break;
         case 'devotion':
-          if (devotionId) history.push(`/full-devotion?id=${devotionId}`);
+          if (targetId) history.push(`/full-devotion?id=${targetId}`);
           break;
         case 'event':
-          if (eventId) history.push(`/event-detail?id=${eventId}`);
+          if (targetId) history.push(`/event-detail?id=${targetId}`);
           break;
         case 'ministry':
-          if (ministryId) history.push(`/ministry-detail?id=${ministryId}`);
+          if (targetId) history.push(`/ministry-detail?id=${targetId}`);
           break;
         case 'prayer':
-          if (prayerId) history.push('/prayer-request');
+          if (targetId) history.push('/prayer-request');
           break;
         default:
           if (url) history.push(url);
@@ -271,21 +336,42 @@ const Notifications: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Notifications</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>
+            Notifications
+          </IonTitle>
+          {unreadCount > 0 && (
+            <IonButton fill="clear" slot="end" onClick={markAllAsRead} style={{ marginRight: '4px' }}>
+              <IonIcon icon={checkmarkDone} slot="start" style={{ fontSize: '18px' }} />
+              <span style={{ fontSize: '13px' }}>Read all</span>
+            </IonButton>
+          )}
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
         <div className="am-page">
-
           {/* Filter Actions */}
           <div className="am-section">
             <div className="am-section-header">
-              <h2 className="am-section-title">Notifications</h2>
+              <h2 className="am-section-title">
+                Notifications
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      marginLeft: '8px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#6366f1',
+                    }}
+                  >
+                    {unreadCount} unread
+                  </span>
+                )}
+              </h2>
               {notifList.length > 0 && (
                 <button
                   className="am-action-chip"
-                  onClick={clearAll}
+                  onClick={() => setShowClearConfirm(true)}
                   style={{ '--chip-color': '#ef4444' } as React.CSSProperties}
                 >
                   <div className="am-action-icon">
@@ -317,8 +403,8 @@ const Notifications: React.FC = () => {
                 <IonIcon icon={notificationsIcon} />
                 <p className="am-empty-title">All caught up</p>
                 <p className="am-empty-text">
-                  {filterUnread
-                    ? 'No unread notifications'
+                  {filterType !== 'all'
+                    ? `No ${filterType} notifications`
                     : 'No notifications yet. New content will appear here.'}
                 </p>
               </div>
@@ -334,9 +420,10 @@ const Notifications: React.FC = () => {
                       <div className="am-list">
                         {notifs.map((n: any) => (
                           <NotifRow
-                            key={n.id}
+                            key={getNotifId(n)}
                             notification={n}
                             onClick={() => handleClick(n)}
+                            onDelete={() => removeNotification(getNotifId(n))}
                           />
                         ))}
                       </div>
@@ -353,6 +440,21 @@ const Notifications: React.FC = () => {
           </div>
         </div>
       </IonContent>
+
+      <IonAlert
+        isOpen={showClearConfirm}
+        onDidDismiss={() => setShowClearConfirm(false)}
+        header="Clear All Notifications"
+        message="Are you sure you want to delete all notifications? This cannot be undone."
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Clear All',
+            role: 'destructive',
+            handler: clearAll,
+          },
+        ]}
+      />
     </IonPage>
   );
 };

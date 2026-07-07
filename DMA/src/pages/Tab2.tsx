@@ -93,6 +93,15 @@ const Tab2: React.FC = () => {
     savePlaybackPosition(time);
   }, []);
 
+  // Stable onPlay callback
+  const stableOnPlay = useCallback(() => setIsPlaying(true), []);
+
+  // Memoize the video URL to prevent iframe re-mounts
+  const videoUrl = useMemo(() => {
+    if (!currentSermon) return '';
+    return getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '');
+  }, [currentSermon?.id, (currentSermon as any)?.videoUrl, (currentSermon as any)?.streamUrl]);
+
   // IntersectionObserver to detect when video scrolls out of view
   useEffect(() => {
     const container = videoContainerRef.current;
@@ -510,11 +519,11 @@ const Tab2: React.FC = () => {
               }}>
                 <VideoPlayer
                   key={currentSermon.id}
-                  url={getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '')}
+                  url={videoUrl}
                   title={currentSermon.title}
                   playing={isPlaying}
                   startTime={savedStartTime}
-                  onPlay={() => setIsPlaying(true)}
+                  onPlay={stableOnPlay}
                   onTimeUpdate={stableOnTimeUpdate}
                 />
               </div>
@@ -546,7 +555,7 @@ const Tab2: React.FC = () => {
                     onClick={async () => {
                       if (currentSermon) {
                         // Generate the shareable URL that points to the Vercel deployment
-                        const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${currentSermon.id}`;
+                        const shareUrl = `${window.location.origin}/tab2?videoId=${currentSermon.id}`;
                         
                         const shareData = {
                           title: currentSermon.title,
@@ -1234,7 +1243,7 @@ const Tab2: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedSermonForActionSheet) {
-                  const shareUrl = `https://dove-church-app.vercel.app/tab2?videoId=${selectedSermonForActionSheet.id}`;
+                  const shareUrl = `${window.location.origin}/tab2?videoId=${selectedSermonForActionSheet.id}`;
                   const shareData = {
                     title: selectedSermonForActionSheet.title,
                     text: selectedSermonForActionSheet.description,
@@ -1289,14 +1298,14 @@ const Tab2: React.FC = () => {
           >
             <VideoPlayer
               key={`mini-${currentSermon.id}`}
-              url={getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '')}
+              url={videoUrl}
               title={currentSermon.title}
               playing={isPlaying}
               mini={true}
               miniWidth={200}
               miniHeight={112}
               startTime={savedStartTime}
-              onPlay={() => setIsPlaying(true)}
+              onPlay={stableOnPlay}
               onTimeUpdate={stableOnTimeUpdate}
             />
             {/* Mini Player Overlay */}

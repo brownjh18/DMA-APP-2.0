@@ -1,0 +1,12 @@
+node_modules/
+DMA/node_modules/
+DMA/dist/
+.git/
+.kilo/
+*.md
+crash_log.txt
+.vercel/
+fly.toml
+docker-compose*.yml
+.env
+.env.*

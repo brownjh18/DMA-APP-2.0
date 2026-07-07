@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 type EventCallback = ((data: any) => void) | null;
@@ -6,143 +6,73 @@ type EventCallback = ((data: any) => void) | null;
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  // Devotions
-  devotionCreated: EventCallback;
-  devotionUpdated: EventCallback;
-  devotionDeleted: EventCallback;
-  onDevotionCreated: (callback: (data: any) => void) => void;
-  onDevotionUpdated: (callback: (data: any) => void) => void;
-  onDevotionDeleted: (callback: (data: any) => void) => void;
-  // Sermons
-  sermonCreated: EventCallback;
-  sermonUpdated: EventCallback;
-  sermonDeleted: EventCallback;
+  onNotification: (callback: (data: any) => void) => void;
+  joinUserRoom: (userId: string) => void;
   onSermonCreated: (callback: (data: any) => void) => void;
   onSermonUpdated: (callback: (data: any) => void) => void;
   onSermonDeleted: (callback: (data: any) => void) => void;
-  // Podcasts
-  podcastCreated: EventCallback;
-  podcastUpdated: EventCallback;
-  podcastDeleted: EventCallback;
-  onPodcastCreated: (callback: (data: any) => void) => void;
-  onPodcastUpdated: (callback: (data: any) => void) => void;
-  onPodcastDeleted: (callback: (data: any) => void) => void;
-  // Events
-  eventCreated: EventCallback;
-  eventUpdated: EventCallback;
-  eventDeleted: EventCallback;
+  onDevotionCreated: (callback: (data: any) => void) => void;
+  onDevotionUpdated: (callback: (data: any) => void) => void;
+  onDevotionDeleted: (callback: (data: any) => void) => void;
   onEventCreated: (callback: (data: any) => void) => void;
   onEventUpdated: (callback: (data: any) => void) => void;
   onEventDeleted: (callback: (data: any) => void) => void;
-  // Ministries
-  ministryCreated: EventCallback;
-  ministryUpdated: EventCallback;
-  ministryDeleted: EventCallback;
+  onPodcastCreated: (callback: (data: any) => void) => void;
+  onPodcastUpdated: (callback: (data: any) => void) => void;
+  onPodcastDeleted: (callback: (data: any) => void) => void;
   onMinistryCreated: (callback: (data: any) => void) => void;
   onMinistryUpdated: (callback: (data: any) => void) => void;
   onMinistryDeleted: (callback: (data: any) => void) => void;
 }
 
-const initialContextValue: SocketContextType = {
+const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
-  devotionCreated: null,
-  devotionUpdated: null,
-  devotionDeleted: null,
-  onDevotionCreated: () => {},
-  onDevotionUpdated: () => {},
-  onDevotionDeleted: () => {},
-  sermonCreated: null,
-  sermonUpdated: null,
-  sermonDeleted: null,
+  onNotification: () => {},
+  joinUserRoom: () => {},
   onSermonCreated: () => {},
   onSermonUpdated: () => {},
   onSermonDeleted: () => {},
-  podcastCreated: null,
-  podcastUpdated: null,
-  podcastDeleted: null,
-  onPodcastCreated: () => {},
-  onPodcastUpdated: () => {},
-  onPodcastDeleted: () => {},
-  eventCreated: null,
-  eventUpdated: null,
-  eventDeleted: null,
+  onDevotionCreated: () => {},
+  onDevotionUpdated: () => {},
+  onDevotionDeleted: () => {},
   onEventCreated: () => {},
   onEventUpdated: () => {},
   onEventDeleted: () => {},
-  ministryCreated: null,
-  ministryUpdated: null,
-  ministryDeleted: null,
+  onPodcastCreated: () => {},
+  onPodcastUpdated: () => {},
+  onPodcastDeleted: () => {},
   onMinistryCreated: () => {},
   onMinistryUpdated: () => {},
   onMinistryDeleted: () => {},
-};
-
-const SocketContext = createContext<SocketContextType>(initialContextValue);
+});
 
 export const useSocket = () => useContext(SocketContext);
 
-interface SocketProviderProps {
-  children: React.ReactNode;
-}
+const EVENTS = [
+  'sermon:created', 'sermon:updated', 'sermon:deleted',
+  'devotion:created', 'devotion:updated', 'devotion:deleted',
+  'event:created', 'event:updated', 'event:deleted',
+  'podcast:created', 'podcast:updated', 'podcast:deleted',
+  'ministry:created', 'ministry:updated', 'ministry:deleted',
+] as const;
 
-export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  
-  // Devotions callbacks
-  const [devotionCreated, setDevotionCreated] = useState<EventCallback>(null);
-  const [devotionUpdated, setDevotionUpdated] = useState<EventCallback>(null);
-  const [devotionDeleted, setDevotionDeleted] = useState<EventCallback>(null);
-  
-  // Sermons callbacks
-  const [sermonCreated, setSermonCreated] = useState<EventCallback>(null);
-  const [sermonUpdated, setSermonUpdated] = useState<EventCallback>(null);
-  const [sermonDeleted, setSermonDeleted] = useState<EventCallback>(null);
-  
-  // Podcasts callbacks
-  const [podcastCreated, setPodcastCreated] = useState<EventCallback>(null);
-  const [podcastUpdated, setPodcastUpdated] = useState<EventCallback>(null);
-  const [podcastDeleted, setPodcastDeleted] = useState<EventCallback>(null);
-  
-  // Events callbacks
-  const [eventCreated, setEventCreated] = useState<EventCallback>(null);
-  const [eventUpdated, setEventUpdated] = useState<EventCallback>(null);
-  const [eventDeleted, setEventDeleted] = useState<EventCallback>(null);
-  
-  // Ministries callbacks
-  const [ministryCreated, setMinistryCreated] = useState<EventCallback>(null);
-  const [ministryUpdated, setMinistryUpdated] = useState<EventCallback>(null);
-  const [ministryDeleted, setMinistryDeleted] = useState<EventCallback>(null);
+  const notificationCallbackRef = useRef<EventCallback>(null);
+  const eventCallbackRefs = useRef<Record<string, EventCallback>>({});
 
-useEffect(() => {
-     const isVercel = import.meta.env.VITE_API_URL?.includes('vercel.app');
-     
-     if (isVercel) {
-       console.log('⚠️ Socket.IO: Vercel detected. Using dedicated WebSocket server for real-time notifications.');
-     }
-
-      const isOnVercel = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
-      const apiUrl = isOnVercel ? '' : (import.meta.env.VITE_API_URL || '');
-      const explicitSocketUrl = isOnVercel ? '' : (import.meta.env.VITE_SOCKET_URL || '');
-      const fallbackUrl = apiUrl.replace(/\/api$/, '') || (isOnVercel ? '' : window.location.origin);
-      
-      // Try explicit URL first, fall back to API backend
-      const socketUrl = explicitSocketUrl || fallbackUrl;
-      
-      if (!socketUrl) {
-        console.log('🔌 No WebSocket URL configured, skipping connection (Vercel: Socket.IO not available)');
-        return;
-      }
-
-     console.log(`🔌 Attempting to connect socket to: ${socketUrl}`);
+  useEffect(() => {
+    const socketUrl = window.location.origin;
+    console.log('🔌 Connecting socket to:', socketUrl);
 
     const newSocket = io(socketUrl, {
-      transports: ['polling', 'websocket'],
+      transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 2000,
-      timeout: 10000,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 15000,
     });
 
     newSocket.on('connect', () => {
@@ -157,29 +87,20 @@ useEffect(() => {
 
     newSocket.on('connect_error', (error) => {
       console.warn('Socket connection error:', error.message);
-      // If explicit URL fails and we haven't tried fallback yet
-      if (socketUrl === explicitSocketUrl && fallbackUrl !== explicitSocketUrl) {
-        console.log(`🔌 Falling back to API backend: ${fallbackUrl}`);
-        newSocket.disconnect();
-        const fallbackSocket = io(fallbackUrl, {
-          transports: ['polling', 'websocket'],
-          reconnection: true,
-          reconnectionAttempts: 3,
-          reconnectionDelay: 2000,
-          timeout: 10000,
-        });
-        fallbackSocket.on('connect', () => {
-          console.log('🔌 Fallback socket connected:', fallbackSocket.id);
-          setIsConnected(true);
-        });
-        fallbackSocket.on('disconnect', () => {
-          setIsConnected(false);
-        });
-        fallbackSocket.on('connect_error', (err) => {
-          console.warn('Fallback socket also failed:', err.message);
-        });
-        setSocket(fallbackSocket);
+    });
+
+    newSocket.on('notification:new', (data: any) => {
+      console.log('📥 New notification received:', data);
+      if (notificationCallbackRef.current) {
+        notificationCallbackRef.current(data);
       }
+    });
+
+    EVENTS.forEach((event) => {
+      newSocket.on(event, (data: any) => {
+        const cb = eventCallbackRefs.current[event];
+        if (cb) cb(data);
+      });
     });
 
     setSocket(newSocket);
@@ -189,216 +110,45 @@ useEffect(() => {
     };
   }, []);
 
-  // Set up event listeners for devotions
-  useEffect(() => {
-    if (!socket) return;
+  const onNotification = useCallback((callback: (data: any) => void) => {
+    notificationCallbackRef.current = callback;
+  }, []);
 
-    const handleDevotionCreated = (data: any) => {
-      console.log('📥 Received devotion:created event:', data);
-      if (devotionCreated) devotionCreated(data);
+  const joinUserRoom = useCallback((userId: string) => {
+    if (socket && userId) {
+      socket.emit('join', userId);
+      console.log('👤 Joined room for user:', userId);
+    }
+  }, [socket]);
+
+  const makeEventHandler = useCallback((event: string) => {
+    return (callback: (data: any) => void) => {
+      eventCallbackRefs.current[event] = callback;
     };
-
-    const handleDevotionUpdated = (data: any) => {
-      console.log('📥 Received devotion:updated event:', data);
-      if (devotionUpdated) devotionUpdated(data);
-    };
-
-    const handleDevotionDeleted = (data: any) => {
-      console.log('📥 Received devotion:deleted event:', data);
-      if (devotionDeleted) devotionDeleted(data);
-    };
-
-    socket.on('devotion:created', handleDevotionCreated);
-    socket.on('devotion:updated', handleDevotionUpdated);
-    socket.on('devotion:deleted', handleDevotionDeleted);
-
-    return () => {
-      socket.off('devotion:created', handleDevotionCreated);
-      socket.off('devotion:updated', handleDevotionUpdated);
-      socket.off('devotion:deleted', handleDevotionDeleted);
-    };
-  }, [socket, devotionCreated, devotionUpdated, devotionDeleted]);
-
-  // Set up event listeners for sermons
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleSermonCreated = (data: any) => {
-      console.log('📥 Received sermon:created event:', data);
-      if (sermonCreated) sermonCreated(data);
-    };
-
-    const handleSermonUpdated = (data: any) => {
-      console.log('📥 Received sermon:updated event:', data);
-      if (sermonUpdated) sermonUpdated(data);
-    };
-
-    const handleSermonDeleted = (data: any) => {
-      console.log('📥 Received sermon:deleted event:', data);
-      if (sermonDeleted) sermonDeleted(data);
-    };
-
-    socket.on('sermon:created', handleSermonCreated);
-    socket.on('sermon:updated', handleSermonUpdated);
-    socket.on('sermon:deleted', handleSermonDeleted);
-
-    return () => {
-      socket.off('sermon:created', handleSermonCreated);
-      socket.off('sermon:updated', handleSermonUpdated);
-      socket.off('sermon:deleted', handleSermonDeleted);
-    };
-  }, [socket, sermonCreated, sermonUpdated, sermonDeleted]);
-
-  // Set up event listeners for podcasts
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePodcastCreated = (data: any) => {
-      console.log('📥 Received podcast:created event:', data);
-      if (podcastCreated) podcastCreated(data);
-    };
-
-    const handlePodcastUpdated = (data: any) => {
-      console.log('📥 Received podcast:updated event:', data);
-      if (podcastUpdated) podcastUpdated(data);
-    };
-
-    const handlePodcastDeleted = (data: any) => {
-      console.log('📥 Received podcast:deleted event:', data);
-      if (podcastDeleted) podcastDeleted(data);
-    };
-
-    socket.on('podcast:created', handlePodcastCreated);
-    socket.on('podcast:updated', handlePodcastUpdated);
-    socket.on('podcast:deleted', handlePodcastDeleted);
-
-    return () => {
-      socket.off('podcast:created', handlePodcastCreated);
-      socket.off('podcast:updated', handlePodcastUpdated);
-      socket.off('podcast:deleted', handlePodcastDeleted);
-    };
-  }, [socket, podcastCreated, podcastUpdated, podcastDeleted]);
-
-  // Set up event listeners for events
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleEventCreated = (data: any) => {
-      console.log('📥 Received event:created event:', data);
-      if (eventCreated) eventCreated(data);
-    };
-
-    const handleEventUpdated = (data: any) => {
-      console.log('📥 Received event:updated event:', data);
-      if (eventUpdated) eventUpdated(data);
-    };
-
-    const handleEventDeleted = (data: any) => {
-      console.log('📥 Received event:deleted event:', data);
-      if (eventDeleted) eventDeleted(data);
-    };
-
-    socket.on('event:created', handleEventCreated);
-    socket.on('event:updated', handleEventUpdated);
-    socket.on('event:deleted', handleEventDeleted);
-
-    return () => {
-      socket.off('event:created', handleEventCreated);
-      socket.off('event:updated', handleEventUpdated);
-      socket.off('event:deleted', handleEventDeleted);
-    };
-  }, [socket, eventCreated, eventUpdated, eventDeleted]);
-
-  // Set up event listeners for ministries
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleMinistryCreated = (data: any) => {
-      console.log('📥 Received ministry:created event:', data);
-      if (ministryCreated) ministryCreated(data);
-    };
-
-    const handleMinistryUpdated = (data: any) => {
-      console.log('📥 Received ministry:updated event:', data);
-      if (ministryUpdated) ministryUpdated(data);
-    };
-
-    const handleMinistryDeleted = (data: any) => {
-      console.log('📥 Received ministry:deleted event:', data);
-      if (ministryDeleted) ministryDeleted(data);
-    };
-
-    socket.on('ministry:created', handleMinistryCreated);
-    socket.on('ministry:updated', handleMinistryUpdated);
-    socket.on('ministry:deleted', handleMinistryDeleted);
-
-    return () => {
-      socket.off('ministry:created', handleMinistryCreated);
-      socket.off('ministry:updated', handleMinistryUpdated);
-      socket.off('ministry:deleted', handleMinistryDeleted);
-    };
-  }, [socket, ministryCreated, ministryUpdated, ministryDeleted]);
-
-  // Callback setters for devotions
-  const onDevotionCreated = useCallback((callback: (data: any) => void) => setDevotionCreated(() => callback), []);
-  const onDevotionUpdated = useCallback((callback: (data: any) => void) => setDevotionUpdated(() => callback), []);
-  const onDevotionDeleted = useCallback((callback: (data: any) => void) => setDevotionDeleted(() => callback), []);
-
-  // Callback setters for sermons
-  const onSermonCreated = useCallback((callback: (data: any) => void) => setSermonCreated(() => callback), []);
-  const onSermonUpdated = useCallback((callback: (data: any) => void) => setSermonUpdated(() => callback), []);
-  const onSermonDeleted = useCallback((callback: (data: any) => void) => setSermonDeleted(() => callback), []);
-
-  // Callback setters for podcasts
-  const onPodcastCreated = useCallback((callback: (data: any) => void) => setPodcastCreated(() => callback), []);
-  const onPodcastUpdated = useCallback((callback: (data: any) => void) => setPodcastUpdated(() => callback), []);
-  const onPodcastDeleted = useCallback((callback: (data: any) => void) => setPodcastDeleted(() => callback), []);
-
-  // Callback setters for events
-  const onEventCreated = useCallback((callback: (data: any) => void) => setEventCreated(() => callback), []);
-  const onEventUpdated = useCallback((callback: (data: any) => void) => setEventUpdated(() => callback), []);
-  const onEventDeleted = useCallback((callback: (data: any) => void) => setEventDeleted(() => callback), []);
-
-  // Callback setters for ministries
-  const onMinistryCreated = useCallback((callback: (data: any) => void) => setMinistryCreated(() => callback), []);
-  const onMinistryUpdated = useCallback((callback: (data: any) => void) => setMinistryUpdated(() => callback), []);
-  const onMinistryDeleted = useCallback((callback: (data: any) => void) => setMinistryDeleted(() => callback), []);
+  }, []);
 
   return (
     <SocketContext.Provider
       value={{
         socket,
         isConnected,
-        devotionCreated: null,
-        devotionUpdated: null,
-        devotionDeleted: null,
-        onDevotionCreated,
-        onDevotionUpdated,
-        onDevotionDeleted,
-        sermonCreated: null,
-        sermonUpdated: null,
-        sermonDeleted: null,
-        onSermonCreated,
-        onSermonUpdated,
-        onSermonDeleted,
-        podcastCreated: null,
-        podcastUpdated: null,
-        podcastDeleted: null,
-        onPodcastCreated,
-        onPodcastUpdated,
-        onPodcastDeleted,
-        eventCreated: null,
-        eventUpdated: null,
-        eventDeleted: null,
-        onEventCreated,
-        onEventUpdated,
-        onEventDeleted,
-        ministryCreated: null,
-        ministryUpdated: null,
-        ministryDeleted: null,
-        onMinistryCreated,
-        onMinistryUpdated,
-        onMinistryDeleted,
+        onNotification,
+        joinUserRoom,
+        onSermonCreated: makeEventHandler('sermon:created'),
+        onSermonUpdated: makeEventHandler('sermon:updated'),
+        onSermonDeleted: makeEventHandler('sermon:deleted'),
+        onDevotionCreated: makeEventHandler('devotion:created'),
+        onDevotionUpdated: makeEventHandler('devotion:updated'),
+        onDevotionDeleted: makeEventHandler('devotion:deleted'),
+        onEventCreated: makeEventHandler('event:created'),
+        onEventUpdated: makeEventHandler('event:updated'),
+        onEventDeleted: makeEventHandler('event:deleted'),
+        onPodcastCreated: makeEventHandler('podcast:created'),
+        onPodcastUpdated: makeEventHandler('podcast:updated'),
+        onPodcastDeleted: makeEventHandler('podcast:deleted'),
+        onMinistryCreated: makeEventHandler('ministry:created'),
+        onMinistryUpdated: makeEventHandler('ministry:updated'),
+        onMinistryDeleted: makeEventHandler('ministry:deleted'),
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 interface YouTubePlayerProps {
   url: string;
@@ -27,9 +27,11 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   startTime = 0
 }) => {
   const [showFallback, setShowFallback] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Extract YouTube video ID and create embed URL
-  const getYouTubeEmbedUrl = (videoUrl: string): string => {
+  const getYouTubeEmbedUrl = useCallback((videoUrl: string): string => {
     if (!videoUrl) return '';
 
     let videoId = '';
@@ -50,7 +52,59 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     }
 
     return videoUrl;
+  }, []);
+
+  // Extract video ID for external link fallback
+  const getYouTubeVideoId = useCallback((videoUrl: string): string => {
+    if (!videoUrl) return '';
+    if (videoUrl.includes('youtu.be/')) {
+      return videoUrl.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
+    } else if (videoUrl.includes('youtube.com/watch?v=')) {
+      return videoUrl.split('v=')[1]?.split('&')[0]?.split('?')[0] || '';
+    } else if (videoUrl.includes('youtube.com/embed/')) {
+      return videoUrl.split('embed/')[1]?.split('?')[0]?.split('&')[0] || '';
+    } else if (videoUrl.includes('youtube.com/live/')) {
+      return videoUrl.split('live/')[1]?.split('?')[0]?.split('&')[0] || '';
+    }
+    return '';
+  }, []);
+
+  const videoId = getYouTubeVideoId(url);
+  const embedUrl = getYouTubeEmbedUrl(url);
+
+  // Build embed params
+  const buildEmbedParams = (forMini: boolean) => {
+    const params = new URLSearchParams();
+    if (forMini) {
+      // Mini player: autoplay + mute (required for small previews)
+      params.set('autoplay', playing ? '1' : '0');
+      params.set('mute', '1');
+    } else {
+      // Full player: no autoplay/mute to avoid Error 153 on restricted videos
+      params.set('autoplay', '0');
+    }
+    params.set('modestbranding', '1');
+    params.set('rel', '0');
+    params.set('playsinline', '1');
+    params.set('iv_load_policy', '3');
+    if (startTime > 0) {
+      params.set('start', String(Math.floor(startTime)));
+    }
+    return params.toString();
   };
+
+  const iframeSrc = `${embedUrl}?${buildEmbedParams(false)}`;
+  const miniIframeSrc = `${embedUrl}?${buildEmbedParams(true)}`;
+
+  // Retry loading on error — YouTube iframes sometimes fail on first load
+  useEffect(() => {
+    if (!loadError || !videoId) return;
+    const retryTimeout = setTimeout(() => {
+      setLoadError(false);
+      setShowFallback(false);
+    }, 3000);
+    return () => clearTimeout(retryTimeout);
+  }, [loadError, videoId]);
 
   const containerStyle = fullScreen ? {
     width: '100%',
@@ -81,8 +135,16 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     borderRadius: '8px'
   };
 
+  const openOnYouTube = () => {
+    if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+      window.open(url, '_system');
+    } else {
+      window.open(url, '_blank');
+    }
+  };
+
   if (mini) {
-    if (showFallback) {
+    if (showFallback || loadError) {
       return (
         <div
           style={{
@@ -97,13 +159,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             cursor: 'pointer',
             backgroundColor: '#333'
           }}
-          onClick={() => {
-            if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-              window.open(url, '_system');
-            } else {
-              window.location.href = url;
-            }
-          }}
+          onClick={openOnYouTube}
         >
           ▶️
         </div>
@@ -120,8 +176,9 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         backgroundColor: '#000'
       }}>
         <iframe
+          ref={iframeRef}
           key={`mini-youtube-${url}`}
-          src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&mute=1${startTime > 0 ? `&start=${Math.floor(startTime)}` : ''}`}
+          src={miniIframeSrc}
           width="100%"
           height="100%"
           style={{ borderRadius: '10px', border: 'none' }}
@@ -130,6 +187,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
           onLoad={() => console.log('Mini YouTube iframe loaded:', url)}
           onError={() => {
             console.log('Mini YouTube iframe error, showing fallback');
+            setLoadError(true);
             setShowFallback(true);
           }}
         />
@@ -137,7 +195,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     );
   }
 
-  if (showFallback) {
+  if (showFallback || loadError) {
     return (
       <div style={{
         ...playerStyle,
@@ -158,13 +216,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
           This YouTube video cannot be embedded.
         </p>
         <button
-          onClick={() => {
-            if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-              window.open(url, '_system');
-            } else {
-              window.location.href = url;
-            }
-          }}
+          onClick={openOnYouTube}
           style={{
             backgroundColor: '#ff0000',
             color: 'white',
@@ -188,8 +240,9 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   return (
     <div style={containerStyle}>
       <iframe
+        ref={iframeRef}
         key={`youtube-${url}`}
-        src={`${getYouTubeEmbedUrl(url)}?autoplay=${playing ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3${startTime > 0 ? `&start=${Math.floor(startTime)}` : ''}`}
+        src={iframeSrc}
         width="100%"
         height="100%"
         style={playerStyle}
@@ -199,6 +252,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         onLoad={() => console.log('YouTube iframe loaded:', url)}
         onError={() => {
           console.log('YouTube iframe error, showing fallback');
+          setLoadError(true);
           setShowFallback(true);
         }}
       />

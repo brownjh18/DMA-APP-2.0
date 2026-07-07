@@ -697,7 +697,7 @@ const Tab4: React.FC = () => {
               icon: share,
               handler: async () => {
                 if (selectedPodcast) {
-                  const shareUrl = `https://dove-church-app.vercel.app/podcast-player?id=${selectedPodcast.id}`;
+                  const shareUrl = `${window.location.origin}/podcast-player?id=${selectedPodcast.id}`;
                   const shareData = {
                     title: selectedPodcast.title,
                     text: selectedPodcast.description,

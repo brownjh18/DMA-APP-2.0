@@ -347,7 +347,7 @@ const FullPodcastPlayer: React.FC = () => {
     if (!podcast) return;
 
     // Generate the shareable URL that points to the Vercel deployment
-    const shareUrl = `https://dove-church-app.vercel.app/podcast-player?id=${podcast.id}`;
+    const shareUrl = `${window.location.origin}/podcast-player?id=${podcast.id}`;
     
     const shareData = {
       title: podcast.title,

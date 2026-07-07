@@ -115,9 +115,9 @@ const FullDevotion: React.FC = () => {
 
       fetchDevotion();
     } else {
-      // No valid parameters
-      console.log('No valid devotion ID provided');
-      setDevotion(null);
+      // No valid parameters — redirect back to devotions tab
+      console.log('No valid devotion ID provided, redirecting back');
+      history.replace('/tab3');
     }
   }, [location.search]);
 
@@ -343,7 +343,7 @@ const FullDevotion: React.FC = () => {
                   if (!devotion) return;
 
                   // Generate the shareable URL that points to the Vercel deployment
-                  const shareUrl = `https://dove-church-app.vercel.app/full-devotion?id=${devotion.id}`;
+                  const shareUrl = `${window.location.origin}/full-devotion?id=${devotion.id}`;
                   
                   const shareData = {
                     title: devotion.title,

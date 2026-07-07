@@ -96,9 +96,47 @@
   object-fit: cover;
 }
 
-/* Unread indicator */
+/* Unread row */
 .notif-row.unread {
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #6366f1 !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+}
+
+/* Read row */
+.notif-row.read {
+  border-left: 3px solid #e5e7eb !important;
+  background: #fff !important;
+}
+
+/* Delete button */
+.notif-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.notif-row:hover .notif-delete-btn,
+.notif-row:active .notif-delete-btn {
+  opacity: 1;
+}
+
+.notif-delete-btn:active {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.notif-row {
+  position: relative;
 }
 
 /* Dark Mode */
@@ -124,4 +162,18 @@
 
 [data-theme="dark"] .notif-section-label {
   color: #ffffff;
+}
+
+[data-theme="dark"] .notif-row.unread {
+  border-left: 3px solid #6366f1 !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="dark"] .notif-row.read {
+  border-left: 3px solid rgba(84, 84, 88, 0.36) !important;
+  background: #1c1c1e !important;
+}
+
+[data-theme="dark"] .notif-delete-btn:active {
+  background: rgba(239, 68, 68, 0.2);
 }

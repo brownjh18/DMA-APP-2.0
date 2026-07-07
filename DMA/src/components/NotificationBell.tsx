@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { notificationsOutline, notifications } from 'ionicons/icons';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -9,31 +9,54 @@ interface NotificationBellProps {
   showIcon?: boolean;
 }
 
-const NotificationBell: React.FC<NotificationBellProps> = ({ 
-  onClick, 
+const NotificationBell: React.FC<NotificationBellProps> = ({
+  onClick,
   size = 'medium',
-  showIcon = true 
+  showIcon = true,
 }) => {
-  const { unreadCount } = useNotifications();
+  const { unreadCount, hasNewNotification, clearNewNotificationFlag } = useNotifications();
+  const [isSwinging, setIsSwinging] = useState(false);
+
+  useEffect(() => {
+    if (hasNewNotification) {
+      setIsSwinging(true);
+      clearNewNotificationFlag();
+      const timer = setTimeout(() => setIsSwinging(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasNewNotification, clearNewNotificationFlag]);
 
   const iconSize = {
     small: '20px',
     medium: '24px',
-    large: '28px'
+    large: '28px',
   };
 
   const badgeSize = {
     small: { width: '16px', height: '16px', fontSize: '9px' },
     medium: { width: '18px', height: '18px', fontSize: '10px' },
-    large: { width: '20px', height: '20px', fontSize: '11px' }
+    large: { width: '20px', height: '20px', fontSize: '11px' },
   };
 
-  // Don't render anything if there are no unread notifications and we're not showing the icon
   if (!showIcon && unreadCount === 0) return null;
 
   return (
     <>
       <style>{`
+        @keyframes bellSwing {
+          0% { transform: rotate(0deg); }
+          10% { transform: rotate(14deg); }
+          20% { transform: rotate(-12deg); }
+          30% { transform: rotate(10deg); }
+          40% { transform: rotate(-8deg); }
+          50% { transform: rotate(6deg); }
+          60% { transform: rotate(-4deg); }
+          70% { transform: rotate(2deg); }
+          80% { transform: rotate(-1deg); }
+          90% { transform: rotate(0.5deg); }
+          100% { transform: rotate(0deg); }
+        }
+
         .notification-bell-container {
           position: relative;
           display: inline-flex;
@@ -51,6 +74,10 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 
         .notification-bell-container:active {
           background-color: rgba(128, 128, 128, 0.25);
+        }
+
+        .notification-bell-icon.swinging {
+          animation: bellSwing 0.8s ease-in-out;
         }
 
         .notification-badge {
@@ -81,22 +108,23 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
         }
       `}</style>
 
-      <div 
-        className="notification-bell-container" 
+      <div
+        className="notification-bell-container"
         onClick={onClick}
         role="button"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
       >
         {showIcon && (
-          <IonIcon 
+          <IonIcon
             icon={unreadCount > 0 ? notifications : notificationsOutline}
-            style={{ 
+            className={`notification-bell-icon${isSwinging ? ' swinging' : ''}`}
+            style={{
               fontSize: iconSize[size],
               color: 'var(--ion-text-color)',
             }}
           />
         )}
-        
+
         {unreadCount > 0 && (
           <span className={`notification-badge${!showIcon ? ' no-count' : ''}`}>
             {unreadCount > 99 ? '99+' : unreadCount}

@@ -108,6 +108,18 @@ const FullSermonPlayer: React.FC = () => {
     savePlaybackPosition(time);
   }, []);
 
+  // Stable onPlay callback
+  const stableOnPlay = useCallback(() => setIsPlaying(true), []);
+
+  // Stable onPause callback
+  const stableOnPause = useCallback(() => setIsPlaying(false), []);
+
+  // Memoize video URL
+  const videoUrl = useMemo(() => {
+    if (!sermon) return '';
+    return getFullUrl(sermon.videoUrl || sermon.streamUrl || '');
+  }, [sermon?.id, sermon?.videoUrl, sermon?.streamUrl]);
+
   useEffect(() => {
     // Check for device volume control support
     if (Capacitor.isNativePlatform()) {
@@ -415,12 +427,12 @@ const FullSermonPlayer: React.FC = () => {
               boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)'
             }}>
               <VideoPlayer
-                url={getFullUrl(sermon.videoUrl || sermon.streamUrl || '')}
+                url={videoUrl}
                 title={sermon.title}
                 playing={isPlaying}
                 startTime={savedStartTime}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
+                onPlay={stableOnPlay}
+                onPause={stableOnPause}
                 onTimeUpdate={stableOnTimeUpdate}
                 fullScreen={true}
               />
