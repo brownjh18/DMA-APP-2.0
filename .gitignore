@@ -12,3 +12,5 @@ server-error.log
 server_out.txt
 crash_log*.txt
 websocket-package.json
+.env
+*.png

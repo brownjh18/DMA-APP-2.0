@@ -7,18 +7,18 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        value: "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/dmaApp?appName=Cluster1"
+        sync: false
       - key: JWT_SECRET
-        value: "bcadd09f9a63199da614ffc0e50aea4d3ebf94431e338b2fdad3b16a4d1410b0"
+        sync: false
       - key: JWT_EXPIRES_IN
         value: "7d"
       - key: CORS_ORIGIN
         value: "*"
       - key: CLOUDINARY_CLOUD_NAME
-        value: "durchmyhd"
+        sync: false
       - key: CLOUDINARY_API_KEY
-        value: "385354589753143"
+        sync: false
       - key: CLOUDINARY_API_SECRET
-        value: "F8THR1gRfU7AHKXX77c8MHzHG1c"
+        sync: false
     healthCheckPath: /api/health
     autoDeploy: true
