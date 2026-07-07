@@ -71,8 +71,8 @@ const limiter = rateLimit({
 const allowedOrigins = [
   'https://dove-church.vercel.app',
   'https://dove-church-backend.vercel.app',
-  'https://dovechurchapp.vercel.app',
   'https://dove-church-frontend.vercel.app',
+  'https://dovechurchapp.vercel.app',
   'https://localhost',
   'http://localhost',
   'http://localhost:5000',
@@ -81,12 +81,18 @@ const allowedOrigins = [
   'capacitor://localhost'
 ];
 
+// Also allow any Vercel preview deployments for this project
+const isVercelPreview = (origin) => {
+  return /^https:\/\/dove-church-[a-z0-9]+-brownjh18s-projects\.vercel\.app$/.test(origin);
+};
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (process.env.CORS_ORIGIN === '*') return callback(null, true);
     if (!process.env.CORS_ORIGIN) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isVercelPreview(origin)) return callback(null, true);
     if (process.env.CORS_ORIGIN.includes(origin)) return callback(null, true);
     callback(null, true);
   },
