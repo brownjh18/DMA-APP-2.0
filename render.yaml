@@ -7,7 +7,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        value: "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/dmaApp"
+        value: "mongodb+srv://dove_admin:kQt3f0wk2abekE5x@cluster1.xxt8zzi.mongodb.net/?appName=Cluster1"
       - key: JWT_SECRET
         value: "dove-church-jwt-secret-2024"
       - key: JWT_EXPIRES_IN
