@@ -64,7 +64,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const eventCallbackRefs = useRef<Record<string, EventCallback>>({});
 
   useEffect(() => {
-    const socketUrl = window.location.origin;
+    // In dev, Vite runs on :5173 but Socket.IO is on the backend at :10000.
+    // Use VITE_API_URL env var if set, otherwise fall back to port 10000.
+    const getSocketUrl = () => {
+      if (import.meta.env.VITE_API_URL) {
+        // Strip trailing /api to get the base backend URL
+        return import.meta.env.VITE_API_URL.replace(/\/api$/, '');
+      }
+      // On production (same origin), use window.location.origin
+      if (window.location.hostname !== 'localhost') {
+        return window.location.origin;
+      }
+      // Local dev: backend is always on port 10000
+      return 'http://localhost:10000';
+    };
+
+    const socketUrl = getSocketUrl();
     console.log('🔌 Connecting socket to:', socketUrl);
 
     const newSocket = io(socketUrl, {

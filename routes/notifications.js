@@ -45,6 +45,30 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
   }
 });
 
+// NOTE: /read-all and /clear-all must be defined BEFORE /:id routes
+// to prevent 'read-all' / 'clear-all' being matched as a MongoDB ObjectId
+
+router.put('/read-all', authenticateToken, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user._id, read: false },
+      { read: true }
+    );
+    res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+router.delete('/clear-all', authenticateToken, async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.user._id });
+    res.json({ message: 'All notifications cleared' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
 router.put('/:id/read', authenticateToken, async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
@@ -59,18 +83,6 @@ router.put('/:id/read', authenticateToken, async (req, res) => {
   }
 });
 
-router.put('/read-all', authenticateToken, async (req, res) => {
-  try {
-    await Notification.updateMany(
-      { userId: req.user._id, read: false },
-      { read: true }
-    );
-    res.json({ message: 'All notifications marked as read' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error', details: error.message });
-  }
-});
-
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const notification = await Notification.findOneAndDelete({
@@ -79,15 +91,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     });
     if (!notification) return res.status(404).json({ error: 'Notification not found' });
     res.json({ message: 'Notification deleted' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error', details: error.message });
-  }
-});
-
-router.delete('/clear-all', authenticateToken, async (req, res) => {
-  try {
-    await Notification.deleteMany({ userId: req.user._id });
-    res.json({ message: 'All notifications cleared' });
   } catch (error) {
     res.status(500).json({ error: 'Server error', details: error.message });
   }
