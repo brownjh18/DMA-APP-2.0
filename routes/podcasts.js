@@ -241,8 +241,14 @@ router.post('/', upload.any(), async (req, res) => {
             console.log('☁️ Audio uploaded to Cloudinary:', audioUrl);
           } catch (cloudError) {
             console.error('☁️ Cloudinary upload failed, using local storage:', cloudError.message);
-            // Fallback to local storage
-            audioUrl = `/uploads/podcasts/${audioFile.filename}`;
+            const uploadPath = path.join(__dirname, '../uploads/podcasts');
+            if (!fs.existsSync(uploadPath)) {
+              fs.mkdirSync(uploadPath, { recursive: true });
+            }
+            const audioFilename = `podcast-audio-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(audioFile.originalname)}`;
+            const localPath = path.join(uploadPath, audioFilename);
+            fs.writeFileSync(localPath, audioFile.buffer);
+            audioUrl = `/uploads/podcasts/${audioFilename}`;
           }
         } else {
           // Save to local storage
@@ -250,9 +256,10 @@ router.post('/', upload.any(), async (req, res) => {
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
-          const localPath = path.join(uploadPath, audioFile.filename);
+          const audioFilename = `podcast-audio-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(audioFile.originalname)}`;
+          const localPath = path.join(uploadPath, audioFilename);
           fs.writeFileSync(localPath, audioFile.buffer);
-          audioUrl = `/uploads/podcasts/${audioFile.filename}`;
+          audioUrl = `/uploads/podcasts/${audioFilename}`;
         }
 
         // Get duration from buffer
@@ -279,16 +286,24 @@ router.post('/', upload.any(), async (req, res) => {
             console.log('☁️ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
           } catch (cloudError) {
             console.error('☁️ Cloudinary thumbnail upload failed:', cloudError.message);
-            thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+            const uploadPath = path.join(__dirname, '../uploads/thumbnails');
+            if (!fs.existsSync(uploadPath)) {
+              fs.mkdirSync(uploadPath, { recursive: true });
+            }
+            const thumbnailFilename = `podcast-thumbnail-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(thumbnailFile.originalname)}`;
+            const localPath = path.join(uploadPath, thumbnailFilename);
+            fs.writeFileSync(localPath, thumbnailFile.buffer);
+            thumbnailUrl = `/uploads/thumbnails/${thumbnailFilename}`;
           }
         } else {
           const uploadPath = path.join(__dirname, '../uploads/thumbnails');
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
-          const localPath = path.join(uploadPath, thumbnailFile.filename);
+          const thumbnailFilename = `podcast-thumbnail-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(thumbnailFile.originalname)}`;
+          const localPath = path.join(uploadPath, thumbnailFilename);
           fs.writeFileSync(localPath, thumbnailFile.buffer);
-          thumbnailUrl = `/uploads/thumbnails/${thumbnailFile.filename}`;
+          thumbnailUrl = `/uploads/thumbnails/${thumbnailFilename}`;
         }
       }
     }

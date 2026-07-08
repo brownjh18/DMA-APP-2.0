@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { profileStorage: cloudProfileStorage, isConfigured: cloudIsConfigured } = require('../services/cloudStorage');
@@ -14,9 +15,22 @@ let profileUpload;
 if (cloudIsConfigured()) {
   profileUpload = multer({ storage: cloudProfileStorage });
 } else {
-  // Fallback to memory storage if Cloudinary is not configured
+  // Fallback to disk storage if Cloudinary is not configured
+  const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(__dirname, '../uploads/profiles');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, `profile-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+  });
   profileUpload = multer({
-    storage: multer.memoryStorage(),
+    storage: profileStorage,
     limits: {
       fileSize: 10 * 1024 * 1024 // 10MB limit for profile pictures
     },

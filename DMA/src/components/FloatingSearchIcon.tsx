@@ -472,7 +472,7 @@ const FloatingSearchIcon: React.FC = () => {
       <IonModal
         isOpen={showSearchModal}
         onDidDismiss={() => setShowSearchModal(false)}
-        className="search-modal"
+        className={isDarkMode ? 'search-modal dark-theme' : 'search-modal'}
         style={{
           '--width': '100%',
           '--max-width': '100%',
@@ -574,9 +574,11 @@ const FloatingSearchIcon: React.FC = () => {
               }
             }
             @media (prefers-color-scheme: light) {
+              /* Admin-style soft gradient background for search */
               .search-modal, .search-header, .search-toolbar, .search-content {
-                background: #ffffff !important;
-                --background: #ffffff !important;
+                background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%) !important;
+                --background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%) !important;
+                box-shadow: 0 12px 48px rgba(15, 23, 42, 0.06);
               }
               .search-header {
                 border-bottom: 1px solid var(--ion-color-step-100, #e5e5e5);
@@ -588,11 +590,14 @@ const FloatingSearchIcon: React.FC = () => {
               }
             }
             @media (prefers-color-scheme: dark) {
+              /* Dark semi-opaque panel for admin look */
               .search-modal, .search-header, .search-toolbar, .search-content {
-                background: transparent !important;
-                backdrop-filter: blur(20px) saturate(180%) !important;
-                -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-                --background: transparent !important;
+                background: rgba(16,18,20,0.64) !important;
+                --background: rgba(16,18,20,0.64) !important;
+                backdrop-filter: blur(18px) saturate(160%) !important;
+                -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+                border: 1px solid rgba(255,255,255,0.04);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.6);
               }
               .search-toolbar {
                 background: transparent !important;
@@ -606,6 +611,52 @@ const FloatingSearchIcon: React.FC = () => {
                 box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
               }
             }
+            /* Support app-controlled dark theme using data-theme="dark" */
+            [data-theme="dark"] .search-modal,
+            [data-theme="dark"] .search-header,
+            [data-theme="dark"] .search-toolbar,
+            [data-theme="dark"] .search-content {
+              background: rgba(16,18,20,0.64) !important;
+              --background: rgba(16,18,20,0.64) !important;
+              backdrop-filter: blur(18px) saturate(160%) !important;
+              -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+              border: 1px solid rgba(255,255,255,0.04);
+              box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            }
+            [data-theme="dark"] .search-toolbar {
+              background: transparent !important;
+              --background: transparent !important;
+            }
+            [data-theme="dark"] .custom-searchbar {
+              background: rgba(30, 30, 30, 0.6) !important;
+              backdrop-filter: blur(16px) saturate(180%) !important;
+              -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+            }
+            /* Fallback: when modal gets a dark-theme class (added via cssClass) */
+            .search-modal.dark-theme,
+            .search-modal.dark-theme .search-header,
+            .search-modal.dark-theme .search-toolbar,
+            .search-modal.dark-theme .search-content {
+              background: rgba(16,18,20,0.64) !important;
+              --background: rgba(16,18,20,0.64) !important;
+              backdrop-filter: blur(18px) saturate(160%) !important;
+              -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+              border: 1px solid rgba(255,255,255,0.04);
+              box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            }
+            .search-modal.dark-theme .search-toolbar {
+              background: transparent !important;
+              --background: transparent !important;
+            }
+            .search-modal.dark-theme .custom-searchbar {
+              background: rgba(30, 30, 30, 0.6) !important;
+              backdrop-filter: blur(16px) saturate(180%) !important;
+              -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+            }
             /* Use Ionic CSS variables for colors to adapt to both modes */
             .filter-label, .loading-text, .results-count, .no-results-title, .no-results-text, .result-card-title, .result-card-subtitle, .result-card-description {
               color: var(--ion-text-color, #1c1c1e) !important;
@@ -613,152 +664,119 @@ const FloatingSearchIcon: React.FC = () => {
             .filter-chips, .loading-spinner, .no-results {
               color: var(--ion-text-color, #1c1c1e);
             }
+            /* Full frosted backdrop for the modal content */
+            .search-content {
+              position: relative;
+              overflow: hidden;
+            }
+            .search-content::before {
+              content: '';
+              position: absolute;
+              inset: 0;
+              z-index: 0;
+              pointer-events: none;
+              backdrop-filter: blur(28px) saturate(160%);
+              -webkit-backdrop-filter: blur(28px) saturate(160%);
+              background: rgba(255,255,255,0.18);
+            }
+            /* Dark mode frosted backdrop */
+            @media (prefers-color-scheme: dark) {
+              .search-content::before {
+                background: rgba(10,12,14,0.56);
+                backdrop-filter: blur(28px) saturate(140%);
+                -webkit-backdrop-filter: blur(28px) saturate(140%);
+              }
+            }
+            [data-theme="dark"] .search-content::before,
+            .search-modal.dark-theme .search-content::before {
+              background: rgba(10,12,14,0.56);
+              backdrop-filter: blur(28px) saturate(140%);
+              -webkit-backdrop-filter: blur(28px) saturate(140%);
+            }
+            /* Ensure content sits above the frosted layer */
+            .yt-search-shell, .yt-results-list, .yt-sidebar, .yt-controls { z-index: 1; position: relative; }
           `}</style>
           <div style={{ padding: '16px' }}>
-            {/* Filter Chips */}
-            <div className="filter-chips" style={{ marginTop: '0px' }}>
-              <IonText className="filter-label" style={{ fontSize: '0.9em', marginBottom: '8px', display: 'block' }}>
-                Filter by:
-              </IonText>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {filters.map((filter) => (
-                  <IonChip
-                    key={filter.value}
-                    className={`filter-chip-transparent ${selectedFilter === filter.value ? 'active' : ''}`}
-                    onClick={() => handleFilterChange(filter.value)}
-                  >
-                    <IonLabel>{filter.label}</IonLabel>
-                  </IonChip>
-                ))}
-              </div>
-            </div>
+            <div className="yt-search-shell">
+              <div>
+                <div className="yt-controls">
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ fontSize: 18, fontWeight: 800 }}>Search</div>
+                    <div style={{ color: 'var(--ion-color-medium)' }}>{searchResults.length} results</div>
+                  </div>
+                  <div className="yt-filters">
+                    <select value={selectedFilter} onChange={(e) => handleFilterChange(e.target.value)} style={{ padding: '6px 8px', borderRadius: 6 }}>
+                      {filters.map(f => (<option key={f.value} value={f.value}>{f.label}</option>))}
+                    </select>
+                    <IonButton fill="clear">Sort</IonButton>
+                  </div>
+                </div>
 
-            {/* Loading State */}
-            {isLoading && (
-              <div className="loading-spinner" style={{ textAlign: 'center', padding: '40px' }}>
-                <IonSpinner name="crescent" color="primary" />
-                <IonText className="loading-text" style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
-                  Searching...
-                </IonText>
-              </div>
-            )}
-
-            {/* Search Results */}
-            {!isLoading && hasSearched && (
-              <>
-                {searchResults.length > 0 ? (
-                  <div style={{ marginBottom: '20px' }}>
-                    <IonText className="results-count" style={{ fontSize: '0.9em', marginBottom: '16px', display: 'block', color: 'var(--ion-text-color)' }}>
-                      {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
+                {/* Main results list */}
+                {isLoading && (
+                  <div className="loading-spinner" style={{ textAlign: 'center', padding: '40px' }}>
+                    <IonSpinner name="crescent" color="primary" />
+                    <IonText className="loading-text" style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
+                      Searching...
                     </IonText>
+                  </div>
+                )}
 
-                    {searchResults.map((result, index) => (
-                      <div
-                        key={`${result.type}-${result.id}-${index}`}
-                        className="result-card-transparent"
-                        onClick={() => {
-                          setShowSearchModal(false);
-                          history.push(result.url);
-                        }}
-                      >
-                        <div className="result-card-content">
-                          {/* Thumbnail */}
-                          {result.image ? (
-                            <img
-                              src={result.image.startsWith('/uploads') ? `${BACKEND_BASE_URL}${result.image}` : result.image}
-                              alt={result.title}
-                              className="result-card-thumbnail"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                // Use type-specific fallback images
-                                if (result.type === 'devotion') {
-                                  target.src = '/hero-evangelism.jpg';
-                                } else if (result.type === 'event' || result.type === 'ministry') {
-                                  target.src = '/dove.png';
-                                } else {
-                                  target.src = '/bible.JPG';
-                                }
-                                target.onerror = null; // Prevent infinite loop
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="result-card-thumbnail"
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: 'var(--ion-color-step-100, rgba(28, 28, 30, 0.1))'
-                              }}
-                            >
-                              <IonIcon
-                                icon={getTypeIcon(result.type)}
-                                style={{ fontSize: '24px', color: 'var(--ion-text-color)' }}
-                              />
-                            </div>
-                          )}
+                {!isLoading && (
+                  <div className="yt-results-list">
+                    {hasSearched && searchResults.length === 0 && (
+                      <div className="no-results" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                        <IonIcon icon={search} size="large" style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }} />
+                        <div className="no-results-title" style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>No results found</div>
+                        <div className="no-results-text" style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Try different keywords or check your spelling</div>
+                      </div>
+                    )}
 
-                          {/* Content */}
-                          <div className="result-card-info" style={{ flex: 1, margin: '0 12px' }}>
-                            <div className="result-card-title" style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px', color: 'var(--ion-text-color)' }}>{result.title}</div>
-                            <div className="result-card-subtitle" style={{ color: 'var(--ion-color-medium)', fontSize: '0.85em', marginBottom: '4px' }}>
-                              {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-                            </div>
-                            {result.description && (
-                              <div className="result-card-description" style={{
-                                color: 'var(--ion-color-medium)',
-                                fontSize: '0.8em',
-                                lineHeight: '1.4',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                marginBottom: '4px'
-                              }}>
-                                {result.description}
-                              </div>
-                            )}
-                            {result.date && (
-                              <div style={{ color: 'var(--ion-color-medium)', fontSize: '0.8em', marginTop: '4px' }}>
-                                {new Date(result.date).toLocaleDateString()}
-                              </div>
-                            )}
+                    {hasSearched && searchResults.length > 0 && searchResults.map((result, i) => (
+                      <div key={`${result.type}-${result.id}-${i}`} className="yt-card" onClick={() => { setShowSearchModal(false); history.push(result.url); }}>
+                        {result.image ? (
+                          <img className="yt-thumb" src={result.image.startsWith('/uploads') ? `${BACKEND_BASE_URL}${result.image}` : result.image} alt={result.title} />
+                        ) : (
+                          <div className="yt-thumb" style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'var(--ion-color-step-100, rgba(0,0,0,0.04))' }}>
+                            <IonIcon icon={getTypeIcon(result.type)} />
                           </div>
-
-                          {/* Type Badge */}
-                          <div className="result-card-type">
-                            {result.type}
-                          </div>
+                        )}
+                        <div className="yt-meta">
+                          <div className="yt-title">{result.title}</div>
+                          <div className="yt-sub">{result.subtitle || (result.type.charAt(0).toUpperCase() + result.type.slice(1))} • {result.date ? new Date(result.date).toLocaleDateString() : ''}</div>
+                          {result.description && <div className="yt-desc">{result.description}</div>}
+                        </div>
+                        <div className="yt-right">
+                          <div style={{ fontSize:12, color:'var(--ion-color-medium)' }}>{result.score ? Math.round(result.score * 100) + '%' : ''}</div>
+                          <IonButton size="small" fill="clear">Open</IonButton>
                         </div>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="no-results" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                    <IonIcon
-                      icon={search}
-                      size="large"
-                      style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }}
-                    />
-                    <div className="no-results-title" style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>No results found</div>
-                    <div className="no-results-text" style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Try different keywords or check your spelling</div>
+                )}
+
+                {!hasSearched && !isLoading && (
+                  <div style={{ textAlign:'center', padding: '80px 20px' }}>
+                    <div style={{ fontSize:20, fontWeight:700 }}>Search the library</div>
+                    <div style={{ marginTop:8, color: 'var(--ion-color-medium)' }}>Find sermons, events, devotions, podcasts and more</div>
                   </div>
                 )}
-              </>
-            )}
-
-            {/* Initial State */}
-            {!hasSearched && !isLoading && (
-              <div className="no-results" style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <IonIcon
-                  icon={search}
-                  size="large"
-                  style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }}
-                />
-                <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>Search Content</div>
-                <div style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Find sermons, events, devotions, and more</div>
               </div>
-            )}
+
+              {/* Right: suggestions / trending */}
+              <aside className="yt-sidebar">
+                <div style={{ fontWeight:700 }}>Recommended</div>
+                <div className="yt-suggestion">Trending Now</div>
+                <div className="yt-suggestion">Popular Sermons</div>
+                <div className="yt-suggestion">Suggested Ministries</div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontWeight:700 }}>Channels</div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:8 }}>
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}><IonAvatar><img src="/dove.png" alt="Dove"/></IonAvatar><div style={{ fontSize:14 }}>Dove Ministries</div></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </IonContent>
       </IonModal>

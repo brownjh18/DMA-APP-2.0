@@ -589,3 +589,61 @@
 .notification-dot-pulse {
   animation: dotPulse 1.8s ease-in-out infinite;
 }
+
+/* YouTube-like search styles (global) */
+.yt-search-shell {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  min-height: 60vh;
+}
+.yt-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.yt-filters { display:flex; gap:8px; align-items:center; }
+.yt-results-list { display: flex; flex-direction: column; gap: 12px; }
+.yt-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  align-items: flex-start;
+  transition: box-shadow .12s ease, transform .12s ease;
+}
+.yt-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.yt-thumb { width: 210px; height: 118px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.yt-meta { flex:1; display:flex; flex-direction:column; }
+.yt-title { font-weight:700; font-size:15px; margin-bottom:6px; }
+.yt-sub { font-size:13px; color: var(--ion-color-medium); margin-bottom:6px; }
+.yt-desc { font-size:13px; color: var(--ion-color-medium); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.yt-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:90px; }
+.yt-sidebar { background: transparent; padding: 8px; display:flex; flex-direction:column; gap:10px; }
+.yt-suggestion { padding:8px; border-radius:8px; background: rgba(0,0,0,0.03); cursor:pointer; }
+@media (max-width: 900px) { .yt-search-shell { grid-template-columns: 1fr; } .yt-thumb{ width:160px; height:90px } }
+
+/* Frosted overlay applied to modal content */
+.search-content {
+  position: relative;
+  overflow: hidden;
+}
+.search-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  background: rgba(255,255,255,0.18);
+}
+@media (prefers-color-scheme: dark) {
+  .search-content::before { background: rgba(10,12,14,0.56); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); }
+}
+[data-theme="dark"] .search-content::before,
+.search-modal.dark-theme .search-content::before { background: rgba(10,12,14,0.56); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); }
+.yt-search-shell, .yt-results-list, .yt-sidebar, .yt-controls { z-index: 1; position: relative; }

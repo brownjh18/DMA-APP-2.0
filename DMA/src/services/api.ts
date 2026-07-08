@@ -1,24 +1,32 @@
 // API Service for connecting frontend to backend
 import { Capacitor } from '@capacitor/core';
 
-// Helper to get the development API URL based on the current network
+const DEFAULT_LOCAL_API_URL = 'http://localhost:10000/api';
+const DEFAULT_ANDROID_API_URL = 'http://10.0.2.2:10000/api';
+const DEFAULT_LOCAL_BACKEND_URL = 'http://localhost:10000';
+const DEFAULT_ANDROID_BACKEND_URL = 'http://10.0.2.2:10000';
+
+const normalizeUrl = (url: string) => url.replace(/\/$/, '');
+const removeApiPath = (url: string) => normalizeUrl(url).replace(/\/api$/, '');
+const isRelativeUrl = (url: string) => /^\//.test(url) && !/^\/\//.test(url);
+
+const buildAbsoluteUrl = (apiUrl: string) => {
+  const normalizedApiUrl = normalizeUrl(apiUrl);
+  if (!isRelativeUrl(normalizedApiUrl)) return normalizedApiUrl;
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return `${removeApiPath(import.meta.env.VITE_BACKEND_URL)}${normalizedApiUrl}`;
+  }
+  return normalizedApiUrl;
+};
+
 const getDevApiUrl = () => {
-  // For Capacitor apps running on device/emulator, use 10.0.2.2 for Android emulator
   if (Capacitor.isNativePlatform()) {
-    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-    return 'http://10.0.2.2:10000/api';
+    if (import.meta.env.VITE_API_URL) return buildAbsoluteUrl(import.meta.env.VITE_API_URL);
+    return DEFAULT_ANDROID_API_URL;
   }
 
-  // On Vercel or any production web deployment, always use relative /api
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return '/api';
-  }
-
-  // Local development
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  return 'http://localhost:10000/api';
+  if (import.meta.env.VITE_API_URL) return normalizeUrl(import.meta.env.VITE_API_URL);
+  return '/api';
 };
 
 const API_BASE_URL = getDevApiUrl();
@@ -27,24 +35,18 @@ export { API_BASE_URL };
 
 // Base URL for direct backend access (for images, etc.)
 const getBackendBaseUrl = () => {
-  // For Capacitor apps, use VITE_API_URL if set (production), otherwise localhost
   if (Capacitor.isNativePlatform()) {
-    if (import.meta.env.VITE_API_URL) {
-      return import.meta.env.VITE_API_URL.replace(/\/api$/, '');
-    }
-    return 'http://10.0.2.2:10000';
+    if (import.meta.env.VITE_BACKEND_URL) return removeApiPath(import.meta.env.VITE_BACKEND_URL);
+    if (import.meta.env.VITE_API_URL && !isRelativeUrl(import.meta.env.VITE_API_URL)) return removeApiPath(import.meta.env.VITE_API_URL);
+    return DEFAULT_ANDROID_BACKEND_URL;
   }
 
-  // On Vercel or any production web deployment, use relative paths
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return '';
+  if (import.meta.env.VITE_BACKEND_URL) return removeApiPath(import.meta.env.VITE_BACKEND_URL);
+  if (import.meta.env.VITE_API_URL && !isRelativeUrl(import.meta.env.VITE_API_URL)) return removeApiPath(import.meta.env.VITE_API_URL);
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return DEFAULT_LOCAL_BACKEND_URL;
   }
-
-  // Local development
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.replace(/\/api$/, '');
-  }
-  return 'http://localhost:10000';
+  return '';
 };
 
 export const BACKEND_BASE_URL = getBackendBaseUrl();

@@ -20,5 +20,11 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: VITE_API_URL
+        value: /api
+      - key: VITE_BACKEND_URL
+        value: https://dove-church.onrender.com
+      - key: VITE_SOCKET_URL
+        value: https://dove-church.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true

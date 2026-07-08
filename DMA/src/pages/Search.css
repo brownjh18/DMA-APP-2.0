@@ -109,43 +109,58 @@
    ============================================================ */
 
 /* ── Page & Content ─────────────────────────────────────────── */
+/* Use a slightly lighter dark background for better contrast */
 [data-theme="dark"] .search-page,
 :root:not([data-theme="light"]) .search-page {
-  background: #0a0a0c;
-  --ion-background-color: #0a0a0c;
+  background: #000000;
+  --ion-background-color: #000000;
 }
 
 [data-theme="dark"] .search-page-content,
 :root:not([data-theme="light"]) .search-page-content {
-  --ion-background-color: #0a0a0c;
-  --background: #0a0a0c;
+  --ion-background-color: #000000;
+  --background: #000000;
 }
 
 [data-theme="dark"] .search-page-container,
 :root:not([data-theme="light"]) .search-page-container {
-  background: #0a0a0c;
+  background: #000000;
 }
 
-/* ── Toolbar — dark ─────────────────────────────────────────── */
-/*
-  Key fix: give the blurred backdrop a VISIBLE dark tinted base so
-  the frosted-glass effect is actually perceivable. Without a
-  semi-opaque background the blur effect renders on nothing.
-*/
-[data-theme="dark"] .search-toolbar,
-:root:not([data-theme="light"]) .search-toolbar {
-  --background: rgba(28, 28, 30, 0.88) !important;
-  --border-color: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+/* ── Header & Toolbar — Override global Ionic vars ───────────────── */
+/* Override Ionic global variables for search page with max specificity */
+.search-page ion-header::part(background),
+.search-page ion-header::part(toolbar),
+.search-page ion-header::part(native),
+.search-page ion-toolbar::part(background),
+.search-page ion-toolbar::part(toolbar),
+.search-page ion-toolbar::part(native) {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .search-page ion-header::part(background),
+[data-theme="dark"] .search-page ion-header::part(toolbar),
+[data-theme="dark"] .search-page ion-header::part(native),
+[data-theme="dark"] .search-page ion-toolbar::part(background),
+[data-theme="dark"] .search-page ion-toolbar::part(toolbar),
+[data-theme="dark"] .search-page ion-toolbar::part(native) {
+  background: rgba(20, 20, 22, 0.95) !important;
+  backdrop-filter: blur(28px) saturate(140%) brightness(0.8) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) brightness(0.8) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Search input bar — dark ────────────────────────────────── */
+/* Dark tinted bar to match the dark blur theme */
 [data-theme="dark"] .search-header-bar,
 :root:not([data-theme="light"]) .search-header-bar {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .search-header-bar input,

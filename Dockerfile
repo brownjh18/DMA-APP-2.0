@@ -11,6 +11,6 @@ RUN npm ci --omit=dev
 # Install frontend dependencies and build
 RUN cd DMA && npm ci && npm run build
 
-EXPOSE 8080
+EXPOSE 10000
 
 CMD ["node", "--max-http-header-size=65536", "server.js"]

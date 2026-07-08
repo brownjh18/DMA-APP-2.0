@@ -16,7 +16,7 @@ http://ionicframework.com/docs/theming/ */
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   --app-nav-bg-light: rgba(255, 255, 255, 0.95);
-  --app-nav-bg-dark: rgba(28, 28, 30, 0.92);
+  --app-nav-bg-dark: rgba(20, 20, 22, 0.95);
 
   --liquid-app-blue: #007aff;
   --liquid-app-teal: #12d5c8;
@@ -163,12 +163,12 @@ ion-header::part(toolbar) {
   border: 1px solid var(--ios26-separator-light);
 }
 
-/* Dark theme header background */
+/* Dark theme header background - darker blur effect */
 [data-theme="dark"] ion-header::part(background),
 [data-theme="dark"] ion-header::part(toolbar) {
   background: var(--app-nav-bg-dark) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px) saturate(150%) brightness(0.75);
+  -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(0.75);
   border: 1px solid var(--ios26-separator-dark);
 }
 
@@ -301,8 +301,8 @@ ion-header::part(toolbar) {
 [data-theme="dark"] ion-header::part(background),
 [data-theme="dark"] ion-header::part(toolbar) {
   background: var(--app-nav-bg-dark) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px) saturate(150%) brightness(0.75);
+  -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(0.75);
   border: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -447,7 +447,7 @@ ion-content[fullscreen] {
   --background-light: var(--background-dark);
   --text-primary: var(--ios26-text-primary-dark);
   --text-secondary: var(--ios26-text-secondary-dark);
-  --app-nav-bg-dark: rgba(28, 28, 30, 0.92);
+  --app-nav-bg-dark: rgba(20, 20, 22, 0.95);
   --ios26-glass-bg-dark: rgba(28, 28, 30, 0.82);
   --ios26-glass-strong-dark: rgba(44, 44, 46, 0.88);
   --ios26-glass-border-dark: rgba(255, 255, 255, 0.14);

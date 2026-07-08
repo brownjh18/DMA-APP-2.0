@@ -142,7 +142,16 @@ const Search: React.FC = () => {
 
   return (
     <IonPage className="search-page">
-      <IonHeader translucent>
+      <IonHeader 
+        translucent 
+        className="search-header"
+        style={{
+          '--background': isDarkMode ? 'rgba(20, 20, 22, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          '--border-color': isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+          '--backdrop-filter': isDarkMode ? 'blur(28px) saturate(140%) brightness(0.8)' : 'blur(20px) saturate(180%)',
+          '--webkit-backdrop-filter': isDarkMode ? 'blur(28px) saturate(140%) brightness(0.8)' : 'blur(20px) saturate(180%)',
+        } as React.CSSProperties}
+      >
         <IonToolbar className="search-toolbar" style={{ '--padding-start': '8px', '--padding-end': '8px' }}>
           <IonButton
             fill="clear"

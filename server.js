@@ -51,7 +51,7 @@ const app = express();
 app.set('strict routing', false);
 app.set('case sensitive routing', false);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 10000;
 const isVercel = !!process.env.VERCEL;
 const isFly = !!process.env.FLY_APP_NAME;
 const isRender = !!process.env.RENDER;
