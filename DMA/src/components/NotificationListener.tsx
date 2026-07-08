@@ -131,8 +131,9 @@ const NotificationListener: React.FC = () => {
         addNotification({
           title: 'New Podcast Episode',
           message: data.podcast.title || 'A new podcast episode has been published',
-          type: 'sermon',
+          type: 'podcast',
           data: {
+            type: 'podcast',
             url: `/podcast-player?id=${data.podcast._id || data.podcast.id}`,
             podcast: data.podcast
           }
@@ -146,8 +147,9 @@ const NotificationListener: React.FC = () => {
         addNotification({
           title: 'Podcast Updated',
           message: data.podcast.title || 'A podcast episode has been updated',
-          type: 'sermon',
+          type: 'podcast',
           data: {
+            type: 'podcast',
             url: `/podcast-player?id=${data.podcast._id || data.podcast.id}`,
             podcast: data.podcast
           }
@@ -162,8 +164,9 @@ const NotificationListener: React.FC = () => {
         addNotification({
           title: 'New Ministry Launched',
           message: data.ministry.name || 'A new ministry has been launched',
-          type: 'general',
+          type: 'ministry',
           data: {
+            type: 'ministry',
             url: `/ministry/${data.ministry._id || data.ministry.id}`,
             ministry: data.ministry
           }
@@ -177,8 +180,9 @@ const NotificationListener: React.FC = () => {
         addNotification({
           title: 'Ministry Update',
           message: data.ministry.name || 'A ministry has been updated',
-          type: 'general',
+          type: 'ministry',
           data: {
+            type: 'ministry',
             url: `/ministry/${data.ministry._id || data.ministry.id}`,
             ministry: data.ministry
           }

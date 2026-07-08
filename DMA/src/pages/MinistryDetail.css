@@ -318,6 +318,38 @@
   color: var(--ios26-text-secondary-dark);
 }
 
+/* ---- Share Button ---- */
+.md-share-card {
+  padding: 14px;
+}
+
+.md-share-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.md-share-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(99, 102, 241, 0.28);
+}
+
+.md-share-btn:active {
+  transform: scale(0.98);
+}
+
 /* ---- Footer ---- */
 .md-footer {
   text-align: center;

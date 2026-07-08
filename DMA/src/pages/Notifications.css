@@ -52,6 +52,14 @@
   margin-bottom: 20px;
 }
 
+.notif-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
 .notif-section-header {
   display: flex;
   align-items: center;

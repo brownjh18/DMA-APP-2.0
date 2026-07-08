@@ -86,6 +86,38 @@
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
 }
 
+/* Share action */
+.ed-share-card {
+  padding: 14px;
+}
+
+.ed-share-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ed-share-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(99, 102, 241, 0.28);
+}
+
+.ed-share-btn:active {
+  transform: scale(0.98);
+}
+
 /* ---- Hero Banner ---- */
 .ed-hero {
   width: 100%;

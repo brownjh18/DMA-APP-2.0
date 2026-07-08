@@ -358,6 +358,26 @@ const Tab1: React.FC = () => {
     }
   }, []);
 
+  // Check for event refresh flags from admin operations
+  useEffect(() => {
+    const needsRefresh = sessionStorage.getItem('eventsNeedRefresh');
+    if (needsRefresh === 'true') {
+      sessionStorage.removeItem('eventsNeedRefresh');
+      console.log('🔄 Tab1: Detected eventsNeedRefresh flag, reloading events');
+      loadLatestEvents(true);
+    }
+  }, []);
+
+  // Check for ministry refresh flags from admin operations
+  useEffect(() => {
+    const needsRefresh = sessionStorage.getItem('ministriesNeedRefresh');
+    if (needsRefresh === 'true') {
+      sessionStorage.removeItem('ministriesNeedRefresh');
+      console.log('🔄 Tab1: Detected ministriesNeedRefresh flag, reloading ministries');
+      loadLatestMinistries(true);
+    }
+  }, []);
+
   // Socket.io real-time updates for devotions
   useEffect(() => {
     if (isConnected) {
@@ -386,37 +406,37 @@ const Tab1: React.FC = () => {
       // Listen for new events
       onEventCreated((data: any) => {
         console.log('📥 Tab1: Received event:created event:', data);
-        loadLatestEvents();
+        loadLatestEvents(true);
       });
 
       // Listen for event updates
       onEventUpdated((data: any) => {
         console.log('📥 Tab1: Received event:updated event:', data);
-        loadLatestEvents();
+        loadLatestEvents(true);
       });
 
       // Listen for event deletions
       onEventDeleted((data: any) => {
         console.log('📥 Tab1: Received event:deleted event:', data);
-        loadLatestEvents();
+        loadLatestEvents(true);
       });
       
       // Listen for new ministries
       onMinistryCreated((data: any) => {
         console.log('📥 Tab1: Received ministry:created event:', data);
-        loadLatestMinistries();
+        loadLatestMinistries(true);
       });
 
       // Listen for ministry updates
       onMinistryUpdated((data: any) => {
         console.log('📥 Tab1: Received ministry:updated event:', data);
-        loadLatestMinistries();
+        loadLatestMinistries(true);
       });
 
       // Listen for ministry deletions
       onMinistryDeleted((data: any) => {
         console.log('📥 Tab1: Received ministry:deleted event:', data);
-        loadLatestMinistries();
+        loadLatestMinistries(true);
       });
       
       // Listen for new sermons
@@ -675,12 +695,12 @@ const Tab1: React.FC = () => {
     }
   };
 
-  const loadLatestEvents = async () => {
+  const loadLatestEvents = async (forceRefresh: boolean = false) => {
     const now = Date.now();
-    console.log('Loading latest events - cache age:', now - eventsCacheTime.current);
+    console.log('Loading latest events - cache age:', now - eventsCacheTime.current, 'forceRefresh:', forceRefresh);
 
     // Check cache first
-    if (latestEvents.length > 0 && (now - eventsCacheTime.current) < CACHE_DURATION) {
+    if (!forceRefresh && latestEvents.length > 0 && (now - eventsCacheTime.current) < CACHE_DURATION) {
       console.log('loadLatestEvents: Using cached data');
       setEventsLoading(false);
       return;
@@ -702,12 +722,12 @@ const Tab1: React.FC = () => {
     }
   };
 
-  const loadLatestMinistries = async () => {
+  const loadLatestMinistries = async (forceRefresh: boolean = false) => {
     const now = Date.now();
-    console.log('Loading latest ministries - cache age:', now - ministriesCacheTime.current);
+    console.log('Loading latest ministries - cache age:', now - ministriesCacheTime.current, 'forceRefresh:', forceRefresh);
 
     // Check cache first
-    if (latestMinistries.length > 0 && (now - ministriesCacheTime.current) < CACHE_DURATION) {
+    if (!forceRefresh && latestMinistries.length > 0 && (now - ministriesCacheTime.current) < CACHE_DURATION) {
       console.log('loadLatestMinistries: Using cached data');
       setMinistriesLoading(false);
       return;
@@ -750,7 +770,7 @@ const Tab1: React.FC = () => {
   };
 
   const handleRefresh = async (event: CustomEvent) => {
-    await Promise.all([loadDevotions(true), loadLatestContent(), loadLatestPodcasts(), loadLatestEvents(), loadLatestMinistries()]);
+    await Promise.all([loadDevotions(true), loadLatestContent(), loadLatestPodcasts(true), loadLatestEvents(true), loadLatestMinistries(true)]);
     event.detail.complete();
   };
 

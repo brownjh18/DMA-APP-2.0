@@ -57,6 +57,66 @@
   border: 1px solid var(--ios26-separator-light);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --border-radius: 12px;
+  --color: #111;
+}
+
+.signup-page {
+  color: #111;
+}
+
+.signup-page h1,
+.signup-page p,
+.signup-page ion-text,
+.signup-page .error-box-text,
+.signup-page .success-box-text,
+.signup-page .title-ios,
+.signup-page .title-ios * {
+  color: #111 !important;
+}
+
+.signup-page p,
+.signup-page ion-text span:not(.link-text) {
+  color: #4b5563 !important;
+}
+
+[data-theme="dark"] .signup-page {
+  color: #fff;
+}
+
+[data-theme="dark"] .signup-page h1,
+[data-theme="dark"] .signup-page p,
+[data-theme="dark"] .signup-page ion-text,
+[data-theme="dark"] .signup-page .error-box-text,
+[data-theme="dark"] .signup-page .success-box-text,
+[data-theme="dark"] .signup-page .title-ios,
+[data-theme="dark"] .signup-page .title-ios * {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .signup-page p,
+[data-theme="dark"] .signup-page ion-text span:not(.link-text) {
+  color: #d1d5db !important;
+}
+
+.signup-input-item input,
+.signup-input-item textarea,
+.signup-input-item .native-input,
+.signup-input-item .input-wrapper input {
+  color: var(--ion-text-color) !important;
+}
+
+.signup-input-item ion-input {
+  --color: var(--ion-text-color);
+}
+
+.signup-input-item input::placeholder,
+.signup-input-item .native-input::placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .signup-input-item input::placeholder,
+[data-theme="dark"] .signup-input-item .native-input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 [data-theme="dark"] .signup-input-item {

@@ -73,7 +73,7 @@ class ApiService {
   }
 
   // Clear cache for specific endpoint type
-  clearCacheByType(endpointType: 'sermons' | 'podcasts' | 'devotions') {
+  clearCacheByType(endpointType: 'sermons' | 'podcasts' | 'devotions' | 'events' | 'ministries') {
     try {
       const keys = Object.keys(localStorage);
       keys.forEach(key => {

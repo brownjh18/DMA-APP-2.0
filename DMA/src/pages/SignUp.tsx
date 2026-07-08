@@ -97,7 +97,7 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage className="signup-page">
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
@@ -306,16 +306,18 @@ const SignUp: React.FC = () => {
           }}>
             <IonText style={{
               color: 'var(--ion-text-color)',
-              opacity: 0.7,
               fontSize: '0.9em'
             }}>
-              Already have an account?{' '}
+              <span style={{ opacity: 0.7 }}>
+                Already have an account?{' '}
+              </span>
               <span
                 style={{
                   color: 'var(--ion-color-primary)',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  textDecoration: 'underline'
+                  textDecoration: 'underline',
+                  opacity: 1
                 }}
                 onClick={() => history.push('/signin')}
               >

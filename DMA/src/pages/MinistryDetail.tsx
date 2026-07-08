@@ -1,6 +1,6 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonButtons, IonText, IonLoading } from '@ionic/react';
 import { useParams, useHistory } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, informationCircle, arrowBack, calendar, time, share } from 'ionicons/icons';
 import { BACKEND_BASE_URL, apiService } from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
@@ -23,6 +23,28 @@ const MinistryDetail: React.FC = () => {
   useEffect(() => {
     fetchMinistry();
   }, [id]);
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/ministry/${id}`;
+    const shareData = {
+      title: ministry?.name || 'Ministry at Dove Ministries Africa',
+      text: ministry?.name ? `Check out this ministry: ${ministry.name}` : 'Check out this ministry.',
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Ministry link copied to clipboard');
+      } else {
+        window.prompt('Copy this ministry link', shareUrl);
+      }
+    } catch (error) {
+      console.error('Share failed', error);
+    }
+  }, [id, ministry?.name]);
 
   const fetchMinistry = async () => {
     try {
@@ -126,11 +148,6 @@ const MinistryDetail: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Ministry Details</IonTitle>
-          <IonButtons slot="end">
-            <IonButton fill="clear">
-              <IonIcon icon={share} />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -185,6 +202,15 @@ const MinistryDetail: React.FC = () => {
                 <div className="md-stat-num" style={{ fontSize: '13px' }}>{ministry.meetingInfo}</div>
                 <div className="md-stat-txt">Schedule</div>
               </div>
+            </div>
+          </div>
+
+          <div className="md-section">
+            <div className="af-card md-share-card">
+              <button type="button" className="md-share-btn" onClick={handleShare}>
+                <IonIcon icon={share} />
+                Share this ministry
+              </button>
             </div>
           </div>
 

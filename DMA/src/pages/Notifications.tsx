@@ -75,9 +75,34 @@ function getDefaultThumb(type: string) {
       return '/hero-evangelism.jpg';
     case 'event':
       return '/dove.png';
+    case 'ministry':
+      return '/dove.png';
     default:
       return '/Bible.JPG';
   }
+}
+
+function getNotificationThumbnailUrl(notification: any) {
+  if (!notification) return undefined;
+  const fields = [
+    notification.thumbnailUrl,
+    notification.data?.thumbnailUrl,
+    notification.data?.sermon?.thumbnailUrl,
+    notification.data?.podcast?.thumbnailUrl,
+    notification.data?.devotion?.thumbnailUrl,
+    notification.data?.event?.thumbnailUrl,
+    notification.data?.event?.imageUrl,
+    notification.data?.ministry?.imageUrl,
+    notification.data?.ministry?.thumbnailUrl,
+    notification.data?.thumbnail,
+    notification.thumbnail,
+  ];
+  for (const value of fields) {
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function normalizeThumbUrl(url?: unknown) {
@@ -120,7 +145,7 @@ function NotifRow({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const typeMeta = getTypeMeta(notification.type, notification.contentType || notification.data?.contentType);
   const isUnread = !notification.read;
-  const thumbFromData = normalizeThumbUrl(notification.thumbnailUrl || notification.data?.thumbnailUrl);
+  const thumbFromData = normalizeThumbUrl(getNotificationThumbnailUrl(notification));
   const thumbnailUrl = thumbFromData || getDefaultThumb(notification.type);
 
   return (
@@ -270,7 +295,7 @@ const Notifications: React.FC = () => {
   async function handleClick(n: any) {
     markAsRead(getNotifId(n));
     const { type, contentId, sermonId, podcastId, devotionId, eventId, ministryId, prayerId, url } =
-      n.data || { type: n.contentType, contentId: n.contentId };
+      n.data || { type: n.contentType || n.type, contentId: n.contentId };
     const targetId = contentId || sermonId || podcastId || devotionId || eventId || ministryId || prayerId;
     try {
       switch (type) {
@@ -305,27 +330,28 @@ const Notifications: React.FC = () => {
               viewCount: '0',
             });
             setIsPlaying(true);
-            history.push('/podcast-player');
+            history.push(`/podcast-player?id=${targetId}`);
           }
           break;
         case 'devotion':
           if (targetId) history.push(`/full-devotion?id=${targetId}`);
           break;
         case 'event':
-          if (targetId) history.push(`/event-detail?id=${targetId}`);
+          if (targetId) history.push(`/event/${targetId}`);
           break;
         case 'ministry':
-          if (targetId) history.push(`/ministry-detail?id=${targetId}`);
+          if (targetId) history.push(`/ministry/${targetId}`);
           break;
         case 'prayer':
-          if (targetId) history.push('/prayer-request');
+          history.push('/prayer');
           break;
         default:
           if (url) history.push(url);
           else history.push('/tab1');
       }
     } catch {
-      history.push('/tab1');
+      if (url) history.push(url);
+      else history.push('/tab1');
     }
   }
 
@@ -339,12 +365,6 @@ const Notifications: React.FC = () => {
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>
             Notifications
           </IonTitle>
-          {unreadCount > 0 && (
-            <IonButton fill="clear" slot="end" onClick={markAllAsRead} style={{ marginRight: '4px' }}>
-              <IonIcon icon={checkmarkDone} slot="start" style={{ fontSize: '18px' }} />
-              <span style={{ fontSize: '13px' }}>Read all</span>
-            </IonButton>
-          )}
         </IonToolbar>
       </IonHeader>
 
@@ -369,16 +389,30 @@ const Notifications: React.FC = () => {
                 )}
               </h2>
               {notifList.length > 0 && (
-                <button
-                  className="am-action-chip"
-                  onClick={() => setShowClearConfirm(true)}
-                  style={{ '--chip-color': '#ef4444' } as React.CSSProperties}
-                >
-                  <div className="am-action-icon">
-                    <IonIcon icon={trash} />
-                  </div>
-                  <span>Clear all</span>
-                </button>
+                <div className="notif-action-row">
+                  {unreadCount > 0 && (
+                    <button
+                      className="am-action-chip"
+                      onClick={markAllAsRead}
+                      style={{ '--chip-color': '#6366f1' } as React.CSSProperties}
+                    >
+                      <div className="am-action-icon">
+                        <IonIcon icon={checkmarkDone} />
+                      </div>
+                      <span>Read all</span>
+                    </button>
+                  )}
+                  <button
+                    className="am-action-chip"
+                    onClick={() => setShowClearConfirm(true)}
+                    style={{ '--chip-color': '#ef4444' } as React.CSSProperties}
+                  >
+                    <div className="am-action-icon">
+                      <IonIcon icon={trash} />
+                    </div>
+                    <span>Clear all</span>
+                  </button>
+                </div>
               )}
             </div>
             <div className="notif-filters-scroll">

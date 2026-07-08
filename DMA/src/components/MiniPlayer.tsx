@@ -45,7 +45,7 @@ const parseDurationToSeconds = (duration: string): number => {
 };
 
 const MiniPlayer: React.FC = () => {
-  const { currentMedia, isPlaying, setIsPlaying, getPlaybackPosition, skipForward, skipBackward, currentTime, setCurrentMedia } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, getPlaybackPosition, skipForward, skipBackward, currentTime, setCurrentMedia, setCurrentTime } = usePlayer();
   const history = useHistory();
   const location = useLocation();
   
@@ -81,8 +81,9 @@ const MiniPlayer: React.FC = () => {
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentMedia(null);
     setIsPlaying(false);
+    setCurrentTime(0);
+    setCurrentMedia(null);
   };
 
   // Calculate progress

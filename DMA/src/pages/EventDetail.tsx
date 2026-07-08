@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -73,6 +73,28 @@ const EventDetail: React.FC = () => {
     } catch (error) { /* ignore */ }
   };
 
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/event/${id}`;
+    const shareData = {
+      title: event?.title || 'Event at Dove Ministries Africa',
+      text: event?.title ? `Check out this event: ${event.title}` : 'Check out this event.',
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Event link copied to clipboard');
+      } else {
+        window.prompt('Copy this event link', shareUrl);
+      }
+    } catch (error) {
+      console.error('Share failed', error);
+    }
+  }, [event?.title, id]);
+
   const handleRegister = async () => {
     if (!event || !event.registrationRequired) return;
     try {
@@ -141,11 +163,6 @@ const EventDetail: React.FC = () => {
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Event Details</IonTitle>
-          <IonButtons slot="end">
-            <IonButton fill="clear">
-              <IonIcon icon={share} />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -222,6 +239,15 @@ const EventDetail: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="ed-section">
+            <div className="af-card ed-share-card">
+              <button type="button" className="ed-share-btn" onClick={handleShare}>
+                <IonIcon icon={share} />
+                Share this event
+              </button>
+            </div>
           </div>
 
           {/* Registration Progress */}

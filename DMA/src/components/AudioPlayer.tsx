@@ -46,14 +46,24 @@ const AudioPlayer: React.FC = () => {
   // Load audio when media changes
   useEffect(() => {
     if (!currentMedia) {
-      // Miniplayer closed - reset everything
+      // Miniplayer closed or media cleared - stop audio and reset everything
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+      }
       loadedPodcastIdRef.current = undefined;
       needsReloadRef.current = false;
       return;
     }
 
     if (!isPodcast(currentMedia)) {
-      // Not a podcast (it's a sermon), reset
+      // Not a podcast (it's a sermon), stop any existing audio and reset
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+      }
       loadedPodcastIdRef.current = undefined;
       return;
     }
