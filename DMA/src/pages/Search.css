@@ -1,0 +1,187 @@
+/* ============================================================
+   Search Page — Light & Dark Mode
+   ============================================================ */
+
+/* ── Page & Content background ─────────────────────────────── */
+.search-page {
+  background: #ffffff;
+  --ion-background-color: #ffffff;
+}
+
+.search-page-content {
+  --ion-background-color: #ffffff;
+  --background: #ffffff;
+}
+
+.search-page-container {
+  background: #ffffff;
+  min-height: 100%;
+}
+
+/* ── Header / Toolbar ───────────────────────────────────────── */
+/*
+  Light mode: crisp white with very subtle frosted-glass blur.
+  The solid white base makes the blur tint visible.
+*/
+.search-toolbar {
+  --background: rgba(255, 255, 255, 0.92) !important;
+  --border-color: rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* ── Search input bar inside the header ────────────────────── */
+.search-header-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(118, 118, 128, 0.12);
+  border-radius: 12px;
+  padding: 0 12px;
+  height: 40px;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.search-header-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 15px;
+  color: #1c1c1e;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.search-header-bar input::placeholder {
+  color: #8e8e93;
+}
+
+/* ── Filter chips ───────────────────────────────────────────── */
+.search-filter-chip {
+  background: rgba(118, 118, 128, 0.12);
+  color: #1c1c1e;
+  border-radius: 20px;
+  padding: 6px 14px;
+  height: 34px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-filter-chip.active {
+  background: #007aff;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+/* ── Result cards ───────────────────────────────────────────── */
+.search-result-card {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+
+/* ── Page & Content ─────────────────────────────────────────── */
+[data-theme="dark"] .search-page,
+:root:not([data-theme="light"]) .search-page {
+  background: #0a0a0c;
+  --ion-background-color: #0a0a0c;
+}
+
+[data-theme="dark"] .search-page-content,
+:root:not([data-theme="light"]) .search-page-content {
+  --ion-background-color: #0a0a0c;
+  --background: #0a0a0c;
+}
+
+[data-theme="dark"] .search-page-container,
+:root:not([data-theme="light"]) .search-page-container {
+  background: #0a0a0c;
+}
+
+/* ── Toolbar — dark ─────────────────────────────────────────── */
+/*
+  Key fix: give the blurred backdrop a VISIBLE dark tinted base so
+  the frosted-glass effect is actually perceivable. Without a
+  semi-opaque background the blur effect renders on nothing.
+*/
+[data-theme="dark"] .search-toolbar,
+:root:not([data-theme="light"]) .search-toolbar {
+  --background: rgba(28, 28, 30, 0.88) !important;
+  --border-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ── Search input bar — dark ────────────────────────────────── */
+[data-theme="dark"] .search-header-bar,
+:root:not([data-theme="light"]) .search-header-bar {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .search-header-bar input,
+:root:not([data-theme="light"]) .search-header-bar input {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .search-header-bar input::placeholder,
+:root:not([data-theme="light"]) .search-header-bar input::placeholder {
+  color: #636366;
+}
+
+/* ── Filter chips — dark ────────────────────────────────────── */
+[data-theme="dark"] .search-filter-chip,
+:root:not([data-theme="light"]) .search-filter-chip {
+  background: rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .search-filter-chip.active,
+:root:not([data-theme="light"]) .search-filter-chip.active {
+  background: #0a84ff;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+/* ── Result cards — dark ────────────────────────────────────── */
+[data-theme="dark"] .search-result-card,
+:root:not([data-theme="light"]) .search-result-card {
+  background: #1c1c1e;
+  border-color: rgba(84, 84, 88, 0.36);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .search-result-card:hover,
+:root:not([data-theme="light"]) .search-result-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
