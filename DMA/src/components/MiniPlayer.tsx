@@ -45,7 +45,7 @@ const parseDurationToSeconds = (duration: string): number => {
 };
 
 const MiniPlayer: React.FC = () => {
-  const { currentMedia, isPlaying, setIsPlaying, getPlaybackPosition, skipForward, skipBackward, currentTime, setCurrentMedia, setCurrentTime } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, getPlaybackPosition, skipForward, skipBackward, currentTime, setCurrentTime, clearPlayer } = usePlayer();
   const history = useHistory();
   const location = useLocation();
   
@@ -76,14 +76,16 @@ const MiniPlayer: React.FC = () => {
   };
 
   const handleOpenPlayer = () => {
-    history.push('/full-podcast-player');
+    if (podcast && podcast.id) {
+      history.push(`/podcast-player?id=${encodeURIComponent(podcast.id)}`);
+    } else {
+      history.push('/podcast-player');
+    }
   };
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setCurrentMedia(null);
+    clearPlayer();
   };
 
   // Calculate progress

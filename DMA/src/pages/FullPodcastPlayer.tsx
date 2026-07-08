@@ -86,7 +86,7 @@ const FullPodcastPlayer: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
   const contentRef = useRef<HTMLIonContentElement>(null);
-  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition, skipForward, skipBackward } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition, skipForward, skipBackward, clearPlayer } = usePlayer();
   const { isLoggedIn } = useContext(AuthContext);
 
   const [duration, setDuration] = useState(0);
@@ -565,7 +565,10 @@ const FullPodcastPlayer: React.FC = () => {
         <IonContent fullscreen className="content-ios">
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '20px', textAlign: 'center' }}>
             <IonText>Podcast not found</IonText>
-            <IonButton onClick={() => history.goBack()} style={{ marginTop: '16px' }}>
+            <IonButton onClick={() => {
+              clearPlayer();
+              history.goBack();
+            }} style={{ marginTop: '16px' }}>
               Go Back
             </IonButton>
           </div>
@@ -578,7 +581,10 @@ const FullPodcastPlayer: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <div
-          onClick={() => history.goBack()}
+          onClick={() => {
+            clearPlayer();
+            history.goBack();
+          }}
           style={{
             position: 'absolute',
             top: 'calc(var(--ion-safe-area-top) - -5px)',

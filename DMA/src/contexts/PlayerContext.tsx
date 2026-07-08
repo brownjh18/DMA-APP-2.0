@@ -47,6 +47,7 @@ interface PlayerContextType {
   // New: save and restore playback position
   savePlaybackPosition: (time: number) => void;
   getPlaybackPosition: () => number;
+  clearPlayer: () => void;
   // Skip forward/backward
   skipForward: () => void;
   skipBackward: () => void;
@@ -55,22 +56,62 @@ interface PlayerContextType {
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(() => {
-    // Restore current media from localStorage
+  const isSermonRoute = (pathname: string) => pathname === '/sermon-player';
+  const isPodcastRoute = (pathname: string) => pathname === '/podcast-player' || pathname === '/full-podcast-player';
+  const isFavoritesRoute = (pathname: string) => pathname === '/favorites';
+
+  const isValidMedia = (item: any): item is MediaItem => {
+    return item && typeof item === 'object' && typeof item.id === 'string' && typeof item.title === 'string';
+  };
+
+  const routeMatchesMedia = (pathname: string, route: string | null, media: MediaItem | null) => {
+    if (!route || !media) return false;
+    if (isFavoritesRoute(pathname)) {
+      return route === '/favorites';
+    }
+    if (isSermonRoute(pathname) && !isPodcast(media)) {
+      return route === '/sermon-player' || route === '/favorites';
+    }
+    if (isPodcastRoute(pathname) && isPodcast(media)) {
+      return route === '/podcast-player' || route === '/full-podcast-player' || route === '/favorites';
+    }
+    return false;
+  };
+
+  const [sourcePage, setSourcePage] = useState<string | null>(() => {
     try {
-      const saved = localStorage.getItem('player_currentMedia');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
-  const [isPlaying, setIsPlaying] = useState(() => {
-    // Auto-play if we have saved media (resume from where we left off)
-    try {
-      const saved = localStorage.getItem('player_currentMedia');
-      return saved ? true : false;
-    } catch { return false; }
+      return localStorage.getItem('player_source_page');
+    } catch {
+      return null;
+    }
   });
 
-  const [sourcePage, setSourcePage] = useState<string | null>(null);
+  const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(() => {
+    try {
+      const saved = localStorage.getItem('player_currentMedia');
+      const savedRoute = localStorage.getItem('player_source_page');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (!isValidMedia(parsed)) return null;
+      const currentPath = window.location.pathname;
+      return routeMatchesMedia(currentPath, savedRoute, parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isPlaying, setIsPlaying] = useState(() => {
+    try {
+      const saved = localStorage.getItem('player_currentMedia');
+      const savedRoute = localStorage.getItem('player_source_page');
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      if (!isValidMedia(parsed)) return false;
+      return routeMatchesMedia(window.location.pathname, savedRoute, parsed);
+    } catch {
+      return false;
+    }
+  });
 
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -82,14 +123,26 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch { return {}; }
   });
 
-  // Persist currentMedia to localStorage
+  // Persist currentMedia and sourcePage to localStorage
   useEffect(() => {
     if (currentMedia) {
       localStorage.setItem('player_currentMedia', JSON.stringify(currentMedia));
+      const currentPath = window.location.pathname;
+      if (currentPath !== sourcePage) {
+        setSourcePage(currentPath);
+      }
     } else {
       localStorage.removeItem('player_currentMedia');
     }
-  }, [currentMedia]);
+  }, [currentMedia, sourcePage]);
+
+  useEffect(() => {
+    if (sourcePage) {
+      localStorage.setItem('player_source_page', sourcePage);
+    } else {
+      localStorage.removeItem('player_source_page');
+    }
+  }, [sourcePage]);
 
   // Persist playback positions to localStorage (debounced)
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -168,6 +221,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCurrentMedia(sermon);
   };
 
+  const clearPlayer = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentMedia(null);
+    setSourcePage(null);
+    setCurrentTime(0);
+  }, [setCurrentMedia, setIsPlaying, setSourcePage, setCurrentTime]);
+
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
@@ -214,6 +274,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentTime,
       savePlaybackPosition,
       getPlaybackPosition,
+      clearPlayer,
       skipForward,
       skipBackward
     }}>

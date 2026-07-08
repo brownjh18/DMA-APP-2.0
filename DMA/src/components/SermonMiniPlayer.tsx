@@ -38,7 +38,7 @@ const getThumbnailUrl = (sermon: any) => {
 };
 
 const SermonMiniPlayer: React.FC = () => {
-  const { currentMedia, isPlaying, setIsPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, savePlaybackPosition, getPlaybackPosition, clearPlayer } = usePlayer();
   const location = useLocation();
   const history = useHistory();
 
@@ -50,10 +50,11 @@ const SermonMiniPlayer: React.FC = () => {
     savePlaybackPosition(time);
   }, []);
 
-  // Only show for sermons (not podcasts) and not on Tab2
+  // Only show for sermons (not podcasts), not on Tab2, and not on the full sermon player page
   const isSermon = currentMedia && !isPodcast(currentMedia);
   const isOnTab2 = location.pathname === '/tab2' || location.pathname.startsWith('/tab2');
-  const show = isSermon && isPlaying && !isOnTab2;
+  const isOnFullSermonPage = location.pathname === '/sermon-player';
+  const show = isSermon && isPlaying && !isOnTab2 && !isOnFullSermonPage;
 
   if (!show) return null;
 
@@ -68,7 +69,11 @@ const SermonMiniPlayer: React.FC = () => {
       <div
       className="sermon-mini-player-global"
       onClick={() => {
-        history.push('/tab2');
+        if (currentMedia?.id) {
+          history.push(`/sermon-player?id=${encodeURIComponent(currentMedia.id)}`);
+        } else {
+          history.push('/sermon-player');
+        }
       }}
       style={{
         position: 'fixed',
@@ -144,7 +149,7 @@ const SermonMiniPlayer: React.FC = () => {
         <div
           onClick={(e) => {
             e.stopPropagation();
-            setIsPlaying(false);
+            clearPlayer();
           }}
           style={{
             width: '22px',

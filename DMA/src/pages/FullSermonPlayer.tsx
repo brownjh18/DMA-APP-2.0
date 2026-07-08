@@ -88,6 +88,7 @@ const FullSermonPlayer: React.FC = () => {
   const location = useLocation();
   const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition } = usePlayer();
 
+  const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -130,6 +131,55 @@ const FullSermonPlayer: React.FC = () => {
       setDeviceVolumeSupported(true);
     }
   }, []);
+
+  useEffect(() => {
+    const loadSermonById = async () => {
+      const urlParams = new URLSearchParams(location.search);
+      const sermonId = urlParams.get('id');
+
+      if (!sermonId) {
+        setLoading(false);
+        return;
+      }
+
+      if (sermon && sermon.id === sermonId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await apiService.getSermon(sermonId);
+        const sermonData = response.sermon || response;
+
+        const formattedSermon = {
+          id: sermonData._id || sermonData.id,
+          title: sermonData.title || 'Sermon',
+          description: sermonData.description || sermonData.summary || '',
+          thumbnailUrl: sermonData.thumbnailUrl || sermonData.thumbnail || '',
+          publishedAt: sermonData.publishedAt || sermonData.date || new Date().toISOString(),
+          duration: sermonData.duration || sermonData.length || '00:00',
+          viewCount: sermonData.viewCount?.toString() || '0',
+          videoUrl: sermonData.videoUrl || sermonData.streamUrl || sermonData.video || '',
+          speaker: sermonData.speaker || sermonData.preacher || 'Dove Ministries Africa',
+          isDatabaseSermon: true,
+        };
+
+        setCurrentMedia(formattedSermon);
+        setIsPlaying(true);
+      } catch (error) {
+        console.error('Failed to load sermon by ID:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!sermon || (sermon && sermon.id !== new URLSearchParams(location.search).get('id'))) {
+      loadSermonById();
+    } else {
+      setLoading(false);
+    }
+  }, [location.search, sermon, setCurrentMedia, setIsPlaying]);
 
   // Fetch queue sermons when component loads or current sermon changes
   useEffect(() => {
