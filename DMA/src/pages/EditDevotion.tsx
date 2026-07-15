@@ -7,7 +7,6 @@ import {
   IonToolbar,
   IonIcon,
   IonButton,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
@@ -493,11 +492,6 @@ const EditDevotion: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading
-          isOpen={loading}
-          message="Updating devotion..."
-          duration={0}
-        />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

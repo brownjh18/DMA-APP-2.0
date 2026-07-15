@@ -7,7 +7,6 @@ import {
   IonToolbar,
   IonIcon,
   IonButton,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
@@ -422,11 +421,6 @@ const EditMinistry: React.FC = () => {
           <IonText>Dove Church • Ministry Management System</IonText>
         </div>
 
-        <IonLoading
-          isOpen={loading}
-          message="Updating ministry..."
-          duration={0}
-        />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

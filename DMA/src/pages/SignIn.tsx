@@ -10,7 +10,7 @@ import {
   IonButton,
   IonText,
   IonIcon,
-  IonLoading
+  IonSpinner
 } from '@ionic/react';
 import { logIn, personCircle, mail, lockClosed, eye, eyeOff, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -172,7 +172,11 @@ const SignIn: React.FC = () => {
               }}
               disabled={loading}
             >
-              <IonIcon icon={logIn} slot="start" />
+              {loading ? (
+                <IonSpinner name="crescent" color="light" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+              ) : (
+                <IonIcon icon={logIn} slot="start" />
+              )}
               {loading ? 'Signing In...' : 'Sign In'}
             </IonButton>
           </form>
@@ -216,13 +220,6 @@ const SignIn: React.FC = () => {
             </IonText>
           </div>
         </div>
-
-        {/* Loading Spinner */}
-        <IonLoading
-          isOpen={loading}
-          message="Signing you in..."
-          spinner="crescent"
-        />
 
       </IonContent>
     </IonPage>

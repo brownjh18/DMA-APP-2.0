@@ -10,7 +10,7 @@ import {
   IonButton,
   IonText,
   IonIcon,
-  IonLoading
+  IonSpinner
 } from '@ionic/react';
 import { personAdd, mail, lockClosed, person, call, eye, eyeOff, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -294,7 +294,11 @@ const SignUp: React.FC = () => {
               }}
               disabled={loading}
             >
-              <IonIcon icon={personAdd} slot="start" />
+              {loading ? (
+                <IonSpinner name="crescent" color="light" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+              ) : (
+                <IonIcon icon={personAdd} slot="start" />
+              )}
               {loading ? 'Creating Account...' : 'Create Account'}
             </IonButton>
           </form>
@@ -337,13 +341,6 @@ const SignUp: React.FC = () => {
             </IonText>
           </div>
         </div>
-
-        {/* Loading Spinner */}
-        <IonLoading
-          isOpen={loading}
-          message="Creating your account..."
-          spinner="crescent"
-        />
 
       </IonContent>
     </IonPage>
