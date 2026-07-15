@@ -8,8 +8,7 @@ import {
   IonIcon,
   IonButton,
   IonButtons,
-  IonText,
-  IonLoading
+  IonText
 } from '@ionic/react';
 import { useParams, useHistory } from 'react-router-dom';
 import {
@@ -124,7 +123,14 @@ const EventDetail: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonLoading isOpen={loading} message="Loading event..." duration={10000} backdropDismiss showBackdrop />
+        <IonContent className="ion-padding">
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+            <div className="loading-spinner-container">
+              <div className="custom-loading-spinner" />
+              <p style={{ color: isDarkMode ? '#ebebf5' : '#8e8e93', marginTop: '16px', fontSize: '15px' }}>Loading event...</p>
+            </div>
+          </div>
+        </IonContent>
       </IonPage>
     );
   }

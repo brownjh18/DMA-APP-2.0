@@ -572,7 +572,7 @@ router.put('/:id', [
     // Handle thumbnail upload
     if (req.file) {
       updateData.thumbnailUrl = `/uploads/thumbnails/${req.file.filename}`;
-    } else if (thumbnailUrl) {
+    } else if (thumbnailUrl !== undefined) {
       updateData.thumbnailUrl = thumbnailUrl;
     }
 

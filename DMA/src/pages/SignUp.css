@@ -60,6 +60,21 @@
   --color: #111;
 }
 
+/* Ensure input text is visible in both themes */
+.signup-input-item .native-input,
+.signup-input-item input,
+.signup-input-item .input-wrapper input,
+.signup-input-item ion-input {
+  color: #111 !important;
+}
+
+[data-theme="dark"] .signup-input-item .native-input,
+[data-theme="dark"] .signup-input-item input,
+[data-theme="dark"] .signup-input-item .input-wrapper input,
+[data-theme="dark"] .signup-input-item ion-input {
+  color: #fff !important;
+}
+
 .signup-page {
   color: #111;
 }
@@ -98,17 +113,7 @@
   color: #d1d5db !important;
 }
 
-.signup-input-item input,
-.signup-input-item textarea,
-.signup-input-item .native-input,
-.signup-input-item .input-wrapper input {
-  color: var(--ion-text-color) !important;
-}
-
-.signup-input-item ion-input {
-  --color: var(--ion-text-color);
-}
-
+/* Placeholder text colors */
 .signup-input-item input::placeholder,
 .signup-input-item .native-input::placeholder {
   color: rgba(0, 0, 0, 0.55);
@@ -119,6 +124,7 @@
   color: rgba(255, 255, 255, 0.65);
 }
 
+/* Dark mode input item styling */
 [data-theme="dark"] .signup-input-item {
   --background: var(--ios26-card-bg-dark);
   border-color: var(--ios26-separator-dark);
@@ -127,12 +133,4 @@
 
 .signup-input-item ion-icon {
   color: #6366f1;
-}
-
-.signup-input-item ion-input {
-  color: var(--ios26-text-primary-light);
-}
-
-[data-theme="dark"] .signup-input-item ion-input {
-  color: var(--ios26-text-primary-dark);
 }

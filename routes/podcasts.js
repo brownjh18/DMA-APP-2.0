@@ -411,6 +411,11 @@ router.put('/:id', (req, res, next) => {
       }
     }
 
+    // Allow explicit thumbnailUrl from body (e.g., empty string to clear)
+    if (req.body.thumbnailUrl !== undefined && !(req.files && req.files.some(f => f.fieldname === 'thumbnailFile' || f.fieldname === 'thumbnail'))) {
+      thumbnailUrl = req.body.thumbnailUrl;
+    }
+
     const updateData = {
       title: req.body.title, speaker: req.body.speaker, description: req.body.description,
       series: req.body.category, duration: duration, audioUrl: audioUrl, thumbnailUrl: thumbnailUrl,

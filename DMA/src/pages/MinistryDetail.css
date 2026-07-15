@@ -280,6 +280,32 @@
   color: var(--ios26-text-primary-dark);
 }
 
+/* ---- Custom Loading Spinner ---- */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ios26-separator-light);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+[data-theme="dark"] .custom-loading-spinner {
+  border-color: var(--ios26-separator-dark);
+  border-top-color: #8b5cf6;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ---- Empty State ---- */
 .md-empty {
   text-align: center;

@@ -520,6 +520,138 @@
   color: #ffffff;
 }
 
+.fav-player-card {
+  margin-bottom: 24px;
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--ion-background-color);
+  border: 1px solid var(--ion-color-light-tint);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.fav-player-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.fav-player-label {
+  margin: 0 0 6px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+.fav-player-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.fav-player-meta {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.fav-player-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fav-player-close-button {
+  --padding-top: 6px;
+  --padding-bottom: 6px;
+  --padding-start: 6px;
+  --padding-end: 6px;
+}
+
+.fav-player-video-wrap {
+  width: 100%;
+  min-height: 220px;
+}
+
+.fav-player-podcast-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fav-player-thumbnail {
+  width: 120px;
+  min-width: 120px;
+  aspect-ratio: 1/1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f4f4ff;
+}
+
+.fav-player-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fav-player-podcast-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fav-player-description {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ion-text-color);
+}
+
+.fav-player-duration {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.fav-player-loading,
+.fav-player-error {
+  padding: 18px 16px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.16);
+}
+
+.fav-player-error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .fav-player-card {
+    padding: 16px;
+  }
+
+  .fav-player-podcast-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fav-player-thumbnail {
+    width: 100%;
+    min-width: auto;
+    aspect-ratio: 16/9;
+  }
+}
+}
+
 [data-theme="dark"] .fav-hero {
   background: linear-gradient(145deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.06));
   border-color: rgba(99, 102, 241, 0.25);

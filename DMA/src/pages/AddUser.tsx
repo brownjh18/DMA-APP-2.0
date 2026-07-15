@@ -104,7 +104,7 @@ const AddUser: React.FC = () => {
           const profileFormData = new FormData();
           profileFormData.append('profileFile', input.files[0]);
           const response = await apiService.uploadThumbnail(profileFormData);
-          userData.profileUrl = response.thumbnailUrl;
+          userData.profilePicture = response.thumbnailUrl;
         }
       }
 

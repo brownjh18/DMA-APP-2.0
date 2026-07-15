@@ -30,6 +30,7 @@ const EditPodcast: React.FC = () => {
   const { isDarkMode } = useSettings();
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [audioFileName, setAudioFileName] = useState<string>('');
+  const [thumbnailRemoved, setThumbnailRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +66,7 @@ const EditPodcast: React.FC = () => {
         category: podcast.category, duration: podcast.duration, status: podcast.status,
         thumbnailUrl: podcast.thumbnailUrl || ''
       });
+      setThumbnailRemoved(false);
       if (podcast.audioUrl) setAudioFileName('Current audio file exists');
     } catch (error) {
       console.error('Error loading podcast data:', error);
@@ -103,7 +105,10 @@ const EditPodcast: React.FC = () => {
       setAlertHeader('Invalid File'); setAlertMessage('Please select a valid image file (JPEG, PNG, WebP)'); setShowAlert(true);
       event.target.value = ''; return;
     }
-    if (file) setThumbnailPreview(URL.createObjectURL(file));
+    if (file) {
+      setThumbnailPreview(URL.createObjectURL(file));
+      setThumbnailRemoved(false);
+    }
   };
 
   const handleSave = async () => {
@@ -128,6 +133,9 @@ const EditPodcast: React.FC = () => {
       } else {
         const updateData: any = { title: formData.title, speaker: formData.speaker, description: formData.description,
           category: formData.category, duration: formData.duration, status: formData.status };
+        if (thumbnailRemoved) {
+          updateData.thumbnailUrl = '';
+        }
         const response = await fetch(`${API_BASE_URL}/podcasts/${id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json',
             ...(localStorage.getItem('token') && { Authorization: `Bearer ${localStorage.getItem('token')}` }) },
@@ -291,7 +299,7 @@ const EditPodcast: React.FC = () => {
                     <img src={thumbnailPreview || formData.thumbnailUrl} alt="Thumbnail preview" className="af-upload-preview" />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
                       <span className="af-upload-hint">Thumbnail {thumbnailPreview ? 'selected' : 'exists'}</span>
-                      <button onClick={() => { setThumbnailPreview(''); setFormData(prev => ({ ...prev, thumbnailUrl: '' })); if (thumbnailInputRef.current) thumbnailInputRef.current.value = ''; }}
+                      <button onClick={() => { setThumbnailPreview(''); setFormData(prev => ({ ...prev, thumbnailUrl: '' })); setThumbnailRemoved(true); if (thumbnailInputRef.current) thumbnailInputRef.current.value = ''; }}
                         className="af-submit af-submit-danger" style={{ width: 'auto', padding: '6px 12px', fontSize: '12px' }}>
                         <IonIcon icon={closeCircle} /> Remove
                       </button>

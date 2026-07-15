@@ -52,6 +52,7 @@ const EditEvent: React.FC = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>('');
+  const [thumbnailRemoved, setThumbnailRemoved] = useState(false);
   const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
   const videoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -121,6 +122,7 @@ const EditEvent: React.FC = () => {
       });
       setCurrentThumbnailUrl(event.imageUrl || '');
       setCurrentVideoUrl(event.videoUrl || '');
+      setThumbnailRemoved(false);
     } else {
       loadEvent();
     }
@@ -145,6 +147,7 @@ const EditEvent: React.FC = () => {
       });
       setCurrentThumbnailUrl(event.imageUrl || '');
       setCurrentVideoUrl(event.videoUrl || '');
+      setThumbnailRemoved(false);
     } catch (error) {
       console.log('API load failed, using navigation state data');
     }
@@ -174,6 +177,7 @@ const EditEvent: React.FC = () => {
     }
 
     setFormData(prev => ({ ...prev, thumbnailFile: file }));
+    setThumbnailRemoved(false);
     if (file) {
       setThumbnailPreview(URL.createObjectURL(file));
     }
@@ -255,6 +259,8 @@ const EditEvent: React.FC = () => {
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+      } else if (thumbnailRemoved) {
+        thumbnailUrl = '';
       }
 
       if (formData.videoFile) {
@@ -276,12 +282,9 @@ const EditEvent: React.FC = () => {
         speaker: formData.organizer || null,
         contactPhone: formData.contactInfo || null,
         isPublished: formData.status === 'published',
-        endDate: formData.endTime || null
+        endDate: formData.endTime || null,
+        imageUrl: thumbnailUrl
       };
-
-      if (thumbnailUrl) {
-        updateData.imageUrl = thumbnailUrl;
-      }
 
       if (videoUrl) {
         updateData.videoUrl = videoUrl;
@@ -493,6 +496,8 @@ const EditEvent: React.FC = () => {
                   onClick={() => {
                     setFormData(prev => ({ ...prev, thumbnailFile: null }));
                     setThumbnailPreview(null);
+                    setCurrentThumbnailUrl('');
+                    setThumbnailRemoved(true);
                     if (thumbnailInputRef.current) {
                       thumbnailInputRef.current.value = '';
                     }

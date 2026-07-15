@@ -210,7 +210,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, role = 'user' } = req.body;
+    const { name, email, password, role = 'user', profilePicture } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -223,7 +223,8 @@ router.post('/register', [
       name,
       email,
       password,
-      role
+      role,
+      profilePicture
     });
     await user.save();
 

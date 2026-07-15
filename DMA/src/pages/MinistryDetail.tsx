@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonButtons, IonText, IonLoading } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonButtons, IonText } from '@ionic/react';
 import { useParams, useHistory } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { heart, people, book, radio, chatbubble, musicalNotes, mail, call, informationCircle, arrowBack, calendar, time, share } from 'ionicons/icons';
@@ -112,7 +112,12 @@ const MinistryDetail: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          <IonLoading isOpen={loading} message="Loading ministry details..." />
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+            <div className="loading-spinner-container">
+              <div className="custom-loading-spinner" />
+              <p style={{ color: isDarkMode ? '#ebebf5' : '#8e8e93', marginTop: '16px', fontSize: '15px' }}>Loading ministry details...</p>
+            </div>
+          </div>
         </IonContent>
       </IonPage>
     );

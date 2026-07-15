@@ -43,6 +43,7 @@ const EditDevotion: React.FC = () => {
   const [dragActive, setDragActive] = useState(false);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>('');
+  const [thumbnailRemoved, setThumbnailRemoved] = useState(false);
   const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -101,6 +102,7 @@ const EditDevotion: React.FC = () => {
         thumbnailUrl: devotion.thumbnailUrl || ''
       });
       setCurrentThumbnailUrl(devotion.thumbnailUrl || '');
+      setThumbnailRemoved(false);
     } else {
       loadDevotion();
     }
@@ -121,6 +123,7 @@ const EditDevotion: React.FC = () => {
         thumbnailUrl: devotion.thumbnailUrl || ''
       });
       setCurrentThumbnailUrl(devotion.thumbnailUrl || '');
+      setThumbnailRemoved(false);
     } catch (error) {
       console.log('API load failed, using navigation state data');
     }
@@ -150,6 +153,7 @@ const EditDevotion: React.FC = () => {
     }
 
     setFormData(prev => ({ ...prev, thumbnailFile: file }));
+    setThumbnailRemoved(false);
     if (file) {
       setThumbnailPreview(URL.createObjectURL(file));
     }
@@ -205,6 +209,8 @@ const EditDevotion: React.FC = () => {
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+      } else if (thumbnailRemoved) {
+        thumbnailUrl = '';
       }
 
       const token = localStorage.getItem('token');
@@ -224,12 +230,13 @@ const EditDevotion: React.FC = () => {
         },
         body: JSON.stringify({
           title: formData.title,
+          author: formData.author,
           scripture: formData.scripture,
           content: formData.content,
           reflection: formData.reflection,
           prayer: formData.prayer,
           isFeatured: formData.featured,
-          thumbnailUrl: thumbnailUrl || undefined
+          thumbnailUrl: thumbnailUrl
         })
       });
 
@@ -448,6 +455,8 @@ const EditDevotion: React.FC = () => {
                         onClick={() => {
                           setFormData(prev => ({ ...prev, thumbnailFile: null }));
                           setThumbnailPreview(null);
+                          setCurrentThumbnailUrl('');
+                          setThumbnailRemoved(true);
                           if (thumbnailInputRef.current) {
                             thumbnailInputRef.current.value = '';
                           }

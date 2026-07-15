@@ -52,6 +52,7 @@ const EditSermon: React.FC = () => {
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailRemoved, setThumbnailRemoved] = useState(false);
   const videoInputRef = React.useRef<HTMLInputElement>(null);
   const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -124,6 +125,7 @@ const EditSermon: React.FC = () => {
         thumbnailFile: null
       });
       setActiveTab(videoSource);
+      setThumbnailRemoved(false);
       if (sermon.thumbnailUrl) {
         setThumbnailPreview(sermon.thumbnailUrl);
       }
@@ -153,6 +155,7 @@ const EditSermon: React.FC = () => {
         thumbnailFile: null
       });
       setActiveTab(videoSource);
+      setThumbnailRemoved(false);
       if (sermon.thumbnailUrl) {
         setThumbnailPreview(sermon.thumbnailUrl);
       }
@@ -242,6 +245,7 @@ const EditSermon: React.FC = () => {
     }
 
     setFormData(prev => ({ ...prev, thumbnailFile: file }));
+    setThumbnailRemoved(false);
     if (file) {
       setThumbnailPreview(URL.createObjectURL(file));
     }
@@ -328,6 +332,8 @@ const EditSermon: React.FC = () => {
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+      } else if (thumbnailRemoved) {
+        thumbnailUrl = '';
       }
 
       if (formData.videoSource === 'upload') {
@@ -350,11 +356,11 @@ const EditSermon: React.FC = () => {
         description: formData.description,
         series: formData.series,
         videoUrl: videoUrl,
-        thumbnailUrl: thumbnailUrl || undefined,
+        thumbnailUrl: thumbnailUrl,
         isPublished: formData.status === 'published'
       };
 
-      if (formData.videoSource === 'external' && videoUrl && (!formData.existingVideoUrl || formData.existingVideoUrl !== videoUrl)) {
+      if (!thumbnailRemoved && formData.videoSource === 'external' && videoUrl && (!formData.existingVideoUrl || formData.existingVideoUrl !== videoUrl)) {
         if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
           const videoId = videoUrl.includes('youtu.be/')
             ? videoUrl.split('youtu.be/')[1]?.split('?')[0]
@@ -624,20 +630,21 @@ const EditSermon: React.FC = () => {
                       </span>
                     </div>
                     <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }));
-                        setThumbnailPreview(null);
-                        if (thumbnailInputRef.current) {
-                          thumbnailInputRef.current.value = '';
-                        }
-                      }}
-                      className="af-submit af-submit-danger"
-                      style={{ width: 'auto', padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      <IonIcon icon={closeCircle} style={{ fontSize: '14px' }} />
-                      Remove
-                    </button>
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }));
+                          setThumbnailPreview(null);
+                          setThumbnailRemoved(true);
+                          if (thumbnailInputRef.current) {
+                            thumbnailInputRef.current.value = '';
+                          }
+                        }}
+                        className="af-submit af-submit-danger"
+                        style={{ width: 'auto', padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <IonIcon icon={closeCircle} style={{ fontSize: '14px' }} />
+                        Remove
+                      </button>
                   </div>
                 </div>
               )}
