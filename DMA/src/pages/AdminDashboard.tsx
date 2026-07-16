@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   people, playCircle, book, calendar, add,
-  shield, videocam, radio, mail, trendingUp, statsChart,
+  shield, videocam, radio, mail, trendingUp,
   person, documentText, checkmarkCircle, arrowForward, arrowBack
 } from 'ionicons/icons';
 import { apiService } from '../services/api';
@@ -14,10 +14,10 @@ const AdminDashboard: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [data, setData] = useState({
-    sermons: { total: 0, published: 0, views: 0 },
+    sermons: { total: 0, published: 0 },
     devotions: { total: 0, published: 0 },
     events: { total: 0, published: 0, upcoming: 0 },
-    ministries: { total: 0 },
+    ministries: { total: 0, active: 0 },
     podcasts: { total: 0, published: 0 },
     users: { total: 0, active: 0 },
     prayers: { pending: 0 }
@@ -36,7 +36,7 @@ const AdminDashboard: React.FC = () => {
     setIsLoading(true);
     try {
       const [sermons, devotions, events, ministries, podcasts, users, prayers] = await Promise.all([
-        apiService.getSermonStats().catch(() => ({ stats: { total: 0, published: 0, totalViews: 0 } })),
+        apiService.getSermonStats().catch(() => ({ stats: { total: 0, published: 0 } })),
         apiService.getDevotions({ limit: 50 }).catch(() => ({ devotions: [] })),
         apiService.getEvents({ limit: 50 }).catch(() => ({ events: [] })),
         apiService.getMinistries({ limit: 50 }).catch(() => ({ ministries: [] })),
@@ -49,13 +49,12 @@ const AdminDashboard: React.FC = () => {
       const newData = {
         sermons: {
           total: sermons.stats?.total || 0,
-          published: sermons.stats?.published || 0,
-          views: sermons.stats?.totalViews || 0
+          published: sermons.stats?.published || 0
         },
-        devotions: { total: devotions.devotions?.length || 0, published: devotions.devotions?.filter((d: any) => d.isPublished).length || 0 },
+        devotions: { total: devotions.devotions?.length || 0, published: devotions.devotions?.filter((d: any) => d.status === 'publish').length || 0 },
         events: { total: eventsData.length, published: eventsData.filter((e: any) => e.isPublished).length, upcoming: eventsData.filter((e: any) => new Date(e.date) > new Date() && e.isPublished).length },
-        ministries: { total: ministries.ministries?.length || 0 },
-        podcasts: { total: podcasts.podcasts?.length || 0, published: podcasts.podcasts?.filter((p: any) => p.isPublished).length || 0 },
+        ministries: { total: ministries.ministries?.length || 0, active: ministries.ministries?.filter((m: any) => m.isActive).length || 0 },
+        podcasts: { total: podcasts.podcasts?.length || 0, published: podcasts.podcasts?.filter((p: any) => p.status === 'published').length || 0 },
         users: { total: users.users?.length || 0, active: users.users?.filter((u: any) => u.isActive).length || 0 },
         prayers: { pending: prayers.stats?.pending || 0 }
       };
@@ -75,7 +74,6 @@ const AdminDashboard: React.FC = () => {
   const stats = [
     { label: 'Content', value: totalContent, icon: documentText, color: '#6366f1' },
     { label: 'Published', value: totalPublished, icon: checkmarkCircle, color: '#10b981' },
-    { label: 'Views', value: data.sermons.views.toLocaleString(), icon: statsChart, color: '#f59e0b' },
     { label: 'Users', value: data.users.active, icon: person, color: '#ec4899' },
   ];
 
@@ -91,7 +89,7 @@ const AdminDashboard: React.FC = () => {
     { name: 'Sermons', icon: playCircle, route: '/admin/sermons', color: '#6366f1', count: data.sermons.total, detail: `${data.sermons.published} published` },
     { name: 'Devotions', icon: book, route: '/admin/devotions', color: '#8b5cf6', count: data.devotions.total, detail: `${data.devotions.published} published` },
     { name: 'Events', icon: calendar, route: '/admin/events', color: '#f59e0b', count: data.events.total, detail: `${data.events.upcoming} upcoming` },
-    { name: 'Ministries', icon: people, route: '/admin/ministries', color: '#10b981', count: data.ministries.total, detail: 'active ministries' },
+    { name: 'Ministries', icon: people, route: '/admin/ministries', color: '#10b981', count: data.ministries.total, detail: `${data.ministries.active} active` },
     { name: 'Podcasts', icon: radio, route: '/admin/radio', color: '#ec4899', count: data.podcasts.total, detail: `${data.podcasts.published} published` },
     { name: 'Live', icon: videocam, route: '/admin/live', color: '#ef4444', count: null, detail: 'broadcasts', isLive: true },
     { name: 'Users', icon: shield, route: '/admin/users', color: '#06b6d4', count: data.users.total, detail: `${data.users.active} active` },

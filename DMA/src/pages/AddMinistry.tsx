@@ -80,6 +80,7 @@ const AddMinistry: React.FC = () => {
     location: '',
     contactEmail: '',
     contactPhone: '',
+    linkUrl: '',
     memberCount: '',
     status: 'active'
   });
@@ -142,6 +143,7 @@ const AddMinistry: React.FC = () => {
         category: formData.category,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
+        linkUrl: formData.linkUrl || undefined,
         isActive: formData.status === 'active'
       };
 
@@ -355,6 +357,17 @@ const AddMinistry: React.FC = () => {
                   placeholder="Phone for inquiries"
                 />
               </div>
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">Link URL</label>
+              <input
+                type="url"
+                className="af-input"
+                value={formData.linkUrl}
+                onChange={(e) => handleInputChange('linkUrl', e.target.value)}
+                placeholder="e.g., Zoom link, YouTube stream URL"
+              />
             </div>
 
             <div className="af-field">

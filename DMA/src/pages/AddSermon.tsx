@@ -88,7 +88,6 @@ const AddSermon: React.FC = () => {
     title: '',
     description: '',
     speaker: '',
-    series: '',
     status: 'published',
     videoSource: 'upload',
     videoFile: null as File | null,
@@ -104,7 +103,6 @@ const AddSermon: React.FC = () => {
       title: '',
       description: '',
       speaker: '',
-      series: '',
       status: 'published',
       videoSource: 'upload',
       videoFile: null,
@@ -266,7 +264,6 @@ const AddSermon: React.FC = () => {
         title: details.title || prev.title,
         description: details.description || prev.description,
         speaker: details.channelTitle || prev.speaker,
-        series: prev.series,
         videoUrl: url,
         duration: details.duration || '00:00',
         viewCount: details.viewCount || 0,
@@ -352,7 +349,6 @@ const AddSermon: React.FC = () => {
         title: formData.title,
         speaker: formData.speaker,
         description: formData.description,
-        series: formData.series,
         videoUrl: videoUrl,
         thumbnailUrl: thumbnailUrl || formData.thumbnailUrl || undefined,
         duration: videoDuration,
@@ -463,18 +459,6 @@ const AddSermon: React.FC = () => {
                   {formErrors.speaker}
                 </p>
               )}
-            </div>
-
-            {/* Series */}
-            <div className="af-field">
-              <label className="af-label">Series</label>
-              <input
-                type="text"
-                className="af-input"
-                value={formData.series}
-                onChange={(e) => handleInputChange('series', e.target.value)}
-                placeholder="Enter sermon series (optional)"
-              />
             </div>
 
             {/* Description */}

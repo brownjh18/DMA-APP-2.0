@@ -534,7 +534,7 @@ const MyFavorites: React.FC = () => {
                         <div className="fav-media-info">
                           <h4 className="fav-media-title">{p.title}</h4>
                           <p className="fav-media-speaker">{p.speaker}</p>
-                          <p className="fav-media-meta">{p.viewCount} listens • {formatDate(p.publishedAt)}</p>
+                          <p className="fav-media-meta">{formatDate(p.publishedAt)}</p>
                         </div>
                         <IonButton
                           fill="clear"

@@ -65,7 +65,8 @@ const MinistryDetail: React.FC = () => {
           contact: {
             email: m.contactEmail || 'info@doveministriesafrica.org',
             phone: m.contactPhone || '+256 772824677'
-          }
+          },
+          linkUrl: m.linkUrl
         });
       }
     } catch (error) { /* ignore */ }
@@ -278,6 +279,25 @@ const MinistryDetail: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Link URL */}
+          {ministry.linkUrl && (
+            <div className="md-section">
+              <h3 className="md-section-title">Ministry Link</h3>
+              <div className="af-card">
+                <a
+                  href={ministry.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="af-submit md-call-btn"
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <IonIcon icon={informationCircle} style={{ marginRight: '8px' }} />
+                  Open Ministry Link
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Action Button */}
           <div className="md-section">

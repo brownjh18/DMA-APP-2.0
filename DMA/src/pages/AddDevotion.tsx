@@ -63,7 +63,6 @@ const AddDevotion: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    author: '',
     scripture: '',
     reflection: '',
     prayer: '',
@@ -134,9 +133,9 @@ const AddDevotion: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.content || !formData.scripture || !formData.reflection || !formData.prayer || !formData.author) {
+    if (!formData.title || !formData.content || !formData.scripture || !formData.reflection || !formData.prayer) {
       setAlertHeader('Validation Error');
-      setAlertMessage('Please fill in all required fields (Title, Scripture, Content, Reflection, Prayer, Author)');
+      setAlertMessage('Please fill in all required fields (Title, Scripture, Content, Reflection, Prayer)');
       setShowAlert(true);
       return;
     }
@@ -174,7 +173,6 @@ const AddDevotion: React.FC = () => {
           content: formData.content,
           reflection: formData.reflection,
           prayer: formData.prayer,
-          author: formData.author,
           status: 'publish',
           isFeatured: formData.featured,
           thumbnailUrl: thumbnailUrl || undefined
@@ -282,19 +280,6 @@ const AddDevotion: React.FC = () => {
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="Enter devotion title"
-                />
-              </div>
-
-              <div className="af-field">
-                <label className="af-label">
-                  Author <span className="af-required">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="af-input"
-                  value={formData.author}
-                  onChange={(e) => handleInputChange('author', e.target.value)}
-                  placeholder="Enter author name"
                 />
               </div>
 

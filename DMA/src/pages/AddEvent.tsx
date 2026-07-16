@@ -75,12 +75,13 @@ const AddEvent: React.FC = () => {
     title: '',
     description: '',
     date: '',
+    endDate: '',
     time: '',
     endTime: '',
     location: '',
-    capacity: '',
     organizer: '',
     contactInfo: '',
+    linkUrl: '',
     status: 'draft',
     thumbnailFile: null as File | null,
     videoFile: null as File | null
@@ -118,9 +119,9 @@ const AddEvent: React.FC = () => {
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
 
-    if (file && file.size > 100 * 1024 * 1024) {
+    if (file && file.size > 300 * 1024 * 1024) {
       setAlertHeader('File Too Large');
-      setAlertMessage('Video file size must be less than 100MB');
+      setAlertMessage('Video file size must be less than 300MB');
       setShowAlert(true);
       event.target.value = '';
       return;
@@ -157,9 +158,9 @@ const AddEvent: React.FC = () => {
     
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('video/')) {
-      if (file.size > 100 * 1024 * 1024) {
+      if (file.size > 300 * 1024 * 1024) {
         setAlertHeader('File Too Large');
-        setAlertMessage('Video file size must be less than 100MB');
+        setAlertMessage('Video file size must be less than 300MB');
         setShowAlert(true);
         return;
       }
@@ -206,11 +207,12 @@ const AddEvent: React.FC = () => {
         title: formData.title,
         description: formData.description,
         date: formData.date,
+        endDate: formData.endDate || undefined,
         time: formData.time,
         location: formData.location,
-        maxAttendees: formData.capacity ? parseInt(formData.capacity) : undefined,
         speaker: formData.organizer,
         contactPhone: formData.contactInfo,
+        linkUrl: formData.linkUrl || undefined,
         isPublished: formData.status === 'published',
         imageUrl: thumbnailUrl || undefined,
         videoUrl: videoUrl || undefined
@@ -291,7 +293,7 @@ const AddEvent: React.FC = () => {
             <div className="af-row">
               <div className="af-field">
                 <label className="af-label">
-                  Date <span className="af-required">*</span>
+                  Start Date <span className="af-required">*</span>
                 </label>
                 <input
                   type="date"
@@ -300,6 +302,20 @@ const AddEvent: React.FC = () => {
                   onChange={(e) => handleInputChange('date', e.target.value)}
                 />
               </div>
+              <div className="af-field">
+                <label className="af-label">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  className="af-input"
+                  value={formData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="af-row">
               <div className="af-field">
                 <label className="af-label">
                   Start Time <span className="af-required">*</span>
@@ -311,18 +327,17 @@ const AddEvent: React.FC = () => {
                   onChange={(e) => handleInputChange('time', e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="af-field">
-              <label className="af-label">
-                End Time
-              </label>
-              <input
-                type="time"
-                className="af-input"
-                value={formData.endTime}
-                onChange={(e) => handleInputChange('endTime', e.target.value)}
-              />
+              <div className="af-field">
+                <label className="af-label">
+                  End Time
+                </label>
+                <input
+                  type="time"
+                  className="af-input"
+                  value={formData.endTime}
+                  onChange={(e) => handleInputChange('endTime', e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="af-field">
@@ -338,31 +353,17 @@ const AddEvent: React.FC = () => {
               />
             </div>
 
-            <div className="af-row">
-              <div className="af-field">
-                <label className="af-label">
-                  Capacity
-                </label>
-                <input
-                  type="number"
-                  className="af-input"
-                  value={formData.capacity}
-                  onChange={(e) => handleInputChange('capacity', e.target.value)}
-                  placeholder="Max attendees"
-                />
-              </div>
-              <div className="af-field">
-                <label className="af-label">
-                  Organizer
-                </label>
-                <input
-                  type="text"
-                  className="af-input"
-                  value={formData.organizer}
-                  onChange={(e) => handleInputChange('organizer', e.target.value)}
-                  placeholder="Event organizer"
-                />
-              </div>
+            <div className="af-field">
+              <label className="af-label">
+                Organizer
+              </label>
+              <input
+                type="text"
+                className="af-input"
+                value={formData.organizer}
+                onChange={(e) => handleInputChange('organizer', e.target.value)}
+                placeholder="Event organizer"
+              />
             </div>
 
             <div className="af-field">
@@ -375,6 +376,16 @@ const AddEvent: React.FC = () => {
                 value={formData.contactInfo}
                 onChange={(e) => handleInputChange('contactInfo', e.target.value)}
                 placeholder="Phone or email for inquiries"
+              />
+            </div>
+            <div className="af-field">
+              <label className="af-label">Link URL</label>
+              <input
+                type="url"
+                className="af-input"
+                value={formData.linkUrl}
+                onChange={(e) => handleInputChange('linkUrl', e.target.value)}
+                placeholder="e.g., Zoom link, YouTube stream URL"
               />
             </div>
           </div>
@@ -462,7 +473,7 @@ const AddEvent: React.FC = () => {
                 <IonIcon icon={film} />
               </div>
               <p className="af-upload-text">Drag & drop your video here</p>
-              <p className="af-upload-hint">or click to browse (max 100MB)</p>
+              <p className="af-upload-hint">or click to browse (max 300MB)</p>
             </div>
           ) : (
             <div className="af-card" style={{ padding: 0, overflow: 'hidden' }}>

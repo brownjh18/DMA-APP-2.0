@@ -1,6 +1,7 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover } from '@ionic/react';
-import { useState, useEffect } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonAlert, useIonViewDidEnter, useIonViewWillEnter } from '@ionic/react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
+import { AuthContext } from '../App';
 import { play, eye, share, heart, heartOutline, radio, pause, ellipsisVertical, time, musicalNote, calendar, close } from 'ionicons/icons';
 import { usePlayer } from '../contexts/PlayerContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
@@ -49,6 +50,17 @@ interface Podcast {
 
 
 const Tab4: React.FC = () => {
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
+  useIonViewWillEnter(() => {
+    const needsRefresh = sessionStorage.getItem('podcastsNeedRefresh') === 'true';
+    if (needsRefresh) {
+      sessionStorage.removeItem('podcastsNeedRefresh');
+      loadContent(true);
+    }
+  });
+  const { isLoggedIn } = useContext(AuthContext);
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [liveBroadcasts, setLiveBroadcasts] = useState<Podcast[]>([]);
   const [lastPodcast, setLastPodcast] = useState<Podcast | null>(null);
@@ -297,6 +309,11 @@ const Tab4: React.FC = () => {
     }
     
     event.stopPropagation();
+
+    if (!isLoggedIn) {
+      setShowAuthAlert(true);
+      return;
+    }
     
     if (isPodcastSaved(podcast.id)) {
       // Unsave
@@ -372,7 +389,7 @@ const Tab4: React.FC = () => {
           <IonTitle>Radio Podcast</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen className="podcasts-content">
+      <IonContent ref={contentRef} fullscreen className="podcasts-content">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
@@ -629,7 +646,7 @@ const Tab4: React.FC = () => {
                     fontSize: '0.8em',
                     color: 'var(--ion-color-medium)'
                   }}>
-                    {podcast.viewCount} listens • {formatDate(podcast.publishedAt)}
+                    {formatDate(podcast.publishedAt)}
                   </p>
                 </div>
 
@@ -726,6 +743,11 @@ const Tab4: React.FC = () => {
             }
           ]}
         />
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this podcast."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
+
       </IonContent>
     </IonPage>
   );

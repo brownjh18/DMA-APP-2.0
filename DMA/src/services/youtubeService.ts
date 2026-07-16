@@ -287,31 +287,48 @@ async function fetchLiveStreamsDirect(maxResults = 10): Promise<YouTubeVideo[]> 
   return liveVideos;
 }
 
+interface YouTubeVideoInfo {
+  isLive: boolean;
+  duration?: string;
+}
+
 /**
- * Check if a YouTube video is currently live
+ * Check if a YouTube video is currently live and get its content details
  */
-async function checkYouTubeLiveStatus(videoId: string): Promise<boolean> {
+async function fetchYouTubeVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
   try {
     const API_KEY = 'AIzaSyDBYdCJVQ1FpSXPOHd6xFx4eLLuMUBzjw8';
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${API_KEY}`;
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails,contentDetails&id=${videoId}&key=${API_KEY}`;
 
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn(`Failed to check live status for video ${videoId}:`, response.status);
-      return false;
+      console.warn(`Failed to fetch video info for ${videoId}:`, response.status);
+      return { isLive: false };
     }
 
     const data = await response.json();
     if (data.items && data.items.length > 0) {
-      const liveDetails = data.items[0].liveStreamingDetails;
-      // Video is live if it has concurrent viewers (actively streaming)
-      return !!(liveDetails && liveDetails.concurrentViewers !== undefined);
+      const item = data.items[0];
+      const liveDetails = item.liveStreamingDetails;
+      const isLive = !!(liveDetails && liveDetails.concurrentViewers !== undefined);
+      const duration = item.contentDetails?.duration
+        ? isoDurationToTime(item.contentDetails.duration)
+        : undefined;
+      return { isLive, duration };
     }
-    return false;
+    return { isLive: false };
   } catch (error) {
-    console.warn('Error checking YouTube live status:', error);
-    return false;
+    console.warn('Error fetching YouTube video info:', error);
+    return { isLive: false };
   }
+}
+
+/**
+ * Check if a YouTube video is currently live
+ */
+async function checkYouTubeLiveStatus(videoId: string): Promise<boolean> {
+  const info = await fetchYouTubeVideoInfo(videoId);
+  return info.isLive;
 }
 
 /**
@@ -401,8 +418,17 @@ export async function fetchCombinedSermons(maxResults = 30, pageToken?: string, 
         }
 
         if (videoId) {
-          // Check if this YouTube video is currently live
-          isLive = await checkYouTubeLiveStatus(videoId);
+          // Fetch live status and video details from YouTube
+          const videoInfo = await fetchYouTubeVideoInfo(videoId);
+          isLive = videoInfo.isLive;
+
+          // If the live stream ended, update the sermon's info
+          if (!isLive && (sermon.isLive || sermon.duration === 'LIVE')) {
+            if (videoInfo.duration) {
+              sermon.duration = videoInfo.duration;
+            }
+            sermon.isLive = false;
+          }
 
           // Use maxresdefault for highest quality thumbnails (works for both live and uploaded)
           if (!thumbnailUrl) {

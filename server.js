@@ -192,6 +192,8 @@ async function createDefaultAdminUser() {
 async function checkAndUpdateEndedBroadcasts() {
   try {
     const now = Date.now();
+
+    // Check radio live broadcasts
     const broadcasts = await Sermon.find({
       type: 'live_broadcast', isLive: true,
       $or: [
@@ -218,6 +220,20 @@ async function checkAndUpdateEndedBroadcasts() {
         await b.save();
         console.log(`✅ Ended broadcast: ${b.title}`);
       }
+    }
+
+    // Check YouTube sermons with stale live status (started > 4 hours ago)
+    const liveSermons = await Sermon.find({
+      type: 'sermon',
+      videoUrl: { $regex: /youtu\.be\/|youtube\.com\/(watch|live|embed)/i },
+      isLive: true,
+      date: { $lt: new Date(now - 4 * 60 * 60 * 1000) }
+    });
+    for (const s of liveSermons) {
+      s.isLive = false;
+      if (s.duration === 'LIVE') s.duration = '01:00:00';
+      await s.save();
+      console.log(`✅ Ended YouTube sermon live: ${s.title}`);
     }
   } catch (error) {
     console.error('❌ Error checking broadcasts:', error);

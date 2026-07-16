@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonRouterLink, IonButton, IonLoading, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonRouterLink, IonButton, IonSpinner, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { heart, people, book, radio, chatbubble, musicalNotes, informationCircle, arrowBack } from 'ionicons/icons';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -212,6 +212,14 @@ const Ministries: React.FC = () => {
               Ministries
             </h2>
 
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', opacity: 0.6 }}>
+                <IonSpinner name="crescent" color="primary" style={{ width: '36px', height: '36px' }} />
+                <p style={{ margin: '12px 0 0 0', fontSize: '14px', color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  Loading ministries...
+                </p>
+              </div>
+            ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {ministries.map((ministry) => (
                 <div key={ministry.id} className="ministry-content-card">
@@ -301,7 +309,7 @@ const Ministries: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+            )}
 
           {/* Get Involved */}
           <div style={{ marginBottom: '32px' }}>
@@ -348,6 +356,7 @@ const Ministries: React.FC = () => {
               </IonButton>
             </div>
           </div>
+          </div>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
@@ -362,7 +371,6 @@ const Ministries: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Loading ministries..." />
       </IonContent>
     </IonPage>
   );

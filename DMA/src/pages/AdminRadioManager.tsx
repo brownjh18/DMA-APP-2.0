@@ -30,13 +30,12 @@ import {
   playCircle,
   ellipsisVertical,
   arrowBack,
-  musicalNote,
   time,
   search,
   closeCircle as closeIcon,
-  people,
   checkmarkCircle,
-  calendar
+  calendar,
+  stop as stopIcon
 } from 'ionicons/icons';
 import { useSocket } from '../contexts/SocketContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
@@ -244,52 +243,33 @@ const AdminRadioManager: React.FC = () => {
 
   const toggleStatus = async (id: string) => {
     try {
-      // Check if it's a podcast or live broadcast
       const podcast = podcasts.find(p => p._id === id);
       const liveBroadcast = liveBroadcasts.find(b => b._id === id);
 
       if (podcast) {
         const newStatus = podcast.status === 'published' ? 'draft' : 'published';
-        const token = localStorage.getItem('token');
-        await fetch(`${BACKEND_BASE_URL}/api/podcasts/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({ status: newStatus })
-        });
+        const fd = new FormData();
+        fd.append('status', newStatus);
+        await apiService.updatePodcast(id, fd);
 
-        // Update local state immediately for instant feedback
         setPodcasts(podcasts.map(p =>
           p._id === id ? { ...p, status: newStatus } : p
         ));
 
         setAlertMessage(`Podcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
         setShowAlert(true);
-
         sessionStorage.setItem('podcastsNeedRefresh', 'true');
         setTimeout(() => loadPodcasts(true), 500);
       } else if (liveBroadcast) {
         const newStatus = liveBroadcast.status === 'published' ? 'draft' : 'published';
-        const token = localStorage.getItem('token');
-        await fetch(`${BACKEND_BASE_URL}/api/live-broadcasts/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({ isPublished: newStatus === 'published' })
-        });
+        await apiService.updateLiveBroadcast(id, { isPublished: newStatus === 'published' });
 
-        // Update local state immediately for instant feedback
         setLiveBroadcasts(liveBroadcasts.map(b =>
           b._id === id ? { ...b, status: newStatus } : b
         ));
 
         setAlertMessage(`Broadcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
         setShowAlert(true);
-
         sessionStorage.setItem('podcastsNeedRefresh', 'true');
         setTimeout(() => loadPodcasts(true), 500);
       }
@@ -297,7 +277,6 @@ const AdminRadioManager: React.FC = () => {
       console.error('Error updating status:', error);
 
       if (error.message?.includes('not found') || error.message?.includes('404')) {
-        console.log('🗑️ Resource not found in database, removing from local state');
         setPodcasts(podcasts.filter(p => p._id !== id));
         setLiveBroadcasts(liveBroadcasts.filter(b => b._id !== id));
         setAlertMessage('This broadcast no longer exists and has been removed from the list.');
@@ -308,6 +287,20 @@ const AdminRadioManager: React.FC = () => {
         setAlertMessage('Failed to update status. Please try again.');
         setShowAlert(true);
       }
+    }
+  };
+
+  const endLiveBroadcast = async (id: string) => {
+    try {
+      await apiService.stopLiveBroadcast(id);
+      setAlertMessage('Live broadcast ended successfully!');
+      setShowAlert(true);
+      sessionStorage.setItem('podcastsNeedRefresh', 'true');
+      setTimeout(() => loadPodcasts(true), 500);
+    } catch (error: any) {
+      console.error('Error ending live broadcast:', error);
+      setAlertMessage(`Failed to end live broadcast: ${error.message || 'Please try again.'}`);
+      setShowAlert(true);
     }
   };
 
@@ -378,13 +371,10 @@ const AdminRadioManager: React.FC = () => {
   const totalBroadcasts = podcasts.length + liveBroadcasts.length;
   const publishedBroadcasts = podcasts.filter(p => p.status === 'published').length + liveBroadcasts.filter(b => b.status === 'published').length;
   const draftBroadcasts = podcasts.filter(p => p.status === 'draft').length + liveBroadcasts.filter(b => b.status === 'draft').length;
-  const totalListens = podcasts.reduce((acc, p) => acc + (p.listens || 0), 0) + liveBroadcasts.reduce((acc, b) => acc + (b.viewCount || 0), 0);
-
   const statsModules = [
     { name: 'Total Broadcasts', icon: radio, color: '#6366f1', val: totalBroadcasts, sub: 'broadcasts' },
     { name: 'Published', icon: eye, color: '#10b981', val: publishedBroadcasts, sub: 'broadcasts' },
-    { name: 'Drafts', icon: closeIcon, color: '#f59e0b', val: draftBroadcasts, sub: 'broadcasts' },
-    { name: 'Total Listens', icon: people, color: '#8b5cf6', val: totalListens, sub: 'listens' }
+    { name: 'Drafts', icon: closeIcon, color: '#f59e0b', val: draftBroadcasts, sub: 'broadcasts' }
   ];
 
   const getSortedAndFilteredBroadcasts = () => {
@@ -424,13 +414,6 @@ const AdminRadioManager: React.FC = () => {
           return dateB.getTime() - dateA.getTime();
         });
         break;
-      case 'listens':
-        sorted.sort((a, b) => {
-          const listensA = a.type === 'podcast' ? (a.listens || 0) : (a.viewCount || 0);
-          const listensB = b.type === 'podcast' ? (b.listens || 0) : (b.viewCount || 0);
-          return listensB - listensA;
-        });
-        break;
       default:
         break;
     }
@@ -462,7 +445,6 @@ const AdminRadioManager: React.FC = () => {
                 if (mod.name === 'Total Broadcasts') setFilterBy('all');
                 else if (mod.name === 'Published') setFilterBy(filterBy === 'published' ? 'all' : 'published');
                 else if (mod.name === 'Drafts') setFilterBy(filterBy === 'draft' ? 'all' : 'draft');
-                else if (mod.name === 'Total Listens') setSortBy('listens');
               }}>
                 <div className="am-stat-dot" style={{ background: mod.color }} />
                 <div className="am-stat-data">
@@ -551,10 +533,6 @@ const AdminRadioManager: React.FC = () => {
                         <IonIcon icon={calendar} />
                         {new Date(broadcast.publishedAt || broadcast.broadcastStartTime || broadcast.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
-                      <p className="am-meta-item">
-                        <IonIcon icon={broadcast.type === 'podcast' ? musicalNote : eye} />
-                        {broadcast.type === 'podcast' ? (broadcast.listens || 0) : (broadcast.viewCount || 0)}
-                      </p>
                     </div>
                   </div>
 
@@ -564,6 +542,15 @@ const AdminRadioManager: React.FC = () => {
                       {broadcast.isPublished ? 'Published' : 'Draft'}
                     </div>
                     <div className="am-btns">
+                      {broadcast.isLive && broadcast.type === 'live' && (
+                        <div
+                          className="am-btn end-live"
+                          onClick={(e) => { e.stopPropagation(); endLiveBroadcast(broadcast._id || broadcast.id); }}
+                          title="End live broadcast"
+                        >
+                          <IonIcon icon={stopIcon} />
+                        </div>
+                      )}
                       <div
                         className={`am-btn toggle ${broadcast.isPublished ? '' : 'inactive'}`}
                         onClick={(e) => { e.stopPropagation(); toggleStatus(broadcast._id || broadcast.id); }}
@@ -649,6 +636,13 @@ const AdminRadioManager: React.FC = () => {
                 if (selectedBroadcast) openEditPage(selectedBroadcast);
               }
             },
+            ...(selectedBroadcast?.isLive && selectedBroadcast?.type === 'live' ? [{
+              text: 'End Live Broadcast',
+              icon: stopIcon,
+              handler: () => {
+                if (selectedBroadcast) endLiveBroadcast(selectedBroadcast._id || selectedBroadcast.id);
+              }
+            }] : []),
             {
               text: selectedBroadcast?.isPublished ? 'Unpublish' : 'Publish',
               icon: selectedBroadcast?.isPublished ? eyeOff : eye,

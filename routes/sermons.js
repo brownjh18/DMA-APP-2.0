@@ -1040,4 +1040,49 @@ router.post('/:id/refresh-duration', authenticateToken, requireAdmin, async (req
   }
 });
 
+// Update live status for YouTube sermons (admin only)
+// Called periodically to check if YouTube live streams have ended
+router.post('/update-live-status', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const liveSermons = await Sermon.find({
+      type: 'sermon',
+      videoUrl: { $regex: /youtu\.be\/|youtube\.com\/(watch|live|embed)/i },
+      $or: [
+        { isLive: true },
+        { duration: 'LIVE' }
+      ]
+    });
+
+    const updated: Array<{ id: string; title: string; wasLive: boolean; newDuration: string }> = [];
+
+    for (const sermon of liveSermons) {
+      const videoId = extractVideoId(sermon.videoUrl);
+      if (!videoId) continue;
+
+      const youtubeDetails = await fetchYouTubeVideoDetails(sermon.videoUrl);
+      if (!youtubeDetails) continue;
+
+      const isStillLive = youtubeDetails.isLive;
+      const actualDuration = youtubeDetails.duration;
+
+      if (!isStillLive && actualDuration && actualDuration !== 'LIVE') {
+        sermon.isLive = false;
+        sermon.duration = actualDuration;
+        await sermon.save();
+        updated.push({
+          id: sermon._id.toString(),
+          title: sermon.title,
+          wasLive: true,
+          newDuration: actualDuration
+        });
+      }
+    }
+
+    res.json({ message: 'Live status check complete', updated });
+  } catch (error) {
+    console.error('Error updating live status:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
 module.exports = router;

@@ -27,7 +27,7 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonThumbnail,
-  useIonViewWillEnter,
+  useIonViewDidEnter,
 } from '@ionic/react';
 import {
   playCircle,
@@ -261,6 +261,8 @@ const DEFAULT_PROGRAMS = [
 
 
 const Tab1: React.FC = () => {
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
   const [latestVideos, setLatestVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [nextPageToken, setNextPageToken] = useState<string | undefined>();
@@ -872,7 +874,7 @@ const Tab1: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="content-ios">
+      <IonContent ref={contentRef} fullscreen className="content-ios">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>

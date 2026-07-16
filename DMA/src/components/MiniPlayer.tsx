@@ -29,6 +29,15 @@ const resolveThumbnailUrl = (url: string) => {
   return url || '/bible.JPG';
 };
 
+// Helper function to format seconds to mm:ss or hh:mm:ss
+const formatTime = (seconds: number): string => {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
 // Helper function to parse duration string like "5:30" or "1:05:30" to seconds
 const parseDurationToSeconds = (duration: string): number => {
   if (!duration) return 0;
@@ -145,18 +154,32 @@ const MiniPlayer: React.FC = () => {
           e.currentTarget.style.boxShadow = '0 -4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset';
         }}
       >
-        {/* Progress Bar */}
-        <IonProgressBar 
-          value={progress} 
-          style={{ 
-            height: '3px', 
-            '--progress-background': 'rgba(255,255,255,0.8)',
-            '--background': 'rgba(255,255,255,0.1)',
-            marginBottom: '2px',
-            borderRadius: '2px',
-            overflow: 'hidden'
-          }} 
-        />
+        {/* Progress Bar with Time */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <IonProgressBar 
+            value={progress} 
+            style={{ 
+              flex: 1,
+              height: '3px', 
+              '--progress-background': 'rgba(255,255,255,0.8)',
+              '--background': 'rgba(255,255,255,0.1)',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }} 
+          />
+          <span style={{
+            fontSize: '0.65em',
+            fontWeight: '500',
+            color: 'rgba(255,255,255,0.5)',
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
+            minWidth: '35px',
+            textAlign: 'right',
+            letterSpacing: '0.3px'
+          }}>
+            {formatTime(currentTime || getPlaybackPosition())}
+          </span>
+        </div>
         
         {/* Controls Row */}
         <div style={{

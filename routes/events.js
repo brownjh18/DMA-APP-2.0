@@ -37,7 +37,7 @@ if (isCloudStorage) {
   videoUpload = multer({
     storage: videoStorage,
     limits: {
-      fileSize: 100 * 1024 * 1024 // 100MB limit
+      fileSize: 300 * 1024 * 1024 // 300MB limit
     },
     fileFilter: function (req, file, cb) {
       const filetypes = /mp4|mov|avi|mkv|webm/;
@@ -164,6 +164,7 @@ router.post('/', [
     if (typeof value === 'string' && value.trim() === '') return true; // Allow empty strings
     throw new Error('Max attendees must be a positive number or empty');
   }),
+  body('linkUrl').optional().trim(),
   body('contactEmail').optional().custom((value) => {
     if (value === null || value === undefined || value === '') return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -253,6 +254,7 @@ router.put('/:id', [
     return true;
   }),
   body('location').optional().trim().isLength({ min: 1 }).withMessage('Location cannot be empty'),
+  body('linkUrl').optional().trim(),
   body('speaker').optional().custom((value) => {
     if (value === null || value === undefined || value === '') return true; // Allow null, undefined, or empty
     if (typeof value === 'string' && value.trim().length > 0) return true; // Allow non-empty strings

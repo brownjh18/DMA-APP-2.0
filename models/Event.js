@@ -58,6 +58,10 @@ const eventSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  linkUrl: {
+    type: String,
+    trim: true
+  },
   contactEmail: {
     type: String,
     trim: true

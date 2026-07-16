@@ -1,9 +1,10 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonChip, IonLabel, IonGrid, IonRow, IonCol, IonRefresher, IonRefresherContent } from '@ionic/react';
-import { useState, useEffect } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonChip, IonLabel, IonGrid, IonRow, IonCol, IonRefresher, IonRefresherContent, IonAlert, useIonViewDidEnter } from '@ionic/react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { book, heart, heartOutline, flame, play, arrowForward, calendar, time, chevronBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import './Tab3.css';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
+import { AuthContext } from '../App';
 
 interface Devotion {
   id?: string;
@@ -37,7 +38,11 @@ const getDevotionThumbnail = (thumbnailUrl?: string): string => {
 
 
 const Tab3: React.FC = () => {
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
   const history = useHistory();
+  const { isLoggedIn } = useContext(AuthContext);
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [allDevotions, setAllDevotions] = useState<Devotion[]>([]);
   const [devotionsLoading, setDevotionsLoading] = useState<boolean>(false);
   const [savedDevotions, setSavedDevotions] = useState<any[]>([]);
@@ -149,6 +154,10 @@ const Tab3: React.FC = () => {
 
   const toggleSaveDevotion = (devotion: Devotion, event: React.MouseEvent) => {
     event.stopPropagation();
+    if (!isLoggedIn) {
+      setShowAuthAlert(true);
+      return;
+    }
     const devotionId = devotion.id || '';
     
     if (isDevotionSaved(devotionId)) {
@@ -197,7 +206,7 @@ const Tab3: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="content-ios">
+      <IonContent ref={contentRef} fullscreen className="content-ios">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
@@ -410,6 +419,11 @@ const Tab3: React.FC = () => {
             </p>
           </div>
         </div>
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this devotion."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
+
       </IonContent>
     </IonPage>
   );

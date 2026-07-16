@@ -328,6 +328,25 @@ const EventDetail: React.FC = () => {
             </div>
           )}
 
+          {/* Link URL */}
+          {event.linkUrl && (
+            <div className="ed-section">
+              <h3 className="ed-section-title">Event Link</h3>
+              <div className="af-card">
+                <a
+                  href={event.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="af-submit ed-register-btn"
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <IonIcon icon={videocam} style={{ marginRight: '8px' }} />
+                  Open Event Link
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* Action Button */}
           {event.registrationRequired && (
             <div className="ed-section">

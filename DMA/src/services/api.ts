@@ -732,6 +732,26 @@ class ApiService {
     return result;
   }
 
+  async uploadLiveBroadcastRecording(id: string, formData: FormData) {
+    const url = `${API_BASE_URL}/live-broadcasts/${id}/recording`;
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+    const result = await response.json();
+    this.clearCacheByType('podcasts');
+    return result;
+  }
+
   async deletePodcast(id: string) {
     const result = await this.request(`/podcasts/${id}`, {
       method: 'DELETE',

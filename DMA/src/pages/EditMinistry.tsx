@@ -76,7 +76,7 @@ const EditMinistry: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '', description: '', leader: '', category: '', meetingSchedule: '',
-    endTime: '', location: '', contactEmail: '', contactPhone: '', memberCount: '', status: 'active'
+    endTime: '', location: '', contactEmail: '', contactPhone: '', linkUrl: '', memberCount: '', status: 'active'
   });
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const EditMinistry: React.FC = () => {
         name: ministry.name || '', description: ministry.description || '', leader: ministry.leader || '',
         category: ministry.category || '', meetingSchedule: ministry.meetingSchedule || '',
         endTime: ministry.endTime || '', location: ministry.location || '', contactPhone: ministry.contactPhone || '',
-        contactEmail: ministry.contactEmail || '', memberCount: ministry.memberCount?.toString() || '',
+        contactEmail: ministry.contactEmail || '', linkUrl: ministry.linkUrl || '', memberCount: ministry.memberCount?.toString() || '',
         status: ministry.isActive ? 'active' : 'inactive',
       });
       setCurrentThumbnailUrl(ministry.imageUrl || '');
@@ -102,7 +102,7 @@ const EditMinistry: React.FC = () => {
         name: ministry.name || '', description: ministry.description || '', leader: ministry.leader || '',
         category: ministry.category || '', meetingSchedule: ministry.meetingSchedule || '',
         endTime: ministry.endTime || '', location: ministry.location || '', contactEmail: ministry.contactEmail || '',
-        contactPhone: ministry.contactPhone || '', memberCount: ministry.memberCount?.toString() || '',
+        contactPhone: ministry.contactPhone || '', linkUrl: ministry.linkUrl || '', memberCount: ministry.memberCount?.toString() || '',
         status: ministry.isActive ? 'active' : 'inactive',
       });
       setCurrentThumbnailUrl(ministry.imageUrl || '');
@@ -161,7 +161,7 @@ const EditMinistry: React.FC = () => {
         name: formData.name, description: formData.description, leader: formData.leader,
         category: formData.category, imageUrl, meetingSchedule: formData.meetingSchedule,
         location: formData.location, contactEmail: formData.contactEmail, contactPhone: formData.contactPhone,
-        endTime: formData.endTime, memberCount: formData.memberCount ? parseInt(formData.memberCount) : undefined,
+        linkUrl: formData.linkUrl || null, endTime: formData.endTime, memberCount: formData.memberCount ? parseInt(formData.memberCount) : undefined,
         isActive: formData.status === 'active'
       };
 
@@ -335,6 +335,17 @@ const EditMinistry: React.FC = () => {
                   placeholder="Phone for inquiries"
                 />
               </div>
+            </div>
+
+            <div className="af-field">
+              <label className="af-label">Link URL</label>
+              <input
+                type="url"
+                className="af-input"
+                value={formData.linkUrl}
+                onChange={(e) => handleInputChange('linkUrl', e.target.value)}
+                placeholder="e.g., Zoom link, YouTube stream URL"
+              />
             </div>
 
             <div className="af-field">

@@ -8,7 +8,8 @@ import {
   IonButton,
   IonButtons,
   IonIcon,
-  IonText
+  IonText,
+  IonAlert
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -89,6 +90,7 @@ const FullPodcastPlayer: React.FC = () => {
   const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition, skipForward, skipBackward, clearPlayer } = usePlayer();
   const { isLoggedIn } = useContext(AuthContext);
 
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -303,40 +305,18 @@ const FullPodcastPlayer: React.FC = () => {
   const handleSave = async () => {
     if (!podcast) return;
 
-    try {
-      if (isLoggedIn) {
-        if (isSaved) {
-          await apiService.unsavePodcast(podcast.id);
-          setIsSaved(false);
-        } else {
-          await apiService.savePodcast(podcast.id);
-          setIsSaved(true);
-        }
-      } else {
-        const savedPodcasts = JSON.parse(localStorage.getItem('savedPodcasts') || '[]');
-        const isAlreadySaved = savedPodcasts.some((p: any) => p.id === podcast.id);
+    if (!isLoggedIn) {
+      setShowAuthAlert(true);
+      return;
+    }
 
-        if (isAlreadySaved) {
-          const updatedPodcasts = savedPodcasts.filter((p: any) => p.id !== podcast.id);
-          localStorage.setItem('savedPodcasts', JSON.stringify(updatedPodcasts));
-          setIsSaved(false);
-        } else {
-          savedPodcasts.push({
-            id: podcast.id,
-            title: podcast.title,
-            speaker: podcast.speaker || 'Dove Ministries Africa',
-            description: podcast.description || '',
-            thumbnailUrl: podcast.thumbnailUrl || '',
-            publishedAt: podcast.publishedAt || '',
-            duration: podcast.duration || '',
-            audioUrl: podcast.audioUrl || '',
-            savedAt: new Date().toISOString()
-          });
-          localStorage.setItem('savedPodcasts', JSON.stringify(savedPodcasts));
-          setIsSaved(true);
-        }
-        // Dispatch event to notify other pages
-        window.dispatchEvent(new Event('savedItemsChanged'));
+    try {
+      if (isSaved) {
+        await apiService.unsavePodcast(podcast.id);
+        setIsSaved(false);
+      } else {
+        await apiService.savePodcast(podcast.id);
+        setIsSaved(true);
       }
     } catch (error) {
       console.error('Error saving/unsaving podcast:', error);
@@ -372,13 +352,14 @@ const FullPodcastPlayer: React.FC = () => {
 
     setIsSubmittingComment(true);
     try {
+      const contentType = podcast.isLive ? 'live_broadcast' : 'podcast';
       const response = await fetch(`${BACKEND_BASE_URL}/api/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: newComment.trim(),
           contentId: podcast.id,
-          contentType: 'podcast'
+          contentType
         })
       });
 
@@ -800,10 +781,6 @@ const FullPodcastPlayer: React.FC = () => {
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <IonIcon icon={calendar} style={{ fontSize: '14px' }} />
                         {formatDate(podcast.publishedAt)}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <IonIcon icon={eye} style={{ fontSize: '14px' }} />
-                        {podcast.viewCount}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <IonIcon icon={time} style={{ fontSize: '14px' }} />
@@ -1304,6 +1281,11 @@ const FullPodcastPlayer: React.FC = () => {
             background: rgba(255,255,255,0.3);
           }
         `}</style>
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this podcast."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
+
       </IonContent>
     </IonPage>
   );

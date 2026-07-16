@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonGrid, IonRow, IonCol } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonBadge, IonIcon, IonButton, IonGrid, IonRow, IonCol, IonAlert } from '@ionic/react';
 import { useState, useEffect, useContext } from 'react';
 import { book, heart, flame, play, arrowForward, calendar, time, arrowBack } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -42,6 +42,7 @@ const FullDevotion: React.FC = () => {
   const [devotion, setDevotion] = useState<Devotion | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
 
   // Check if devotion is already saved on mount and when devotion changes
   useEffect(() => {
@@ -277,8 +278,7 @@ const FullDevotion: React.FC = () => {
                   if (!devotion) return;
                   
                   if (!isLoggedIn) {
-                    alert('Please sign in to save devotions to your list.');
-                    history.push('/signin');
+                    setShowAuthAlert(true);
                     return;
                   }
                   
@@ -505,6 +505,10 @@ const FullDevotion: React.FC = () => {
           </div>
 
         </div>
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this devotion."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
 
       </IonContent>
     </IonPage>

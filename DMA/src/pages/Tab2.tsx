@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover } from '@ionic/react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonLoading, IonRefresher, IonRefresherContent, IonMenuButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonPopover, IonAlert, useIonViewDidEnter } from '@ionic/react';
+import { useState, useEffect, useRef, useCallback, useMemo, useContext } from 'react';
+import { useLocation, useHistory } from 'react-router-dom';
+import { AuthContext } from '../App';
 import VideoPlayer from '../components/VideoPlayer';
 import { fetchCombinedSermons, YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -62,6 +63,8 @@ const getThumbnailUrl = (sermon: any) => {
 };
 
 const Tab2: React.FC = () => {
+  const { isLoggedIn } = useContext(AuthContext);
+  const history = useHistory();
   const [sermons, setSermons] = useState<YouTubeVideo[]>([]);
   const [lastSermon, setLastSermon] = useState<YouTubeVideo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,7 @@ const Tab2: React.FC = () => {
   const [savedSermons, setSavedSermons] = useState<any[]>([]);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [selectedSermonForActionSheet, setSelectedSermonForActionSheet] = useState<any>(null);
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const location = useLocation();
   const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
@@ -83,7 +87,8 @@ const Tab2: React.FC = () => {
   // Mini player state
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
-  const contentRef = useRef<any>(null);
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
 
   // Memoize startTime so YouTube iframe src doesn't change mid-playback
   const savedStartTime = useMemo(() => getPlaybackPosition(), [currentSermon?.id]);
@@ -405,6 +410,10 @@ const Tab2: React.FC = () => {
   };
 
   const toggleSaveSermon = (sermon: any) => {
+    if (!isLoggedIn) {
+      setShowAuthAlert(true);
+      return;
+    }
     if (isSermonSaved(sermon.id)) {
       unsaveSermon(sermon.id);
     } else {
@@ -465,6 +474,7 @@ const Tab2: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent
+        ref={contentRef}
         fullscreen
         className="sermons-content"
         onIonScroll={(e) => {
@@ -1358,6 +1368,10 @@ const Tab2: React.FC = () => {
             </div>
           </div>
         )}
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this sermon."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
 
       </IonContent>
     </IonPage>

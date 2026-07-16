@@ -77,7 +77,6 @@ const EditDevotion: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    author: '',
     scripture: '',
     reflection: '',
     prayer: '',
@@ -92,7 +91,6 @@ const EditDevotion: React.FC = () => {
       setFormData({
         title: devotion.title || '',
         content: devotion.content || devotion.description || '',
-        author: devotion.author || '',
         scripture: devotion.scripture || '',
         reflection: devotion.reflection || '',
         prayer: devotion.prayer || '',
@@ -113,7 +111,6 @@ const EditDevotion: React.FC = () => {
       setFormData({
         title: devotion.title || '',
         content: devotion.content || '',
-        author: devotion.author || '',
         scripture: devotion.scripture || '',
         reflection: devotion.reflection || '',
         prayer: devotion.prayer || '',
@@ -191,9 +188,9 @@ const EditDevotion: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.scripture || !formData.author) {
+    if (!formData.title || !formData.scripture) {
       setAlertHeader('Validation Error');
-      setAlertMessage('Please fill in all required fields (Title, Scripture, Author)');
+      setAlertMessage('Please fill in all required fields (Title, Scripture)');
       setShowAlert(true);
       return;
     }
@@ -229,7 +226,6 @@ const EditDevotion: React.FC = () => {
         },
         body: JSON.stringify({
           title: formData.title,
-          author: formData.author,
           scripture: formData.scripture,
           content: formData.content,
           reflection: formData.reflection,
@@ -340,19 +336,6 @@ const EditDevotion: React.FC = () => {
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="Enter devotion title"
-                />
-              </div>
-
-              <div className="af-field">
-                <label className="af-label">
-                  Author <span className="af-required">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="af-input"
-                  value={formData.author}
-                  onChange={(e) => handleInputChange('author', e.target.value)}
-                  placeholder="Enter author name"
                 />
               </div>
 

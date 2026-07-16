@@ -3,8 +3,8 @@ import {
   IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonLoading, IonAlert, IonText, IonSpinner
 } from '@ionic/react';
 import {
-  save, radio, closeCircle, image, musicalNote, checkmarkCircle, informationCircle, time, person,
-  documentText, pricetag, cloudUpload, arrowBack
+  save, radio, closeCircle, image, musicalNote, checkmarkCircle, informationCircle, person,
+  documentText, cloudUpload, arrowBack
 } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import { apiService, API_BASE_URL } from '../services/api';
@@ -14,9 +14,30 @@ import './AdminForm.css';
 import './AdminDashboard.css';
 
 interface PodcastData {
-  id: string; title: string; speaker: string; description: string; category: string;
+  id: string; title: string; speaker: string; description: string;
   duration: string; status: string; thumbnailUrl?: string; audioUrl?: string;
 }
+
+const getAudioDuration = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.addEventListener('loadedmetadata', () => {
+      URL.revokeObjectURL(url);
+      const totalSeconds = Math.floor(audio.duration);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      resolve(hours > 0
+        ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        : `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    });
+    audio.addEventListener('error', () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not load audio metadata'));
+    });
+  });
+};
 
 const EditPodcast: React.FC = () => {
   const history = useHistory();
@@ -48,7 +69,7 @@ const EditPodcast: React.FC = () => {
   }, [isLoggedIn, isAdmin, history, id]);
 
   const [formData, setFormData] = useState({
-    title: '', speaker: '', description: '', category: '', duration: '', status: 'draft',
+    title: '', speaker: '', description: '', duration: '', status: 'draft',
     thumbnailUrl: ''
   });
 
@@ -57,13 +78,13 @@ const EditPodcast: React.FC = () => {
       const data = await apiService.getPodcast(id);
       const podcast: PodcastData = {
         id: data.podcast.id, title: data.podcast.title, speaker: data.podcast.speaker,
-        description: data.podcast.description, category: data.podcast.series || '',
+        description: data.podcast.description,
         duration: data.podcast.duration, status: data.podcast.status,
         thumbnailUrl: data.podcast.thumbnailUrl, audioUrl: data.podcast.audioUrl
       };
       setFormData({
         title: podcast.title, speaker: podcast.speaker, description: podcast.description,
-        category: podcast.category, duration: podcast.duration, status: podcast.status,
+        duration: podcast.duration, status: podcast.status,
         thumbnailUrl: podcast.thumbnailUrl || ''
       });
       setThumbnailRemoved(false);
@@ -84,15 +105,20 @@ const EditPodcast: React.FC = () => {
 
   const handleAudioSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    if (file && file.size > 100 * 1024 * 1024) {
-      setAlertHeader('Upload Error'); setAlertMessage('Audio file size must be less than 100MB'); setShowAlert(true);
+    if (file && file.size > 300 * 1024 * 1024) {
+      setAlertHeader('Upload Error'); setAlertMessage('Audio file size must be less than 300MB'); setShowAlert(true);
       event.target.value = ''; return;
     }
     if (file && !file.type.startsWith('audio/')) {
       setAlertHeader('Invalid File'); setAlertMessage('Please select a valid audio file (MP3, WAV, M4A)'); setShowAlert(true);
       event.target.value = ''; return;
     }
-    if (file) setAudioFileName(file.name);
+    if (file) {
+      setAudioFileName(file.name);
+      getAudioDuration(file).then(duration => {
+        setFormData(prev => ({ ...prev, duration }));
+      }).catch(() => {});
+    }
   };
 
   const handleThumbnailSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +150,6 @@ const EditPodcast: React.FC = () => {
         formDataToSend.append('title', formData.title);
         formDataToSend.append('speaker', formData.speaker);
         formDataToSend.append('description', formData.description);
-        formDataToSend.append('category', formData.category);
         formDataToSend.append('duration', formData.duration);
         formDataToSend.append('status', formData.status);
         if (fileInputRef.current?.files?.[0]) formDataToSend.append('audioFile', fileInputRef.current.files[0]);
@@ -132,7 +157,7 @@ const EditPodcast: React.FC = () => {
         await apiService.updatePodcast(id, formDataToSend);
       } else {
         const updateData: any = { title: formData.title, speaker: formData.speaker, description: formData.description,
-          category: formData.category, duration: formData.duration, status: formData.status };
+          duration: formData.duration, status: formData.status };
         if (thumbnailRemoved) {
           updateData.thumbnailUrl = '';
         }
@@ -234,25 +259,6 @@ const EditPodcast: React.FC = () => {
               </div>
 
               <div className="af-field">
-                <label className="af-label">Category</label>
-                <select className="af-input af-select" value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
-                  <option value="">Select category</option>
-                  <option value="faith">Faith &amp; Belief</option>
-                  <option value="prayer">Prayer &amp; Worship</option>
-                  <option value="teaching">Bible Teaching</option>
-                  <option value="testimony">Testimonies</option>
-                  <option value="youth">Youth Ministry</option>
-                  <option value="family">Family &amp; Relationships</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div className="af-field">
-                <label className="af-label">Duration</label>
-                <input type="text" className="af-input" value={formData.duration} onChange={(e) => handleInputChange('duration', e.target.value)} placeholder="e.g., 30:00" />
-              </div>
-
-              <div className="af-field">
                 <label className="af-label">Description</label>
                 <textarea className="af-input af-textarea" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder="Describe the podcast content" rows={4} />
               </div>
@@ -265,7 +271,7 @@ const EditPodcast: React.FC = () => {
                   <div className="af-upload" onClick={() => fileInputRef.current?.click()}>
                     <div className="af-upload-icon"><IonIcon icon={musicalNote} /></div>
                     <p className="af-upload-text">Replace audio file</p>
-                    <p className="af-upload-hint">Optional &bull; Max 100MB &bull; MP3, WAV, M4A</p>
+                    <p className="af-upload-hint">Optional &bull; Max 300MB &bull; MP3, WAV, M4A</p>
                   </div>
                 ) : (
                   <div className="af-upload" style={{ borderStyle: 'solid', borderColor: 'var(--ion-color-success, #22c55e)' }}>

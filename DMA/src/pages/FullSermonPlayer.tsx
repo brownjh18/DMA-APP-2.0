@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, useContext } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -8,9 +8,11 @@ import {
   IonToolbar,
   IonButton,
   IonIcon,
-  IonText
+  IonText,
+  IonAlert
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { AuthContext } from '../App';
 import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
 import VideoPlayer from '../components/VideoPlayer';
@@ -86,12 +88,14 @@ interface Sermon {
 const FullSermonPlayer: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
+  const { isLoggedIn } = useContext(AuthContext);
   const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition } = usePlayer();
 
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -100,6 +104,14 @@ const FullSermonPlayer: React.FC = () => {
 
   const sermon = currentMedia && !isPodcast(currentMedia) ? currentMedia : null;
   const [deviceVolumeSupported, setDeviceVolumeSupported] = useState(false);
+
+  const handleLike = () => {
+    if (!isLoggedIn) {
+      setShowAuthAlert(true);
+      return;
+    }
+    setIsLiked(!isLiked);
+  };
 
   // Memoize startTime so YouTube iframe src doesn't change mid-playback
   const savedStartTime = useMemo(() => getPlaybackPosition(), [sermon?.id]);
@@ -510,7 +522,7 @@ const FullSermonPlayer: React.FC = () => {
 
                 <IonButton
                   fill="clear"
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={handleLike}
                   className="control-button"
                   style={{
                     '--color': isLiked ? '#ff4757' : 'white',
@@ -735,7 +747,7 @@ const FullSermonPlayer: React.FC = () => {
 
                 <IonButton
                   fill="clear"
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={handleLike}
                   className="control-button"
                   style={{
                     '--color': isLiked ? '#ff4757' : 'white',
@@ -1091,6 +1103,11 @@ const FullSermonPlayer: React.FC = () => {
             box-shadow: 0 0 12px rgba(255,255,255,0.6) !important;
           }
         `}</style>
+
+        <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
+          header="Sign In Required" message="You must sign in to save this sermon."
+          buttons={[{ text: 'OK', role: 'cancel' }, { text: 'Sign In', handler: () => history.push('/signin') }]} />
+
       </IonContent>
     </IonPage>
   );

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonText, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonIcon, IonButton, IonText, IonRefresher, IonRefresherContent, useIonViewDidEnter } from '@ionic/react';
 import { call, mail, location, time, people, heart, book, radio, calendar, cash, chatbubble, camera, informationCircle, chevronBack, arrowBack } from 'ionicons/icons';
 import { BACKEND_BASE_URL } from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
 
 const Tab5: React.FC = () => {
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
   const [contactInfo, setContactInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -96,7 +98,7 @@ const Tab5: React.FC = () => {
         />
       </div>
 
-      <IonContent fullscreen className="content-ios">
+      <IonContent ref={contentRef} fullscreen className="content-ios">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>

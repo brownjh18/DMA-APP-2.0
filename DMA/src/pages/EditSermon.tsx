@@ -92,7 +92,6 @@ const EditSermon: React.FC = () => {
     title: '',
     description: '',
     speaker: '',
-    series: '',
     status: 'draft',
     videoSource: 'upload',
     videoFile: null as File | null,
@@ -113,7 +112,6 @@ const EditSermon: React.FC = () => {
         title: sermon.title || '',
         description: sermon.description || '',
         speaker: sermon.speaker || '',
-        series: sermon.series || '',
         status: sermon.isPublished ? 'published' : 'draft',
         videoSource: videoSource,
         videoFile: null,
@@ -143,7 +141,6 @@ const EditSermon: React.FC = () => {
         title: sermon.title || '',
         description: sermon.description || '',
         speaker: sermon.speaker || '',
-        series: sermon.series || '',
         status: sermon.isPublished ? 'published' : 'draft',
         videoSource: videoSource,
         videoFile: null,
@@ -185,7 +182,6 @@ const EditSermon: React.FC = () => {
         title: details.title || prev.title,
         description: details.description || prev.description,
         speaker: details.channelTitle || prev.speaker,
-        series: prev.series,
         videoUrl: url,
         duration: details.duration || '00:00',
         viewCount: details.viewCount || 0,
@@ -354,7 +350,6 @@ const EditSermon: React.FC = () => {
         title: formData.title,
         speaker: formData.speaker,
         description: formData.description,
-        series: formData.series,
         videoUrl: videoUrl,
         thumbnailUrl: thumbnailUrl,
         isPublished: formData.status === 'published'
@@ -460,18 +455,6 @@ const EditSermon: React.FC = () => {
                 value={formData.speaker}
                 onChange={(e) => handleInputChange('speaker', e.target.value)}
                 placeholder="Enter speaker name"
-              />
-            </div>
-
-            {/* Series */}
-            <div className="af-field">
-              <label className="af-label">Series</label>
-              <input
-                type="text"
-                className="af-input"
-                value={formData.series}
-                onChange={(e) => handleInputChange('series', e.target.value)}
-                placeholder="Enter sermon series (optional)"
               />
             </div>
 

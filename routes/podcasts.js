@@ -29,7 +29,7 @@ console.log('☁️ Cloud Storage configured for podcasts:', isCloudStorageConfi
 // Multer configuration - use memory storage when Cloudinary is configured
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  limits: { fileSize: 300 * 1024 * 1024 }, // 300MB
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'audioFile' || file.fieldname === 'thumbnailFile' || file.fieldname === 'audio' || file.fieldname === 'thumbnail') {
       cb(null, true);
@@ -83,8 +83,7 @@ async function uploadBufferToCloudinary(buffer, fieldName, mimeType) {
 const getAudioDurationFromBuffer = (buffer, mimeType) => {
   return new Promise((resolve, reject) => {
     if (!ffmpeg) {
-      console.warn('ffmpeg not available, returning default duration');
-      return resolve('00:00');
+      return reject(new Error('ffmpeg not available'));
     }
     
     const tempPath = path.join(__dirname, '../uploads/temp');
@@ -130,7 +129,13 @@ router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, search, speaker, published = true } = req.query;
     const query = { type: 'podcast' };
-    if (published !== 'false') query.isPublished = true;
+    if (published === 'all') {
+      // no filter — return both published and unpublished
+    } else if (published === 'false') {
+      query.isPublished = false;
+    } else {
+      query.isPublished = true;
+    }
     if (search) query.$text = { $search: search };
     if (speaker) query.speaker = new RegExp(speaker, 'i');
 
@@ -262,13 +267,14 @@ router.post('/', upload.any(), async (req, res) => {
           audioUrl = `/uploads/podcasts/${audioFilename}`;
         }
 
-        // Get duration from buffer
-        try {
-          duration = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype);
-          console.log('☁️ Audio duration:', duration);
-        } catch (durationError) {
-          console.warn('Could not get audio duration:', durationError.message);
-          duration = '00:00';
+        // Get duration from buffer using ffprobe (if available)
+        if (ffmpeg) {
+          try {
+            const computed = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype);
+            if (computed !== '00:00') duration = computed;
+          } catch (durationError) {
+            console.warn('Could not get audio duration:', durationError.message);
+          }
         }
       }
 
@@ -382,8 +388,12 @@ router.put('/:id', (req, res, next) => {
           audioUrl = `/uploads/podcasts/${audioFile.filename}`;
         }
 
-        try { duration = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype); } 
-        catch (e) { duration = '00:00'; }
+        if (ffmpeg) {
+          try {
+            const computed = await getAudioDurationFromBuffer(audioFile.buffer, audioFile.mimetype);
+            if (computed !== '00:00') duration = computed;
+          } catch (e) { /* keep provided duration */ }
+        }
       }
 
       const thumbnailFile = req.files.find(file => 

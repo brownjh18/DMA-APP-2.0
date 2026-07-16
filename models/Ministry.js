@@ -26,6 +26,10 @@ const ministrySchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  linkUrl: {
+    type: String,
+    trim: true
+  },
   contactEmail: {
     type: String,
     trim: true

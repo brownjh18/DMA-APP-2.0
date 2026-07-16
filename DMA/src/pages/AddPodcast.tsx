@@ -20,10 +20,8 @@ import {
   musicalNote,
   checkmarkCircle,
   informationCircle,
-  time,
   person,
   documentText,
-  pricetag,
   cloudUpload,
   arrowBack
 } from 'ionicons/icons';
@@ -33,6 +31,27 @@ import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
 import './AdminDashboard.css';
+
+const getAudioDuration = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.addEventListener('loadedmetadata', () => {
+      URL.revokeObjectURL(url);
+      const totalSeconds = Math.floor(audio.duration);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      resolve(hours > 0
+        ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        : `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    });
+    audio.addEventListener('error', () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not load audio metadata'));
+    });
+  });
+};
 
 const AddPodcast: React.FC = () => {
   const history = useHistory();
@@ -75,7 +94,7 @@ const AddPodcast: React.FC = () => {
   }
 
   const [formData, setFormData] = useState({
-    title: '', speaker: '', description: '', category: '', duration: '', status: 'draft'
+    title: '', speaker: '', description: '', duration: '', status: 'draft'
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -84,9 +103,9 @@ const AddPodcast: React.FC = () => {
 
   const handleAudioSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    if (file && file.size > 100 * 1024 * 1024) {
-      setAlertHeader('Upload Error');
-      setAlertMessage('Audio file size must be less than 100MB');
+      if (file && file.size > 300 * 1024 * 1024) {
+        setAlertHeader('Upload Error');
+        setAlertMessage('Audio file size must be less than 300MB');
       setShowAlert(true);
       event.target.value = '';
       return;
@@ -100,6 +119,9 @@ const AddPodcast: React.FC = () => {
     }
     if (file) {
       setAudioFileName(file.name);
+      getAudioDuration(file).then(duration => {
+        setFormData(prev => ({ ...prev, duration }));
+      }).catch(() => {});
     }
   };
 
@@ -138,7 +160,6 @@ const AddPodcast: React.FC = () => {
       formDataToSend.append('title', formData.title);
       formDataToSend.append('speaker', formData.speaker);
       formDataToSend.append('description', formData.description);
-      formDataToSend.append('category', formData.category);
       formDataToSend.append('duration', formData.duration);
       formDataToSend.append('status', formData.status);
 
@@ -224,25 +245,6 @@ const AddPodcast: React.FC = () => {
               </div>
 
               <div className="af-field">
-                <label className="af-label">Category</label>
-                <select className="af-input af-select" value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
-                  <option value="">Select category</option>
-                  <option value="faith">Faith &amp; Belief</option>
-                  <option value="prayer">Prayer &amp; Worship</option>
-                  <option value="teaching">Bible Teaching</option>
-                  <option value="testimony">Testimonies</option>
-                  <option value="youth">Youth Ministry</option>
-                  <option value="family">Family &amp; Relationships</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div className="af-field">
-                <label className="af-label">Duration</label>
-                <input type="text" className="af-input" value={formData.duration} onChange={(e) => handleInputChange('duration', e.target.value)} placeholder="e.g., 30:00" />
-              </div>
-
-              <div className="af-field">
                 <label className="af-label">Description</label>
                 <textarea className="af-input af-textarea" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder="Describe the podcast content" rows={4} />
               </div>
@@ -255,7 +257,7 @@ const AddPodcast: React.FC = () => {
                   <div className="af-upload" onClick={() => fileInputRef.current?.click()}>
                     <div className="af-upload-icon"><IonIcon icon={musicalNote} /></div>
                     <p className="af-upload-text">Upload audio file</p>
-                    <p className="af-upload-hint">Required &bull; Max 100MB &bull; MP3, WAV, M4A</p>
+                    <p className="af-upload-hint">Required &bull; Max 300MB &bull; MP3, WAV, M4A</p>
                   </div>
                 ) : (
                   <div className="af-upload" style={{ borderStyle: 'solid', borderColor: 'var(--ion-color-success, #22c55e)' }}>
