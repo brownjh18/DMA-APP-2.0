@@ -129,6 +129,8 @@ router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, search, speaker, published = true } = req.query;
     const query = { type: 'podcast' };
+    // Exclude podcasts with empty audioUrl (incomplete/invalid entries)
+    query.audioUrl = { $exists: true, $ne: '' };
     if (published === 'all') {
       // no filter — return both published and unpublished
     } else if (published === 'false') {

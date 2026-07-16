@@ -218,6 +218,8 @@ const Tab4: React.FC = () => {
         const key = item._id || item.id;
         if (seen.has(key)) { console.log('Tab4: Deduplicating', key); return false; }
         seen.add(key);
+        // Filter out podcasts with empty audioUrl (empty entries)
+        if (!item.audioUrl || item.audioUrl.trim() === '') { console.log('Tab4: Filtering empty audio', key); return false; }
         return true;
       });
       

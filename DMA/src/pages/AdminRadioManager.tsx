@@ -315,21 +315,31 @@ const AdminRadioManager: React.FC = () => {
 
     try {
       const id = broadcastToDelete._id || broadcastToDelete.id;
-      const podcast = podcasts.find(p => (p._id || p.id) === id);
-      const liveBroadcast = liveBroadcasts.find(b => (b._id || b.id) === id);
-
-      if (podcast) {
+      
+      // Try deleting as podcast first (covers converted live broadcasts)
+      // then as live broadcast. This handles cases where the document type was changed.
+      let deleted = false;
+      try {
         await apiService.deletePodcast(id);
-        setPodcasts(podcasts.filter(podcast => (podcast._id || podcast.id) !== id));
-      } else if (liveBroadcast) {
-        await apiService.deleteLiveBroadcast(id);
-        setLiveBroadcasts(liveBroadcasts.filter(broadcast => (broadcast._id || broadcast.id) !== id));
+        deleted = true;
+      } catch (e: any) {
+        if (e.message?.includes('not found') || e.message?.includes('404')) {
+          // Try as live broadcast
+          await apiService.deleteLiveBroadcast(id);
+          deleted = true;
+        } else {
+          throw e;
+        }
       }
-
-      setAlertMessage('Broadcast deleted successfully!');
-      setShowAlert(true);
-      sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => loadPodcasts(true), 500);
+      
+      if (deleted) {
+        setPodcasts(podcasts.filter(p => (p._id || p.id) !== id));
+        setLiveBroadcasts(liveBroadcasts.filter(b => (b._id || b.id) !== id));
+        setAlertMessage('Broadcast deleted successfully!');
+        setShowAlert(true);
+        sessionStorage.setItem('podcastsNeedRefresh', 'true');
+        setTimeout(() => loadPodcasts(true), 500);
+      }
     } catch (error: any) {
       console.error('Error deleting broadcast:', error);
 
