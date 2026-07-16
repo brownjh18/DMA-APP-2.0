@@ -240,11 +240,11 @@ const FullPodcastPlayer: React.FC = () => {
     checkSavedStatus();
   }, [podcast, isLoggedIn]);
 
-  // Fetch comments when podcast changes
+  // Fetch comments when podcast changes and poll every 5s for live updates
   useEffect(() => {
-    const fetchComments = async () => {
-      if (!podcast?.id) return;
+    if (!podcast?.id) return;
 
+    const fetchComments = async () => {
       try {
         const response = await fetch(`${BACKEND_BASE_URL}/api/comments/${podcast.id}?_t=${Date.now()}`);
         if (response.ok) {
@@ -257,6 +257,8 @@ const FullPodcastPlayer: React.FC = () => {
     };
 
     fetchComments();
+    const interval = setInterval(fetchComments, 5000);
+    return () => clearInterval(interval);
   }, [podcast?.id]);
 
   // Global mouse event listeners for volume dragging
