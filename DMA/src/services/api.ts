@@ -791,9 +791,9 @@ class ApiService {
   }
 
   // Live Broadcasts
-  async getLiveBroadcasts(params: any = {}) {
+  async getLiveBroadcasts(params: any = {}, forceRefresh: boolean = false) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/live-broadcasts?${queryString}`);
+    return this.request(`/live-broadcasts?${queryString}`, {}, 0, forceRefresh);
   }
 
   async startLiveBroadcast(broadcastData: any) {
