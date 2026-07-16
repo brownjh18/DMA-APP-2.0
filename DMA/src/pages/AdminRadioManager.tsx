@@ -197,7 +197,7 @@ const AdminRadioManager: React.FC = () => {
       }
 
       // Load podcasts using apiService - includes all for admin management (published and drafts)
-      const podcastData = await apiService.getPodcasts({ limit: 100, published: 'all' });
+      const podcastData = await apiService.getPodcasts({ limit: 100, published: 'all' }, forceRefresh);
       if (podcastData && podcastData.podcasts) {
         setPodcasts(podcastData.podcasts);
       } else {
@@ -205,7 +205,7 @@ const AdminRadioManager: React.FC = () => {
       }
 
       // Load live broadcasts using apiService (both live and recorded)
-      const liveData = await apiService.getLiveBroadcasts({ type: 'live_broadcast' });
+      const liveData = await apiService.getLiveBroadcasts({ type: 'live_broadcast' }, forceRefresh);
       if (liveData && liveData.broadcasts) {
         setLiveBroadcasts(liveData.broadcasts);
       } else {
@@ -382,11 +382,17 @@ const AdminRadioManager: React.FC = () => {
   ];
 
   const getSortedAndFilteredBroadcasts = () => {
-    // Combine podcasts and live broadcasts
+    // Combine podcasts and live broadcasts (deduplicate by id)
+    const seen = new Set();
     const allBroadcasts = [
       ...podcasts.map(p => ({ ...p, type: 'podcast', isPublished: p.status === 'published' })),
       ...liveBroadcasts.map(l => ({ ...l, type: 'live', isPublished: l.status === 'published' }))
-    ];
+    ].filter(item => {
+      const key = item._id || item.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     // Apply search filter
     let filtered = allBroadcasts;
