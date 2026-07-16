@@ -24,22 +24,7 @@ const STEP_RECORDING = 1;
 const STEP_REVIEW = 2;
 const STEP_PUBLISHED = 3;
 
-const getAudioDurationFromBlob = async (blob: Blob): Promise<string> => {
-  try {
-    const arrayBuffer = await blob.arrayBuffer();
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    const totalSeconds = Math.floor(audioBuffer.duration);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return hours > 0
-      ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-      : `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } catch {
-    return '00:00';
-  }
-};
+
 
 const AdminGoLive: React.FC = () => {
   const history = useHistory();
@@ -298,7 +283,7 @@ const AdminGoLive: React.FC = () => {
   const publishPreview = async () => {
     if (recordedBlob) {
       setIsPublishing(true);
-      const duration = await getAudioDurationFromBlob(recordedBlob);
+      const duration = formatTime(recordingTime);
       await uploadPodcast(recordedBlob, duration);
       setIsPublishing(false);
     }
@@ -318,14 +303,13 @@ const AdminGoLive: React.FC = () => {
       // Stop the broadcast (sets isLive=false, broadcastEndTime)
       await apiService.stopLiveBroadcast(liveId);
       // Upload recording to the broadcast (converts type to 'podcast', sets date for sorting)
-      const duration = await getAudioDurationFromBlob(recordedBlob);
       const fd = new FormData();
       let ext = 'webm';
       if (recordedBlob.type.includes('mp4')) ext = 'm4a';
       else if (recordedBlob.type.includes('wav')) ext = 'wav';
       else if (recordedBlob.type.includes('ogg')) ext = 'ogg';
       fd.append('audioFile', recordedBlob, `podcast-${Date.now()}.${ext}`);
-      fd.append('duration', duration);
+      fd.append('duration', formatTime(recordingTime));
       if (thumbnailFile) fd.append('thumbnailFile', thumbnailFile);
       await apiService.uploadLiveBroadcastRecording(liveId, fd);
       setAlertMessage(`"${title}" is now live and published!`);
