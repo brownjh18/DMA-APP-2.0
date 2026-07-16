@@ -333,6 +333,9 @@ const AdminRadioManager: React.FC = () => {
       }
       
       if (deleted) {
+        // Aggressively clear cache to prevent stale data from reappearing
+        apiService.clearCacheByType('podcasts');
+        apiService.clearCacheByType('live-broadcasts');
         setPodcasts(podcasts.filter(p => (p._id || p.id) !== id));
         setLiveBroadcasts(liveBroadcasts.filter(b => (b._id || b.id) !== id));
         setAlertMessage('Broadcast deleted successfully!');

@@ -57,7 +57,7 @@ class ApiService {
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-  // Clear all API cache
+  // Clear all API cache (both localStorage and in-memory)
   clearAllCache() {
     try {
       const keys = Object.keys(localStorage);
@@ -66,13 +66,14 @@ class ApiService {
           localStorage.removeItem(key);
         }
       });
+      this.cache.clear();
       console.log('All API cache cleared');
     } catch (error) {
       console.error('Error clearing all cache:', error);
     }
   }
 
-  // Clear cache for specific endpoint type
+  // Clear cache for specific endpoint type (both localStorage and in-memory)
   clearCacheByType(endpointType: 'sermons' | 'podcasts' | 'devotions' | 'events' | 'ministries' | 'live-broadcasts') {
     try {
       const keys = Object.keys(localStorage);
@@ -80,6 +81,12 @@ class ApiService {
         if (key.startsWith('api_cache_') && key.includes(endpointType)) {
           localStorage.removeItem(key);
           console.log(`Cleared cache for ${endpointType}:`, key);
+        }
+      });
+      // Also clear in-memory cache entries matching endpointType
+      this.cache.forEach((_, key) => {
+        if (key.includes(endpointType)) {
+          this.cache.delete(key);
         }
       });
     } catch (error) {

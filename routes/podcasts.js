@@ -485,7 +485,8 @@ router.post('/:id/save', authenticateToken, async (req, res) => {
 // Delete podcast
 router.delete('/:id', async (req, res) => {
   try {
-    const podcast = await Sermon.findOne({ _id: req.params.id, type: 'podcast' });
+    // Allow deleting any Sermon document by ID (covers converted live broadcasts)
+    const podcast = await Sermon.findById(req.params.id);
     
     if (!podcast) {
       return res.status(404).json({ error: 'Podcast not found' });

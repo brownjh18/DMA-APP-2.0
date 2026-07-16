@@ -464,9 +464,16 @@ router.post('/:id/recording', [
     broadcast.audioUrl = audioUrl;
     broadcast.duration = duration;
     broadcast.recordingStatus = 'completed';
-    broadcast.type = 'podcast'; // Convert to podcast once recorded
-    broadcast.isLive = false;   // Ensure live flag is cleared
-    broadcast.date = broadcast.broadcastEndTime || new Date(); // Set date for podcast sorting
+    
+    // Only convert to podcast type if an actual audio file was uploaded
+    if (req.file) {
+      broadcast.type = 'podcast'; // Convert to podcast once recorded
+      broadcast.isLive = false;   // Ensure live flag is cleared
+      broadcast.date = broadcast.broadcastEndTime || new Date(); // Set date for podcast sorting
+    } else {
+      broadcast.isLive = false;
+      broadcast.broadcastEndTime = broadcast.broadcastEndTime || new Date();
+    }
 
     await broadcast.save();
     res.json({
@@ -635,7 +642,6 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     const broadcast = await Sermon.findOneAndDelete({
       _id: req.params.id,
-      type: 'live_broadcast',
       createdBy: createdBy
     });
 
