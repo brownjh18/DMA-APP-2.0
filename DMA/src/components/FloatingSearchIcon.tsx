@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { IonIcon, IonBadge, IonPopover, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonText, IonChip, IonSpinner, IonSearchbar } from '@ionic/react';
-import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close } from 'ionicons/icons';
+import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close, personCircleOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
+import { AuthContext } from '../App';
 import { YouTubeVideo } from '../services/youtubeService';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -36,6 +37,7 @@ const FloatingSearchIcon: React.FC = () => {
   const { setCurrentMedia, setIsPlaying, setCurrentSermon, isPlaying, currentSermon, currentMedia } = usePlayer();
   const { unreadCount } = useNotifications();
   const { isDarkMode } = useSettings();
+  const { user } = useContext(AuthContext);
   const prevUnreadCount = useRef(unreadCount);
   const [isSwinging, setIsSwinging] = useState(false);
 
@@ -314,6 +316,67 @@ const FloatingSearchIcon: React.FC = () => {
           </div>
         )}
 
+        {/* Profile Photo Icon */}
+        <div
+          className="floating-profile-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            history.push('/profile');
+          }}
+          style={{
+            position: 'fixed',
+            top: 'calc(var(--ion-safe-area-top) + 4px)',
+            right: 16,
+            width: 44,
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10001,
+            transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            overflow: 'visible',
+          }}
+        >
+          {user?.profilePicture ? (
+            <img
+              src={user.profilePicture.startsWith('data:') || user.profilePicture.startsWith('http')
+                ? user.profilePicture
+                : `${BACKEND_BASE_URL}${user.profilePicture}`}
+              alt="profile"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid ' + (isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)'),
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+              }}
+            />
+          ) : (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                history.push('/signin');
+              }}
+              style={{
+                fontSize: '11px',
+                fontWeight: '600',
+                color: '#fff',
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 6px rgba(99,102,241,0.3)',
+                letterSpacing: '0.3px',
+              }}
+            >
+              Sign In
+            </div>
+          )}
+        </div>
+
         {/* Notification Bell Button - Minimal Redesign */}
         <div
           className="floating-notification-button"
@@ -328,7 +391,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 65,
+            right: 70,
             width: 44,
             height: 44,
             display: 'flex',
@@ -422,7 +485,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 16,
+            right: 124,
             width: 44,
             height: 44,
             display: 'flex',

@@ -155,31 +155,33 @@ const MiniPlayer: React.FC = () => {
         }}
       >
         {/* Progress Bar with Time */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <IonProgressBar 
-            value={progress} 
-            style={{ 
-              flex: 1,
-              height: '3px', 
-              '--progress-background': 'rgba(255,255,255,0.8)',
-              '--background': 'rgba(255,255,255,0.1)',
-              borderRadius: '2px',
-              overflow: 'hidden'
-            }} 
-          />
-          <span style={{
-            fontSize: '0.65em',
-            fontWeight: '500',
-            color: 'rgba(255,255,255,0.5)',
-            fontVariantNumeric: 'tabular-nums',
-            whiteSpace: 'nowrap',
-            minWidth: '35px',
-            textAlign: 'right',
-            letterSpacing: '0.3px'
-          }}>
-            {formatTime(currentTime || getPlaybackPosition())}
-          </span>
-        </div>
+        {!podcast.isLive && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IonProgressBar 
+              value={progress} 
+              style={{ 
+                flex: 1,
+                height: '3px', 
+                '--progress-background': 'rgba(255,255,255,0.8)',
+                '--background': 'rgba(255,255,255,0.1)',
+                borderRadius: '2px',
+                overflow: 'hidden'
+              }} 
+            />
+            <span style={{
+              fontSize: '0.65em',
+              fontWeight: '500',
+              color: 'rgba(255,255,255,0.5)',
+              fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap',
+              minWidth: '35px',
+              textAlign: 'right',
+              letterSpacing: '0.3px'
+            }}>
+              {formatTime(currentTime || getPlaybackPosition())}
+            </span>
+          </div>
+        )}
         
         {/* Controls Row */}
         <div style={{
@@ -200,6 +202,23 @@ const MiniPlayer: React.FC = () => {
             position: 'relative',
             overflow: 'hidden'
           }}>
+            {podcast.isLive && (
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: '#ff4444',
+                color: 'white',
+                fontSize: '0.55em',
+                fontWeight: '700',
+                textAlign: 'center',
+                padding: '1px 0',
+                letterSpacing: '0.5px'
+              }}>
+                LIVE
+              </div>
+            )}
           </div>
           
           {/* Title & Speaker */}
@@ -216,9 +235,27 @@ const MiniPlayer: React.FC = () => {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-              letterSpacing: '0.2px'
+              letterSpacing: '0.2px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}>
-              {podcast.title}
+              {podcast.isLive && (
+                <span style={{
+                  background: '#ff4444',
+                  color: 'white',
+                  fontSize: '0.65em',
+                  fontWeight: '700',
+                  padding: '1px 5px',
+                  borderRadius: '4px',
+                  letterSpacing: '0.5px',
+                  flexShrink: 0,
+                  lineHeight: '1.4'
+                }}>
+                  LIVE
+                </span>
+              )}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{podcast.title}</span>
             </div>
             <div style={{
               fontSize: '0.7em',

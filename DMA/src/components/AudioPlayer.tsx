@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useSocket } from '../contexts/SocketContext';
 import { isPodcast } from '../utils/mediaUtils';
 import { BACKEND_BASE_URL } from '../services/api';
 
-// Helper to resolve relative upload URLs to full backend URLs
 const resolveUrl = (url: string) => {
   if (!url || url.trim() === '') {
     console.warn('AudioPlayer: Empty audio URL detected');
@@ -26,7 +26,6 @@ const resolveUrl = (url: string) => {
     return resolved;
   }
   
-  // Try treating it as a relative path
   const resolved = `${BACKEND_BASE_URL}/${url}`;
   console.log('AudioPlayer: Resolved relative to:', resolved);
   return resolved;
@@ -34,44 +33,130 @@ const resolveUrl = (url: string) => {
 
 const SKIP_SECONDS = 10;
 const AudioPlayer: React.FC = () => {
-  const { currentMedia, isPlaying, setIsPlaying, savePlaybackPosition, getPlaybackPosition, setCurrentTime } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, savePlaybackPosition, setCurrentTime } = usePlayer();
+  const { socket } = useSocket();
   const audioRef = useRef<HTMLAudioElement>(null);
-  // Use a ref that survives component re-renders but can be reset
   const loadedPodcastIdRef = useRef<string | undefined>(undefined);
-  // Track if we need to reload audio
   const needsReloadRef = useRef<boolean>(false);
 
+  // Live streaming refs
+  const mediaSourceRef = useRef<MediaSource | null>(null);
+  const sourceBufferRef = useRef<SourceBuffer | null>(null);
+  const chunkQueueRef = useRef<Uint8Array[]>([]);
+  const liveBroadcastIdRef = useRef<string | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm;codecs=opus');
+
   const podcast = currentMedia && isPodcast(currentMedia) ? currentMedia : null;
+
+  // Cleanup live stream resources
+  const cleanupLive = useCallback(() => {
+    if (liveBroadcastIdRef.current && socket) {
+      socket.emit('broadcast:leave-room', liveBroadcastIdRef.current);
+      socket.off('broadcast:audio');
+    }
+    liveBroadcastIdRef.current = null;
+    if (sourceBufferRef.current) {
+      try { sourceBufferRef.current.abort(); } catch {}
+      sourceBufferRef.current = null;
+    }
+    if (mediaSourceRef.current) {
+      if (mediaSourceRef.current.readyState === 'open') {
+        try { mediaSourceRef.current.endOfStream(); } catch {}
+      }
+      mediaSourceRef.current = null;
+    }
+    chunkQueueRef.current = [];
+    mimeTypeRef.current = 'audio/webm;codecs=opus';
+  }, [socket]);
+
+  // Initialize live stream (MediaSource + Socket.IO)
+  const initLiveStream = useCallback((broadcastId: string) => {
+    if (!audioRef.current || !socket) return;
+
+    cleanupLive();
+    liveBroadcastIdRef.current = broadcastId;
+    socket.emit('broadcast:join-room', broadcastId);
+
+    const mediaSource = new MediaSource();
+    mediaSourceRef.current = mediaSource;
+    audioRef.current.src = URL.createObjectURL(mediaSource);
+
+    // For live streams, set duration to Infinity (no known end)
+    audioRef.current.removeAttribute('duration');
+
+    mediaSource.addEventListener('sourceopen', () => {
+      try {
+        const sb = mediaSource.addSourceBuffer(mimeTypeRef.current);
+        sourceBufferRef.current = sb;
+
+        sb.addEventListener('updateend', () => {
+          while (chunkQueueRef.current.length > 0 && !sb.updating) {
+            const chunk = chunkQueueRef.current.shift()!;
+            sb.appendBuffer(chunk.buffer as ArrayBuffer);
+          }
+        });
+      } catch (err) {
+        console.error('AudioPlayer: MediaSource failed. Trying fallback.', err);
+      }
+    });
+
+    socket.on('broadcast:audio', (data: { chunk: string; mimeType?: string }) => {
+      if (!data.chunk) return;
+      try {
+        const binary = atob(data.chunk);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        if (data.mimeType) mimeTypeRef.current = data.mimeType;
+
+        const sb = sourceBufferRef.current;
+        if (sb && !sb.updating) {
+          sb.appendBuffer(bytes.buffer as ArrayBuffer);
+        } else {
+          chunkQueueRef.current.push(bytes);
+        }
+      } catch (err) {
+        console.error('AudioPlayer: Error processing audio chunk', err);
+      }
+    });
+  }, [socket, cleanupLive]);
 
   // Load audio when media changes
   useEffect(() => {
     if (!currentMedia) {
-      // Miniplayer closed or media cleared - stop audio and reset everything
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.removeAttribute('src');
         audioRef.current.load();
       }
+      cleanupLive();
       loadedPodcastIdRef.current = undefined;
       needsReloadRef.current = false;
       return;
     }
 
     if (!isPodcast(currentMedia)) {
-      // Not a podcast (it's a sermon), stop any existing audio and reset
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.removeAttribute('src');
         audioRef.current.load();
       }
+      cleanupLive();
       loadedPodcastIdRef.current = undefined;
+      return;
+    }
+
+    // Live stream via MediaSource + socket
+    if (currentMedia.isLive) {
+      cleanupLive();
+      initLiveStream(currentMedia.id);
       return;
     }
 
     const podcastId = currentMedia.id;
 
-    // Always reload when podcast changes or when needsReload is set
     if (loadedPodcastIdRef.current !== podcastId || needsReloadRef.current) {
+      cleanupLive();
       loadedPodcastIdRef.current = podcastId;
       needsReloadRef.current = false;
 
@@ -85,7 +170,7 @@ const AudioPlayer: React.FC = () => {
         }
       }
     }
-  }, [currentMedia]);
+  }, [currentMedia, cleanupLive, initLiveStream]);
 
   // Handle play/pause
   useEffect(() => {
@@ -94,10 +179,13 @@ const AudioPlayer: React.FC = () => {
     const audio = audioRef.current;
 
     const playAudio = () => {
+      if (podcast.isLive) {
+        audio.play().catch(() => {});
+        return;
+      }
       const playPromise = audio.play();
       if (playPromise) {
         playPromise.catch((error) => {
-          // Retry after a delay for autoplay policy
           setTimeout(() => {
             if (isPlaying) {
               audio.play().catch(() => {});
@@ -111,7 +199,6 @@ const AudioPlayer: React.FC = () => {
       audio.pause();
     };
 
-    // Small delay to ensure audio is loaded
     const timer = setTimeout(() => {
       if (isPlaying) {
         playAudio();
@@ -142,27 +229,26 @@ const AudioPlayer: React.FC = () => {
   }, [setIsPlaying]);
 
   const handleCanPlay = useCallback(() => {
-    // Force reload check on canPlay
     if (podcast && loadedPodcastIdRef.current !== podcast.id) {
       needsReloadRef.current = true;
     }
   }, [podcast]);
 
-  // Set up event listeners for skip operations
+  // Set up event listeners for skip operations (not applicable for live)
   useEffect(() => {
     const handleSkipForward = () => {
-      if (audioRef.current) {
+      if (audioRef.current && !liveBroadcastIdRef.current) {
         audioRef.current.currentTime += SKIP_SECONDS;
       }
     };
     const handleSkipBackward = () => {
-      if (audioRef.current) {
+      if (audioRef.current && !liveBroadcastIdRef.current) {
         audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
       }
     };
     const handleSeek = (event: Event) => {
       const customEvent = event as CustomEvent<{ time: number }>;
-      if (audioRef.current && customEvent.detail?.time != null) {
+      if (audioRef.current && customEvent.detail?.time != null && !liveBroadcastIdRef.current) {
         audioRef.current.currentTime = customEvent.detail.time;
       }
     };
@@ -178,7 +264,6 @@ const AudioPlayer: React.FC = () => {
     };
   }, []);
 
-  // Don't render if no podcast
   if (!podcast) {
     return null;
   }

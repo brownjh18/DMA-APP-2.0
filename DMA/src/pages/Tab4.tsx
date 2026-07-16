@@ -212,8 +212,14 @@ const Tab4: React.FC = () => {
         console.warn('All live broadcasts fetch failed:', e);
       }
 
-      // Combine podcasts and stopped live broadcasts
-      const allContent = [...podcastData.podcasts, ...stoppedLiveBroadcasts];
+      // Combine podcasts and stopped live broadcasts (deduplicate by id)
+      const seen = new Set();
+      const allContent = [...podcastData.podcasts, ...stoppedLiveBroadcasts].filter(item => {
+        const key = item._id || item.id;
+        if (seen.has(key)) { console.log('Tab4: Deduplicating', key); return false; }
+        seen.add(key);
+        return true;
+      });
       
       console.log('Tab4: First podcast data sample:', allContent[0] ? {
         id: allContent[0].id,

@@ -271,6 +271,32 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Live broadcast audio streaming
+  socket.on('broadcast:join-room', (broadcastId) => {
+    if (broadcastId) {
+      socket.join(`broadcast:${broadcastId}`);
+      console.log(`🎙️ Client ${socket.id} joined broadcast room ${broadcastId}`);
+    }
+  });
+
+  socket.on('broadcast:leave-room', (broadcastId) => {
+    if (broadcastId) {
+      socket.leave(`broadcast:${broadcastId}`);
+      console.log(`🎙️ Client ${socket.id} left broadcast room ${broadcastId}`);
+    }
+  });
+
+  socket.on('broadcast:audio', (data) => {
+    if (data && data.broadcastId && data.chunk) {
+      // Relay audio chunk to all listeners in the broadcast room (excluding sender)
+      socket.to(`broadcast:${data.broadcastId}`).emit('broadcast:audio', {
+        chunk: data.chunk,
+        mimeType: data.mimeType,
+        timestamp: Date.now()
+      });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('🔌 Client disconnected:', socket.id);
   });

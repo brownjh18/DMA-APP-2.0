@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 import {
   IonContent,
   IonHeader,
@@ -52,6 +53,7 @@ const AdminGoLive: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   useContext(AuthContext);
+  const { socket: liveSocket } = useSocket();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -184,15 +186,34 @@ const AdminGoLive: React.FC = () => {
       const mr = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mr;
       recordedChunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+          if (isLiveMode && liveBroadcastId && liveSocket?.connected) {
+            e.data.arrayBuffer().then(buf => {
+              const bytes = new Uint8Array(buf);
+              let binary = '';
+              for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+              liveSocket.emit('broadcast:audio', {
+                broadcastId: liveBroadcastId,
+                chunk: btoa(binary),
+                mimeType: mr.mimeType || 'audio/webm'
+              });
+            }).catch(() => {});
+          }
+        }
+      };
       mr.onerror = () => { setAlertMessage('Recording failed. Check your microphone.'); setShowAlert(true); stopRecording(); };
       mr.onstop = () => {
+        if (isLiveMode && liveBroadcastId && liveSocket?.connected) {
+          liveSocket.emit('broadcast:leave-room', liveBroadcastId);
+        }
         if (recordedChunksRef.current.length === 0) return;
         const blob = new Blob(recordedChunksRef.current, { type: mr.mimeType || 'audio/webm' });
         setRecordedBlob(blob);
         recordedChunksRef.current = [];
       };
-      mr.start();
+      mr.start(2000); // timeslice — send chunks every 2s for live relay
       setIsRecording(true);
       setIsPaused(false);
       setHasStoppedRecording(false);
@@ -238,6 +259,9 @@ const AdminGoLive: React.FC = () => {
       setIsRecording(false);
       setIsPaused(false);
       setHasStoppedRecording(true);
+      // Clear live mode state so subsequent publish doesn't target the same broadcast
+      setIsLiveMode(false);
+      setLiveBroadcastId(null);
       if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       cleanup();
@@ -269,6 +293,9 @@ const AdminGoLive: React.FC = () => {
         fd.append('status', 'published');
         await apiService.createPodcast(fd);
       }
+      // Clear live mode state to prevent double-creation on subsequent publishes
+      setIsLiveMode(false);
+      setLiveBroadcastId(null);
       setAlertMessage(`"${title || 'Untitled'}" published!`);
       setShowAlert(true);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -297,12 +324,14 @@ const AdminGoLive: React.FC = () => {
     }
     setIsLiveGoing(true);
     try {
-      const broadcast = await apiService.startLiveBroadcast({ title, description, speaker: 'Dove Church' });
-      const liveId = broadcast?._id || broadcast?.id || broadcast?.broadcast?._id;
-      if (!liveId) { throw new Error('Could not get live broadcast ID'); }
-      // Stop the broadcast (sets isLive=false, broadcastEndTime)
-      await apiService.stopLiveBroadcast(liveId);
-      // Upload recording to the broadcast (converts type to 'podcast', sets date for sorting)
+      // Use existing live broadcast if available, otherwise create a new one
+      let liveId = liveBroadcastId;
+      if (!liveId) {
+        const broadcast = await apiService.startLiveBroadcast({ title, description, speaker: 'Dove Church' });
+        liveId = broadcast?._id || broadcast?.id || broadcast?.broadcast?._id;
+        if (!liveId) { throw new Error('Could not get live broadcast ID'); }
+        await apiService.stopLiveBroadcast(liveId);
+      }
       const fd = new FormData();
       let ext = 'webm';
       if (recordedBlob.type.includes('mp4')) ext = 'm4a';
@@ -312,6 +341,8 @@ const AdminGoLive: React.FC = () => {
       fd.append('duration', formatTime(recordingTime));
       if (thumbnailFile) fd.append('thumbnailFile', thumbnailFile);
       await apiService.uploadLiveBroadcastRecording(liveId, fd);
+      setIsLiveMode(false);
+      setLiveBroadcastId(null);
       setAlertMessage(`"${title}" is now live and published!`);
       setShowAlert(true);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -335,6 +366,7 @@ const AdminGoLive: React.FC = () => {
       const liveId = broadcast?._id || broadcast?.id || broadcast?.broadcast?._id;
       setLiveBroadcastId(liveId);
       setIsLiveMode(true);
+      if (liveSocket?.connected) liveSocket.emit('broadcast:join-room', liveId);
       await startRecording();
     } catch (err: any) {
       setAlertMessage(`Failed to start live broadcast: ${err.message || 'Please try again.'}`);

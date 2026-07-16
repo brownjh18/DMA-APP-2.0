@@ -465,6 +465,7 @@ router.post('/:id/recording', [
     broadcast.duration = duration;
     broadcast.recordingStatus = 'completed';
     broadcast.type = 'podcast'; // Convert to podcast once recorded
+    broadcast.isLive = false;   // Ensure live flag is cleared
     broadcast.date = broadcast.broadcastEndTime || new Date(); // Set date for podcast sorting
 
     await broadcast.save();
