@@ -141,8 +141,9 @@ const AdminRadioManager: React.FC = () => {
       onPodcastUpdated((data: any) => {
         console.log('📥 Received podcast:updated event:', data);
         if (data.podcast) {
+          const pid = data.podcast._id || data.podcast.id;
           setPodcasts(prev =>
-            prev.map(p => p._id === data.podcast._id ? data.podcast : p)
+            prev.map(p => (p._id || p.id) === pid ? data.podcast : p)
           );
           clearPodcastsCache();
           sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -152,7 +153,7 @@ const AdminRadioManager: React.FC = () => {
       onPodcastDeleted((data: any) => {
         console.log('📥 Received podcast:deleted event:', data);
         if (data.id) {
-          setPodcasts(prev => prev.filter(p => p._id !== data.id));
+          setPodcasts(prev => prev.filter(p => (p._id || p.id) !== data.id));
           clearPodcastsCache();
           sessionStorage.setItem('podcastsNeedRefresh', 'true');
         }
@@ -243,8 +244,8 @@ const AdminRadioManager: React.FC = () => {
 
   const toggleStatus = async (id: string) => {
     try {
-      const podcast = podcasts.find(p => p._id === id);
-      const liveBroadcast = liveBroadcasts.find(b => b._id === id);
+      const podcast = podcasts.find(p => (p._id || p.id) === id);
+      const liveBroadcast = liveBroadcasts.find(b => (b._id || b.id) === id);
 
       if (podcast) {
         const newStatus = podcast.status === 'published' ? 'draft' : 'published';
@@ -253,7 +254,7 @@ const AdminRadioManager: React.FC = () => {
         await apiService.updatePodcast(id, fd);
 
         setPodcasts(podcasts.map(p =>
-          p._id === id ? { ...p, status: newStatus } : p
+          (p._id || p.id) === id ? { ...p, status: newStatus } : p
         ));
 
         setAlertMessage(`Podcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
@@ -265,7 +266,7 @@ const AdminRadioManager: React.FC = () => {
         await apiService.updateLiveBroadcast(id, { isPublished: newStatus === 'published' });
 
         setLiveBroadcasts(liveBroadcasts.map(b =>
-          b._id === id ? { ...b, status: newStatus } : b
+          (b._id || b.id) === id ? { ...b, status: newStatus } : b
         ));
 
         setAlertMessage(`Broadcast ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
@@ -277,8 +278,8 @@ const AdminRadioManager: React.FC = () => {
       console.error('Error updating status:', error);
 
       if (error.message?.includes('not found') || error.message?.includes('404')) {
-        setPodcasts(podcasts.filter(p => p._id !== id));
-        setLiveBroadcasts(liveBroadcasts.filter(b => b._id !== id));
+        setPodcasts(podcasts.filter(p => (p._id || p.id) !== id));
+        setLiveBroadcasts(liveBroadcasts.filter(b => (b._id || b.id) !== id));
         setAlertMessage('This broadcast no longer exists and has been removed from the list.');
         setShowAlert(true);
         sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -313,15 +314,16 @@ const AdminRadioManager: React.FC = () => {
     if (!broadcastToDelete) return;
 
     try {
-      const podcast = podcasts.find(p => p._id === broadcastToDelete._id);
-      const liveBroadcast = liveBroadcasts.find(b => b._id === broadcastToDelete._id);
+      const id = broadcastToDelete._id || broadcastToDelete.id;
+      const podcast = podcasts.find(p => (p._id || p.id) === id);
+      const liveBroadcast = liveBroadcasts.find(b => (b._id || b.id) === id);
 
       if (podcast) {
-        await apiService.deletePodcast(broadcastToDelete._id);
-        setPodcasts(podcasts.filter(podcast => podcast._id !== broadcastToDelete._id));
+        await apiService.deletePodcast(id);
+        setPodcasts(podcasts.filter(podcast => (podcast._id || podcast.id) !== id));
       } else if (liveBroadcast) {
-        await apiService.deleteLiveBroadcast(broadcastToDelete._id);
-        setLiveBroadcasts(liveBroadcasts.filter(broadcast => broadcast._id !== broadcastToDelete._id));
+        await apiService.deleteLiveBroadcast(id);
+        setLiveBroadcasts(liveBroadcasts.filter(broadcast => (broadcast._id || broadcast.id) !== id));
       }
 
       setAlertMessage('Broadcast deleted successfully!');
@@ -333,8 +335,9 @@ const AdminRadioManager: React.FC = () => {
 
       if (error.message?.includes('not found') || error.message?.includes('404')) {
         console.log('🗑️ Broadcast not found in database, removing from local state');
-        setPodcasts(podcasts.filter(p => p._id !== broadcastToDelete._id));
-        setLiveBroadcasts(liveBroadcasts.filter(broadcast => broadcast._id !== broadcastToDelete._id));
+        const id2 = broadcastToDelete._id || broadcastToDelete.id;
+        setPodcasts(podcasts.filter(p => (p._id || p.id) !== id2));
+        setLiveBroadcasts(liveBroadcasts.filter(broadcast => (broadcast._id || broadcast.id) !== id2));
         setAlertMessage('This broadcast no longer exists and has been removed from the list.');
         setShowAlert(true);
         sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -350,11 +353,12 @@ const AdminRadioManager: React.FC = () => {
   };
 
   const openEditPage = (broadcast: any) => {
-    const podcast = podcasts.find(p => p._id === broadcast.id || p._id === broadcast._id);
+    const id = broadcast._id || broadcast.id;
+    const podcast = podcasts.find(p => (p._id || p.id) === id);
     if (podcast) {
-      history.push(`/admin/radio/edit/${broadcast._id || broadcast.id}`, { broadcast });
+      history.push(`/admin/radio/edit/${id}`, { broadcast });
     } else {
-      history.push(`/admin/live/edit/${broadcast._id || broadcast.id}`, { broadcast });
+      history.push(`/admin/live/edit/${id}`, { broadcast });
     }
   };
 
