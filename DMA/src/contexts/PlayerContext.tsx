@@ -26,6 +26,8 @@ export interface Podcast {
   viewCount: string;
   audioUrl: string;
   speaker?: string;
+  isLive?: boolean;
+  broadcastStartTime?: string;
 }
 
 export type MediaItem = Sermon | Podcast;

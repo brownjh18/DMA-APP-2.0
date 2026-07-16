@@ -286,7 +286,6 @@ const EditEvent: React.FC = () => {
         contactPhone: formData.contactInfo || null,
         linkUrl: formData.linkUrl || null,
         isPublished: formData.status === 'published',
-        endDate: formData.endTime || null,
         imageUrl: thumbnailUrl
       };
 
