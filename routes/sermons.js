@@ -1053,7 +1053,7 @@ router.post('/update-live-status', authenticateToken, requireAdmin, async (req, 
       ]
     });
 
-    const updated: Array<{ id: string; title: string; wasLive: boolean; newDuration: string }> = [];
+    const updated = [];
 
     for (const sermon of liveSermons) {
       const videoId = extractVideoId(sermon.videoUrl);
