@@ -227,7 +227,7 @@ const Events: React.FC = () => {
                         {formatEventDate(event.date)} • {event.location}
                       </p>
                       <p style={{
-                        margin: '0',
+                        margin: '0 0 12px 0',
                         color: isDarkMode ? '#92949c' : '#8e8e93',
                         fontSize: '0.9em',
                         lineHeight: '1.4',
@@ -238,6 +238,19 @@ const Events: React.FC = () => {
                       }}>
                         {event.description}
                       </p>
+                      <IonButton
+                        onClick={() => history.push(`/event/${event._id}`)}
+                        style={{
+                          width: '100%',
+                          height: '44px',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          backgroundColor: '#6366f1',
+                          '--border-radius': '8px'
+                        }}>
+                        <IonIcon icon={calendar} slot="start" />
+                        Learn More
+                      </IonButton>
                     </div>
                 </div>
               )) : (
