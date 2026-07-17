@@ -1,7 +1,9 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { book, time, removeCircle, library, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import { useState, useEffect, useCallback } from 'react';
+import { apiService } from '../services/api';
 
 const ReadingHistory: React.FC = () => {
   const history = useHistory();
@@ -62,6 +64,14 @@ const ReadingHistory: React.FC = () => {
     return `${Math.floor(diffDays / 30)} months ago`;
   };
 
+  const handleRefresh = async (event: any) => {
+    // Refresh reading history data
+    console.log('🔄 ReadingHistory: Refreshing...');
+    // TODO: Add actual API call to refresh reading history
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    event.detail.complete();
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
@@ -74,6 +84,10 @@ const ReadingHistory: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
+
         <div style={{
           padding: '20px',
           maxWidth: '400px',

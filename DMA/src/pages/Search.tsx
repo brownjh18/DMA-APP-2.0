@@ -12,6 +12,8 @@ import {
   IonChip,
   IonBadge,
   IonButton,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ionic/react';
 import {
   search,
@@ -49,6 +51,15 @@ const Search: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
   const { isDarkMode } = useSettings();
+
+  const handleRefresh = async (event: any) => {
+    console.log('🔄 Search: Refreshing...');
+    // Trigger a fresh search with current query and filter
+    if (searchQuery.trim()) {
+      await performSearch(searchQuery, selectedFilter);
+    }
+    event.detail.complete();
+  };
 
   // Auto-focus search input when page loads
   useEffect(() => {
@@ -196,7 +207,10 @@ const Search: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="search-page-content">
+      <IonContent fullscreen className="search-content">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
         <div className="search-page-container" style={{ padding: '16px' }}>
 
           {/* Filter chips */}

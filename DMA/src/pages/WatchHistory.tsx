@@ -1,7 +1,9 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonBadge, IonButton, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { play, time, removeCircle, videocam, arrowBack } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import { useState, useEffect, useCallback } from 'react';
+import { apiService } from '../services/api';
 
 const WatchHistory: React.FC = () => {
   const history = useHistory();
@@ -91,6 +93,17 @@ const WatchHistory: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
+  const handleRefresh = async (event?: any) => {
+    try {
+      // Refresh watch history from API
+      // await loadWatchHistory();
+    } catch (error) {
+      console.error('Error refreshing watch history:', error);
+    } finally {
+      event?.detail?.complete?.();
+    }
+  };
+
   return (
     <IonPage>
       <IonHeader translucent>
@@ -103,6 +116,9 @@ const WatchHistory: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
         <div style={{
           padding: '20px',
           maxWidth: '400px',
