@@ -41,7 +41,8 @@ import {
   people,
   radio,
   arrowForward,
-  close
+  close,
+  chevronForward,
 } from 'ionicons/icons';
 import { useState, useEffect, useRef, useCallback, useMemo, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -51,6 +52,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSocket } from '../contexts/SocketContext';
 import { AuthContext } from '../App';
+import { WEEKLY_PROGRAMS } from '../constants/weeklyPrograms';
 import './Tab1.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -249,14 +251,7 @@ const generateDailyDevotions = (): Devotion[] => {
   return devotions;
 };
 
-const DEFAULT_PROGRAMS = [
-  { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ff6b6b', description: 'Join us for a powerful prayer service where we seek God\'s intervention and breakthrough. Come with your prayer requests and experience the power of collective prayer.', location: 'Main Sanctuary' },
-  { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#45b7d1', description: 'Dive deep into God\'s Word with our mid-week Bible study. Learn practical applications of scripture for daily living and grow in your understanding of God\'s teachings.', location: 'Fellowship Hall' },
-  { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24', description: 'A time of worship, practice, and fellowship for all worship team members. Develop your gifts and connect with fellow worshippers.', location: 'Worship Center' },
-  { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#f0932b', description: 'Experience the refreshing presence of God at our Friday service. Worship, word, and wonderful fellowship await you as we prepare for the weekend.', location: 'Main Sanctuary' },
-  { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#eb4d4b', description: 'Weekend worship team gathering for rehearsal and spiritual preparation for Sunday services.', location: 'Worship Center' },
-  { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#6c5ce7', description: 'Join us for our Sunday services featuring powerful worship, life-changing Word, and warm fellowship. Multiple services available.', location: 'Main Sanctuary' },
-];
+
 
 
 const Tab1: React.FC = () => {
@@ -827,9 +822,9 @@ const Tab1: React.FC = () => {
   const todaysDevotion = allDevotions[0]; // Always show the latest devotion uploaded
 
   // Popover state for program details
-  const [selectedProgram, setSelectedProgram] = useState<typeof DEFAULT_PROGRAMS[0] | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<typeof WEEKLY_PROGRAMS[0] | null>(null);
 
-  const handleProgramClick = (program: typeof DEFAULT_PROGRAMS[0]) => {
+  const handleProgramClick = (program: typeof WEEKLY_PROGRAMS[0]) => {
     setSelectedProgram(program);
   };
 
@@ -940,7 +935,7 @@ const Tab1: React.FC = () => {
 
           <div className="programs-marquee" role="list" aria-label="Weekly programs">
             <div className="programs-marquee-track">
-              {DEFAULT_PROGRAMS.map((p, idx) => (
+              {WEEKLY_PROGRAMS.map((p, idx) => (
                 <article
                   key={idx}
                   className="program-tile"
@@ -949,10 +944,12 @@ const Tab1: React.FC = () => {
                   style={{ ['--program-color' as any]: p.color }}
                 >
                   <div className="program-tile-top">
-                    <span className="program-tile-day">{p.day}</span>
-                    <span className="program-tile-icon">
-                      <IonIcon icon={time} />
-                    </span>
+                    <div className="program-tile-day-badge">
+                      <span className="program-tile-day">{p.day}</span>
+                      <span className="program-tile-icon">
+                        <IonIcon icon={time} />
+                      </span>
+                    </div>
                   </div>
                   <h4 className="program-tile-name">{p.program}</h4>
                   <div className="program-tile-bottom">
@@ -968,7 +965,7 @@ const Tab1: React.FC = () => {
                 </article>
               ))}
               {/* Duplicate for seamless loop */}
-              {DEFAULT_PROGRAMS.map((p, idx) => (
+              {WEEKLY_PROGRAMS.map((p, idx) => (
                 <article
                   key={`${idx}-dup`}
                   className="program-tile"
@@ -978,10 +975,12 @@ const Tab1: React.FC = () => {
                   aria-hidden="true"
                 >
                   <div className="program-tile-top">
-                    <span className="program-tile-day">{p.day}</span>
-                    <span className="program-tile-icon">
-                      <IonIcon icon={time} />
-                    </span>
+                    <div className="program-tile-day-badge">
+                      <span className="program-tile-day">{p.day}</span>
+                      <span className="program-tile-icon">
+                        <IonIcon icon={time} />
+                      </span>
+                    </div>
                   </div>
                   <h4 className="program-tile-name">{p.program}</h4>
                   <div className="program-tile-bottom">

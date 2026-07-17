@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { calendar, location, time, people, arrowBack } from 'ionicons/icons';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
+import { WEEKLY_PROGRAMS } from '../constants/weeklyPrograms';
 import './Events.css';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -87,15 +88,6 @@ const Events: React.FC = () => {
       day: 'numeric'
     });
   };
-
-  const weeklyPrograms = [
-    { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ea5252', description: 'Powerful prayer service seeking breakthrough', location: 'Main Sanctuary' },
-    { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#3d8d8f', description: 'Deep dive into Scripture with practical application', location: 'Fellowship Hall' },
-    { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#d4a200', description: 'Worship practice and spiritual preparation', location: 'Worship Center' },
-    { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#cd7423', description: 'Weekend kickoff with worship and Word', location: 'Main Sanctuary' },
-    { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#df4b4b', description: 'Weekend worship rehearsal and fellowship', location: 'Worship Center' },
-    { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#4c47c9', description: 'Multiple services with worship and preaching', location: 'Main Sanctuary' },
-  ];
 
   return (
     <IonPage>
@@ -269,7 +261,7 @@ const Events: React.FC = () => {
             </h2>
 
             <div className="weekly-programs-list" role="list" aria-label="Weekly programs">
-              {weeklyPrograms.map((p, idx) => (
+              {WEEKLY_PROGRAMS.map((p, idx) => (
                 <article
                   key={idx}
                   className="weekly-program-card"
