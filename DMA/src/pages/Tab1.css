@@ -775,169 +775,237 @@
   box-shadow: 0 4px 12px rgba(240, 147, 43, 0.4);
 }
 
-/* Weekly Programs - Modern Compact Two Column Layout with Solid Distinct Colors */
-.program-buttons-column {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-}
-
-.program-button {
+/* Weekly Programs - Professional Card Grid */
+.programs-grid {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.program-card {
+  display: flex;
   align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-  padding: 14px 12px;
-  background: var(--program-bg, var(--program-color-dark, #ffffff));
-  border: 1px solid var(--program-border, rgba(0,0,0,0.04));
-  border-left: 3px solid var(--program-color, var(--ion-color-primary));
-  border-radius: 10px;
+  gap: 14px;
+  padding: 16px;
+  background: var(--ios26-card-bg-light);
+  border: 1px solid var(--ios26-separator-light);
+  border-left: 4px solid var(--program-color, var(--ion-color-primary));
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-  min-height: 64px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
   position: relative;
   overflow: hidden;
 }
 
-.program-button::before {
+.program-card::before {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
+  right: 0;
   bottom: 0;
-  width: 0;
-  background: rgba(255, 255, 255, 0.6);
-  opacity: 0;
-  transition: all 0.25s ease;
-}
-
-.program-button::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 70%);
+  background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  border-radius: 10px;
 }
 
-.program-button:hover::before {
-  width: 3px;
-  opacity: 0.8;
+.program-card:hover::before {
+  opacity: 0.04;
 }
 
-.program-button:hover::after {
-  opacity: 1;
+.program-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border-color: var(--program-color, var(--ion-color-primary));
 }
 
-.program-button:hover {
-  transform: translateY(-2px) translateX(2px);
-  box-shadow: 
-    0 6px 14px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04);
-  background: linear-gradient(145deg, var(--program-bg), var(--program-bg-light, var(--program-bg)));
+.program-card:active {
+  transform: translateY(0) scale(0.99);
 }
 
-.program-button:active {
-  transform: translateY(0) scale(0.98) translateX(0);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+.program-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)), var(--program-color, var(--ion-color-primary)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.program-button-day {
-  font-size: 9px;
-  font-weight: 800;
+.program-card-icon ion-icon {
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.program-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.program-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.program-card-day {
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--program-text, #ffffff);
-  padding: 0;
-  line-height: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  opacity: 0.95;
+  letter-spacing: 0.5px;
+  color: var(--program-color, var(--ion-color-primary));
+  background: rgba(var(--program-color-rgb, 102, 126, 234), 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
-.program-button-name {
+.program-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(71, 85, 105, 0.75);
+  white-space: nowrap;
+}
+
+.program-card-time ion-icon {
   font-size: 13px;
+  color: var(--program-color, var(--ion-color-primary));
+}
+
+.program-card-name {
+  margin: 4px 0 2px 0;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--program-text, #ffffff);
-  line-height: 1.2;
-  opacity: 0.95;
+  color: rgba(15, 23, 42, 0.92);
+  line-height: 1.3;
   letter-spacing: -0.01em;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.program-card-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(100, 116, 139, 0.7);
+}
+
+.program-card-location ion-icon {
+  font-size: 13px;
+  color: var(--program-color, var(--ion-color-primary));
+}
+
+.program-card-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)), var(--program-color, var(--ion-color-primary)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease;
+}
+
+.program-card-arrow ion-icon {
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.program-card:hover .program-card-arrow {
+  transform: translateX(4px);
 }
 
 /* Individual color presets for the 6 programs */
-.program-button:nth-child(1) {
+.program-card:nth-child(1) {
   --program-color: #ea5252;
-  --program-bg: linear-gradient(145deg, #ea5252, #db4242);
-  --program-bg-light: #d53939;
-  --program-border: rgba(234, 82, 82, 0.15);
-  --program-text: #ffffff;
+  --program-color-rgb: 234, 82, 82;
 }
-.program-button:nth-child(2) {
+.program-card:nth-child(2) {
   --program-color: #3d8d8f;
-  --program-bg: linear-gradient(145deg, #3d8d8f, #337c80);
-  --program-bg-light: #347a7e;
-  --program-border: rgba(61, 141, 143, 0.15);
-  --program-text: #ffffff;
+  --program-color-rgb: 61, 141, 143;
 }
-.program-button:nth-child(3) {
+.program-card:nth-child(3) {
   --program-color: #d4a200;
-  --program-bg: linear-gradient(145deg, #d4a200, #c19500);
-  --program-bg-light: #b78c00;
-  --program-border: rgba(212, 162, 0, 0.15);
-  --program-text: #212121;
+  --program-color-rgb: 212, 162, 0;
 }
-.program-button:nth-child(4) {
+.program-card:nth-child(4) {
   --program-color: #cd7423;
-  --program-bg: linear-gradient(145deg, #cd7423, #bd6722);
-  --program-bg-light: #ad6f1e;
-  --program-border: rgba(205, 116, 35, 0.15);
-  --program-text: #212121;
+  --program-color-rgb: 205, 116, 35;
 }
-.program-button:nth-child(5) {
+.program-card:nth-child(5) {
   --program-color: #df4b4b;
-  --program-bg: linear-gradient(145deg, #df4b4b, #cf3a3a);
-  --program-bg-light: #c13333;
-  --program-border: rgba(223, 75, 75, 0.15);
-  --program-text: #ffffff;
+  --program-color-rgb: 223, 75, 75;
 }
-.program-button:nth-child(6) {
+.program-card:nth-child(6) {
   --program-color: #4c47c9;
-  --program-bg: linear-gradient(145deg, #4c47c9, #3d42bc);
-  --program-bg-light: #3634b2;
-  --program-border: rgba(76, 71, 201, 0.15);
-  --program-text: #ffffff;
+  --program-color-rgb: 76, 71, 201;
 }
 
-/* Dark mode - ensure text is visible on lighter colors */
-[data-theme="dark"] .program-button:nth-child(3),
-[data-theme="dark"] .program-button:nth-child(4) {
-  --program-text: #212121;
-}
-
-[data-theme="dark"] .program-button {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .program-button:hover {
-  transform: translateY(-2px) translateX(2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
-}
-
-/* Responsive: single column on mobile */
+/* Responsive: two columns on tablet, single column on mobile */
 @media (max-width: 480px) {
-  .program-buttons-column {
-    grid-template-columns: 1fr;
+  .programs-grid {
+    gap: 8px;
+  }
+  .program-card {
+    padding: 14px;
+    gap: 12px;
+  }
+  .program-card-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .program-card-icon ion-icon {
+    font-size: 16px;
+  }
+  .program-card-name {
+    font-size: 14px;
   }
 }
 
-/* Legacy Programs styles (kept for compatibility) */
+/* Dark mode support */
+[data-theme="dark"] .program-card {
+  background: var(--ios26-card-bg-dark);
+  border: 1px solid var(--ios26-separator-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .program-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border-color: var(--program-color, var(--ion-color-primary));
+}
+
+[data-theme="dark"] .program-card-name {
+  color: var(--ios26-text-primary-dark);
+}
+
+[data-theme="dark"] .program-card-day {
+  background: rgba(var(--program-color-rgb, 102, 126, 234), 0.2);
+  color: var(--program-color, var(--ion-color-primary));
+}
+
+[data-theme="dark"] .program-card-time,
+[data-theme="dark"] .program-card-location {
+  color: var(--ios26-text-secondary-dark);
+}
+
+[data-theme="dark"] .program-card-time ion-icon,
+[data-theme="dark"] .program-card-location ion-icon {
+  color: var(--program-color, var(--ion-color-primary));
+}
+
+/* Legacy styles (kept for compatibility) */
 .programs-row {
   display:flex;
   gap:16px;

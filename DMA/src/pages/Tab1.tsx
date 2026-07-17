@@ -926,7 +926,7 @@ const Tab1: React.FC = () => {
           </section>
         )}
 
-        {/* WEEKLY PROGRAMS - Column Buttons */}
+        {/* WEEKLY PROGRAMS - Professional Cards */}
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
@@ -938,18 +938,36 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
 
-          <div className="program-buttons-column" role="list">
+          <div className="programs-grid" role="list">
             {DEFAULT_PROGRAMS.map((p, idx) => (
-              <button
+              <article
                 key={idx}
-                className="program-button"
+                className="program-card"
                 role="listitem"
                 onClick={() => handleProgramClick(p)}
                 style={{ ['--program-color' as any]: p.color }}
               >
-                <span className="program-button-day">{p.day}</span>
-                <span className="program-button-name">{p.program}</span>
-              </button>
+                <div className="program-card-icon">
+                  <IonIcon icon={time} />
+                </div>
+                <div className="program-card-content">
+                  <div className="program-card-header">
+                    <span className="program-card-day">{p.day}</span>
+                    <span className="program-card-time">
+                      <IonIcon icon={time} />
+                      {p.time}
+                    </span>
+                  </div>
+                  <h3 className="program-card-name">{p.program}</h3>
+                  <p className="program-card-location">
+                    <IonIcon icon={location} />
+                    {p.location}
+                  </p>
+                </div>
+                <div className="program-card-arrow">
+                  <IonIcon icon={arrowForward} />
+                </div>
+              </article>
             ))}
           </div>
         </section>
