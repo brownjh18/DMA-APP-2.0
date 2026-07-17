@@ -926,7 +926,7 @@ const Tab1: React.FC = () => {
           </section>
         )}
 
-        {/* WEEKLY PROGRAMS - Compact Tiles */}
+        {/* WEEKLY PROGRAMS - Auto-scroll Marquee */}
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
@@ -938,34 +938,65 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
 
-          <div className="programs-scroll" role="list">
-            {DEFAULT_PROGRAMS.map((p, idx) => (
-              <article
-                key={idx}
-                className="program-tile"
-                role="listitem"
-                onClick={() => handleProgramClick(p)}
-                style={{ ['--program-color' as any]: p.color }}
-              >
-                <div className="program-tile-top">
-                  <span className="program-tile-day">{p.day}</span>
-                  <span className="program-tile-icon">
-                    <IonIcon icon={time} />
-                  </span>
-                </div>
-                <h4 className="program-tile-name">{p.program}</h4>
-                <div className="program-tile-bottom">
-                  <span className="program-tile-time">
-                    <IonIcon icon={time} />
-                    {p.time}
-                  </span>
-                  <span className="program-tile-location">
-                    <IonIcon icon={location} />
-                    {p.location}
-                  </span>
-                </div>
-              </article>
-            ))}
+          <div className="programs-marquee" role="list" aria-label="Weekly programs">
+            <div className="programs-marquee-track">
+              {DEFAULT_PROGRAMS.map((p, idx) => (
+                <article
+                  key={idx}
+                  className="program-tile"
+                  role="listitem"
+                  onClick={() => handleProgramClick(p)}
+                  style={{ ['--program-color' as any]: p.color }}
+                >
+                  <div className="program-tile-top">
+                    <span className="program-tile-day">{p.day}</span>
+                    <span className="program-tile-icon">
+                      <IonIcon icon={time} />
+                    </span>
+                  </div>
+                  <h4 className="program-tile-name">{p.program}</h4>
+                  <div className="program-tile-bottom">
+                    <span className="program-tile-time">
+                      <IonIcon icon={time} />
+                      {p.time}
+                    </span>
+                    <span className="program-tile-location">
+                      <IonIcon icon={location} />
+                      {p.location}
+                    </span>
+                  </div>
+                </article>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {DEFAULT_PROGRAMS.map((p, idx) => (
+                <article
+                  key={`${idx}-dup`}
+                  className="program-tile"
+                  role="listitem"
+                  onClick={() => handleProgramClick(p)}
+                  style={{ ['--program-color' as any]: p.color }}
+                  aria-hidden="true"
+                >
+                  <div className="program-tile-top">
+                    <span className="program-tile-day">{p.day}</span>
+                    <span className="program-tile-icon">
+                      <IonIcon icon={time} />
+                    </span>
+                  </div>
+                  <h4 className="program-tile-name">{p.program}</h4>
+                  <div className="program-tile-bottom">
+                    <span className="program-tile-time">
+                      <IonIcon icon={time} />
+                      {p.time}
+                    </span>
+                    <span className="program-tile-location">
+                      <IonIcon icon={location} />
+                      {p.location}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
