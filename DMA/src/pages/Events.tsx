@@ -281,10 +281,6 @@ const Events: React.FC = () => {
                       <IonIcon icon={time} />
                       {p.time}
                     </span>
-                    <span className="weekly-program-card-location">
-                      <IonIcon icon={location} />
-                      {p.location}
-                    </span>
                   </div>
                 </article>
               ))}

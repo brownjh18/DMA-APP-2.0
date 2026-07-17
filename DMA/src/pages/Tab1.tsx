@@ -945,7 +945,7 @@ const Tab1: React.FC = () => {
                 >
                   <div className="program-tile-top">
                     <span className="program-tile-icon">
-                      <IonIcon icon={time} />
+                      <IonIcon icon={calendar} />
                     </span>
                     <span className="program-tile-day">{p.day}</span>
                   </div>
@@ -954,10 +954,6 @@ const Tab1: React.FC = () => {
                     <span className="program-tile-time">
                       <IonIcon icon={time} />
                       {p.time}
-                    </span>
-                    <span className="program-tile-location">
-                      <IonIcon icon={location} />
-                      {p.location}
                     </span>
                   </div>
                 </article>
@@ -974,7 +970,7 @@ const Tab1: React.FC = () => {
                 >
                   <div className="program-tile-top">
                     <span className="program-tile-icon">
-                      <IonIcon icon={time} />
+                      <IonIcon icon={calendar} />
                     </span>
                     <span className="program-tile-day">{p.day}</span>
                   </div>
@@ -983,10 +979,6 @@ const Tab1: React.FC = () => {
                     <span className="program-tile-time">
                       <IonIcon icon={time} />
                       {p.time}
-                    </span>
-                    <span className="program-tile-location">
-                      <IonIcon icon={location} />
-                      {p.location}
                     </span>
                   </div>
                 </article>
