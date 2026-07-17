@@ -41,7 +41,6 @@ import {
   people,
   radio,
   arrowForward,
-  arrowForwardOutline,
   close
 } from 'ionicons/icons';
 import { useState, useEffect, useRef, useCallback, useMemo, useContext } from 'react';
@@ -927,8 +926,7 @@ const Tab1: React.FC = () => {
           </section>
         )}
 
-        {/* WEEKLY PROGRAMS - Modern Quick Actions */}
-        <div className="home-text-area">
+        {/* WEEKLY PROGRAMS - Column Buttons */}
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
@@ -940,33 +938,18 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
 
-          <div className="quick-actions-grid" role="list">
+          <div className="program-buttons-column" role="list">
             {DEFAULT_PROGRAMS.map((p, idx) => (
-              <div
+              <button
                 key={idx}
-                className="quick-action-card"
+                className="program-button"
                 role="listitem"
                 onClick={() => handleProgramClick(p)}
-                style={{ cursor: 'pointer' }}
+                style={{ ['--program-color' as any]: p.color }}
               >
-                <div className="quick-action-accent" style={{ ['--program-color' as any]: p.color }} />
-                <div className="quick-action-icon" style={{ ['--program-color' as any]: p.color }}>
-                  <IonIcon icon={calendar} />
-                </div>
-                <div className="quick-action-content">
-                  <div className="quick-action-day">{p.day}</div>
-                  <div className="quick-action-name">{p.program}</div>
-                  <div className="quick-action-time">
-                    <IonIcon icon={time} style={{ fontSize: '12px', marginRight: '4px' }} />
-                    {p.time}
-                  </div>
-                </div>
-                <div className="quick-action-end">
-                  <div className="quick-action-open-btn">
-                    <IonIcon icon={arrowForwardOutline} style={{ fontSize: '12px' }} />
-                  </div>
-                </div>
-              </div>
+                <span className="program-button-day">{p.day}</span>
+                <span className="program-button-name">{p.program}</span>
+              </button>
             ))}
           </div>
         </section>
@@ -1379,7 +1362,6 @@ const Tab1: React.FC = () => {
             </div>
           </>
         )}
-      </div>
       </IonContent>
     </IonPage>
   );
