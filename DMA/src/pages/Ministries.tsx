@@ -268,8 +268,12 @@ const Ministries: React.FC = () => {
                     <p style={{
                       margin: '0 0 12px 0',
                       color: isDarkMode ? '#92949c' : '#8e8e93',
-                      fontSize: '0.9em',
-                      lineHeight: '1.4'
+                      fontSize: '0.85em',
+                      lineHeight: '1.4',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
                     }}>
                       {ministry.description}
                     </p>
