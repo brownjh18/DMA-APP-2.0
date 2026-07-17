@@ -37,7 +37,6 @@ import {
   time,
   heart,
   informationCircle,
-  location,
   people,
   radio,
   arrowForward,
@@ -1371,10 +1370,6 @@ const Tab1: React.FC = () => {
                 <div className="program-popover-info-row">
                   <IonIcon icon={time} style={{ fontSize: '16px' }} />
                   <span>{selectedProgram.time}</span>
-                </div>
-                <div className="program-popover-info-row">
-                  <IonIcon icon={location} style={{ fontSize: '16px' }} />
-                  <span>{selectedProgram.location}</span>
                 </div>
                 <div className="program-popover-description">
                   <p>{selectedProgram.description}</p>
