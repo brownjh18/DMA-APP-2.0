@@ -89,12 +89,12 @@ const Events: React.FC = () => {
   };
 
   const weeklyPrograms = [
-    { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ff6b6b' },
-    { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#45b7d1' },
-    { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#f9ca24' },
-    { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#f0932b' },
-    { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#eb4d4b' },
-    { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#6c5ce7' },
+    { day: 'Mon', program: 'Enough is Enough Prayer Service', time: '6:00PM - 8:00PM', color: '#ea5252', description: 'Powerful prayer service seeking breakthrough', location: 'Main Sanctuary' },
+    { day: 'Wed', program: 'Bible Study', time: '6:00PM - 8:30PM', color: '#3d8d8f', description: 'Deep dive into Scripture with practical application', location: 'Fellowship Hall' },
+    { day: 'Thu', program: 'Worship Team Fellowship', time: '7:00PM - 9:00PM', color: '#d4a200', description: 'Worship practice and spiritual preparation', location: 'Worship Center' },
+    { day: 'Fri', program: "Eagle's Friday Service", time: '6:00PM - 9:00PM', color: '#cd7423', description: 'Weekend kickoff with worship and Word', location: 'Main Sanctuary' },
+    { day: 'Sat', program: 'Worship Team Fellowship', time: '6:00PM - 8:00PM', color: '#df4b4b', description: 'Weekend worship rehearsal and fellowship', location: 'Worship Center' },
+    { day: 'Sun', program: 'Sunday Services', time: '7:30AM - 1:30PM', color: '#4c47c9', description: 'Multiple services with worship and preaching', location: 'Main Sanctuary' },
   ];
 
   return (
@@ -268,47 +268,65 @@ const Events: React.FC = () => {
               Weekly Programs
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {weeklyPrograms.map((p, idx) => (
-                <div key={idx} className="weekly-program-item-themed">
-                  <div style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '12px',
-                    backgroundColor: p.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '16px',
-                    flexShrink: 0
-                  }}>
-                    <span style={{
-                      color: 'white',
-                      fontWeight: '700',
-                      fontSize: '1.1em'
-                    }}>
-                      {p.day}
-                    </span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{
-                      margin: '0 0 4px 0',
-                      fontSize: '1em',
-                      fontWeight: '600',
-                      color: isDarkMode ? '#ffffff' : '#000000'
-                    }}>
-                      {p.program}
-                    </h4>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '0.9em',
-                      color: isDarkMode ? '#92949c' : '#8e8e93'
-                    }}>
-                      {p.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="weekly-programs-marquee" role="list" aria-label="Weekly programs">
+              <div className="weekly-programs-marquee-track">
+                {weeklyPrograms.map((p, idx) => (
+                  <article
+                    key={idx}
+                    className="weekly-program-card"
+                    role="listitem"
+                    style={{ ['--program-color' as any]: p.color }}
+                  >
+                    <div className="weekly-program-card-header">
+                      <span className="weekly-program-card-day">{p.day}</span>
+                      <div className="weekly-program-card-icon">
+                        <IonIcon icon={time} />
+                      </div>
+                    </div>
+                    <h4 className="weekly-program-card-name">{p.program}</h4>
+                    <p className="weekly-program-card-desc">{p.description}</p>
+                    <div className="weekly-program-card-meta">
+                      <span className="weekly-program-card-time">
+                        <IonIcon icon={time} />
+                        {p.time}
+                      </span>
+                      <span className="weekly-program-card-location">
+                        <IonIcon icon={location} />
+                        {p.location}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+                {/* Duplicate for seamless loop */}
+                {weeklyPrograms.map((p, idx) => (
+                  <article
+                    key={`${idx}-dup`}
+                    className="weekly-program-card"
+                    role="listitem"
+                    style={{ ['--program-color' as any]: p.color }}
+                    aria-hidden="true"
+                  >
+                    <div className="weekly-program-card-header">
+                      <span className="weekly-program-card-day">{p.day}</span>
+                      <div className="weekly-program-card-icon">
+                        <IonIcon icon={time} />
+                      </div>
+                    </div>
+                    <h4 className="weekly-program-card-name">{p.program}</h4>
+                    <p className="weekly-program-card-desc">{p.description}</p>
+                    <div className="weekly-program-card-meta">
+                      <span className="weekly-program-card-time">
+                        <IonIcon icon={time} />
+                        {p.time}
+                      </span>
+                      <span className="weekly-program-card-location">
+                        <IonIcon icon={location} />
+                        {p.location}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
 
