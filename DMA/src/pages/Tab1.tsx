@@ -289,7 +289,7 @@ const Tab1: React.FC = () => {
   const podcastsCacheTime = useRef<number>(0);
   const eventsCacheTime = useRef<number>(0);
   const ministriesCacheTime = useRef<number>(0);
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const CACHE_DURATION = 30 * 1000; // 30 seconds
 
   // Use a ref to prevent multiple initializations
   const initializedRef = useRef(false);
