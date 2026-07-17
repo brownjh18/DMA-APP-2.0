@@ -938,7 +938,7 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
 
-          <div className="programs-tiles" role="list">
+          <div className="programs-scroll" role="list">
             {DEFAULT_PROGRAMS.map((p, idx) => (
               <article
                 key={idx}
