@@ -211,10 +211,10 @@ const Search: React.FC = () => {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
-        <div className="search-page-container" style={{ padding: '16px' }}>
+        <div className="search-page-container" style={{ padding: '12px' }}>
 
           {/* Filter chips */}
-          <div style={{ marginTop: '16px', marginBottom: '20px' }}>
+          <div style={{ marginTop: '8px', marginBottom: '12px' }}>
             <IonText
               style={{
                 fontSize: '0.85em',
@@ -280,16 +280,18 @@ const Search: React.FC = () => {
                         key={`${result.type}-${result.id}-${index}`}
                         className="search-result-card"
                         onClick={() => history.push(result.url)}
+                        style={{ padding: '6px 0', minHeight: '60px' }}
                       >
                         {/* Thumbnail */}
                         <div
                           style={{
-                            width: '96px',
-                            height: '96px',
+                            width: '107px',
+                            height: '60px',
                             flexShrink: 0,
-                            borderRadius: '12px',
+                            borderRadius: '8px',
                             overflow: 'hidden',
                             background: isDarkMode ? '#2c2c2e' : '#f2f2f7',
+                            marginLeft: '8px',
                           }}
                         >
                           {result.image ? (
@@ -325,64 +327,46 @@ const Search: React.FC = () => {
                         </div>
 
                         {/* Text */}
-                        <IonLabel style={{ flex: 1, margin: '0', overflow: 'hidden' }}>
+                        <IonLabel style={{ flex: 1, margin: '0', overflow: 'hidden', minWidth: 0 }}>
                           <h2
                             style={{
                               fontWeight: '600',
-                              marginBottom: '4px',
-                              fontSize: '15px',
+                              marginBottom: '2px',
+                              fontSize: '14px',
                               color: isDarkMode ? '#ffffff' : '#1c1c1e',
-                              whiteSpace: 'normal',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
                           >
                             {result.title}
                           </h2>
-                          <p
-                            style={{
-                              color: isDarkMode ? '#98989d' : '#8e8e93',
-                              fontSize: '0.85em',
-                              marginBottom: '4px',
-                            }}
-                          >
-                            {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-                          </p>
-                          {result.description && (
-                            <p
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <IonBadge
+                              color={getTypeColor(result.type)}
                               style={{
-                                color: isDarkMode ? '#636366' : '#aeaeb2',
-                                fontSize: '0.8em',
-                                lineHeight: '1.4',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                marginBottom: '4px',
+                                fontSize: '0.55em',
+                                padding: '2px 5px',
+                                borderRadius: '4px',
+                                flexShrink: 0,
                               }}
                             >
-                              {result.description}
+                              {result.type}
+                            </IonBadge>
+                            <p
+                              style={{
+                                color: isDarkMode ? '#98989d' : '#8e8e93',
+                                fontSize: '0.75em',
+                                marginBottom: '0',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {result.subtitle || result.type.charAt(0).toUpperCase() + result.type.slice(1)} • {result.date ? new Date(result.date).toLocaleDateString() : ''}
                             </p>
-                          )}
-                          {result.date && (
-                            <p style={{ color: isDarkMode ? '#636366' : '#aeaeb2', fontSize: '0.75em', margin: 0 }}>
-                              {new Date(result.date).toLocaleDateString()}
-                            </p>
-                          )}
+                          </div>
                         </IonLabel>
-
-                        {/* Type badge */}
-                        <IonBadge
-                          color={getTypeColor(result.type)}
-                          style={{
-                            fontSize: '0.65em',
-                            padding: '4px 8px',
-                            borderRadius: '8px',
-                            alignSelf: 'flex-start',
-                            marginTop: '2px',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {result.type}
-                        </IonBadge>
                       </div>
                     ))}
                   </IonList>

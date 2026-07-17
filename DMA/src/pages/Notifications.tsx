@@ -151,47 +151,31 @@ function NotifRow({
   return (
     <>
       <div
-        className={`am-card notif-row ${isUnread ? 'unread' : 'read'}`}
+        className={`notif-row ${isUnread ? 'unread' : 'read'}`}
         onClick={onClick}
-        style={{
-          background: isUnread ? 'rgba(99,102,241,0.08)' : '#fff',
-          borderLeft: isUnread ? '3px solid #6366f1' : '3px solid #e5e7eb',
-        }}
       >
+        {/* Type icon / avatar */}
         <div className="notif-icon">
-          <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color, fontSize: '22px' }} />
+          <IonIcon icon={typeMeta.icon} style={{ color: typeMeta.color, fontSize: '20px' }} />
         </div>
-        <div className="am-content">
-          <p
-            className="am-title"
-            style={{
-              whiteSpace: 'normal',
-              lineHeight: '1.4',
-              fontWeight: isUnread ? 700 : 500,
-              color: isUnread ? '#1f2937' : '#6b7280',
-            }}
-          >
+
+        {/* Content */}
+        <div className="notif-content">
+          <p className="notif-title" style={{ fontWeight: isUnread ? 600 : 400 }}>
             {notification.title}
           </p>
-          <p
-            className="am-subtitle"
-            style={{
-              whiteSpace: 'normal',
-              lineHeight: '1.3',
-              color: isUnread ? '#374151' : '#9ca3af',
-            }}
-          >
+          <p className="notif-message" style={{ color: isUnread ? '#374151' : '#6b7280' }}>
             {notification.message}
           </p>
-          <div className="am-meta">
-            <span className="am-meta-item">
-              {formatTime(notification.createdAt)}
-            </span>
-            <span className="am-meta-item" style={{ color: typeMeta.color }}>
+          <div className="notif-meta">
+            <span className="notif-time">{formatTime(notification.createdAt)}</span>
+            <span className="notif-type" style={{ color: typeMeta.color }}>
               {typeMeta.label}
             </span>
           </div>
         </div>
+
+        {/* Thumbnail - 16:9 small */}
         {thumbnailUrl && (
           <div className="notif-thumbnail">
             <img
@@ -203,6 +187,8 @@ function NotifRow({
             />
           </div>
         )}
+
+        {/* Delete button */}
         <button
           className="notif-delete-btn"
           onClick={(e) => {
@@ -369,11 +355,11 @@ const Notifications: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div className="am-page">
+        <div className="notif-page">
           {/* Filter Actions */}
-          <div className="am-section">
-            <div className="am-section-header">
-              <h2 className="am-section-title">
+          <div className="notif-section">
+            <div className="notif-section-header">
+              <h2 className="notif-section-title">
                 Notifications
                 {unreadCount > 0 && (
                   <span
@@ -392,22 +378,22 @@ const Notifications: React.FC = () => {
                 <div className="notif-action-row">
                   {unreadCount > 0 && (
                     <button
-                      className="am-action-chip"
+                      className="notif-action-chip"
                       onClick={markAllAsRead}
                       style={{ '--chip-color': '#6366f1' } as React.CSSProperties}
                     >
-                      <div className="am-action-icon">
+                      <div className="notif-action-icon">
                         <IonIcon icon={checkmarkDone} />
                       </div>
                       <span>Read all</span>
                     </button>
                   )}
                   <button
-                    className="am-action-chip"
+                    className="notif-action-chip"
                     onClick={() => setShowClearConfirm(true)}
                     style={{ '--chip-color': '#ef4444' } as React.CSSProperties}
                   >
-                    <div className="am-action-icon">
+                    <div className="notif-action-icon">
                       <IonIcon icon={trash} />
                     </div>
                     <span>Clear all</span>
@@ -431,12 +417,12 @@ const Notifications: React.FC = () => {
           </div>
 
           {/* Notification List */}
-          <div className="am-section">
+          <div className="notif-list">
             {sorted.length === 0 ? (
-              <div className="am-empty">
+              <div className="notif-empty">
                 <IonIcon icon={notificationsIcon} />
-                <p className="am-empty-title">All caught up</p>
-                <p className="am-empty-text">
+                <p className="notif-empty-title">All caught up</p>
+                <p className="notif-empty-text">
                   {filterType !== 'all'
                     ? `No ${filterType} notifications`
                     : 'No notifications yet. New content will appear here.'}
@@ -449,18 +435,16 @@ const Notifications: React.FC = () => {
                     <div key={label} className="notif-section">
                       <div className="notif-section-header">
                         <span className="notif-section-label">{label}</span>
-                        <span className="am-stat-txt">{notifs.length}</span>
+                        <span className="notif-section-count">{notifs.length}</span>
                       </div>
-                      <div className="am-list">
-                        {notifs.map((n: any) => (
-                          <NotifRow
-                            key={getNotifId(n)}
-                            notification={n}
-                            onClick={() => handleClick(n)}
-                            onDelete={() => removeNotification(getNotifId(n))}
-                          />
-                        ))}
-                      </div>
+                      {notifs.map((n: any) => (
+                        <NotifRow
+                          key={getNotifId(n)}
+                          notification={n}
+                          onClick={() => handleClick(n)}
+                          onDelete={() => removeNotification(getNotifId(n))}
+                        />
+                      ))}
                     </div>
                   ) : null
                 )}
@@ -469,7 +453,7 @@ const Notifications: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="am-footer">
+          <div className="notif-footer">
             <IonText>Dove Church &bull; Admin Panel v2.0</IonText>
           </div>
         </div>

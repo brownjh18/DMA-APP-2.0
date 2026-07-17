@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
-import { IonIcon, IonBadge, IonPopover, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonText, IonChip, IonSpinner, IonSearchbar } from '@ionic/react';
-import { search, radio, playCircle, calendar, book, people, informationCircle, arrowBack, close, personCircleOutline } from 'ionicons/icons';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { IonIcon, IonBadge, IonButton, IonPopover, IonAvatar } from '@ionic/react';
+import { search, radio, playCircle, calendar, book, people } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
 import { YouTubeVideo } from '../services/youtubeService';
@@ -10,28 +10,10 @@ import { useSettings } from '../contexts/SettingsContext';
 import apiService, { BACKEND_BASE_URL } from '../services/api';
 import './FloatingSearchIcon.css';
 
-interface SearchResult {
-  id: string;
-  type: 'sermon' | 'podcast' | 'event' | 'devotion' | 'ministry';
-  title: string;
-  subtitle?: string;
-  description?: string;
-  image?: string;
-  date?: string;
-  url: string;
-  score: number;
-}
-
 const FloatingSearchIcon: React.FC = () => {
   const [liveStreams, setLiveStreams] = useState<YouTubeVideo[]>([]);
   const [liveBroadcasts, setLiveBroadcasts] = useState<any[]>([]);
   const [isCheckingLive, setIsCheckingLive] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const history = useHistory();
   const location = useLocation();
   const { setCurrentMedia, setIsPlaying, setCurrentSermon, isPlaying, currentSermon, currentMedia } = usePlayer();
@@ -137,92 +119,8 @@ const FloatingSearchIcon: React.FC = () => {
     prevUnreadCount.current = unreadCount;
   }, [unreadCount]);
 
-  // Debounced search function
-  const performSearch = useCallback(async (query: string, filter: string = 'all') => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setHasSearched(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await apiService.search(query.trim());
-      let results = response.results || [];
-
-      // Apply filter if not 'all'
-      if (filter !== 'all') {
-        results = results.filter((result: SearchResult) => result.type === filter);
-      }
-
-      setSearchResults(results);
-      setHasSearched(true);
-    } catch (error) {
-      console.error('Search failed:', error);
-      setSearchResults([]);
-      setHasSearched(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Debounced search effect
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setHasSearched(false);
-      return;
-    }
-
-    const debounceDelay = searchQuery.trim().length <= 2 ? 50 : 150; // Faster for short queries
-    const debounceTimer = setTimeout(() => {
-      performSearch(searchQuery, selectedFilter);
-    }, debounceDelay);
-
-    return () => clearTimeout(debounceTimer);
-  }, [searchQuery, selectedFilter, performSearch]);
-
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter);
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'sermon': return playCircle;
-      case 'podcast': return radio;
-      case 'event': return calendar;
-      case 'devotion': return book;
-      case 'ministry': return people;
-      default: return search;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'sermon': return 'primary';
-      case 'podcast': return 'secondary';
-      case 'event': return 'tertiary';
-      case 'devotion': return 'success';
-      case 'ministry': return 'warning';
-      default: return 'medium';
-    }
-  };
-
-  const filters = [
-    { value: 'all', label: 'All' },
-    { value: 'sermon', label: 'Sermons' },
-    { value: 'podcast', label: 'Podcasts' },
-    { value: 'event', label: 'Events' },
-    { value: 'devotion', label: 'Devotions' },
-    { value: 'ministry', label: 'Ministries' }
-  ];
-
   const handleSearchClick = () => {
-    setShowSearchModal(true);
+    history.push('/search');
   };
 
   const handleLiveBroadcastClick = () => {
@@ -263,6 +161,10 @@ const FloatingSearchIcon: React.FC = () => {
     }
   };
 
+  // Hide floating icons on search page
+  if (location.pathname === '/search') {
+    return null;
+  }
 
   return (
     <>
@@ -526,323 +428,9 @@ const FloatingSearchIcon: React.FC = () => {
               strokeLinecap="round"
               style={{ transition: 'stroke 0.3s ease' }}
             />
-          </svg>
+</svg>
         </div>
       </div>
-
-
-      {/* Search Modal - White Background for Light Mode, Blur for Dark Mode */}
-      <IonModal
-        isOpen={showSearchModal}
-        onDidDismiss={() => setShowSearchModal(false)}
-        className={isDarkMode ? 'search-modal dark-theme' : 'search-modal'}
-        style={{
-          '--width': '100%',
-          '--max-width': '100%',
-          '--height': '100%',
-          '--max-height': '100%',
-          '--border-radius': '0',
-          '--margin': '0'
-        }}
-      >
-        <IonHeader className="search-header">
-          <IonToolbar className="search-toolbar">
-            <IonButton
-              fill="clear"
-              slot="start"
-              onClick={() => setShowSearchModal(false)}
-              style={{ '--color': 'var(--ion-color-primary)' }}
-            >
-              <IonIcon icon={close} />
-            </IonButton>
-            
-            {/* Custom Search Bar in Header with X button inside */}
-            <div className="custom-searchbar" style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              background: 'var(--ion-color-step-50, #f5f5f7)',
-              borderRadius: '12px',
-              padding: '0 12px',
-              height: '40px',
-              marginRight: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              border: '1px solid var(--ion-color-step-100, #e5e5e5)',
-              transition: 'all 0.3s ease'
-            }}>
-              <IonIcon 
-                icon={search} 
-                style={{ 
-                  color: 'var(--ion-color-primary, #007aff)', 
-                  fontSize: '18px',
-                  flexShrink: 0
-                }} 
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search..."
-                autoFocus
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  background: 'transparent',
-                  padding: '8px',
-                  fontSize: '15px',
-                  color: 'var(--ion-text-color, #1c1c1e)',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  minWidth: '0'
-                }}
-              />
-              {searchQuery && (
-                <IonIcon 
-                  icon={close} 
-                  style={{ 
-                    color: 'var(--ion-color-medium, #8e8e93)', 
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSearchResults([]);
-                    setHasSearched(false);
-                  }}
-                />
-              )}
-            </div>
-          </IonToolbar>
-        </IonHeader>
-
-        <IonContent className="search-content">
-          <style>{`
-            /* Full page modal on all screen sizes */
-            .search-modal {
-              --width: 100% !important;
-              --max-width: 100% !important;
-              --height: 100% !important;
-              --max-height: 100% !important;
-              --border-radius: 0 !important;
-              margin: 0 !important;
-            }
-            @media (min-width: 768px) {
-              .search-modal {
-                --width: 100% !important;
-                --max-width: 100% !important;
-              }
-            }
-            @media (prefers-color-scheme: light) {
-              /* Admin-style soft gradient background for search */
-              .search-modal, .search-header, .search-toolbar, .search-content {
-                background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%) !important;
-                --background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%) !important;
-                box-shadow: 0 12px 48px rgba(15, 23, 42, 0.06);
-              }
-              .search-header {
-                border-bottom: 1px solid var(--ion-color-step-100, #e5e5e5);
-              }
-              .custom-searchbar {
-                background: var(--ion-color-step-50, #f5f5f7) !important;
-                border: 1px solid var(--ion-color-step-100, #e5e5e5) !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-              }
-            }
-            @media (prefers-color-scheme: dark) {
-              /* Dark semi-opaque panel for admin look */
-              .search-modal, .search-header, .search-toolbar, .search-content {
-                background: rgba(16,18,20,0.64) !important;
-                --background: rgba(16,18,20,0.64) !important;
-                backdrop-filter: blur(18px) saturate(160%) !important;
-                -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-                border: 1px solid rgba(255,255,255,0.04);
-                box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-              }
-              .search-toolbar {
-                background: transparent !important;
-                --background: transparent !important;
-              }
-              .custom-searchbar {
-                background: rgba(30, 30, 30, 0.6) !important;
-                backdrop-filter: blur(16px) saturate(180%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
-              }
-            }
-            /* Support app-controlled dark theme using data-theme="dark" */
-            [data-theme="dark"] .search-modal,
-            [data-theme="dark"] .search-header,
-            [data-theme="dark"] .search-toolbar,
-            [data-theme="dark"] .search-content {
-              background: rgba(16,18,20,0.64) !important;
-              --background: rgba(16,18,20,0.64) !important;
-              backdrop-filter: blur(18px) saturate(160%) !important;
-              -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-              border: 1px solid rgba(255,255,255,0.04);
-              box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            }
-            [data-theme="dark"] .search-toolbar {
-              background: transparent !important;
-              --background: transparent !important;
-            }
-            [data-theme="dark"] .custom-searchbar {
-              background: rgba(30, 30, 30, 0.6) !important;
-              backdrop-filter: blur(16px) saturate(180%) !important;
-              -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-              border: 1px solid rgba(255, 255, 255, 0.1) !important;
-              box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
-            }
-            /* Fallback: when modal gets a dark-theme class (added via cssClass) */
-            .search-modal.dark-theme,
-            .search-modal.dark-theme .search-header,
-            .search-modal.dark-theme .search-toolbar,
-            .search-modal.dark-theme .search-content {
-              background: rgba(16,18,20,0.64) !important;
-              --background: rgba(16,18,20,0.64) !important;
-              backdrop-filter: blur(18px) saturate(160%) !important;
-              -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-              border: 1px solid rgba(255,255,255,0.04);
-              box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            }
-            .search-modal.dark-theme .search-toolbar {
-              background: transparent !important;
-              --background: transparent !important;
-            }
-            .search-modal.dark-theme .custom-searchbar {
-              background: rgba(30, 30, 30, 0.6) !important;
-              backdrop-filter: blur(16px) saturate(180%) !important;
-              -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-              border: 1px solid rgba(255, 255, 255, 0.1) !important;
-              box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
-            }
-            /* Use Ionic CSS variables for colors to adapt to both modes */
-            .filter-label, .loading-text, .results-count, .no-results-title, .no-results-text, .result-card-title, .result-card-subtitle, .result-card-description {
-              color: var(--ion-text-color, #1c1c1e) !important;
-            }
-            .filter-chips, .loading-spinner, .no-results {
-              color: var(--ion-text-color, #1c1c1e);
-            }
-            /* Full frosted backdrop for the modal content */
-            .search-content {
-              position: relative;
-              overflow: hidden;
-            }
-            .search-content::before {
-              content: '';
-              position: absolute;
-              inset: 0;
-              z-index: 0;
-              pointer-events: none;
-              backdrop-filter: blur(28px) saturate(160%);
-              -webkit-backdrop-filter: blur(28px) saturate(160%);
-              background: rgba(255,255,255,0.18);
-            }
-            /* Dark mode frosted backdrop */
-            @media (prefers-color-scheme: dark) {
-              .search-content::before {
-                background: rgba(10,12,14,0.56);
-                backdrop-filter: blur(28px) saturate(140%);
-                -webkit-backdrop-filter: blur(28px) saturate(140%);
-              }
-            }
-            [data-theme="dark"] .search-content::before,
-            .search-modal.dark-theme .search-content::before {
-              background: rgba(10,12,14,0.56);
-              backdrop-filter: blur(28px) saturate(140%);
-              -webkit-backdrop-filter: blur(28px) saturate(140%);
-            }
-            /* Ensure content sits above the frosted layer */
-            .yt-search-shell, .yt-results-list, .yt-sidebar, .yt-controls { z-index: 1; position: relative; }
-          `}</style>
-          <div style={{ padding: '16px' }}>
-            <div className="yt-search-shell">
-              <div>
-                <div className="yt-controls">
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 800 }}>Search</div>
-                    <div style={{ color: 'var(--ion-color-medium)' }}>{searchResults.length} results</div>
-                  </div>
-                  <div className="yt-filters">
-                    <select value={selectedFilter} onChange={(e) => handleFilterChange(e.target.value)} style={{ padding: '6px 8px', borderRadius: 6 }}>
-                      {filters.map(f => (<option key={f.value} value={f.value}>{f.label}</option>))}
-                    </select>
-                    <IonButton fill="clear">Sort</IonButton>
-                  </div>
-                </div>
-
-                {/* Main results list */}
-                {isLoading && (
-                  <div className="loading-spinner" style={{ textAlign: 'center', padding: '40px' }}>
-                    <IonSpinner name="crescent" color="primary" />
-                    <IonText className="loading-text" style={{ display: 'block', marginTop: '16px', color: 'var(--ion-text-color)' }}>
-                      Searching...
-                    </IonText>
-                  </div>
-                )}
-
-                {!isLoading && (
-                  <div className="yt-results-list">
-                    {hasSearched && searchResults.length === 0 && (
-                      <div className="no-results" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                        <IonIcon icon={search} size="large" style={{ marginBottom: '16px', color: 'var(--ion-color-medium)' }} />
-                        <div className="no-results-title" style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--ion-text-color)' }}>No results found</div>
-                        <div className="no-results-text" style={{ fontSize: '0.9em', color: 'var(--ion-color-medium)' }}>Try different keywords or check your spelling</div>
-                      </div>
-                    )}
-
-                    {hasSearched && searchResults.length > 0 && searchResults.map((result, i) => (
-                      <div key={`${result.type}-${result.id}-${i}`} className="yt-card" onClick={() => { setShowSearchModal(false); history.push(result.url); }}>
-                        {result.image ? (
-                          <img className="yt-thumb" src={result.image.startsWith('/uploads') ? `${BACKEND_BASE_URL}${result.image}` : result.image} alt={result.title} />
-                        ) : (
-                          <div className="yt-thumb" style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'var(--ion-color-step-100, rgba(0,0,0,0.04))' }}>
-                            <IonIcon icon={getTypeIcon(result.type)} />
-                          </div>
-                        )}
-                        <div className="yt-meta">
-                          <div className="yt-title">{result.title}</div>
-                          <div className="yt-sub">{result.subtitle || (result.type.charAt(0).toUpperCase() + result.type.slice(1))} • {result.date ? new Date(result.date).toLocaleDateString() : ''}</div>
-                          {result.description && <div className="yt-desc">{result.description}</div>}
-                        </div>
-                        <div className="yt-right">
-                          <div style={{ fontSize:12, color:'var(--ion-color-medium)' }}>{result.score ? Math.round(result.score * 100) + '%' : ''}</div>
-                          <IonButton size="small" fill="clear">Open</IonButton>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!hasSearched && !isLoading && (
-                  <div style={{ textAlign:'center', padding: '80px 20px' }}>
-                    <div style={{ fontSize:20, fontWeight:700 }}>Search the library</div>
-                    <div style={{ marginTop:8, color: 'var(--ion-color-medium)' }}>Find sermons, events, devotions, podcasts and more</div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right: suggestions / trending */}
-              <aside className="yt-sidebar">
-                <div style={{ fontWeight:700 }}>Recommended</div>
-                <div className="yt-suggestion">Trending Now</div>
-                <div className="yt-suggestion">Popular Sermons</div>
-                <div className="yt-suggestion">Suggested Ministries</div>
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ fontWeight:700 }}>Channels</div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:8 }}>
-                    <div style={{ display:'flex', gap:8, alignItems:'center' }}><IonAvatar><img src="/dove.png" alt="Dove"/></IonAvatar><div style={{ fontSize:14 }}>Dove Ministries</div></div>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          </div>
-        </IonContent>
-      </IonModal>
     </>
   );
 };
