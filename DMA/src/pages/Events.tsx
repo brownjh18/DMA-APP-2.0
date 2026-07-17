@@ -100,34 +100,6 @@ const Events: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      {/* Back Button */}
-      <div
-        className="floating-back-btn"
-        onClick={() => history.goBack()}
-        onMouseDown={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(0.8)';
-        }}
-        onMouseUp={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          setTimeout(() => {
-            target.style.transform = 'scale(1)';
-          }, 200);
-        }}
-        onMouseLeave={(e) => {
-          const target = e.currentTarget as HTMLElement;
-          target.style.transform = 'scale(1)';
-        }}
-      >
-        <IonIcon
-          icon={arrowBack}
-          style={{
-            color: isDarkMode ? '#ffffff' : '#000000',
-            fontSize: '20px',
-          }}
-        />
-      </div>
-
       <IonContent fullscreen className="content-ios">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>

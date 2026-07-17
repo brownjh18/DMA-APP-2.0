@@ -139,10 +139,10 @@ const EventDetail: React.FC = () => {
     return (
       <IonPage>
         <IonHeader translucent>
-          <div className="floating-back-btn" onClick={() => history.goBack()}>
-            <IonIcon icon={arrowBack} style={{ color: isDarkMode ? '#ffffff' : '#000000', fontSize: '20px' }} />
-          </div>
           <IonToolbar className="toolbar-ios">
+            <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+              <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
+            </IonButton>
             <IonTitle className="title-ios">Event Not Found</IonTitle>
           </IonToolbar>
         </IonHeader>
