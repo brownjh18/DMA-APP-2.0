@@ -926,7 +926,7 @@ const Tab1: React.FC = () => {
           </section>
         )}
 
-        {/* WEEKLY PROGRAMS - Professional Cards */}
+        {/* WEEKLY PROGRAMS - Compact Tiles */}
         <section className="section-padding programs-section">
           <div className="section-head">
             <div className="section-title">
@@ -938,34 +938,31 @@ const Tab1: React.FC = () => {
             </IonButton>
           </div>
 
-          <div className="programs-grid" role="list">
+          <div className="programs-tiles" role="list">
             {DEFAULT_PROGRAMS.map((p, idx) => (
               <article
                 key={idx}
-                className="program-card"
+                className="program-tile"
                 role="listitem"
                 onClick={() => handleProgramClick(p)}
                 style={{ ['--program-color' as any]: p.color }}
               >
-                <div className="program-card-icon">
-                  <IonIcon icon={time} />
+                <div className="program-tile-top">
+                  <span className="program-tile-day">{p.day}</span>
+                  <span className="program-tile-icon">
+                    <IonIcon icon={time} />
+                  </span>
                 </div>
-                <div className="program-card-content">
-                  <div className="program-card-header">
-                    <span className="program-card-day">{p.day}</span>
-                    <span className="program-card-time">
-                      <IonIcon icon={time} />
-                      {p.time}
-                    </span>
-                  </div>
-                  <h3 className="program-card-name">{p.program}</h3>
-                  <p className="program-card-location">
+                <h4 className="program-tile-name">{p.program}</h4>
+                <div className="program-tile-bottom">
+                  <span className="program-tile-time">
+                    <IonIcon icon={time} />
+                    {p.time}
+                  </span>
+                  <span className="program-tile-location">
                     <IonIcon icon={location} />
                     {p.location}
-                  </p>
-                </div>
-                <div className="program-card-arrow">
-                  <IonIcon icon={arrowForward} />
+                  </span>
                 </div>
               </article>
             ))}
