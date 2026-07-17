@@ -268,65 +268,34 @@ const Events: React.FC = () => {
               Weekly Programs
             </h2>
 
-            <div className="weekly-programs-marquee" role="list" aria-label="Weekly programs">
-              <div className="weekly-programs-marquee-track">
-                {weeklyPrograms.map((p, idx) => (
-                  <article
-                    key={idx}
-                    className="weekly-program-card"
-                    role="listitem"
-                    style={{ ['--program-color' as any]: p.color }}
-                  >
-                    <div className="weekly-program-card-header">
-                      <span className="weekly-program-card-day">{p.day}</span>
-                      <div className="weekly-program-card-icon">
-                        <IonIcon icon={time} />
-                      </div>
+            <div className="weekly-programs-list" role="list" aria-label="Weekly programs">
+              {weeklyPrograms.map((p, idx) => (
+                <article
+                  key={idx}
+                  className="weekly-program-card"
+                  role="listitem"
+                  style={{ ['--program-color' as any]: p.color }}
+                >
+                  <div className="weekly-program-card-header">
+                    <span className="weekly-program-card-day">{p.day}</span>
+                    <div className="weekly-program-card-icon">
+                      <IonIcon icon={time} />
                     </div>
-                    <h4 className="weekly-program-card-name">{p.program}</h4>
-                    <p className="weekly-program-card-desc">{p.description}</p>
-                    <div className="weekly-program-card-meta">
-                      <span className="weekly-program-card-time">
-                        <IonIcon icon={time} />
-                        {p.time}
-                      </span>
-                      <span className="weekly-program-card-location">
-                        <IonIcon icon={location} />
-                        {p.location}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-                {/* Duplicate for seamless loop */}
-                {weeklyPrograms.map((p, idx) => (
-                  <article
-                    key={`${idx}-dup`}
-                    className="weekly-program-card"
-                    role="listitem"
-                    style={{ ['--program-color' as any]: p.color }}
-                    aria-hidden="true"
-                  >
-                    <div className="weekly-program-card-header">
-                      <span className="weekly-program-card-day">{p.day}</span>
-                      <div className="weekly-program-card-icon">
-                        <IonIcon icon={time} />
-                      </div>
-                    </div>
-                    <h4 className="weekly-program-card-name">{p.program}</h4>
-                    <p className="weekly-program-card-desc">{p.description}</p>
-                    <div className="weekly-program-card-meta">
-                      <span className="weekly-program-card-time">
-                        <IonIcon icon={time} />
-                        {p.time}
-                      </span>
-                      <span className="weekly-program-card-location">
-                        <IonIcon icon={location} />
-                        {p.location}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                  </div>
+                  <h4 className="weekly-program-card-name">{p.program}</h4>
+                  <p className="weekly-program-card-desc">{p.description}</p>
+                  <div className="weekly-program-card-meta">
+                    <span className="weekly-program-card-time">
+                      <IonIcon icon={time} />
+                      {p.time}
+                    </span>
+                    <span className="weekly-program-card-location">
+                      <IonIcon icon={location} />
+                      {p.location}
+                    </span>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
 
