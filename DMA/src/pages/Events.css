@@ -31,17 +31,9 @@
 
 .weekly-program-card-top {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.weekly-program-card-day-badge {
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  min-width: 56px;
+  gap: 12px;
 }
 
 .weekly-program-card-day {
@@ -51,16 +43,17 @@
   letter-spacing: 0.5px;
   color: var(--program-color, var(--ion-color-primary));
   background: rgba(var(--program-color-rgb, 102, 126, 234), 0.12);
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 6px;
   line-height: 1;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .weekly-program-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)), var(--program-color, var(--ion-color-primary)));
   display: flex;
   align-items: center;
@@ -70,7 +63,7 @@
 }
 
 .weekly-program-card-icon ion-icon {
-  font-size: 18px;
+  font-size: 16px;
   color: #ffffff;
 }
 

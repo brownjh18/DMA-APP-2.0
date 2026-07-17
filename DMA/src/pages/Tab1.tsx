@@ -944,12 +944,10 @@ const Tab1: React.FC = () => {
                   style={{ ['--program-color' as any]: p.color }}
                 >
                   <div className="program-tile-top">
-                    <div className="program-tile-day-badge">
-                      <span className="program-tile-day">{p.day}</span>
-                      <span className="program-tile-icon">
-                        <IonIcon icon={time} />
-                      </span>
-                    </div>
+                    <span className="program-tile-icon">
+                      <IonIcon icon={time} />
+                    </span>
+                    <span className="program-tile-day">{p.day}</span>
                   </div>
                   <h4 className="program-tile-name">{p.program}</h4>
                   <div className="program-tile-bottom">
@@ -975,12 +973,10 @@ const Tab1: React.FC = () => {
                   aria-hidden="true"
                 >
                   <div className="program-tile-top">
-                    <div className="program-tile-day-badge">
-                      <span className="program-tile-day">{p.day}</span>
-                      <span className="program-tile-icon">
-                        <IonIcon icon={time} />
-                      </span>
-                    </div>
+                    <span className="program-tile-icon">
+                      <IonIcon icon={time} />
+                    </span>
+                    <span className="program-tile-day">{p.day}</span>
                   </div>
                   <h4 className="program-tile-name">{p.program}</h4>
                   <div className="program-tile-bottom">

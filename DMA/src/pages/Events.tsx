@@ -268,11 +268,11 @@ const Events: React.FC = () => {
                   role="listitem"
                   style={{ ['--program-color' as any]: p.color }}
                 >
-                  <div className="weekly-program-card-header">
-                    <span className="weekly-program-card-day">{p.day}</span>
+                  <div className="weekly-program-card-top">
                     <div className="weekly-program-card-icon">
-                      <IonIcon icon={time} />
+                      <IonIcon icon={calendar} />
                     </div>
+                    <span className="weekly-program-card-day">{p.day}</span>
                   </div>
                   <h4 className="weekly-program-card-name">{p.program}</h4>
                   <p className="weekly-program-card-desc">{p.description}</p>

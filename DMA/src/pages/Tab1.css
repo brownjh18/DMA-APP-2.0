@@ -856,14 +856,9 @@
 
 .program-tile-top {
   display: flex;
-  justify-content: flex-start;
-}
-
-.program-tile-day-badge {
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .program-tile-day {
@@ -877,11 +872,12 @@
   border-radius: 4px;
   line-height: 1;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .program-tile-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   background: linear-gradient(135deg, var(--program-color, var(--ion-color-primary)), var(--program-color, var(--ion-color-primary)));
   display: flex;
