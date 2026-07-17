@@ -230,7 +230,11 @@ const Events: React.FC = () => {
                         margin: '0',
                         color: isDarkMode ? '#92949c' : '#8e8e93',
                         fontSize: '0.9em',
-                        lineHeight: '1.4'
+                        lineHeight: '1.4',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
                       }}>
                         {event.description}
                       </p>
