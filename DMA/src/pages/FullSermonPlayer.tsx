@@ -146,6 +146,12 @@ const FullSermonPlayer: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Don't load sermon by URL if we're no longer on the sermon player page
+    if (location.pathname !== '/sermon-player') {
+      setLoading(false);
+      return;
+    }
+
     const loadSermonById = async () => {
       const urlParams = new URLSearchParams(location.search);
       const sermonId = urlParams.get('id');
