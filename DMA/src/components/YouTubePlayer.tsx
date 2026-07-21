@@ -61,11 +61,9 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const buildEmbedParams = (forMini: boolean) => {
     const params = new URLSearchParams();
     params.set('enablejsapi', '1');
+    params.set('autoplay', playing ? '1' : '0');
     if (forMini) {
-      params.set('autoplay', playing ? '1' : '0');
       params.set('mute', '1');
-    } else {
-      params.set('autoplay', '0');
     }
     params.set('modestbranding', '1');
     params.set('rel', '0');
@@ -79,6 +77,16 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
   const iframeSrc = `${embedUrl}?${buildEmbedParams(false)}`;
   const miniIframeSrc = `${embedUrl}?${buildEmbedParams(true)}`;
+
+  // Control playback via YouTube iframe API when playing prop changes dynamically
+  useEffect(() => {
+    if (mini || !videoId || !iframeRef.current) return;
+    const command = playing ? 'playVideo' : 'pauseVideo';
+    iframeRef.current.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: command, args: '' }),
+      '*'
+    );
+  }, [playing, mini, videoId]);
 
   // Listen for YouTube postMessage errors (Error 153, etc.)
   useEffect(() => {
