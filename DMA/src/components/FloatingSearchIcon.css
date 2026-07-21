@@ -218,14 +218,51 @@
   font-size: 12px !important;
   margin-top: 4px !important;
 }
+/* Live broadcast animation */
+@keyframes liveBroadcastPulse {
+  0% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+  50% { box-shadow: 0 12px 48px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 20px rgba(239, 68, 68, 0.5); }
+  100% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+}
 
-/* Dark mode support */
+/* Dark mode support for live button */
 [data-theme="dark"] .floating-live-button {
   transition: all 0.3s ease;
 }
 
 [data-theme="dark"] .floating-live-button.blinking {
   animation: blink 1.5s infinite;
+}
+
+/* Enhanced live broadcast hover effects */
+.floating-live-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.floating-live-button:hover .live-badge {
+  background-color: rgba(255, 255, 255, 1);
+  color: #ef4444;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .floating-live-button {
+    left: 110px; /* Adjust for smaller screens */
+    width: 42px;
+    height: 42px;
+  }
+  
+  .floating-live-button .live-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    top: 1px;
+    right: 6px;
+  }
+  
+  .floating-live-button svg {
+    font-size: 20px;
+  }
 }
 
 [data-theme="dark"] .search-container {

@@ -177,7 +177,8 @@ const FloatingSearchIcon: React.FC = () => {
             style={{
               position: 'absolute',
               top: 'calc(var(--ion-safe-area-top) - 18px)',
-              right: 120,
+              right: 'auto',
+              left: 124, // Position to the left of the search button (124px from right edge)
               width: 45,
               height: 45,
               borderRadius: 25,
@@ -190,9 +191,21 @@ const FloatingSearchIcon: React.FC = () => {
               zIndex: 999,
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              transition: 'transform 0.2s ease',
-              overflow: 'hidden'
+              border: '2px solid rgba(255,255,255,0.3)',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              overflow: 'hidden',
+              // Enhanced glow effect for live broadcast
+              animation: 'liveBroadcastPulse 2s infinite',
+            }}
+            onMouseEnter={(e) => {
+              const target = e.currentTarget;
+              target.style.transform = 'scale(1.05)';
+              target.style.boxShadow = '0 12px 40px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)';
             }}
           >
             <div style={{
@@ -205,11 +218,28 @@ const FloatingSearchIcon: React.FC = () => {
               pointerEvents: 'none',
               borderRadius: '25px'
             }} />
+            <div style={{
+              position: 'absolute',
+              top: '2px',
+              right: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              color: '#ef4444',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              padding: '2px 6px',
+              borderRadius: '8px',
+              zIndex: 2,
+              boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+            }}>
+              LIVE
+            </div>
             <IonIcon
               icon={radio}
               style={{
                 color: 'white',
-                fontSize: '20px',
+                fontSize: '22px', // Slightly larger icon to accommodate LIVE badge
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 1

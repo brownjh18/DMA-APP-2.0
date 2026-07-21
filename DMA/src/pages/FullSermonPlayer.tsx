@@ -31,7 +31,8 @@ import {
   heartOutline,
   ellipsisHorizontal,
   list,
-  alertCircle
+  alertCircle,
+  close
 } from 'ionicons/icons';
 
 // Helper function to convert relative URLs to full backend URLs
@@ -89,7 +90,7 @@ const FullSermonPlayer: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
   const { isLoggedIn } = useContext(AuthContext);
-  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition } = usePlayer();
+  const { currentMedia, isPlaying, setIsPlaying, setCurrentMedia, setCurrentSermon, savePlaybackPosition, getPlaybackPosition, clearPlayer, currentTime } = usePlayer();
 
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState(1);
@@ -308,6 +309,12 @@ const FullSermonPlayer: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
+  const handleClose = () => {
+    savePlaybackPosition(currentTime);
+    clearPlayer();
+    history.push('/tab2');
+  };
+
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(event.target.value);
     setVolume(newVolume);
@@ -407,6 +414,11 @@ const FullSermonPlayer: React.FC = () => {
     <IonPage>
       <IonHeader translucent>
         <IonToolbar style={{ '--background': 'transparent' }}>
+          <IonButtons slot="start">
+            <IonButton onClick={handleClose} style={{ '--color': 'white' }}>
+              <IonIcon icon={close} slot="icon-only" />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -966,10 +978,11 @@ const FullSermonPlayer: React.FC = () => {
                         transition: 'background-color 0.2s ease'
                       }}
                       onClick={() => {
-                        // Switch to this sermon
+                        // Switch to this sermon and update URL to match
                         setCurrentMedia(queueSermon);
                         setIsPlaying(true);
                         setShowQueue(false);
+                        history.replace(`/sermon-player?id=${encodeURIComponent(queueSermon.id)}`);
                       }}
                     >
                       <div style={{

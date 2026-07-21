@@ -80,7 +80,7 @@ const Tab2: React.FC = () => {
   const [selectedSermonForActionSheet, setSelectedSermonForActionSheet] = useState<any>(null);
   const [showAuthAlert, setShowAuthAlert] = useState(false);
   const location = useLocation();
-  const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition } = usePlayer();
+  const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition, clearPlayer } = usePlayer();
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
   const { isDarkMode } = useSettings();
 
@@ -673,8 +673,7 @@ const Tab2: React.FC = () => {
                     className="channel-action-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCurrentSermon(null);
-                      setIsPlaying(false);
+                      clearPlayer();
                     }}
                     style={{
                       width: 45,
