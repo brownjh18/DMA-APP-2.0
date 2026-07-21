@@ -88,6 +88,7 @@ const Tab2: React.FC = () => {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const contentRef = useRef<HTMLIonContentElement>(null);
+  const initialSelectionDoneRef = useRef(false);
   useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
 
   // Memoize startTime so YouTube iframe src doesn't change mid-playback
@@ -143,8 +144,9 @@ const Tab2: React.FC = () => {
     setSavedSermons(saved);
   }, []);
 
-  // Check for videoId/sermonId parameter and auto-select video
+  // Check for videoId/sermonId parameter and auto-select video (only on initial load)
   useEffect(() => {
+    if (initialSelectionDoneRef.current) return;
     if (!loading) {
       const urlParams = new URLSearchParams(location.search);
       const videoId = urlParams.get('videoId') || urlParams.get('sermonId');
@@ -156,6 +158,7 @@ const Tab2: React.FC = () => {
         if (video) {
           setCurrentSermon(video);
           setIsPlaying(true);
+          initialSelectionDoneRef.current = true;
         } else {
           // If not found in loaded sermons, fetch it directly from the database
           const fetchSermonById = async () => {
@@ -180,6 +183,7 @@ const Tab2: React.FC = () => {
               
               setCurrentSermon(formattedSermon as any);
               setIsPlaying(true);
+              initialSelectionDoneRef.current = true;
             } catch (error) {
               console.error('Failed to fetch sermon by ID:', error);
             }
