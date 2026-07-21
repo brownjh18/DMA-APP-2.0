@@ -117,10 +117,9 @@ app.set('strict routing', false);
 app.set('case sensitive routing', false);
 
 const PORT = process.env.PORT || 10000;
-const isVercel = !!process.env.VERCEL;
 const isFly = !!process.env.FLY_APP_NAME;
 const isRender = !!process.env.RENDER;
-const isProduction = isVercel || isFly || isRender;
+const isProduction = isFly || isRender;
 
 const limiter = rateLimit({
   windowMs: isProduction ? 15 * 60 * 1000 : 60 * 60 * 1000,
@@ -131,10 +130,6 @@ const limiter = rateLimit({
 });
 
 const allowedOrigins = [
-  'https://dove-church.vercel.app',
-  'https://dove-church-backend.vercel.app',
-  'https://dove-church-frontend.vercel.app',
-  'https://dovechurchapp.vercel.app',
   'https://dove-church.fly.dev',
   'https://dove-church.onrender.com',
   'https://localhost',
@@ -548,7 +543,7 @@ app.post('/api/upload/thumbnail', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : isVercel ? 'vercel' : isRender ? 'render' : 'local', mongoReady: mongoose.connection.readyState, dbName: mongoose.connection.name });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : 'local', mongoReady: mongoose.connection.readyState, dbName: mongoose.connection.name });
 });
 
 // Error handling
@@ -573,7 +568,7 @@ app.get('*', (req, res) => {
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Platform: ${isFly ? 'Fly.io' : isVercel ? 'Vercel' : 'Local'}`);
+  console.log(`📍 Platform: ${isFly ? 'Fly.io' : 'Local'}`);
   console.log(`🔌 Socket.IO enabled`);
 });
 

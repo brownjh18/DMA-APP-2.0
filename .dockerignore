@@ -5,7 +5,6 @@ DMA/dist/
 .kilo/
 *.md
 crash_log.txt
-.vercel/
 fly.toml
 docker-compose*.yml
 .env
