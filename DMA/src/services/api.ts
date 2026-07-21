@@ -201,7 +201,7 @@ class ApiService {
         // But don't trigger logout for certain endpoints that can fail without logging out
         if (response.status === 401 || response.status === 403) {
           // Endpoints that should NOT trigger logout
-          const isSyncEndpoint = endpoint.includes('/saved') || endpoint.includes('/subscribe');
+          const isSyncEndpoint = endpoint.includes('/save') || endpoint.includes('/subscribe');
           const isProfileEndpoint = endpoint === '/auth/profile';
           const isSearchEndpoint = endpoint === '/search';
           const isAdminOnlyEndpoint = endpoint.includes('/auth/users') || endpoint.includes('/admin');
@@ -225,6 +225,12 @@ class ApiService {
           console.log(`Rate limited. Retrying ${endpoint} in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.request(endpoint, options, retryCount + 1, forceRefresh);
+        }
+
+        // Handle header too large (431) - do NOT retry, just throw immediately
+        if (response.status === 431) {
+          console.error(`431 Header Too Large for ${endpoint}`);
+          throw new Error('HTTP 431: Request Header Fields Too Large');
         }
 
         const error = await response.json().catch(() => ({ error: 'Network error' }));
@@ -304,6 +310,12 @@ class ApiService {
           console.log(`Rate limited. Retrying upload ${endpoint} in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.upload(endpoint, formData, retryCount + 1);
+        }
+
+        // Handle header too large (431) - do NOT retry, just throw immediately
+        if (response.status === 431) {
+          console.error(`431 Header Too Large for upload ${endpoint}`);
+          throw new Error('HTTP 431: Request Header Fields Too Large');
         }
 
         const error = await response.json().catch(() => ({ error: 'Network error' }));
