@@ -296,10 +296,9 @@ const Tab2: React.FC = () => {
                 if (video.broadcastStartTime && video.broadcastEndTime) {
                   calculatedDuration = calculateDuration(video.broadcastStartTime, video.broadcastEndTime);
                 } else if (video.broadcastStartTime) {
-                  // If only start time is available, estimate duration (e.g., 1 hour default)
                   calculatedDuration = '1:00:00';
                 } else {
-                  calculatedDuration = '00:00';
+                  calculatedDuration = calculatedDuration || '—';
                 }
               }
               return {
