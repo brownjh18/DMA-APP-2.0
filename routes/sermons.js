@@ -54,14 +54,16 @@ function extractVideoId(url) {
 
 // Helper function to convert ISO 8601 duration to readable format
 function parseDuration(isoDuration) {
-  if (!isoDuration) return '00:00';
+  if (!isoDuration) return null;
 
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return '00:00';
+  if (!match) return null;
 
   const hours = parseInt(match[1] || '0');
   const minutes = parseInt(match[2] || '0');
   const seconds = parseInt(match[3] || '0');
+
+  if (hours === 0 && minutes === 0 && seconds === 0) return null;
 
   if (hours > 0) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -101,10 +103,11 @@ async function fetchYouTubeVideoDetails(videoUrl) {
     const statistics = video.statistics;
 
     const isLive = snippet.liveBroadcastContent === 'live';
+    const parsedDuration = isLive ? null : parseDuration(contentDetails.duration);
 
     return {
       description: snippet.description || '',
-      duration: isLive ? 'LIVE' : parseDuration(contentDetails.duration),
+      duration: parsedDuration,
       viewCount: statistics.viewCount ? parseInt(statistics.viewCount) : 0,
       thumbnailUrl: snippet.thumbnails?.maxres?.url ||
                     snippet.thumbnails?.high?.url ||
@@ -652,7 +655,7 @@ router.post('/', authenticateToken, requireAdmin, [
         console.log('YouTube video details fetched:', youtubeDetails);
         // Only update fields that are not already provided
         if (!sermonData.duration || sermonData.duration === '00:00') {
-          sermonData.duration = youtubeDetails.duration;
+          sermonData.duration = youtubeDetails.duration || '00:00';
         }
         if (!sermonData.viewCount || sermonData.viewCount === 0) {
           sermonData.viewCount = youtubeDetails.viewCount;
@@ -666,6 +669,10 @@ router.post('/', authenticateToken, requireAdmin, [
         // Save description from YouTube if not provided
         if (!sermonData.description && youtubeDetails.description) {
           sermonData.description = youtubeDetails.description;
+        }
+        // Set isLive flag so the cron job can find and update it later
+        if (youtubeDetails.isLive) {
+          sermonData.isLive = true;
         }
       }
     }
@@ -740,7 +747,7 @@ router.put('/:id', authenticateToken, requireAdmin, [
         console.log('YouTube video details fetched:', youtubeDetails);
         // Only update fields that are not already provided in the request
         if (!updateData.duration || updateData.duration === '00:00') {
-          updateData.duration = youtubeDetails.duration;
+          updateData.duration = youtubeDetails.duration || '00:00';
         }
         if (!updateData.viewCount || updateData.viewCount === 0) {
           updateData.viewCount = youtubeDetails.viewCount;
@@ -751,6 +758,10 @@ router.put('/:id', authenticateToken, requireAdmin, [
         // Update description from YouTube if not provided in the request
         if (!updateData.description && youtubeDetails.description) {
           updateData.description = youtubeDetails.description;
+        }
+        // Set isLive flag if the YouTube video is currently live
+        if (youtubeDetails.isLive) {
+          updateData.isLive = true;
         }
       }
     }
@@ -1049,6 +1060,7 @@ router.post('/update-live-status', authenticateToken, requireAdmin, async (req, 
       videoUrl: { $regex: /youtu\.be\/|youtube\.com\/(watch|live|embed)/i },
       $or: [
         { isLive: true },
+        { duration: '00:00' },
         { duration: 'LIVE' }
       ]
     });
@@ -1065,7 +1077,12 @@ router.post('/update-live-status', authenticateToken, requireAdmin, async (req, 
       const isStillLive = youtubeDetails.isLive;
       const actualDuration = youtubeDetails.duration;
 
-      if (!isStillLive && actualDuration && actualDuration !== 'LIVE') {
+      if (isStillLive) {
+        continue;
+      }
+
+      // Only save if YouTube returned a real duration
+      if (actualDuration) {
         sermon.isLive = false;
         sermon.duration = actualDuration;
         await sermon.save();

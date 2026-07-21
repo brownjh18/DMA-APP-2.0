@@ -326,6 +326,9 @@ router.post('/:id/stop', async (req, res) => {
 
     await broadcast.save();
 
+    // Refresh live cache to reflect the stopped broadcast
+    await liveCache.updateLiveCache();
+
     res.json({
       message: 'Live broadcast stopped successfully',
       broadcast: {
@@ -464,18 +467,29 @@ router.post('/:id/recording', [
     broadcast.audioUrl = audioUrl;
     broadcast.duration = duration;
     broadcast.recordingStatus = 'completed';
-    
-    // Only convert to podcast type if an actual audio file was uploaded
-    if (req.file) {
-      broadcast.type = 'podcast'; // Convert to podcast once recorded
-      broadcast.isLive = false;   // Ensure live flag is cleared
-      broadcast.date = broadcast.broadcastEndTime || new Date(); // Set date for podcast sorting
-    } else {
-      broadcast.isLive = false;
-      broadcast.broadcastEndTime = broadcast.broadcastEndTime || new Date();
-    }
+    broadcast.isLive = false;
+    broadcast.broadcastEndTime = broadcast.broadcastEndTime || new Date();
 
     await broadcast.save();
+
+    // Create a NEW podcast entry from the recording (separate from live broadcast)
+    let newPodcast = null;
+    if (req.file) {
+      const podcast = new Sermon({
+        title: broadcast.title,
+        speaker: broadcast.speaker,
+        description: broadcast.description,
+        thumbnailUrl: broadcast.thumbnailUrl,
+        audioUrl: audioUrl,
+        duration: duration,
+        type: 'podcast',
+        isPublished: true,
+        date: broadcast.broadcastEndTime || new Date(),
+        createdBy: broadcast.createdBy
+      });
+      await podcast.save();
+      newPodcast = podcast;
+    }
     res.json({
       message: 'Recording uploaded successfully',
       broadcast: {
@@ -483,8 +497,15 @@ router.post('/:id/recording', [
         audioUrl: broadcast.audioUrl,
         duration: broadcast.duration,
         recordingStatus: broadcast.recordingStatus,
-        type: broadcast.type
-      }
+        type: broadcast.type,
+        isLive: broadcast.isLive
+      },
+      podcast: newPodcast ? {
+        id: newPodcast._id,
+        title: newPodcast.title,
+        audioUrl: newPodcast.audioUrl,
+        duration: newPodcast.duration
+      } : null
     });
   } catch (error) {
     console.error('Upload recording error:', error);

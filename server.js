@@ -28,6 +28,71 @@ const Ministry = require('./models/Ministry');
 const User = require('./models/User');
 const Notification = require('./models/Notification');
 
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || 'AIzaSyDBYdCJVQ1FpSXPOHd6xFx4eLLuMUBzjw8';
+const YOUTUBE_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+
+function extractVideoId(url) {
+  if (!url) return null;
+  const patterns = [
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?youtu\.be\/([^&\n?#]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/live\/([^&\n?#]+)/
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) return match[1];
+  }
+  return null;
+}
+
+function parseDuration(isoDuration) {
+  if (!isoDuration) return null;
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return null;
+  const hours = parseInt(match[1] || '0');
+  const minutes = parseInt(match[2] || '0');
+  const seconds = parseInt(match[3] || '0');
+  if (hours === 0 && minutes === 0 && seconds === 0) return null;
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+async function fetchYouTubeVideoDetails(videoUrl) {
+  try {
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) return null;
+    const response = await fetch(
+      `${YOUTUBE_BASE_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.items || data.items.length === 0) return null;
+    const video = data.items[0];
+    const snippet = video.snippet;
+    const contentDetails = video.contentDetails;
+    const statistics = video.statistics;
+    const isLive = snippet.liveBroadcastContent === 'live';
+    const parsedDuration = isLive ? null : parseDuration(contentDetails?.duration);
+    return {
+      description: snippet.description || '',
+      duration: parsedDuration,
+      viewCount: statistics.viewCount ? parseInt(statistics.viewCount) : 0,
+      thumbnailUrl: snippet.thumbnails?.maxres?.url ||
+                    snippet.thumbnails?.high?.url ||
+                    snippet.thumbnails?.default?.url,
+      publishedAt: snippet.publishedAt,
+      isLive: isLive
+    };
+  } catch (error) {
+    console.error('Error fetching YouTube video details:', error.message);
+    return null;
+  }
+}
+
 const isCloudStorage = cloudStorage.isConfigured();
 console.log('☁️ Cloud Storage Status:', cloudStorage.getConfigStatus());
 
@@ -222,18 +287,39 @@ async function checkAndUpdateEndedBroadcasts() {
       }
     }
 
-    // Check YouTube sermons with stale live status (started > 4 hours ago)
+    // Check YouTube sermons with stale live status - use YouTube API to check actual status
     const liveSermons = await Sermon.find({
       type: 'sermon',
       videoUrl: { $regex: /youtu\.be\/|youtube\.com\/(watch|live|embed)/i },
-      isLive: true,
-      date: { $lt: new Date(now - 4 * 60 * 60 * 1000) }
+      $or: [
+        { isLive: true },
+        { duration: '00:00' },
+        { duration: 'LIVE' }
+      ]
     });
     for (const s of liveSermons) {
-      s.isLive = false;
-      if (s.duration === 'LIVE') s.duration = '01:00:00';
-      await s.save();
-      console.log(`✅ Ended YouTube sermon live: ${s.title}`);
+      const youtubeDetails = await fetchYouTubeVideoDetails(s.videoUrl);
+      if (youtubeDetails) {
+        const isStillLive = youtubeDetails.isLive;
+        const actualDuration = youtubeDetails.duration;
+
+        if (isStillLive) {
+          console.log(`🔴 YouTube sermon still live: ${s.title}`);
+          continue;
+        }
+
+        // Only save if YouTube returned a real duration
+        // null = YouTube hasn't processed the video yet, keep retrying
+        // '00:00' = empty duration, skip
+        if (actualDuration) {
+          s.isLive = false;
+          s.duration = actualDuration;
+          await s.save();
+          console.log(`✅ Ended YouTube sermon live: ${s.title} (duration: ${actualDuration})`);
+        } else {
+          console.log(`⏳ YouTube sermon ended but duration not ready yet: ${s.title}`);
+        }
+      }
     }
   } catch (error) {
     console.error('❌ Error checking broadcasts:', error);
@@ -241,17 +327,13 @@ async function checkAndUpdateEndedBroadcasts() {
 }
 
 // Initialize
-if (isProduction) {
-  console.log('⚡ Running in production — skipping cron/scheduler');
-} else {
-  console.log('🚀 Initializing caches...');
-  liveCache.updateLiveCache();
-  checkAndUpdateEndedBroadcasts();
-  cron.schedule("*/30 * * * *", async () => {
-    await liveCache.updateLiveCache();
-    await checkAndUpdateEndedBroadcasts();
-  });
-}
+console.log('🚀 Initializing caches...');
+liveCache.updateLiveCache();
+checkAndUpdateEndedBroadcasts();
+cron.schedule("*/30 * * * *", async () => {
+  await liveCache.updateLiveCache();
+  await checkAndUpdateEndedBroadcasts();
+});
 
 // Create HTTP server + Socket.IO
 const server = createServer(app);
