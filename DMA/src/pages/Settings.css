@@ -278,40 +278,20 @@
   z-index: 9998;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  animation: settingsFadeIn 0.15s ease both;
-}
-
-@keyframes settingsFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .settings-popover {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.85);
-  opacity: 0;
+  transform: translate(-50%, -50%);
   z-index: 9999;
   background: var(--ios26-card-bg-light);
   border-radius: 20px;
   padding: 28px 24px 20px;
   width: min(340px, 88vw);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
-  animation: settingsPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 0.01s) both;
   text-align: center;
-  will-change: transform, opacity;
-}
-
-@keyframes settingsPopIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.85);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
 }
 
 .settings-popover-close {
