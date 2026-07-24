@@ -23,12 +23,12 @@
   letter-spacing: -0.3px;
 }
 
-/* Profile Card - Premium Design */
+/* Profile Card - Clean Centered Design */
 .settings-profile-card {
   margin: 20px 16px 20px;
   background: var(--ios26-card-bg-light);
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -39,92 +39,54 @@
   transform: scale(0.98);
 }
 
-.settings-profile-banner {
-  height: 72px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #d946ef 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.settings-profile-banner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.2) 0%, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.15) 0%, transparent 40%);
-}
-
-.settings-profile-banner-pattern {
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 90% 10%, rgba(255,255,255,0.12) 0%, transparent 30%),
-    radial-gradient(circle at 10% 90%, rgba(0,0,0,0.1) 0%, transparent 40%);
-}
-
-.settings-profile-content {
+.settings-profile-top {
+  padding: 20px 20px 0;
   display: flex;
-  align-items: center;
-  padding: 0 18px 18px;
-  gap: 14px;
-  margin-top: -30px;
-  position: relative;
+  justify-content: center;
 }
 
 .settings-profile-avatar-wrapper {
-  flex-shrink: 0;
   position: relative;
-  width: 60px;
-  height: 60px;
-}
-
-.settings-profile-avatar-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #d946ef, #f093fb);
-  animation: profileRingRotate 6s linear infinite;
-}
-
-@keyframes profileRingRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 .settings-profile-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #6366f1, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-  border: 3px solid var(--ios26-card-bg-light, white);
-  position: relative;
-  z-index: 1;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
   letter-spacing: 0.5px;
 }
 
-.settings-profile-info {
-  flex: 1;
-  min-width: 0;
-  padding-top: 30px;
+.settings-profile-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #34c759;
+  border: 2.5px solid var(--ios26-card-bg-light, white);
+  box-shadow: 0 1px 4px rgba(52, 199, 89, 0.4);
+}
+
+.settings-profile-bottom {
+  padding: 14px 20px 18px;
+  text-align: center;
+  position: relative;
 }
 
 .settings-profile-name {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   letter-spacing: -0.3px;
 }
 
@@ -132,32 +94,25 @@
   font-size: 13px;
   color: #8e8e93;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.settings-profile-action {
-  width: 32px;
-  height: 32px;
+.settings-profile-chevron {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin-top: 30px;
   color: #c7c7cc;
-  transition: all 0.2s ease;
 }
 
-.settings-profile-action:active {
-  background: rgba(0, 0, 0, 0.08);
-  transform: translateX(2px);
-}
-
-.settings-profile-action ion-icon {
-  font-size: 14px;
+.settings-profile-chevron ion-icon {
+  font-size: 13px;
 }
 
 /* Grouped Section */
@@ -924,19 +879,16 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
 [data-theme="dark"] .settings-profile-card {
   background: var(--ios26-card-bg-dark) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-}
-
-[data-theme="dark"] .settings-profile-banner {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 40%, #a21caf 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .settings-profile-avatar {
-  border-color: var(--ios26-card-bg-dark) !important;
+  background: linear-gradient(145deg, #6366f1, #a855f7) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45) !important;
 }
 
-[data-theme="dark"] .settings-profile-avatar-ring {
-  background: linear-gradient(135deg, #6366f1, #a21caf, #d946ef) !important;
+[data-theme="dark"] .settings-profile-status-dot {
+  border-color: var(--ios26-card-bg-dark) !important;
 }
 
 [data-theme="dark"] .settings-profile-name {
@@ -947,13 +899,9 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   color: var(--ios26-text-secondary-dark) !important;
 }
 
-[data-theme="dark"] .settings-profile-action {
+[data-theme="dark"] .settings-profile-chevron {
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--ios26-text-tertiary-dark) !important;
-}
-
-[data-theme="dark"] .settings-profile-action:active {
-  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 [data-theme="dark"] .settings-item:not(:last-child)::after {
@@ -1184,19 +1132,16 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
   :root:not([data-theme="light"]) .settings-profile-card {
     background: var(--ios26-card-bg-dark);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-
-  :root:not([data-theme="light"]) .settings-profile-banner {
-    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 40%, #a21caf 100%);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
   }
 
   :root:not([data-theme="light"]) .settings-profile-avatar {
-    border-color: var(--ios26-card-bg-dark);
+    background: linear-gradient(145deg, #6366f1, #a855f7);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
   }
 
-  :root:not([data-theme="light"]) .settings-profile-avatar-ring {
-    background: linear-gradient(135deg, #6366f1, #a21caf, #d946ef);
+  :root:not([data-theme="light"]) .settings-profile-status-dot {
+    border-color: var(--ios26-card-bg-dark);
   }
 
   :root:not([data-theme="light"]) .settings-profile-name {
@@ -1207,7 +1152,7 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
     color: var(--ios26-text-secondary-dark);
   }
 
-  :root:not([data-theme="light"]) .settings-profile-action {
+  :root:not([data-theme="light"]) .settings-profile-chevron {
     background: rgba(255, 255, 255, 0.08);
     color: var(--ios26-text-tertiary-dark);
   }

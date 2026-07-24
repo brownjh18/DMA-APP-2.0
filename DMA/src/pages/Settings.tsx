@@ -138,21 +138,18 @@ const Settings: React.FC = () => {
 
         {/* Profile Card */}
         <div className="settings-profile-card" onClick={() => history.push('/profile')}>
-          <div className="settings-profile-banner">
-            <div className="settings-profile-banner-pattern" />
-          </div>
-          <div className="settings-profile-content">
+          <div className="settings-profile-top">
             <div className="settings-profile-avatar-wrapper">
-              <div className="settings-profile-avatar-ring" />
               <div className="settings-profile-avatar">
                 {getUserInitials()}
               </div>
+              <div className="settings-profile-status-dot" />
             </div>
-            <div className="settings-profile-info">
-              <p className="settings-profile-name">{getUserName()}</p>
-              <p className="settings-profile-email">{getUserEmail() || 'Tap to sign in'}</p>
-            </div>
-            <div className="settings-profile-action">
+          </div>
+          <div className="settings-profile-bottom">
+            <p className="settings-profile-name">{getUserName()}</p>
+            <p className="settings-profile-email">{getUserEmail() || 'Tap to sign in'}</p>
+            <div className="settings-profile-chevron">
               <IonIcon icon={chevronForward} />
             </div>
           </div>
