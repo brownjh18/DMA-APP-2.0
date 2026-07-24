@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
-import apiService, { BACKEND_BASE_URL } from '../services/api';
-import { useSocket } from '../contexts/SocketContext';
+import apiService from '../services/api';
 import {
   IonContent,
   IonHeader,
@@ -15,7 +14,7 @@ import {
 } from '@ionic/react';
 import {
   mic, play, pause, stop, radio, image, arrowBack, download, cloudUpload,
-  documentText, musicalNotes, send
+  documentText, musicalNotes
 } from 'ionicons/icons';
 import { AuthContext } from '../App';
 import './AdminDashboard.css';
@@ -45,15 +44,8 @@ const AdminGoLive: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [isLiveMode, setIsLiveMode] = useState(false);
-  const [liveBroadcastId, setLiveBroadcastId] = useState<string | null>(null);
-  const [isLiveGoing, setIsLiveGoing] = useState(false);
   const [audioEnhancement, setAudioEnhancement] = useState(true);
-  const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   useContext(AuthContext);
-  const { socket: liveSocket } = useSocket();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -83,23 +75,6 @@ const AdminGoLive: React.FC = () => {
     blobUrlRef.current = url;
     if (audioPreviewRef.current) audioPreviewRef.current.src = url;
   }, [recordedBlob]);
-
-  // Poll for live broadcast comments
-  useEffect(() => {
-    if (!liveBroadcastId) return;
-    const fetchComments = async () => {
-      try {
-        const res = await fetch(`${BACKEND_BASE_URL}/api/comments/${liveBroadcastId}?_t=${Date.now()}`);
-        if (res.ok) {
-          const data = await res.json();
-          setComments(data.comments || []);
-        }
-      } catch {}
-    };
-    fetchComments();
-    const interval = setInterval(fetchComments, 5000);
-    return () => clearInterval(interval);
-  }, [liveBroadcastId]);
 
   const cleanup = () => {
     if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
@@ -189,25 +164,10 @@ const AdminGoLive: React.FC = () => {
       mr.ondataavailable = (e) => {
         if (e.data.size > 0) {
           recordedChunksRef.current.push(e.data);
-          if (isLiveMode && liveBroadcastId && liveSocket?.connected) {
-            e.data.arrayBuffer().then(buf => {
-              const bytes = new Uint8Array(buf);
-              let binary = '';
-              for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-              liveSocket.emit('broadcast:audio', {
-                broadcastId: liveBroadcastId,
-                chunk: btoa(binary),
-                mimeType: mr.mimeType || 'audio/webm'
-              });
-            }).catch(() => {});
-          }
         }
       };
       mr.onerror = () => { setAlertMessage('Recording failed. Check your microphone.'); setShowAlert(true); stopRecording(); };
       mr.onstop = () => {
-        if (isLiveMode && liveBroadcastId && liveSocket?.connected) {
-          liveSocket.emit('broadcast:leave-room', liveBroadcastId);
-        }
         if (recordedChunksRef.current.length === 0) return;
         const blob = new Blob(recordedChunksRef.current, { type: mr.mimeType || 'audio/webm' });
         setRecordedBlob(blob);
@@ -259,17 +219,9 @@ const AdminGoLive: React.FC = () => {
       setIsRecording(false);
       setIsPaused(false);
       setHasStoppedRecording(true);
-      // Clear live mode state so subsequent publish doesn't target the same broadcast
-      setIsLiveMode(false);
-      setLiveBroadcastId(null);
       if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       cleanup();
-      if (liveBroadcastId && isLiveMode) {
-        try { await apiService.stopLiveBroadcast(liveBroadcastId); } catch (err: any) {
-          console.error('Failed to stop live broadcast:', err);
-        }
-      }
     }
   };
 
@@ -283,19 +235,11 @@ const AdminGoLive: React.FC = () => {
     fd.append('duration', duration);
     if (thumbnailFile) fd.append('thumbnailFile', thumbnailFile);
     try {
-      if (liveBroadcastId) {
-        // Upload recording to existing live broadcast (converts it to a podcast in-place)
-        await apiService.uploadLiveBroadcastRecording(liveBroadcastId, fd);
-      } else {
-        fd.append('title', title || 'Untitled Podcast');
-        fd.append('speaker', 'Dove Church');
-        fd.append('description', description || '');
-        fd.append('status', 'published');
-        await apiService.createPodcast(fd);
-      }
-      // Clear live mode state to prevent double-creation on subsequent publishes
-      setIsLiveMode(false);
-      setLiveBroadcastId(null);
+      fd.append('title', title || 'Untitled Podcast');
+      fd.append('speaker', 'Dove Church');
+      fd.append('description', description || '');
+      fd.append('status', 'published');
+      await apiService.createPodcast(fd);
       setAlertMessage(`"${title || 'Untitled'}" published!`);
       setShowAlert(true);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
@@ -313,64 +257,6 @@ const AdminGoLive: React.FC = () => {
       const duration = formatTime(recordingTime);
       await uploadPodcast(recordedBlob, duration);
       setIsPublishing(false);
-    }
-  };
-
-  const goLiveWithRecording = async () => {
-    if (!recordedBlob || !title.trim()) {
-      setAlertMessage('Please enter a title before going live.');
-      setShowAlert(true);
-      return;
-    }
-    setIsLiveGoing(true);
-    try {
-      // Use existing live broadcast if available, otherwise create a new one
-      let liveId = liveBroadcastId;
-      if (!liveId) {
-        const broadcast = await apiService.startLiveBroadcast({ title, description, speaker: 'Dove Church' });
-        liveId = broadcast?._id || broadcast?.id || broadcast?.broadcast?._id;
-        if (!liveId) { throw new Error('Could not get live broadcast ID'); }
-        await apiService.stopLiveBroadcast(liveId);
-      }
-      const fd = new FormData();
-      let ext = 'webm';
-      if (recordedBlob.type.includes('mp4')) ext = 'm4a';
-      else if (recordedBlob.type.includes('wav')) ext = 'wav';
-      else if (recordedBlob.type.includes('ogg')) ext = 'ogg';
-      fd.append('audioFile', recordedBlob, `podcast-${Date.now()}.${ext}`);
-      fd.append('duration', formatTime(recordingTime));
-      if (thumbnailFile) fd.append('thumbnailFile', thumbnailFile);
-      await apiService.uploadLiveBroadcastRecording(liveId, fd);
-      setIsLiveMode(false);
-      setLiveBroadcastId(null);
-      setAlertMessage(`"${title}" is now live and published!`);
-      setShowAlert(true);
-      sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/radio'), 1500);
-    } catch (err: any) {
-      setAlertMessage(`Failed to go live: ${err.message || 'Please try again.'}`);
-      setShowAlert(true);
-    } finally {
-      setIsLiveGoing(false);
-    }
-  };
-
-  const startLiveBroadcastMode = async () => {
-    if (!title.trim()) {
-      setAlertMessage('Please enter a broadcast title.');
-      setShowAlert(true);
-      return;
-    }
-    try {
-      const broadcast = await apiService.startLiveBroadcast({ title, description, speaker: 'Dove Church' });
-      const liveId = broadcast?._id || broadcast?.id || broadcast?.broadcast?._id;
-      setLiveBroadcastId(liveId);
-      setIsLiveMode(true);
-      if (liveSocket?.connected) liveSocket.emit('broadcast:join-room', liveId);
-      await startRecording();
-    } catch (err: any) {
-      setAlertMessage(`Failed to start live broadcast: ${err.message || 'Please try again.'}`);
-      setShowAlert(true);
     }
   };
 
@@ -411,29 +297,6 @@ const AdminGoLive: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim() || !liveBroadcastId) return;
-    setIsSubmittingComment(true);
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/api/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: newComment.trim(),
-          contentId: liveBroadcastId,
-          contentType: 'live_broadcast'
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setComments(prev => [data.comment, ...prev]);
-        setNewComment('');
-      }
-    } catch {}
-    setIsSubmittingComment(false);
-  };
-
   const resetAll = () => {
     setTitle('');
     setDescription('');
@@ -446,8 +309,6 @@ const AdminGoLive: React.FC = () => {
     setCurrentTime(0);
     setIsPublishing(false);
     setIsPlayingPreview(false);
-    setIsLiveMode(false);
-    setLiveBroadcastId(null);
     if (audioPreviewRef.current) audioPreviewRef.current.src = '';
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
   };
@@ -622,7 +483,7 @@ const AdminGoLive: React.FC = () => {
                       animation: currentStep === STEP_RECORDING && !isPaused ? 'fn-pulse 1.2s ease-in-out infinite' : 'none',
                     }} />
                     {currentStep === STEP_SETUP && 'Setup'}
-                    {currentStep === STEP_RECORDING && (isPaused ? 'Paused' : isLiveMode ? 'Live' : 'Recording')}
+                    {currentStep === STEP_RECORDING && (isPaused ? 'Paused' : 'Recording')}
                     {currentStep === STEP_REVIEW && 'Review'}
                   </span>
                   <span className="gl-hero-step">
@@ -759,23 +620,7 @@ const AdminGoLive: React.FC = () => {
                 <IonIcon icon={mic} className="gl-icon" />
               </button>
               <p style={{ margin: '20px 0 4px', fontSize: '15px', fontWeight: '700', color: 'var(--ion-text-color)' }}>Start Recording</p>
-              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#8e8e93' }}>Microphone access required</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                <div style={{ height: '1px', flex: 1, background: 'var(--ios26-separator-light)' }} />
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#aeaeb2', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Or</span>
-                <div style={{ height: '1px', flex: 1, background: 'var(--ios26-separator-light)' }} />
-              </div>
-              <button onClick={startLiveBroadcastMode} style={{
-                marginTop: '16px', width: '100%', padding: '14px 20px', borderRadius: '16px', border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
-                boxShadow: '0 8px 24px rgba(190,18,60,0.25)',
-                color: 'white', fontSize: '14px', fontWeight: '700', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-              }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', animation: 'fn-pulse 1.2s ease-in-out infinite' }} />
-                Go Live Now
-              </button>
-              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#aeaeb2' }}>Starts live broadcast + records simultaneously</p>
+              <p style={{ margin: '0', fontSize: '13px', color: '#8e8e93' }}>Microphone access required</p>
             </div>
           )}
 
@@ -786,12 +631,6 @@ const AdminGoLive: React.FC = () => {
                 <canvas ref={canvasRef} />
               </div>
               <div className="gl-card" style={{ textAlign: 'center', padding: '20px 20px 18px' }}>
-                {isLiveMode && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '3px 14px 3px 10px', borderRadius: '999px', background: 'rgba(225,29,72,0.1)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#e11d48', marginBottom: '12px' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#e11d48', animation: 'fn-pulse 1.2s ease-in-out infinite' }} />
-                    Live Broadcast
-                  </div>
-                )}
                 <div className="gl-controls">
                   <button className={`gl-ctrl-btn ${isPaused ? 'resume' : 'pause'}`} onClick={togglePause}>
                     <IonIcon icon={isPaused ? play : pause} className="gl-ctrl-icon" />
@@ -801,96 +640,10 @@ const AdminGoLive: React.FC = () => {
                   </button>
                 </div>
                 <div className={`gl-status ${isPaused ? 'paused' : 'rec'}`}>
-                  {isPaused ? 'PAUSED' : isLiveMode ? 'LIVE & RECORDING' : 'RECORDING'}
+                  {isPaused ? 'PAUSED' : 'RECORDING'}
                 </div>
               </div>
 
-              {/* Live Comments Feed */}
-              {isLiveMode && (
-                <div className="gl-card">
-                  <h3 className="gl-card-title">
-                    <IonIcon icon={send} style={{ color: '#6366f1', fontSize: '18px' }} />
-                    Live Comments
-                  </h3>
-
-                  {/* Comment Form */}
-                  <form onSubmit={handleSubmitComment} style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input
-                        value={newComment}
-                        onChange={e => setNewComment(e.target.value)}
-                        placeholder="Write a comment..."
-                        style={{
-                          flex: 1,
-                          padding: '10px 14px',
-                          borderRadius: '12px',
-                          border: '1px solid var(--ios26-separator-light)',
-                          background: 'var(--ios26-card-bg-light)',
-                          color: 'var(--ion-text-color)',
-                          fontSize: '0.85em',
-                          outline: 'none',
-                          fontFamily: 'inherit'
-                        }}
-                        disabled={isSubmittingComment}
-                      />
-                      <IonButton
-                        type="submit"
-                        fill="solid"
-                        disabled={!newComment.trim() || isSubmittingComment}
-                        style={{
-                          '--background': 'rgba(99,102,241,0.2)',
-                          '--color': '#6366f1',
-                          '--border-radius': '12px',
-                          fontSize: '0.85em',
-                          fontWeight: '600',
-                          minWidth: '44px',
-                          height: '40px'
-                        }}
-                      >
-                        <IonIcon icon={send} style={{ fontSize: '16px' }} />
-                      </IonButton>
-                    </div>
-                  </form>
-
-                  {/* Comments List */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                    {comments.length > 0 ? (
-                      comments.map((comment: any) => (
-                        <div key={comment._id} style={{
-                          padding: '10px',
-                          borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.06)'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                            <span style={{
-                              width: '22px', height: '22px', borderRadius: '50%',
-                              background: 'rgba(99,102,241,0.3)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '0.7em', fontWeight: '600', color: 'white', flexShrink: 0
-                            }}>
-                              {(comment.user?.name || 'A')[0].toUpperCase()}
-                            </span>
-                            <span style={{ fontSize: '0.8em', fontWeight: '600', color: 'var(--ion-text-color)' }}>
-                              {comment.user?.name || 'Anonymous'}
-                            </span>
-                            <span style={{ fontSize: '0.65em', color: 'rgba(255,255,255,0.3)', marginLeft: 'auto' }}>
-                              {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p style={{ margin: 0, fontSize: '0.85em', color: 'rgba(255,255,255,0.7)', paddingLeft: '28px', lineHeight: '1.5' }}>
-                            {comment.content}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '24px', color: '#8e8e93', fontSize: '0.85em' }}>
-                        No comments yet. Comments will appear here in real-time.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </>
           )}
 
@@ -950,14 +703,6 @@ const AdminGoLive: React.FC = () => {
                     <><div className="gl-spinner" /> Publishing...</>
                   ) : (
                     <><IonIcon icon={cloudUpload} style={{ fontSize: '18px' }} /> Publish to Podcasts</>
-                  )}
-                </button>
-                <button className="gl-publish-btn primary" onClick={goLiveWithRecording} disabled={isLiveGoing}
-                  style={{ background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', boxShadow: '0 8px 24px rgba(190,18,60,0.25)' }}>
-                  {isLiveGoing ? (
-                    <><div className="gl-spinner" /> Going Live...</>
-                  ) : (
-                    <><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', animation: 'fn-pulse 1.2s ease-in-out infinite' }} /> Go Live</>
                   )}
                 </button>
                 <button className="gl-publish-btn secondary" onClick={resetAll}>

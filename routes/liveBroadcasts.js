@@ -311,6 +311,18 @@ router.post('/:id/stop', async (req, res) => {
     broadcast.isLive = false;
     broadcast.broadcastEndTime = new Date();
 
+    // End ALL currently live broadcasts to ensure no other live session is still going on
+    const otherLiveBroadcasts = await Sermon.find({ isLive: true, type: 'live_broadcast', _id: { $ne: broadcast._id } });
+    for (const other of otherLiveBroadcasts) {
+      if (other.recordingPid) {
+        try { process.kill(other.recordingPid, 'SIGTERM'); } catch {}
+      }
+    }
+    await Sermon.updateMany(
+      { isLive: true, type: 'live_broadcast', _id: { $ne: broadcast._id } },
+      { isLive: false, broadcastEndTime: new Date() }
+    );
+
     // Calculate duration from start time to end time
     if (broadcast.broadcastStartTime) {
       const startTime = new Date(broadcast.broadcastStartTime).getTime();
