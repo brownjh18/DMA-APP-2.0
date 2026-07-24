@@ -374,6 +374,14 @@ const App: React.FC = () => {
 
       try {
         if (savedToken) {
+          // Discard oversized tokens (old tokens may have contained base64 profilePicture)
+          if (savedToken.length > 2000) {
+            console.warn('⚠️ Token too large, discarding. Please log in again.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setIsAuthChecking(false);
+            return;
+          }
           console.log('📝 Found saved token, attempting to verify...');
           apiService.setToken(savedToken);
 
