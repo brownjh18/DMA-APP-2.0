@@ -161,9 +161,9 @@ const MyFavorites: React.FC = () => {
     setLoading(true);
     try {
       const [sermonsRes, podcastsRes, devotionsRes] = await Promise.all([
-        apiService.getSavedSermons(),
-        apiService.getSavedPodcasts(),
-        apiService.getSavedDevotions()
+        apiService.getSavedSermons(true),
+        apiService.getSavedPodcasts(true),
+        apiService.getSavedDevotions(true)
       ]);
       const sermonList = Array.isArray(sermonsRes) ? sermonsRes : (sermonsRes?.savedSermons || sermonsRes?.data || []);
       const podcastList = Array.isArray(podcastsRes) ? podcastsRes : (podcastsRes?.savedPodcasts || podcastsRes?.data || []);

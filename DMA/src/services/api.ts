@@ -102,6 +102,20 @@ class ApiService {
     this.token = null;
   }
 
+  private clearAllCookies() {
+    try {
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const name = cookie.split('=')[0].trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+      }
+      console.log('Cookies cleared');
+    } catch (e) {
+      console.warn('Failed to clear cookies:', e);
+    }
+  }
+
   setLogoutCallback(callback: () => void) {
     this.logoutCallback = callback;
   }
@@ -194,6 +208,7 @@ class ApiService {
         ...options,
         headers,
         cache: 'no-cache',
+        credentials: 'omit',
       });
 
       if (!response.ok) {
@@ -231,9 +246,13 @@ class ApiService {
           return this.request(endpoint, options, retryCount + 1, forceRefresh);
         }
 
-        // Handle header too large (431) - do NOT retry, just throw immediately
+        // Handle header too large (431) - clear stale cookies and retry once
         if (response.status === 431) {
-          console.error(`431 Header Too Large for ${endpoint}`);
+          console.error(`431 Header Too Large for ${endpoint}, clearing cookies and retrying`);
+          this.clearAllCookies();
+          if (retryCount === 0) {
+            return this.request(endpoint, options, retryCount + 1, forceRefresh);
+          }
           throw new Error('HTTP 431: Request Header Fields Too Large');
         }
 
@@ -482,6 +501,7 @@ class ApiService {
     const result = await this.request(`/sermons/${id}/save`, {
       method: 'POST',
     });
+    this.clearCacheByType('sermons');
     // Dispatch event to notify other pages (like MyFavorites) to refresh
     if (typeof window !== 'undefined') {
       console.log('📢 API: Dispatching savedItemsChanged event for sermon');
@@ -548,6 +568,7 @@ class ApiService {
     const result = await this.request(`/devotions/${id}/save`, {
       method: 'POST',
     });
+    this.clearCacheByType('devotions');
     // Dispatch event to notify other pages (like MyFavorites) to refresh
     if (typeof window !== 'undefined') {
       console.log('📢 API: Dispatching savedItemsChanged event for devotion');
@@ -790,6 +811,7 @@ class ApiService {
     const result = await this.request(`/podcasts/${id}/save`, {
       method: 'POST',
     });
+    this.clearCacheByType('podcasts');
     // Dispatch event to notify other pages (like MyFavorites) to refresh
     if (typeof window !== 'undefined') {
       console.log('📢 API: Dispatching savedItemsChanged event for podcast');
@@ -802,6 +824,7 @@ class ApiService {
     const result = await this.request(`/podcasts/${id}/unsave`, {
       method: 'POST',
     });
+    this.clearCacheByType('podcasts');
     // Dispatch event to notify other pages (like MyFavorites) to refresh
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('savedItemsChanged'));

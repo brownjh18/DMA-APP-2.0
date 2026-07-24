@@ -331,7 +331,7 @@ cron.schedule("*/30 * * * *", async () => {
 });
 
 // Create HTTP server + Socket.IO
-const server = createServer(app);
+const server = createServer({ maxHeaderSize: 32768 }, app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling']
