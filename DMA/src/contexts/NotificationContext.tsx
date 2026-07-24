@@ -60,26 +60,32 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const getNotifId = (n: Notification) => n._id || n.id || '';
 
-  // Setup notification channel and check permissions on mount (Android)
+  // Setup notification channel and check permissions on mount
   useEffect(() => {
     const setupNotifications = async () => {
-      if (!Capacitor.isNativePlatform()) return;
       try {
-        // Create notification channel for Android
-        await LocalNotifications.createChannel({
-          id: 'dma-notifications',
-          name: 'Dove Church Notifications',
-          description: 'Notifications from Dove Church app',
-          importance: 4,
-          visibility: 1,
-          vibration: true,
-        });
+        if (Capacitor.isNativePlatform()) {
+          // Create notification channel for Android
+          await LocalNotifications.createChannel({
+            id: 'dma-notifications',
+            name: 'Dove Church Notifications',
+            description: 'Notifications from Dove Church app',
+            importance: 4,
+            visibility: 1,
+            vibration: true,
+          });
 
-        // Check current permission status
-        const status = await LocalNotifications.checkPermissions();
-        setNotificationPermission(normalizePermission(status.display));
+          // Check current permission status
+          const status = await LocalNotifications.checkPermissions();
+          setNotificationPermission(normalizePermission(status.display));
+        } else if ('Notification' in window) {
+          // Web: check browser notification permission
+          const perm = Notification.permission;
+          const normalized = perm === 'granted' ? 'granted' : perm === 'denied' ? 'denied' : 'undetermined';
+          setNotificationPermission(normalized);
+        }
       } catch (error) {
-        console.warn('Failed to setup notification channel:', error);
+        console.warn('Failed to setup notification permissions:', error);
       }
     };
     setupNotifications();

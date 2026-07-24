@@ -30,7 +30,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useAppUpdate } from '../contexts/AppUpdateContext';
 import { AuthContext } from '../App';
 import { useHistory } from 'react-router-dom';
-import { useState, useContext, useCallback } from 'react';
+import { useState, useContext, useCallback, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import './Settings.css';
 
@@ -65,11 +65,21 @@ const Settings: React.FC = () => {
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [showNotificationDeniedAlert, setShowNotificationDeniedAlert] = useState(false);
 
+  // Sync toggle state with actual permission on mount
+  useEffect(() => {
+    if (notificationPermission === 'denied' && pushNotifications) {
+      // Permission is denied but toggle says ON — sync them
+      setPushNotifications(false);
+    } else if (notificationPermission === 'granted' && !pushNotifications) {
+      // Permission is granted but toggle says OFF — sync them
+      setPushNotifications(true);
+    }
+  }, []); // Only on mount
+
   const handlePushNotificationToggle = useCallback(async () => {
     if (pushNotifications) {
-      // Turning OFF: revoke permissions and disable
+      // Turning OFF: just save the preference
       setPushNotifications(false);
-      await revokeNotificationPermission();
       return;
     }
     // Turning ON: request permission first
@@ -78,14 +88,19 @@ const Settings: React.FC = () => {
       const result = await requestNotificationPermission();
       if (result === 'granted') {
         setPushNotifications(true);
-      } else if (result === 'denied' && Capacitor.isNativePlatform()) {
-        // Permission was previously denied — guide user to device settings
+      } else {
+        // Permission denied or undetermined — show appropriate alert
         setShowNotificationDeniedAlert(true);
+        // Make sure toggle stays off
+        setPushNotifications(false);
       }
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      setPushNotifications(false);
     } finally {
       setIsRequestingPermission(false);
     }
-  }, [pushNotifications, setPushNotifications, requestNotificationPermission, revokeNotificationPermission]);
+  }, [pushNotifications, setPushNotifications, requestNotificationPermission]);
 
   const handleUpdateTap = () => {
     if (hasUpdate) {
@@ -203,8 +218,12 @@ const Settings: React.FC = () => {
               />
               <div className="settings-item-content">
                 <span className="settings-item-label">Push Notifications</span>
-                {Capacitor.isNativePlatform() && notificationPermission === 'denied' && (
-                  <span className="settings-item-sublabel">Permission denied in device settings</span>
+                {notificationPermission === 'denied' && (
+                  <span className="settings-item-sublabel">
+                    {Capacitor.isNativePlatform()
+                      ? 'Permission denied in device settings'
+                      : 'Permission denied in browser settings'}
+                  </span>
                 )}
               </div>
               <div 
@@ -350,8 +369,10 @@ const Settings: React.FC = () => {
       <IonAlert
         isOpen={showNotificationDeniedAlert}
         onDidDismiss={() => setShowNotificationDeniedAlert(false)}
-        header="Notifications Disabled"
-        message="Notification permission was previously denied. Please enable notifications in your device settings to receive alerts."
+        header="Notifications Blocked"
+        message={Capacitor.isNativePlatform()
+          ? "Notification permission was denied. Please enable notifications for this app in your device settings to receive alerts."
+          : "Notification permission was denied. To enable notifications, click the lock icon in your browser's address bar, find Notifications, and set it to Allow."}
         buttons={[
           {
             text: 'OK',
