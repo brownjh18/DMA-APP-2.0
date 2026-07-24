@@ -3,6 +3,7 @@ import { LocalNotifications, PermissionStatus } from '@capacitor/local-notificat
 import { Capacitor } from '@capacitor/core';
 import { API_BASE_URL } from '../services/api';
 import { useSocket } from './SocketContext';
+import { useSettings } from './SettingsContext';
 
 export interface Notification {
   _id?: string;
@@ -32,6 +33,7 @@ interface NotificationContextType {
   clearNewNotificationFlag: () => void;
   notificationPermission: NormalizedPermission;
   requestNotificationPermission: () => Promise<NormalizedPermission>;
+  revokeNotificationPermission: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -54,6 +56,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [notificationPermission, setNotificationPermission] = useState<NormalizedPermission>('undetermined');
   const socketContext = useSocket();
   const { onNotification, joinUserRoom } = socketContext || {};
+  const { pushNotifications } = useSettings();
 
   const getNotifId = (n: Notification) => n._id || n.id || '';
 
@@ -84,6 +87,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const requestNotificationPermission = useCallback(async (): Promise<NormalizedPermission> => {
     if (!Capacitor.isNativePlatform()) {
+      // Web: use the browser Notification API
+      if ('Notification' in window) {
+        const result = await Notification.requestPermission();
+        const normalized = result === 'granted' ? 'granted' : result === 'denied' ? 'denied' : 'undetermined';
+        setNotificationPermission(normalized);
+        return normalized;
+      }
       setNotificationPermission('granted');
       return 'granted';
     }
@@ -96,6 +106,19 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       console.error('Failed to request notification permissions:', error);
       return 'denied';
     }
+  }, []);
+
+  const revokeNotificationPermission = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      // Web: best-effort — we can't programmatically revoke, but we can update our state
+      // The browser won't allow re-prompting once denied; user must change in browser settings
+      setNotificationPermission('denied');
+      return;
+    }
+    // On native, permissions can only be revoked via device settings
+    // Update local state to reflect disabled intent
+    const status = await LocalNotifications.checkPermissions();
+    setNotificationPermission(normalizePermission(status.display));
   }, []);
 
   // Load notifications from API
@@ -143,6 +166,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, [onNotification]);
 
   const showLocalNotification = useCallback(async (title: string, body: string) => {
+    // Respect the push notifications toggle
+    if (!pushNotifications) return;
+
     if (Capacitor.isNativePlatform()) {
       try {
         const status = await LocalNotifications.checkPermissions();
@@ -162,7 +188,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         console.error('Failed to show device notification:', error);
       }
     }
-  }, []);
+  }, [pushNotifications]);
 
   const addNotification = useCallback(async (notification: Omit<Notification, 'id' | '_id' | 'createdAt' | 'read'>) => {
     const optimistic: Notification = {
@@ -247,6 +273,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         clearNewNotificationFlag,
         notificationPermission,
         requestNotificationPermission,
+        revokeNotificationPermission,
       }}
     >
       {children}

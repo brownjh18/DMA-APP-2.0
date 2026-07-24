@@ -44,7 +44,7 @@ const Settings: React.FC = () => {
     setPushNotifications,
     clearCache,
   } = useSettings();
-  const { notificationPermission, requestNotificationPermission } = useNotifications();
+  const { notificationPermission, requestNotificationPermission, revokeNotificationPermission } = useNotifications();
   const { 
     currentVersion, 
     hasUpdate, 
@@ -63,22 +63,29 @@ const Settings: React.FC = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showUpToDateModal, setShowUpToDateModal] = useState(false);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [showNotificationDeniedAlert, setShowNotificationDeniedAlert] = useState(false);
 
   const handlePushNotificationToggle = useCallback(async () => {
     if (pushNotifications) {
+      // Turning OFF: revoke permissions and disable
       setPushNotifications(false);
+      await revokeNotificationPermission();
       return;
     }
+    // Turning ON: request permission first
     setIsRequestingPermission(true);
     try {
       const result = await requestNotificationPermission();
       if (result === 'granted') {
         setPushNotifications(true);
+      } else if (result === 'denied' && Capacitor.isNativePlatform()) {
+        // Permission was previously denied — guide user to device settings
+        setShowNotificationDeniedAlert(true);
       }
     } finally {
       setIsRequestingPermission(false);
     }
-  }, [pushNotifications, setPushNotifications, requestNotificationPermission]);
+  }, [pushNotifications, setPushNotifications, requestNotificationPermission, revokeNotificationPermission]);
 
   const handleUpdateTap = () => {
     if (hasUpdate) {
@@ -335,6 +342,20 @@ const Settings: React.FC = () => {
             handler: () => {
               clearCache();
             },
+          },
+        ]}
+      />
+
+      {/* Notification Permission Denied Alert */}
+      <IonAlert
+        isOpen={showNotificationDeniedAlert}
+        onDidDismiss={() => setShowNotificationDeniedAlert(false)}
+        header="Notifications Disabled"
+        message="Notification permission was previously denied. Please enable notifications in your device settings to receive alerts."
+        buttons={[
+          {
+            text: 'OK',
+            role: 'cancel',
           },
         ]}
       />
