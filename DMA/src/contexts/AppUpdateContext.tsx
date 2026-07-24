@@ -87,6 +87,9 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
       if (updateAvailable) {
         localStorage.setItem('app-update-available', 'true');
         localStorage.setItem('app-update-version', data.latestVersion);
+      } else {
+        localStorage.removeItem('app-update-available');
+        localStorage.removeItem('app-update-version');
       }
     } catch (error) {
       console.error('Failed to check for app update:', error);

@@ -549,7 +549,7 @@ app.get('/api/health', (req, res) => {
 // App version check
 app.get('/api/app/version', (req, res) => {
   res.json({
-    latestVersion: '1.1.0',
+    latestVersion: '1.0.0',
     minimumVersion: '1.0.0',
     releaseDate: '2026-07-24',
     releaseNotes: [
