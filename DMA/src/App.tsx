@@ -626,8 +626,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <NotificationProvider>
     <SettingsProvider>
+    <NotificationProvider>
       <AppUpdateProvider>
       <NetworkProvider>
         <DownloadsProvider>
@@ -914,8 +914,8 @@ const App: React.FC = () => {
       </DownloadsProvider>
     </NetworkProvider>
     </AppUpdateProvider>
-  </SettingsProvider>
   </NotificationProvider>
+  </SettingsProvider>
  );
 };
 
