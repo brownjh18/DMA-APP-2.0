@@ -138,9 +138,12 @@ const Settings: React.FC = () => {
 
         {/* Profile Card */}
         <div className="settings-profile-card" onClick={() => history.push('/profile')}>
-          <div className="settings-profile-banner" />
+          <div className="settings-profile-banner">
+            <div className="settings-profile-banner-pattern" />
+          </div>
           <div className="settings-profile-content">
             <div className="settings-profile-avatar-wrapper">
+              <div className="settings-profile-avatar-ring" />
               <div className="settings-profile-avatar">
                 {getUserInitials()}
               </div>
