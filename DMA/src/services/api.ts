@@ -205,7 +205,11 @@ class ApiService {
           const isProfileEndpoint = endpoint === '/auth/profile';
           const isSearchEndpoint = endpoint === '/search';
           const isAdminOnlyEndpoint = endpoint.includes('/auth/users') || endpoint.includes('/admin');
-          const noLogoutEndpoint = isSyncEndpoint || isProfileEndpoint || isSearchEndpoint || isAdminOnlyEndpoint || this.isAuthEndpoint(endpoint);
+          const isResourceEndpoint = endpoint.startsWith('/devotions/') || endpoint.startsWith('/sermons/') ||
+            endpoint.startsWith('/events/') || endpoint.startsWith('/news/') || endpoint.startsWith('/ministries/') ||
+            endpoint.startsWith('/radio/') || endpoint.startsWith('/users/') || endpoint.startsWith('/podcasts/') ||
+            endpoint.startsWith('/donations/');
+          const noLogoutEndpoint = isSyncEndpoint || isProfileEndpoint || isSearchEndpoint || isAdminOnlyEndpoint || isResourceEndpoint || this.isAuthEndpoint(endpoint);
           
           if (!noLogoutEndpoint) {
             console.log('Authentication error on critical endpoint, logging out user');
