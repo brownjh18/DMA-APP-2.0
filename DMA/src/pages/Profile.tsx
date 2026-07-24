@@ -42,15 +42,16 @@ const Profile: React.FC = () => {
   };
 
   const HelpFeedbackModal = () => (
-    <div className="settings-modal-overlay" onClick={() => setShowHelpFeedbackModal(false)}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2>Help & Feedback</h2>
-          <div className="settings-modal-close-btn" onClick={() => setShowHelpFeedbackModal(false)}>
-            <IonIcon icon={close} style={{ fontSize: '18px' }} />
-          </div>
+    <>
+      <div className="settings-popover-overlay" onClick={() => setShowHelpFeedbackModal(false)} />
+      <div className="settings-popover">
+        <div className="settings-popover-close" onClick={() => setShowHelpFeedbackModal(false)}>
+          <IonIcon icon={close} />
         </div>
-        <div className="settings-modal-body">
+
+        <h2 className="settings-popover-title">Help & Feedback</h2>
+
+        <div className="settings-popover-body-scroll">
           <h3>Support & Help</h3>
           <p>For help with your account, app navigation, or technical issues, please contact our support team.</p>
           
@@ -61,14 +62,13 @@ const Profile: React.FC = () => {
           <p>Call us at: 1-800-HELP-NOW (1-800-435-7669)</p>
           
           <h3>Report a Bug</h3>
-          <p>If you encounter an issue, please provide details including:
-            <ul>
-              <li>What you were trying to do</li>
-              <li>What happened instead</li>
-              <li>Screenshots if possible</li>
-              <li>Your device and app version</li>
-            </ul>
-          </p>
+          <p>If you encounter an issue, please provide details including:</p>
+          <ul>
+            <li>What you were trying to do</li>
+            <li>What happened instead</li>
+            <li>Screenshots if possible</li>
+            <li>Your device and app version</li>
+          </ul>
           
           <h3>Feature Requests</h3>
           <p>Share your ideas for new features or improvements by contacting us at: features@doveapp.com</p>
@@ -76,27 +76,28 @@ const Profile: React.FC = () => {
           <h3>Community Support</h3>
           <p>Connect with other users in our community forums and Discord channel for tips, tricks, and peer support.</p>
           
-          <p className="last-updated">Last updated: January 2025</p>
+          <p className="settings-popover-footer-text">Last updated: January 2025</p>
         </div>
       </div>
-    </div>
+    </>
   );
 
   const AboutModal = () => (
-    <div className="settings-modal-overlay" onClick={() => setShowAboutModal(false)}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2>About Dove App v1.0.0</h2>
-          <div className="settings-modal-close-btn" onClick={() => setShowAboutModal(false)}>
-            <IonIcon icon={close} style={{ fontSize: '18px' }} />
-          </div>
+    <>
+      <div className="settings-popover-overlay" onClick={() => setShowAboutModal(false)} />
+      <div className="settings-popover">
+        <div className="settings-popover-close" onClick={() => setShowAboutModal(false)}>
+          <IonIcon icon={close} />
         </div>
-        <div className="settings-modal-body">
-          <div className="about-app-info">
-            <h1>Dove App v1.0.0</h1>
-            <p>Your spiritual journey companion for prayer, devotion, worship, and community connection.</p>
+
+        <h2 className="settings-popover-title">About Dove App</h2>
+
+        <div className="settings-popover-body-scroll">
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            <p style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 4px' }}>Dove App v1.0.0</p>
+            <p style={{ fontSize: '13px', color: '#8e8e93', margin: 0 }}>Your spiritual journey companion</p>
           </div>
-          
+
           <h3>Our Mission</h3>
           <p>Dove App helps believers deepen their faith, connect with their faith community, and grow spiritually through daily devotionals, prayer requests, and meaningful relationships.</p>
           
@@ -117,10 +118,10 @@ const Profile: React.FC = () => {
           <h3>Company</h3>
           <p>Dove App is committed to helping churches and faith communities connect with their members and grow spiritually in today's digital world.</p>
           
-          <p className="last-updated">Version 1.0.0 | Last updated: January 2025</p>
+          <p className="settings-popover-footer-text">Version 1.0.0 | Last updated: January 2025</p>
         </div>
       </div>
-    </div>
+    </>
   );
 
   if (loading) {
@@ -237,6 +238,8 @@ const Profile: React.FC = () => {
           </IonButton>
         </div>
       </IonContent>
+      {showHelpFeedbackModal && <HelpFeedbackModal />}
+      {showAboutModal && <AboutModal />}
     </IonPage>
   );
 };

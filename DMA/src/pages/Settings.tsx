@@ -367,16 +367,15 @@ const Settings: React.FC = () => {
       <div>
         {showPrivacyModal && (
           <>
-            <div className="settings-modal-overlay" onClick={() => setShowPrivacyModal(false)} />
-            <div className="settings-modal">
-              <div className="settings-modal-handle" />
-              <div className="settings-modal-header">
-                <h2>Privacy Policy</h2>
-                <div className="settings-modal-close-btn" onClick={() => setShowPrivacyModal(false)}>
-                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
-                </div>
+            <div className="settings-popover-overlay" onClick={() => setShowPrivacyModal(false)} />
+            <div className="settings-popover">
+              <div className="settings-popover-close" onClick={() => setShowPrivacyModal(false)}>
+                <IonIcon icon={close} />
               </div>
-              <div className="settings-modal-body">
+
+              <h2 className="settings-popover-title">Privacy Policy</h2>
+
+              <div className="settings-popover-body-scroll">
                 <h3>1. Information We Collect</h3>
                 <p>We collect information you provide directly to us, such as when you create an account, update your profile, or contact us for support.</p>
 
@@ -395,7 +394,7 @@ const Settings: React.FC = () => {
                 <h3>6. Contact Us</h3>
                 <p>If you have any questions about this Privacy Policy, please contact us at privacy@dovechurch.com</p>
 
-                <p className="last-updated">Last updated: January 2025</p>
+                <p className="settings-popover-footer-text">Last updated: January 2025</p>
               </div>
             </div>
           </>
@@ -406,16 +405,15 @@ const Settings: React.FC = () => {
       <div>
         {showTermsModal && (
           <>
-            <div className="settings-modal-overlay" onClick={() => setShowTermsModal(false)} />
-            <div className="settings-modal">
-              <div className="settings-modal-handle" />
-              <div className="settings-modal-header">
-                <h2>Terms of Service</h2>
-                <div className="settings-modal-close-btn" onClick={() => setShowTermsModal(false)}>
-                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
-                </div>
+            <div className="settings-popover-overlay" onClick={() => setShowTermsModal(false)} />
+            <div className="settings-popover">
+              <div className="settings-popover-close" onClick={() => setShowTermsModal(false)}>
+                <IonIcon icon={close} />
               </div>
-              <div className="settings-modal-body">
+
+              <h2 className="settings-popover-title">Terms of Service</h2>
+
+              <div className="settings-popover-body-scroll">
                 <h3>1. Acceptance of Terms</h3>
                 <p>By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.</p>
 
@@ -443,7 +441,7 @@ const Settings: React.FC = () => {
                 <h3>9. Contact Us</h3>
                 <p>If you have any questions about these Terms, please contact us at legal@dovechurch.com</p>
 
-                <p className="last-updated">Last updated: January 2025</p>
+                <p className="settings-popover-footer-text">Last updated: January 2025</p>
               </div>
             </div>
           </>

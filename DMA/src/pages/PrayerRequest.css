@@ -64,3 +64,201 @@
   color: var(--ios26-text-secondary-dark) !important;
 }
 
+/* Prayer Success Popover */
+.prayer-popover-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: prayerFadeIn 0.2s ease;
+}
+
+@keyframes prayerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.prayer-popover {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: var(--ios26-card-bg-light, #ffffff);
+  border-radius: 20px;
+  padding: 28px 24px 20px;
+  width: min(340px, 88vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  animation: prayerPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+@keyframes prayerPopIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.prayer-popover-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.06);
+  color: #8e8e93;
+  transition: all 0.15s ease;
+  font-size: 14px;
+}
+
+.prayer-popover-close:active {
+  transform: scale(0.9);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.prayer-popover-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  color: white;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.prayer-popover-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #1a1a1a;
+}
+
+.prayer-popover-subtitle {
+  font-size: 13px;
+  color: #8e8e93;
+  margin: 0 0 16px;
+}
+
+.prayer-popover-body-scroll {
+  text-align: left;
+  max-height: 40vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prayer-popover-request-card {
+  background: rgba(0, 0, 0, 0.04);
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.prayer-popover-request-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #1a1a1a;
+}
+
+.prayer-popover-request-card p {
+  font-size: 13px;
+  color: #3a3a3c;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.prayer-popover-quote {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.prayer-popover-quote p {
+  font-size: 12px;
+  color: #3a3a3c;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+.prayer-popover-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  margin-top: 16px;
+}
+
+.prayer-popover-cta:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Dark mode - Prayer Popover */
+[data-theme="dark"] .prayer-popover {
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .prayer-popover-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: #98989d;
+}
+
+[data-theme="dark"] .prayer-popover-title {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .prayer-popover-subtitle {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .prayer-popover-request-card {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .prayer-popover-request-card h3 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .prayer-popover-request-card p {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .prayer-popover-quote {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .prayer-popover-quote p {
+  color: var(--ios26-text-primary-dark) !important;
+}
+

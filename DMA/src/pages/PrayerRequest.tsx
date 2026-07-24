@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonCheckbox, IonText, IonAlert, IonIcon, IonModal, IonBadge } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard, IonCardContent, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonCheckbox, IonText, IonAlert, IonIcon, IonBadge } from '@ionic/react';
 import { heart, mail, person, lockClosed, globe, time, informationCircle, checkmarkCircle, closeCircle, calendar, arrowBack } from 'ionicons/icons';
 import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -237,128 +237,43 @@ const PrayerRequest: React.FC = () => {
           </div>
         </div>
 
-        {/* Frosted Glass Success Modal */}
-        <IonModal
-          isOpen={showModal}
-          onDidDismiss={() => setShowModal(false)}
-          style={{
-            '--border-radius': '24px',
-            '--background': 'rgba(var(--ion-background-color-rgb), 0.8)',
-            '--backdrop-filter': 'blur(20px)',
-            '--webkit-backdrop-filter': 'blur(20px)',
-            'border': '1px solid rgba(255, 255, 255, 0.2)',
-            'boxShadow': '0 8px 32px rgba(0, 0, 0, 0.3)'
-          }}
-        >
-          <div style={{
-            padding: '0',
-            borderRadius: '24px',
-            overflow: 'hidden',
-            backgroundColor: 'rgba(var(--ion-background-color-rgb), 0.9)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '24px 24px 16px 24px',
-              textAlign: 'center',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
-              <IonIcon
-                icon={checkmarkCircle}
-                style={{
-                  fontSize: '4em',
-                  color: '#10b981',
-                  marginBottom: '16px'
-                }}
-              />
-              <h2 style={{
-                margin: '0 0 8px 0',
-                color: isDarkMode ? '#ffffff' : '#000000',
-                fontSize: '1.5em',
-                fontWeight: '700'
-              }}>
-                Prayer Request Submitted
-              </h2>
-              <p style={{
-                margin: '0',
-                color: isDarkMode ? '#92949c' : '#8e8e93',
-                fontSize: '1em'
-              }}>
-                Your heart has been heard
-              </p>
+        {/* Success Popover */}
+        {showModal && (
+          <>
+            <div className="prayer-popover-overlay" onClick={() => setShowModal(false)} />
+            <div className="prayer-popover">
+              <div className="prayer-popover-close" onClick={() => setShowModal(false)}>
+                <IonIcon icon={closeCircle} />
+              </div>
+
+              <div className="prayer-popover-icon">
+                <IonIcon icon={checkmarkCircle} />
+              </div>
+
+              <h2 className="prayer-popover-title">Prayer Request Submitted</h2>
+              <p className="prayer-popover-subtitle">Your heart has been heard</p>
+
+              <div className="prayer-popover-body-scroll">
+                {submittedRequest && (
+                  <>
+                    <div className="prayer-popover-request-card">
+                      <h3>Your Request</h3>
+                      <p>{submittedRequest.request}</p>
+                    </div>
+
+                    <div className="prayer-popover-quote">
+                      <p>"Our prayer team will be standing with you in faith. We believe in the power of prayer and trust in God's perfect timing."</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <button className="prayer-popover-cta" onClick={() => setShowModal(false)}>
+                <IonIcon icon={heart} /> Amen
+              </button>
             </div>
-
-            {/* Modal Content */}
-            <div style={{
-              padding: '16px 24px 24px 24px',
-              backgroundColor: 'rgba(var(--ion-background-color-rgb), 0.6)',
-              backdropFilter: 'blur(5px)'
-            }}>
-              {submittedRequest && (
-                <div>
-                  <div style={{
-                    backgroundColor: 'rgba(var(--ion-background-color-rgb), 0.8)',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: `1px solid ${isDarkMode ? '#3e3e42' : '#d1d1d6'}`,
-                    marginBottom: '16px',
-                    backdropFilter: 'blur(5px)'
-                  }}>
-                    <h3 style={{
-                      margin: '0 0 8px 0',
-                      color: isDarkMode ? '#ffffff' : '#000000',
-                      fontSize: '1.1em',
-                      fontWeight: '600'
-                    }}>
-                      Your Request:
-                    </h3>
-                    <p style={{
-                      margin: '0',
-                      color: isDarkMode ? '#ffffff' : '#000000',
-                      lineHeight: '1.5',
-                      fontSize: '0.95em'
-                    }}>
-                      {submittedRequest.request}
-                    </p>
-                  </div>
-
-                  <div style={{
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    marginBottom: '20px'
-                  }}>
-                    <p style={{
-                      margin: '0',
-                      color: isDarkMode ? '#ffffff' : '#000000',
-                      fontSize: '0.95em',
-                      textAlign: 'center',
-                      fontStyle: 'italic'
-                    }}>
-                      "Our prayer team will be standing with you in faith.
-                      We believe in the power of prayer and trust in God's perfect timing."
-                    </p>
-                  </div>
-
-                  <IonButton
-                    expand="block"
-                    onClick={() => setShowModal(false)}
-                    style={{
-                      '--border-radius': '20px',
-                      'backgroundColor': '#6366f1',
-                      'fontWeight': '600',
-                      'boxShadow': '0 4px 12px rgba(99, 102, 241, 0.3)'
-                    }}
-                  >
-                    <IonIcon icon={heart} slot="start" />
-                    Amen
-                  </IonButton>
-                </div>
-              )}
-            </div>
-          </div>
-        </IonModal>
+          </>
+        )}
 
       </IonContent>
     </IonPage>

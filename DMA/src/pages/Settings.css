@@ -577,6 +577,51 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   animation: settingsFadeIn 0.2s ease;
 }
 
+.settings-popover-body-scroll {
+  text-align: left;
+  max-height: 55vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 2px;
+}
+
+.settings-popover-body-scroll h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 16px 0 6px;
+  color: #1a1a1a;
+}
+
+.settings-popover-body-scroll h3:first-child {
+  margin-top: 0;
+}
+
+.settings-popover-body-scroll p {
+  font-size: 13px;
+  color: #3a3a3c;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.settings-popover-body-scroll ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+}
+
+.settings-popover-body-scroll li {
+  font-size: 13px;
+  color: #3a3a3c;
+  line-height: 1.55;
+  margin-bottom: 4px;
+}
+
+.settings-popover-footer-text {
+  font-size: 11px;
+  color: #8e8e93;
+  margin: 16px 0 0;
+  text-align: center;
+}
+
 @keyframes settingsFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -811,6 +856,22 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   color: var(--ios26-text-tertiary-dark) !important;
 }
 
+[data-theme="dark"] .settings-popover-body-scroll h3 {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-popover-body-scroll p {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-popover-body-scroll li {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-popover-footer-text {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
 [data-theme="dark"] .settings-profile-arrow {
   color: var(--ios26-text-tertiary-dark) !important;
 }
@@ -1010,6 +1071,22 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   }
 
   :root:not([data-theme="light"]) .settings-popover-hint {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-body-scroll h3 {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-body-scroll p {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-body-scroll li {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-footer-text {
     color: var(--ios26-text-tertiary-dark);
   }
 
