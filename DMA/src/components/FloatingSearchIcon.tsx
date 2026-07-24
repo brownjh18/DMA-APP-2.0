@@ -253,13 +253,17 @@ const FloatingSearchIcon: React.FC = () => {
           className="floating-profile-button"
           onClick={(e) => {
             e.stopPropagation();
-            history.push('/profile');
+            if (user?.profilePicture) {
+              history.push('/profile');
+            } else {
+              history.push('/signin');
+            }
           }}
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
             right: 16,
-            width: 44,
+            width: 56,
             height: 44,
             display: 'flex',
             alignItems: 'center',
@@ -287,21 +291,33 @@ const FloatingSearchIcon: React.FC = () => {
             />
           ) : (
             <div
-              onClick={(e) => {
-                e.stopPropagation();
-                history.push('/signin');
-              }}
               style={{
-                fontSize: '11px',
-                fontWeight: '600',
+                fontSize: '12px',
+                fontWeight: '700',
                 color: '#fff',
                 background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                padding: '4px 10px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 2px 6px rgba(99,102,241,0.3)',
+                width: '100%',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
                 letterSpacing: '0.3px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.94)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(99,102,241,0.3)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2)';
               }}
             >
               Sign In
@@ -323,7 +339,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 70,
+            right: 76,
             width: 44,
             height: 44,
             display: 'flex',
@@ -417,7 +433,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 124,
+            right: 130,
             width: 44,
             height: 44,
             display: 'flex',

@@ -30,9 +30,7 @@ const AdminPopover: React.FC<AdminPopoverProps> = ({
 
   const handleOptionClick = (option: PopoverOption) => {
     option.handler();
-    if (option.role !== 'cancel') {
-      onDidDismiss();
-    }
+    onDidDismiss();
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
