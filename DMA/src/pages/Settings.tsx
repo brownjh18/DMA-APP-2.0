@@ -388,8 +388,8 @@ const Settings: React.FC = () => {
 
               {releaseNotes.length > 0 && (
                 <>
-                  <p style={{ fontSize: '13px', color: '#3a3a3c', margin: '0 0 10px', textAlign: 'left' }}>
-                    What's new in v{latestVersion}:
+                  <p style={{ fontSize: '13px', color: '#3a3a3c', margin: '0 0 10px', textAlign: 'left', fontWeight: '600' }}>
+                    What's new:
                   </p>
                   <ul className="settings-popover-notes">
                     {releaseNotes.map((note, index) => (
@@ -422,15 +422,24 @@ const Settings: React.FC = () => {
                 <IonIcon icon={checkmarkCircle} />
               </div>
 
-              <h2 className="settings-popover-title">You're Up to Date</h2>
-
-              <p style={{ fontSize: '13px', color: '#8e8e93', margin: '0 0 4px' }}>
-                No updates available
-              </p>
+              <h2 className="settings-popover-title">App Up to Date</h2>
 
               <div className="settings-popover-version-badge">
                 <span className="settings-popover-ver-new">v{currentVersion}</span>
               </div>
+
+              {releaseNotes.length > 0 && (
+                <>
+                  <p style={{ fontSize: '13px', color: '#3a3a3c', margin: '12px 0 8px', textAlign: 'left', fontWeight: '600' }}>
+                    Latest updates:
+                  </p>
+                  <ul className="settings-popover-notes">
+                    {releaseNotes.map((note, index) => (
+                      <li key={index}>{note}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
               {lastChecked && (
                 <span className="settings-popover-date">

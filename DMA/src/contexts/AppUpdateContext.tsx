@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { API_BASE_URL } from '../services/api';
 
-const CURRENT_APP_VERSION = '1.0.0';
+const CURRENT_APP_VERSION = '1.2.0';
 
 interface VersionInfo {
   latestVersion: string;
@@ -83,6 +83,8 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
       const now = Date.now();
       setLastChecked(now);
       localStorage.setItem('app-update-last-checked', String(now));
+      localStorage.setItem('app-update-release-notes', JSON.stringify(data.releaseNotes || []));
+      localStorage.setItem('app-update-release-date', data.releaseDate || '');
 
       if (updateAvailable) {
         localStorage.setItem('app-update-available', 'true');
@@ -106,6 +108,12 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
     } else {
       const stored = localStorage.getItem('app-update-available');
       const storedVersion = localStorage.getItem('app-update-version');
+      const storedNotes = localStorage.getItem('app-update-release-notes');
+      const storedDate = localStorage.getItem('app-update-release-date');
+      if (storedNotes) {
+        try { setReleaseNotes(JSON.parse(storedNotes)); } catch {}
+      }
+      if (storedDate) setReleaseDate(storedDate);
       if (stored === 'true' && storedVersion) {
         // Verify cached version is still newer than current app
         const stillHasUpdate = compareVersions(storedVersion, CURRENT_APP_VERSION) > 0;

@@ -549,12 +549,14 @@ app.get('/api/health', (req, res) => {
 // App version check
 app.get('/api/app/version', (req, res) => {
   res.json({
-    latestVersion: '1.1.0',
+    latestVersion: '1.2.0',
     minimumVersion: '1.0.0',
-    releaseDate: '2026-07-24',
+    releaseDate: '2026-07-25',
     releaseNotes: [
-      'Improved save functionality for sermons, podcasts, and devotions',
-      'Better notification support for mobile devices',
+      'Fixed popover cancel buttons across the app',
+      'Redesigned sign-in button for better visibility',
+      'Improved push notification permission handling',
+      'Fixed authentication header size issue',
       'Performance improvements and bug fixes',
     ],
     updateUrl: 'https://play.google.com/store/apps/details?id=io.dove.ministries.africa',
