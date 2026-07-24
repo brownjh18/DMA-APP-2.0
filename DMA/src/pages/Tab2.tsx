@@ -408,7 +408,12 @@ const Tab2: React.FC = () => {
     setSavedSermons(updatedSaved);
     localStorage.setItem('savedSermons', JSON.stringify(updatedSaved));
     
-    // Dispatch event to notify other pages
+    try {
+      await apiService.saveSermon(sermonId);
+    } catch (error) {
+      console.warn('Failed to unsave sermon on server:', error);
+    }
+
     window.dispatchEvent(new Event('savedItemsChanged'));
   };
 

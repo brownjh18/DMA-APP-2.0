@@ -322,6 +322,7 @@ const FullPodcastPlayer: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving/unsaving podcast:', error);
+      alert('Failed to save podcast. Please try again.');
     }
   };
 

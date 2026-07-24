@@ -175,6 +175,7 @@ import { NetworkProvider } from './contexts/NetworkContext';
 import { DownloadsProvider } from './contexts/DownloadsContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AppUpdateProvider } from './contexts/AppUpdateContext';
 
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
@@ -627,6 +628,7 @@ const App: React.FC = () => {
   return (
     <NotificationProvider>
     <SettingsProvider>
+      <AppUpdateProvider>
       <NetworkProvider>
         <DownloadsProvider>
           <SocketProvider>
@@ -909,10 +911,11 @@ const App: React.FC = () => {
           </PlayerProvider>
         </AuthContext.Provider>
         </SocketProvider>
-     </DownloadsProvider>
-   </NetworkProvider>
- </SettingsProvider>
- </NotificationProvider>
+      </DownloadsProvider>
+    </NetworkProvider>
+    </AppUpdateProvider>
+  </SettingsProvider>
+  </NotificationProvider>
  );
 };
 

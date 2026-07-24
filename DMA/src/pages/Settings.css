@@ -181,10 +181,154 @@
   margin-right: 4px;
 }
 
+.settings-item-sublabel {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 2px;
+  display: block;
+}
+
 .settings-item-arrow {
   color: #1a1a1a;
   font-size: 14px;
   flex-shrink: 0;
+}
+
+/* Update dot indicator */
+.settings-item-icon-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.settings-item-icon-wrapper .settings-item-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.settings-update-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff9500;
+  border: 2px solid var(--ios26-card-bg-light, white);
+  animation: settingsDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes settingsDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* Update spinner */
+.settings-update-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e9e9ea;
+  border-top-color: #ff9500;
+  border-radius: 50%;
+  animation: settingsSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes settingsSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Update modal styles */
+.update-modal-version-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 149, 0, 0.08);
+  border-radius: 12px;
+}
+
+.update-modal-version-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.update-modal-current {
+  color: #8e8e93;
+  text-decoration: line-through;
+}
+
+.update-modal-arrow {
+  color: #ff9500;
+  font-size: 18px;
+}
+
+.update-modal-latest {
+  color: #ff9500;
+}
+
+.update-modal-date {
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+.update-modal-notes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.update-modal-notes li {
+  padding: 8px 0 8px 20px;
+  position: relative;
+  font-size: 14px;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+.update-modal-notes li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff9500;
+}
+
+.update-modal-install-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #ff9500;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.update-modal-install-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.update-modal-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #8e8e93;
+  margin: 12px 0 0;
 }
 
 .settings-item-destructive .settings-item-label {
@@ -550,6 +694,43 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   color: var(--ios26-text-tertiary-dark) !important;
 }
 
+[data-theme="dark"] .settings-item-sublabel {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-update-dot {
+  border-color: var(--ios26-card-bg-dark) !important;
+}
+
+[data-theme="dark"] .settings-update-spinner {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  border-top-color: #ff9500 !important;
+}
+
+[data-theme="dark"] .update-modal-version-info {
+  background: rgba(255, 149, 0, 0.12) !important;
+}
+
+[data-theme="dark"] .update-modal-current {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .update-modal-latest {
+  color: #ff9500 !important;
+}
+
+[data-theme="dark"] .update-modal-date {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .update-modal-notes li {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .update-modal-hint {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
 [data-theme="dark"] .settings-profile-arrow {
   color: var(--ios26-text-tertiary-dark) !important;
 }
@@ -715,6 +896,34 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   }
 
   :root:not([data-theme="light"]) .settings-item-arrow {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-item-sublabel {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-update-dot {
+    border-color: var(--ios26-card-bg-dark);
+  }
+
+  :root:not([data-theme="light"]) .update-modal-current {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .update-modal-latest {
+    color: #ff9500;
+  }
+
+  :root:not([data-theme="light"]) .update-modal-date {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .update-modal-notes li {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .update-modal-hint {
     color: var(--ios26-text-tertiary-dark);
   }
 

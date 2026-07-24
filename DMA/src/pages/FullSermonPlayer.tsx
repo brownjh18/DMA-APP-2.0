@@ -106,12 +106,35 @@ const FullSermonPlayer: React.FC = () => {
   const sermon = currentMedia && !isPodcast(currentMedia) ? currentMedia : null;
   const [deviceVolumeSupported, setDeviceVolumeSupported] = useState(false);
 
-  const handleLike = () => {
+  useEffect(() => {
+    if (!sermon || !isLoggedIn) return;
+    const checkSavedStatus = async () => {
+      try {
+        const response = await apiService.getSavedSermons();
+        const isAlreadySaved = response.savedSermons?.some((s: any) => s._id === sermon.id || s.id === sermon.id);
+        setIsLiked(!!isAlreadySaved);
+      } catch {
+        const savedSermons = JSON.parse(localStorage.getItem('savedSermons') || '[]');
+        setIsLiked(savedSermons.some((s: any) => s.id === sermon.id));
+      }
+    };
+    checkSavedStatus();
+  }, [sermon?.id, isLoggedIn]);
+
+  const handleLike = async () => {
     if (!isLoggedIn) {
       setShowAuthAlert(true);
       return;
     }
-    setIsLiked(!isLiked);
+    if (!sermon) return;
+    try {
+      const response = await apiService.saveSermon(sermon.id);
+      setIsLiked(response.saved);
+      window.dispatchEvent(new Event('savedItemsChanged'));
+    } catch (error) {
+      console.error('Error saving sermon:', error);
+      alert('Failed to save sermon. Please try again.');
+    }
   };
 
   // Memoize startTime so YouTube iframe src doesn't change mid-playback

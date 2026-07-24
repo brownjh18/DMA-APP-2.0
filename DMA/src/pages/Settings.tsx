@@ -6,16 +6,10 @@ import {
   IonContent,
   IonIcon,
   IonButton,
-  IonItem,
-  IonLabel,
-  IonToggle,
   IonAlert,
-  IonModal,
-  IonTextarea,
 } from "@ionic/react";
 
 import {
-  settingsSharp,
   arrowBack,
   moon,
   sunny,
@@ -26,15 +20,17 @@ import {
   shieldCheckmark,
   documentText,
   close,
-  globe,
-  person,
   chevronForward,
+  cloudDownload,
+  checkmarkCircle,
 } from "ionicons/icons";
 
 import { useSettings } from '../contexts/SettingsContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useAppUpdate } from '../contexts/AppUpdateContext';
 import { AuthContext } from '../App';
 import { useHistory } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import './Settings.css';
 
@@ -48,32 +44,53 @@ const Settings: React.FC = () => {
     setPushNotifications,
     clearCache,
   } = useSettings();
+  const { notificationPermission, requestNotificationPermission } = useNotifications();
+  const { 
+    currentVersion, 
+    hasUpdate, 
+    latestVersion, 
+    releaseNotes, 
+    releaseDate, 
+    isChecking, 
+    checkForUpdate,
+    updateUrl,
+  } = useAppUpdate();
 
   const [showClearCacheAlert, setShowClearCacheAlert] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [pushNotificationStatus, setPushNotificationStatus] = useState<string>('unknown');
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
-  // Check push notification permission status
-  useEffect(() => {
-    setPushNotificationStatus('granted');
-  }, []);
+  const handlePushNotificationToggle = useCallback(async () => {
+    if (pushNotifications) {
+      setPushNotifications(false);
+      return;
+    }
+    setIsRequestingPermission(true);
+    try {
+      const result = await requestNotificationPermission();
+      if (result === 'granted') {
+        setPushNotifications(true);
+      }
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  }, [pushNotifications, setPushNotifications, requestNotificationPermission]);
 
-  const handlePushNotificationToggle = async (checked: boolean) => {
-    setPushNotifications(checked);
-    if (checked) {
-      console.log('Push notifications enabled (local setting only - Firebase not configured)');
+  const handleUpdateTap = () => {
+    if (hasUpdate) {
+      setShowUpdateModal(true);
     } else {
-      console.log('Push notifications disabled');
+      checkForUpdate();
     }
   };
 
-  const openPrivacyPolicy = () => {
-    setShowPrivacyModal(true);
-  };
-
-  const openTermsOfService = () => {
-    setShowTermsModal(true);
+  const openUpdateStore = () => {
+    if (updateUrl) {
+      window.open(updateUrl, '_system');
+    }
+    setShowUpdateModal(false);
   };
 
   const themeOptions = [
@@ -82,7 +99,6 @@ const Settings: React.FC = () => {
     { key: 'dark' as const, icon: moon, label: 'Dark' },
   ];
 
-  // Get user initials for avatar
   const getUserInitials = () => {
     const name = user?.name || user?.firstName || user?.username || 'U';
     const parts = name.split(' ');
@@ -161,12 +177,54 @@ const Settings: React.FC = () => {
               />
               <div className="settings-item-content">
                 <span className="settings-item-label">Push Notifications</span>
+                {Capacitor.isNativePlatform() && notificationPermission === 'denied' && (
+                  <span className="settings-item-sublabel">Permission denied in device settings</span>
+                )}
               </div>
-              <div className="settings-toggle-wrapper" onClick={() => handlePushNotificationToggle(!pushNotifications)}>
+              <div 
+                className="settings-toggle-wrapper" 
+                onClick={handlePushNotificationToggle}
+                style={{ opacity: isRequestingPermission ? 0.5 : 1 }}
+              >
                 <div className={`settings-toggle-track ${pushNotifications ? 'on' : ''}`}>
                   <div className="settings-toggle-knob" />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* App Updates Section */}
+        <div className="settings-section">
+          <p className="settings-section-title">App Updates</p>
+          <div className="settings-section-card">
+            <div className="settings-item no-icon" onClick={handleUpdateTap}>
+              <div className="settings-item-icon-wrapper">
+                <IonIcon
+                  icon={hasUpdate ? cloudDownload : checkmarkCircle}
+                  className="settings-item-icon"
+                  style={{ background: hasUpdate ? '#ff9500' : '#34c759' }}
+                />
+                {hasUpdate && <div className="settings-update-dot" />}
+              </div>
+              <div className="settings-item-content">
+                <span className="settings-item-label">
+                  {hasUpdate ? 'Update Available' : 'App Updates'}
+                </span>
+                <span className="settings-item-sublabel">
+                  {hasUpdate 
+                    ? `Version ${latestVersion} available`
+                    : isChecking 
+                      ? 'Checking for updates...'
+                      : `Version ${currentVersion} - You're up to date`
+                  }
+                </span>
+              </div>
+              {isChecking ? (
+                <div className="settings-update-spinner" />
+              ) : (
+                <IonIcon icon={chevronForward} className="settings-item-arrow" />
+              )}
             </div>
           </div>
         </div>
@@ -205,9 +263,9 @@ const Settings: React.FC = () => {
               <div className="settings-item-content">
                 <span className="settings-item-label">App Version</span>
               </div>
-              <span className="settings-item-value">1.0.0</span>
+              <span className="settings-item-value">{currentVersion}</span>
             </div>
-            <div className="settings-item" onClick={openPrivacyPolicy}>
+            <div className="settings-item" onClick={() => setShowPrivacyModal(true)}>
               <IonIcon
                 icon={shieldCheckmark}
                 className="settings-item-icon"
@@ -218,7 +276,7 @@ const Settings: React.FC = () => {
               </div>
               <IonIcon icon={chevronForward} className="settings-item-arrow" />
             </div>
-            <div className="settings-item" onClick={openTermsOfService}>
+            <div className="settings-item" onClick={() => setShowTermsModal(true)}>
               <IonIcon
                 icon={documentText}
                 className="settings-item-icon"
@@ -235,7 +293,7 @@ const Settings: React.FC = () => {
         {/* Footer */}
         <div className="settings-footer">
           <p className="settings-footer-text">Dove Church</p>
-          <p className="settings-footer-version">Version 1.0.0</p>
+          <p className="settings-footer-version">Version {currentVersion}</p>
         </div>
       </IonContent>
 
@@ -261,6 +319,53 @@ const Settings: React.FC = () => {
           },
         ]}
       />
+
+      {/* Update Available Modal */}
+      <div>
+        {showUpdateModal && (
+          <>
+            <div className="settings-modal-overlay" onClick={() => setShowUpdateModal(false)} />
+            <div className="settings-modal">
+              <div className="settings-modal-handle" />
+              <div className="settings-modal-header">
+                <h2>Update Available</h2>
+                <div className="settings-modal-close-btn" onClick={() => setShowUpdateModal(false)}>
+                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
+                </div>
+              </div>
+              <div className="settings-modal-body">
+                <div className="update-modal-version-info">
+                  <div className="update-modal-version-badge">
+                    <span className="update-modal-current">v{currentVersion}</span>
+                    <span className="update-modal-arrow">→</span>
+                    <span className="update-modal-latest">v{latestVersion}</span>
+                  </div>
+                  {releaseDate && (
+                    <span className="update-modal-date">Released {releaseDate}</span>
+                  )}
+                </div>
+                
+                {releaseNotes.length > 0 && (
+                  <>
+                    <h3>What's New</h3>
+                    <ul className="update-modal-notes">
+                      {releaseNotes.map((note, index) => (
+                        <li key={index}>{note}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                <button className="update-modal-install-btn" onClick={openUpdateStore}>
+                  <IonIcon icon={cloudDownload} style={{ fontSize: '18px', marginRight: '8px' }} />
+                  Install Update
+                </button>
+                <p className="update-modal-hint">You will be redirected to the Play Store to download the update.</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Privacy Policy Modal */}
       <div>

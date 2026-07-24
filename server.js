@@ -546,6 +546,22 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : 'local', mongoReady: mongoose.connection.readyState, dbName: mongoose.connection.name });
 });
 
+// App version check
+app.get('/api/app/version', (req, res) => {
+  res.json({
+    latestVersion: '1.1.0',
+    minimumVersion: '1.0.0',
+    releaseDate: '2026-07-24',
+    releaseNotes: [
+      'Improved save functionality for sermons, podcasts, and devotions',
+      'Better notification support for mobile devices',
+      'Performance improvements and bug fixes',
+    ],
+    updateUrl: 'https://play.google.com/store/apps/details?id=io.dove.ministries.africa',
+    forceUpdate: false,
+  });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);

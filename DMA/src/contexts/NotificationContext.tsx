@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { LocalNotifications, PermissionStatus } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { API_BASE_URL } from '../services/api';
 import { useSocket } from './SocketContext';
@@ -17,6 +17,8 @@ export interface Notification {
   createdAt: string;
 }
 
+type NormalizedPermission = 'granted' | 'denied' | 'undetermined';
+
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
@@ -28,9 +30,17 @@ interface NotificationContextType {
   refreshNotifications: () => Promise<void>;
   hasNewNotification: boolean;
   clearNewNotificationFlag: () => void;
+  notificationPermission: NormalizedPermission;
+  requestNotificationPermission: () => Promise<NormalizedPermission>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+const normalizePermission = (state: PermissionStatus['display']): NormalizedPermission => {
+  if (state === 'granted') return 'granted';
+  if (state === 'denied') return 'denied';
+  return 'undetermined';
+};
 
 const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('token');
@@ -41,10 +51,52 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NormalizedPermission>('undetermined');
   const socketContext = useSocket();
   const { onNotification, joinUserRoom } = socketContext || {};
 
   const getNotifId = (n: Notification) => n._id || n.id || '';
+
+  // Setup notification channel and check permissions on mount (Android)
+  useEffect(() => {
+    const setupNotifications = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      try {
+        // Create notification channel for Android
+        await LocalNotifications.createChannel({
+          id: 'dma-notifications',
+          name: 'Dove Church Notifications',
+          description: 'Notifications from Dove Church app',
+          importance: 4,
+          visibility: 1,
+          vibration: true,
+        });
+
+        // Check current permission status
+        const status = await LocalNotifications.checkPermissions();
+        setNotificationPermission(normalizePermission(status.display));
+      } catch (error) {
+        console.warn('Failed to setup notification channel:', error);
+      }
+    };
+    setupNotifications();
+  }, []);
+
+  const requestNotificationPermission = useCallback(async (): Promise<NormalizedPermission> => {
+    if (!Capacitor.isNativePlatform()) {
+      setNotificationPermission('granted');
+      return 'granted';
+    }
+    try {
+      const status = await LocalNotifications.requestPermissions();
+      const normalized = normalizePermission(status.display);
+      setNotificationPermission(normalized);
+      return normalized;
+    } catch (error) {
+      console.error('Failed to request notification permissions:', error);
+      return 'denied';
+    }
+  }, []);
 
   // Load notifications from API
   const refreshNotifications = useCallback(async () => {
@@ -94,6 +146,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (Capacitor.isNativePlatform()) {
       try {
         const status = await LocalNotifications.checkPermissions();
+        setNotificationPermission(normalizePermission(status.display));
         if (status.display !== 'granted') return;
         await LocalNotifications.schedule({
           notifications: [{
@@ -192,6 +245,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         refreshNotifications,
         hasNewNotification,
         clearNewNotificationFlag,
+        notificationPermission,
+        requestNotificationPermission,
       }}
     >
       {children}
