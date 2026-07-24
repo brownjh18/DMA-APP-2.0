@@ -160,8 +160,6 @@ router.post('/signup', [
           name: user.name,
           email: user.email,
           role: user.role,
-          profilePicture: user.profilePicture,
-          phone: user.phone
         },
         process.env.JWT_SECRET,
         { expiresIn: '365d' }
@@ -300,8 +298,6 @@ router.post('/login', [
           name: user.name,
           email: user.email,
           role: user.role,
-          profilePicture: user.profilePicture,
-          phone: user.phone
         },
         process.env.JWT_SECRET,
         { expiresIn: '365d' }
@@ -766,8 +762,6 @@ router.get('/google/callback',
           name: req.user.name,
           email: req.user.email,
           role: req.user.role,
-          profilePicture: req.user.profilePicture,
-          phone: req.user.phone
         },
         process.env.JWT_SECRET,
         { expiresIn: '365d' }

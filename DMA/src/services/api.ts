@@ -102,19 +102,6 @@ class ApiService {
     this.token = null;
   }
 
-  private clearAllCookies() {
-    try {
-      const cookies = document.cookie.split(';');
-      for (const cookie of cookies) {
-        const name = cookie.split('=')[0].trim();
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
-      }
-      console.log('Cookies cleared');
-    } catch (e) {
-      console.warn('Failed to clear cookies:', e);
-    }
-  }
 
   setLogoutCallback(callback: () => void) {
     this.logoutCallback = callback;
@@ -246,13 +233,9 @@ class ApiService {
           return this.request(endpoint, options, retryCount + 1, forceRefresh);
         }
 
-        // Handle header too large (431) - clear stale cookies and retry once
+        // Handle header too large (431) - token likely contains excessive data
         if (response.status === 431) {
-          console.error(`431 Header Too Large for ${endpoint}, clearing cookies and retrying`);
-          this.clearAllCookies();
-          if (retryCount === 0) {
-            return this.request(endpoint, options, retryCount + 1, forceRefresh);
-          }
+          console.error(`431 Header Too Large for ${endpoint} - authorization header exceeds server limit`);
           throw new Error('HTTP 431: Request Header Fields Too Large');
         }
 
