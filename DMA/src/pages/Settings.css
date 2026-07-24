@@ -239,96 +239,174 @@
   to { transform: rotate(360deg); }
 }
 
-/* Update modal styles */
-.update-modal-version-info {
+/* Centered Popover - Update Modal */
+.settings-popover-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9998;
+  animation: settingsFadeIn 0.2s ease;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.settings-popover {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: var(--ios26-card-bg-light);
+  border-radius: 20px;
+  padding: 28px 24px 20px;
+  width: min(340px, 88vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  animation: settingsPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+@keyframes settingsPopIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.settings-popover-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.06);
+  color: #8e8e93;
+  transition: all 0.15s ease;
+  font-size: 14px;
+}
+
+.settings-popover-close:active {
+  transform: scale(0.9);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.settings-popover-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff9500, #ff6b00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 26px;
+  color: white;
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.35);
+}
+
+.settings-popover-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: #1a1a1a;
+}
+
+.settings-popover-version-badge {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
-  padding: 16px;
+  padding: 6px 14px;
+  border-radius: 20px;
   background: rgba(255, 149, 0, 0.08);
-  border-radius: 12px;
+  margin-bottom: 6px;
 }
 
-.update-modal-version-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
+.settings-popover-ver-old {
+  font-size: 13px;
   font-weight: 600;
-}
-
-.update-modal-current {
   color: #8e8e93;
   text-decoration: line-through;
 }
 
-.update-modal-arrow {
-  color: #ff9500;
-  font-size: 18px;
-}
-
-.update-modal-latest {
+.settings-popover-ver-arrow {
+  font-size: 14px;
   color: #ff9500;
 }
 
-.update-modal-date {
-  font-size: 12px;
+.settings-popover-ver-new {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff9500;
+}
+
+.settings-popover-date {
+  display: block;
+  font-size: 11px;
   color: #8e8e93;
+  margin-bottom: 16px;
 }
 
-.update-modal-notes {
+.settings-popover-notes {
   list-style: none;
   padding: 0;
   margin: 0 0 20px;
+  text-align: left;
 }
 
-.update-modal-notes li {
-  padding: 8px 0 8px 20px;
+.settings-popover-notes li {
+  padding: 6px 0 6px 16px;
   position: relative;
-  font-size: 14px;
-  color: #1a1a1a;
-  line-height: 1.5;
+  font-size: 13px;
+  color: #3a3a3c;
+  line-height: 1.45;
 }
 
-.update-modal-notes li::before {
+.settings-popover-notes li::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 14px;
-  width: 6px;
-  height: 6px;
+  top: 12px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #ff9500;
 }
 
-.update-modal-install-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.settings-popover-install-btn {
+  display: block;
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   border: none;
   border-radius: 12px;
-  background: #ff9500;
+  background: linear-gradient(135deg, #ff9500, #ff6b00);
   color: white;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 149, 0, 0.3);
 }
 
-.update-modal-install-btn:active {
-  transform: scale(0.98);
+.settings-popover-install-btn:active {
+  transform: scale(0.97);
   opacity: 0.9;
 }
 
-.update-modal-hint {
-  text-align: center;
-  font-size: 12px;
+.settings-popover-hint {
+  font-size: 11px;
   color: #8e8e93;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
 }
 
 .settings-item-destructive .settings-item-label {
@@ -707,27 +785,29 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   border-top-color: #ff9500 !important;
 }
 
-[data-theme="dark"] .update-modal-version-info {
-  background: rgba(255, 149, 0, 0.12) !important;
+[data-theme="dark"] .settings-popover {
+  background: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
 }
 
-[data-theme="dark"] .update-modal-current {
+[data-theme="dark"] .settings-popover-close {
+  background: rgba(255, 255, 255, 0.08) !important;
   color: var(--ios26-text-tertiary-dark) !important;
 }
 
-[data-theme="dark"] .update-modal-latest {
-  color: #ff9500 !important;
-}
-
-[data-theme="dark"] .update-modal-date {
-  color: var(--ios26-text-tertiary-dark) !important;
-}
-
-[data-theme="dark"] .update-modal-notes li {
+[data-theme="dark"] .settings-popover-title {
   color: var(--ios26-text-primary-dark) !important;
 }
 
-[data-theme="dark"] .update-modal-hint {
+[data-theme="dark"] .settings-popover-ver-old {
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-popover-notes li {
+  color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-popover-hint {
   color: var(--ios26-text-tertiary-dark) !important;
 }
 
@@ -907,23 +987,29 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
     border-color: var(--ios26-card-bg-dark);
   }
 
-  :root:not([data-theme="light"]) .update-modal-current {
+  :root:not([data-theme="light"]) .settings-popover {
+    background: var(--ios26-card-bg-dark);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-close {
+    background: rgba(255, 255, 255, 0.08);
     color: var(--ios26-text-tertiary-dark);
   }
 
-  :root:not([data-theme="light"]) .update-modal-latest {
-    color: #ff9500;
-  }
-
-  :root:not([data-theme="light"]) .update-modal-date {
-    color: var(--ios26-text-tertiary-dark);
-  }
-
-  :root:not([data-theme="light"]) .update-modal-notes li {
+  :root:not([data-theme="light"]) .settings-popover-title {
     color: var(--ios26-text-primary-dark);
   }
 
-  :root:not([data-theme="light"]) .update-modal-hint {
+  :root:not([data-theme="light"]) .settings-popover-ver-old {
+    color: var(--ios26-text-tertiary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-notes li {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-popover-hint {
     color: var(--ios26-text-tertiary-dark);
   }
 

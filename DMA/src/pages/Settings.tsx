@@ -320,48 +320,44 @@ const Settings: React.FC = () => {
         ]}
       />
 
-      {/* Update Available Modal */}
+      {/* Update Available Popover */}
       <div>
         {showUpdateModal && (
           <>
-            <div className="settings-modal-overlay" onClick={() => setShowUpdateModal(false)} />
-            <div className="settings-modal">
-              <div className="settings-modal-handle" />
-              <div className="settings-modal-header">
-                <h2>Update Available</h2>
-                <div className="settings-modal-close-btn" onClick={() => setShowUpdateModal(false)}>
-                  <IonIcon icon={close} style={{ fontSize: '18px' }} />
-                </div>
+            <div className="settings-popover-overlay" onClick={() => setShowUpdateModal(false)} />
+            <div className="settings-popover">
+              <div className="settings-popover-close" onClick={() => setShowUpdateModal(false)}>
+                <IonIcon icon={close} />
               </div>
-              <div className="settings-modal-body">
-                <div className="update-modal-version-info">
-                  <div className="update-modal-version-badge">
-                    <span className="update-modal-current">v{currentVersion}</span>
-                    <span className="update-modal-arrow">→</span>
-                    <span className="update-modal-latest">v{latestVersion}</span>
-                  </div>
-                  {releaseDate && (
-                    <span className="update-modal-date">Released {releaseDate}</span>
-                  )}
-                </div>
-                
-                {releaseNotes.length > 0 && (
-                  <>
-                    <h3>What's New</h3>
-                    <ul className="update-modal-notes">
-                      {releaseNotes.map((note, index) => (
-                        <li key={index}>{note}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
 
-                <button className="update-modal-install-btn" onClick={openUpdateStore}>
-                  <IonIcon icon={cloudDownload} style={{ fontSize: '18px', marginRight: '8px' }} />
-                  Install Update
-                </button>
-                <p className="update-modal-hint">You will be redirected to the Play Store to download the update.</p>
+              <div className="settings-popover-icon">
+                <IonIcon icon={cloudDownload} />
               </div>
+
+              <h2 className="settings-popover-title">Update Available</h2>
+
+              <div className="settings-popover-version-badge">
+                <span className="settings-popover-ver-old">v{currentVersion}</span>
+                <span className="settings-popover-ver-arrow">→</span>
+                <span className="settings-popover-ver-new">v{latestVersion}</span>
+              </div>
+
+              {releaseDate && (
+                <span className="settings-popover-date">Released {releaseDate}</span>
+              )}
+
+              {releaseNotes.length > 0 && (
+                <ul className="settings-popover-notes">
+                  {releaseNotes.map((note, index) => (
+                    <li key={index}>{note}</li>
+                  ))}
+                </ul>
+              )}
+
+              <button className="settings-popover-install-btn" onClick={openUpdateStore}>
+                Install Update
+              </button>
+              <p className="settings-popover-hint">You'll be redirected to the Play Store.</p>
             </div>
           </>
         )}
