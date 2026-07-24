@@ -13,6 +13,7 @@ export interface Notification {
   type: 'sermon' | 'podcast' | 'devotion' | 'event' | 'ministry' | 'prayer' | 'general';
   contentType?: string;
   contentId?: string;
+  thumbnailUrl?: string;
   data?: any;
   read: boolean;
   createdAt: string;
@@ -65,14 +66,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const setupNotifications = async () => {
       try {
         if (Capacitor.isNativePlatform()) {
-          // Create notification channel for Android
+          // Create notification channel for Android with full settings
           await LocalNotifications.createChannel({
             id: 'dma-notifications',
             name: 'Dove Church Notifications',
-            description: 'Notifications from Dove Church app',
+            description: 'Notifications for new sermons, podcasts, events, and updates',
             importance: 4,
             visibility: 1,
             vibration: true,
+            sound: 'default',
           });
 
           // Check current permission status
@@ -158,20 +160,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [joinUserRoom]);
 
-  // Listen for real-time notifications via Socket.IO
-  useEffect(() => {
-    if (!onNotification) return;
-
-    onNotification((notif: Notification) => {
-      console.log('📥 Real-time notification:', notif);
-      setNotifications(prev => [notif, ...prev]);
-      setUnreadCount(prev => prev + 1);
-      setHasNewNotification(true);
-      showLocalNotification(notif.title, notif.message);
-    });
-  }, [onNotification]);
-
-  const showLocalNotification = useCallback(async (title: string, body: string) => {
+  const showLocalNotification = useCallback(async (title: string, body: string, type?: Notification['type']) => {
     // Respect the push notifications toggle
     if (!pushNotifications) return;
 
@@ -183,18 +172,55 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         await LocalNotifications.schedule({
           notifications: [{
             title, body,
-            id: Date.now() + Math.random(),
+            id: Math.floor(Date.now() / 1000),
             iconColor: '#6366f1',
-            smallIcon: 'res://icon',
+            smallIcon: 'notification_small_icon',
             channelId: 'dma-notifications',
             actionTypeId: 'notification-open',
+            sound: 'default',
+            vibration: true,
           }],
         });
+        console.log('📱 Device notification shown:', title);
       } catch (error) {
         console.error('Failed to show device notification:', error);
       }
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      // Web: use browser Notification API
+      try {
+        const notification = new Notification(title, {
+          body,
+          icon: '/icon-192x192.png',
+          badge: '/icon-192x192.png',
+          tag: `dma-${Date.now()}`,
+          renotify: true,
+          vibrate: [200, 100, 200],
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        console.log('🌐 Browser notification shown:', title);
+      } catch (error) {
+        console.error('Failed to show browser notification:', error);
+      }
     }
   }, [pushNotifications]);
+
+  // Listen for real-time notifications via Socket.IO
+  useEffect(() => {
+    if (!onNotification) return;
+
+    onNotification((notif: Notification) => {
+      console.log('📥 Real-time notification:', notif);
+      setNotifications(prev => [notif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      setHasNewNotification(true);
+      showLocalNotification(notif.title, notif.message, notif.type);
+    });
+  }, [onNotification, showLocalNotification]);
 
   const addNotification = useCallback(async (notification: Omit<Notification, 'id' | '_id' | 'createdAt' | 'read'>) => {
     const optimistic: Notification = {
@@ -206,7 +232,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications(prev => [optimistic, ...prev]);
     setUnreadCount(prev => prev + 1);
     setHasNewNotification(true);
-    showLocalNotification(notification.title, notification.message);
+    showLocalNotification(notification.title, notification.message, notification.type);
   }, [showLocalNotification]);
 
   const markAsRead = useCallback(async (id: string) => {

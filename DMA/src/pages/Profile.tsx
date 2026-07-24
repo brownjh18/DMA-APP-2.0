@@ -224,18 +224,16 @@ const Profile: React.FC = () => {
         </IonList>
 
         <div className="danger-zone">
-          <IonButton
-            expand="block"
-            color="danger"
-            fill="clear"
+          <button
+            className="signout-btn"
             onClick={() => {
               logout();
               history.push('/tab1');
             }}
           >
-            <IonIcon slot="start" icon={logOut} />
-            Sign Out
-          </IonButton>
+            <IonIcon icon={logOut} />
+            <span>Sign Out</span>
+          </button>
         </div>
       </IonContent>
       {showHelpFeedbackModal && <HelpFeedbackModal />}

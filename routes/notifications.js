@@ -29,8 +29,42 @@ router.get('/', authenticateToken, async (req, res) => {
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
+
+    // Populate thumbnails from content for notifications that don't have one stored
+    const Sermon = require('../models/Sermon');
+    const Devotion = require('../models/Devotion');
+    const Event = require('../models/Event');
+    const Ministry = require('../models/Ministry');
+
+    const enriched = await Promise.all(notifications.map(async (n) => {
+      if (n.thumbnailUrl) return n.toObject();
+
+      const obj = n.toObject();
+      try {
+        if (n.contentType === 'sermon' && n.contentId) {
+          const sermon = await Sermon.findById(n.contentId).select('thumbnailUrl');
+          if (sermon?.thumbnailUrl) obj.thumbnailUrl = sermon.thumbnailUrl;
+        } else if (n.contentType === 'podcast' && n.contentId) {
+          const podcast = await Sermon.findById(n.contentId).select('thumbnailUrl');
+          if (podcast?.thumbnailUrl) obj.thumbnailUrl = podcast.thumbnailUrl;
+        } else if (n.contentType === 'devotion' && n.contentId) {
+          const devotion = await Devotion.findById(n.contentId).select('thumbnailUrl');
+          if (devotion?.thumbnailUrl) obj.thumbnailUrl = devotion.thumbnailUrl;
+        } else if (n.contentType === 'event' && n.contentId) {
+          const event = await Event.findById(n.contentId).select('imageUrl');
+          if (event?.imageUrl) obj.thumbnailUrl = event.imageUrl;
+        } else if (n.contentType === 'ministry' && n.contentId) {
+          const ministry = await Ministry.findById(n.contentId).select('imageUrl');
+          if (ministry?.imageUrl) obj.thumbnailUrl = ministry.imageUrl;
+        }
+      } catch (e) {
+        // Content may have been deleted — skip
+      }
+      return obj;
+    }));
+
     const unreadCount = await Notification.countDocuments({ userId: req.user._id, read: false });
-    res.json({ notifications, unreadCount });
+    res.json({ notifications: enriched, unreadCount });
   } catch (error) {
     res.status(500).json({ error: 'Server error', details: error.message });
   }

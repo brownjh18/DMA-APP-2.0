@@ -25,7 +25,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { apiService } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 import './AdminManager.css';
 import './Notifications.css';
 
@@ -68,9 +68,9 @@ function getTypeMeta(type: string, contentType?: string) {
 function getDefaultThumb(type: string) {
   switch (type) {
     case 'sermon':
-      return '/Bible.JPG';
+      return '/bible.JPG';
     case 'podcast':
-      return '/Bible.JPG';
+      return '/bible.JPG';
     case 'devotion':
       return '/hero-evangelism.jpg';
     case 'event':
@@ -78,7 +78,7 @@ function getDefaultThumb(type: string) {
     case 'ministry':
       return '/dove.png';
     default:
-      return '/Bible.JPG';
+      return '/bible.JPG';
   }
 }
 
@@ -86,15 +86,12 @@ function getNotificationThumbnailUrl(notification: any) {
   if (!notification) return undefined;
   const fields = [
     notification.thumbnailUrl,
-    notification.data?.thumbnailUrl,
+    notification.thumbnailUrl || notification.data?.thumbnailUrl,
     notification.data?.sermon?.thumbnailUrl,
     notification.data?.podcast?.thumbnailUrl,
     notification.data?.devotion?.thumbnailUrl,
-    notification.data?.event?.thumbnailUrl,
     notification.data?.event?.imageUrl,
     notification.data?.ministry?.imageUrl,
-    notification.data?.ministry?.thumbnailUrl,
-    notification.data?.thumbnail,
     notification.thumbnail,
   ];
   for (const value of fields) {
@@ -110,8 +107,8 @@ function normalizeThumbUrl(url?: unknown) {
   const trimmed = url.trim();
   if (!trimmed) return '';
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  if (trimmed.startsWith('/')) return trimmed;
-  return `/${trimmed}`;
+  if (trimmed.startsWith('/')) return `${BACKEND_BASE_URL}${trimmed}`;
+  return `${BACKEND_BASE_URL}/${trimmed}`;
 }
 
 function getYouTubeSectionLabel(createdAt: string) {
@@ -293,7 +290,7 @@ const Notifications: React.FC = () => {
               id: sermonData._id || sermonData.id,
               title: sermonData.title,
               description: sermonData.description || '',
-              thumbnailUrl: sermonData.thumbnailUrl || sermonData.thumbnail || '/Bible.JPG',
+              thumbnailUrl: sermonData.thumbnailUrl || sermonData.thumbnail || '/bible.JPG',
               publishedAt: sermonData.date || sermonData.createdAt || new Date().toISOString(),
               duration: sermonData.duration || '00:00',
               viewCount: (sermonData.viewCount || 0).toString(),
@@ -309,7 +306,7 @@ const Notifications: React.FC = () => {
               id: pd._id || pd.id,
               title: pd.title,
               description: pd.description || '',
-              thumbnailUrl: pd.thumbnailUrl || pd.thumbnail || '/Bible.JPG',
+              thumbnailUrl: pd.thumbnailUrl || pd.thumbnail || '/bible.JPG',
               publishedAt: pd.publishedAt || new Date().toISOString(),
               duration: pd.duration || '00:00',
               audioUrl: pd.audioUrl || '',

@@ -31,6 +31,10 @@ const notificationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     default: null
   },
+  thumbnailUrl: {
+    type: String,
+    default: null
+  },
   read: {
     type: Boolean,
     default: false

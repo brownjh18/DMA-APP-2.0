@@ -383,7 +383,7 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // Helper: create notification for all users and emit via Socket.IO
-async function createAndEmitNotification({ title, message, type, contentType, contentId }) {
+async function createAndEmitNotification({ title, message, type, contentType, contentId, thumbnailUrl }) {
   try {
     const users = await User.find({ isActive: true }).select('_id');
     const notifications = users.map(user => ({
@@ -393,6 +393,7 @@ async function createAndEmitNotification({ title, message, type, contentType, co
       type,
       contentType,
       contentId,
+      thumbnailUrl: thumbnailUrl || null,
       read: false
     }));
     const saved = await Notification.insertMany(notifications);
@@ -423,7 +424,7 @@ function setupChangeStreams() {
       if (!doc) return;
       if (doc.type === 'podcast') {
         if (change.operationType === 'insert') {
-          await createAndEmitNotification({ title: 'New Podcast', message: `"${doc.title}" is now available`, type: 'podcast', contentType: 'podcast', contentId: doc._id });
+          await createAndEmitNotification({ title: 'New Podcast', message: `"${doc.title}" is now available`, type: 'podcast', contentType: 'podcast', contentId: doc._id, thumbnailUrl: doc.thumbnailUrl });
         }
       } else {
         const ops = {
@@ -433,7 +434,7 @@ function setupChangeStreams() {
         };
         const op = ops[change.operationType];
         if (op) {
-          await createAndEmitNotification({ ...op, type: 'sermon', contentType: 'sermon', contentId: doc._id });
+          await createAndEmitNotification({ ...op, type: 'sermon', contentType: 'sermon', contentId: doc._id, thumbnailUrl: doc.thumbnailUrl });
         }
       }
     });
@@ -447,7 +448,7 @@ function setupChangeStreams() {
         update: { title: 'Devotion Updated', message: `"${doc.title || doc.scripture}" has been updated` }
       };
       const op = ops[change.operationType];
-      if (op) await createAndEmitNotification({ ...op, type: 'devotion', contentType: 'devotion', contentId: doc._id });
+      if (op) await createAndEmitNotification({ ...op, type: 'devotion', contentType: 'devotion', contentId: doc._id, thumbnailUrl: doc.thumbnailUrl });
     });
 
     const eventStream = Event.watch([], { fullDocument: 'updateLookup' });
@@ -459,7 +460,7 @@ function setupChangeStreams() {
         update: { title: 'Event Updated', message: `"${doc.title}" has been updated` }
       };
       const op = ops[change.operationType];
-      if (op) await createAndEmitNotification({ ...op, type: 'event', contentType: 'event', contentId: doc._id });
+      if (op) await createAndEmitNotification({ ...op, type: 'event', contentType: 'event', contentId: doc._id, thumbnailUrl: doc.imageUrl });
     });
 
     const ministryStream = Ministry.watch([], { fullDocument: 'updateLookup' });
@@ -471,7 +472,7 @@ function setupChangeStreams() {
         update: { title: 'Ministry Updated', message: `"${doc.name}" has been updated` }
       };
       const op = ops[change.operationType];
-      if (op) await createAndEmitNotification({ ...op, type: 'ministry', contentType: 'ministry', contentId: doc._id });
+      if (op) await createAndEmitNotification({ ...op, type: 'ministry', contentType: 'ministry', contentId: doc._id, thumbnailUrl: doc.imageUrl });
     });
 
     console.log('📡 MongoDB change streams active');
