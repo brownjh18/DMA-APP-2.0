@@ -112,7 +112,7 @@ const AddPodcast: React.FC = () => {
     }
     if (file && !file.type.startsWith('audio/')) {
       setAlertHeader('Invalid File');
-      setAlertMessage('Please select a valid audio file (MP3, WAV, M4A)');
+      setAlertMessage('Please select a valid audio file');
       setShowAlert(true);
       event.target.value = '';
       return;
@@ -257,7 +257,7 @@ const AddPodcast: React.FC = () => {
                   <div className="af-upload" onClick={() => fileInputRef.current?.click()}>
                     <div className="af-upload-icon"><IonIcon icon={musicalNote} /></div>
                     <p className="af-upload-text">Upload audio file</p>
-                    <p className="af-upload-hint">Required &bull; Max 300MB &bull; MP3, WAV, M4A</p>
+                    <p className="af-upload-hint">Required &bull; Max 300MB &bull; All audio formats</p>
                   </div>
                 ) : (
                   <div className="af-upload" style={{ borderStyle: 'solid', borderColor: 'var(--ion-color-success, #22c55e)' }}>

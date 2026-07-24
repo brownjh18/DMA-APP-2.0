@@ -359,7 +359,7 @@ router.post('/:id/recording', [
         cb(null, 'live-recording-' + uniqueSuffix + path.extname(file.originalname));
       }
     }),
-    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+    limits: { fileSize: 300 * 1024 * 1024 }, // 300MB limit
     fileFilter: (req, file, cb) => {
       if (file.mimetype.startsWith('audio/')) {
         cb(null, true);

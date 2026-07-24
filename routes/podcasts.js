@@ -31,8 +31,18 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 300 * 1024 * 1024 }, // 300MB
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'audioFile' || file.fieldname === 'thumbnailFile' || file.fieldname === 'audio' || file.fieldname === 'thumbnail') {
-      cb(null, true);
+    if (file.fieldname === 'audioFile' || file.fieldname === 'audio') {
+      if (file.mimetype.startsWith('audio/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only audio files are allowed!'), false);
+      }
+    } else if (file.fieldname === 'thumbnailFile' || file.fieldname === 'thumbnail') {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for thumbnails!'), false);
+      }
     } else {
       cb(null, true);
     }
