@@ -54,12 +54,14 @@ const Settings: React.FC = () => {
     isChecking, 
     checkForUpdate,
     updateUrl,
+    lastChecked,
   } = useAppUpdate();
 
   const [showClearCacheAlert, setShowClearCacheAlert] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showUpToDateModal, setShowUpToDateModal] = useState(false);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   const handlePushNotificationToggle = useCallback(async () => {
@@ -82,7 +84,7 @@ const Settings: React.FC = () => {
     if (hasUpdate) {
       setShowUpdateModal(true);
     } else {
-      checkForUpdate();
+      setShowUpToDateModal(true);
     }
   };
 
@@ -347,17 +349,60 @@ const Settings: React.FC = () => {
               )}
 
               {releaseNotes.length > 0 && (
-                <ul className="settings-popover-notes">
-                  {releaseNotes.map((note, index) => (
-                    <li key={index}>{note}</li>
-                  ))}
-                </ul>
+                <>
+                  <p style={{ fontSize: '13px', color: '#3a3a3c', margin: '0 0 10px', textAlign: 'left' }}>
+                    What's new in v{latestVersion}:
+                  </p>
+                  <ul className="settings-popover-notes">
+                    {releaseNotes.map((note, index) => (
+                      <li key={index}>{note}</li>
+                    ))}
+                  </ul>
+                </>
               )}
 
               <button className="settings-popover-install-btn" onClick={openUpdateStore}>
                 Install Update
               </button>
               <p className="settings-popover-hint">You'll be redirected to the Play Store.</p>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Up to Date Popover */}
+      <div>
+        {showUpToDateModal && (
+          <>
+            <div className="settings-popover-overlay" onClick={() => setShowUpToDateModal(false)} />
+            <div className="settings-popover">
+              <div className="settings-popover-close" onClick={() => setShowUpToDateModal(false)}>
+                <IonIcon icon={close} />
+              </div>
+
+              <div className="settings-popover-icon" style={{ background: 'linear-gradient(135deg, #34c759, #30b350)' }}>
+                <IonIcon icon={checkmarkCircle} />
+              </div>
+
+              <h2 className="settings-popover-title">You're Up to Date</h2>
+
+              <p style={{ fontSize: '13px', color: '#8e8e93', margin: '0 0 4px' }}>
+                No updates available
+              </p>
+
+              <div className="settings-popover-version-badge">
+                <span className="settings-popover-ver-new">v{currentVersion}</span>
+              </div>
+
+              {lastChecked && (
+                <span className="settings-popover-date">
+                  Last checked {new Date(lastChecked).toLocaleDateString()} at {new Date(lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+
+              <button className="settings-popover-install-btn" onClick={() => { setShowUpToDateModal(false); checkForUpdate(); }} style={{ background: 'linear-gradient(135deg, #34c759, #30b350)', boxShadow: '0 4px 14px rgba(52, 199, 89, 0.3)' }}>
+                Check Again
+              </button>
             </div>
           </>
         )}
