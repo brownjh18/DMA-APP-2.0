@@ -23,68 +23,123 @@
   letter-spacing: -0.3px;
 }
 
-/* Profile Card */
+/* Profile Card - Redesigned */
 .settings-profile-card {
   margin: 0 16px 20px;
   background: var(--ios26-card-bg-light);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 18px 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .settings-profile-card:active {
   transform: scale(0.98);
-  opacity: 0.8;
+}
+
+.settings-profile-banner {
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  position: relative;
+}
+
+.settings-profile-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
+}
+
+.settings-profile-content {
+  display: flex;
+  align-items: center;
+  padding: 0 16px 16px;
+  gap: 14px;
+  margin-top: -26px;
+  position: relative;
+}
+
+.settings-profile-avatar-wrapper {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.settings-profile-avatar-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  opacity: 0.3;
 }
 
 .settings-profile-avatar {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+  border: 2.5px solid var(--ios26-card-bg-light, white);
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.5px;
 }
 
 .settings-profile-info {
   flex: 1;
   min-width: 0;
+  padding-top: 26px;
 }
 
 .settings-profile-name {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
 
 .settings-profile-email {
   font-size: 13px;
-  color: #1a1a1a;
+  color: #8e8e93;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.settings-profile-arrow {
-  color: #1a1a1a;
-  font-size: 18px;
+.settings-profile-action {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  margin-top: 26px;
+  color: #c7c7cc;
+  transition: all 0.2s ease;
+}
+
+.settings-profile-action:active {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.settings-profile-action ion-icon {
+  font-size: 14px;
 }
 
 /* Grouped Section */
@@ -851,8 +906,36 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
 [data-theme="dark"] .settings-profile-card {
   background: var(--ios26-card-bg-dark) !important;
-  border: 1px solid var(--ios26-separator-dark) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .settings-profile-banner {
+  background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #a855f7 100%) !important;
+}
+
+[data-theme="dark"] .settings-profile-avatar {
+  border-color: var(--ios26-card-bg-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-avatar-wrapper::before {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7) !important;
+}
+
+[data-theme="dark"] .settings-profile-name {
   color: var(--ios26-text-primary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-email {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-action {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--ios26-text-tertiary-dark) !important;
+}
+
+[data-theme="dark"] .settings-profile-action:active {
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 [data-theme="dark"] .settings-item:not(:last-child)::after {
@@ -1009,18 +1092,6 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   color: var(--ios26-text-tertiary-dark) !important;
 }
 
-[data-theme="dark"] .settings-profile-arrow {
-  color: var(--ios26-text-tertiary-dark) !important;
-}
-
-[data-theme="dark"] .settings-profile-name {
-  color: var(--ios26-text-primary-dark) !important;
-}
-
-[data-theme="dark"] .settings-profile-email {
-  color: var(--ios26-text-secondary-dark) !important;
-}
-
 [data-theme="dark"] .settings-section-title {
   color: var(--ios26-text-secondary-dark) !important;
 }
@@ -1095,7 +1166,32 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
   :root:not([data-theme="light"]) .settings-profile-card {
     background: var(--ios26-card-bg-dark);
-    border: 1px solid var(--ios26-separator-dark);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-banner {
+    background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #a855f7 100%);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-avatar {
+    border-color: var(--ios26-card-bg-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-avatar-wrapper::before {
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-name {
+    color: var(--ios26-text-primary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-email {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-action {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ios26-text-tertiary-dark);
   }
 
   :root:not([data-theme="light"]) .settings-item:not(:last-child)::after {
@@ -1240,18 +1336,6 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
   :root:not([data-theme="light"]) .settings-popover-footer-text {
     color: var(--ios26-text-tertiary-dark);
-  }
-
-  :root:not([data-theme="light"]) .settings-profile-arrow {
-    color: var(--ios26-text-tertiary-dark);
-  }
-
-  :root:not([data-theme="light"]) .settings-profile-name {
-    color: var(--ios26-text-primary-dark);
-  }
-
-  :root:not([data-theme="light"]) .settings-profile-email {
-    color: var(--ios26-text-secondary-dark);
   }
 
   :root:not([data-theme="light"]) .settings-section-title {
