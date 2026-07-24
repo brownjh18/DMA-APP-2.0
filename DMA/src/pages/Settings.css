@@ -23,84 +23,78 @@
   letter-spacing: -0.3px;
 }
 
-/* Profile Card - Clean Centered Design */
+/* Profile Card - Accent Stripe Design */
 .settings-profile-card {
   margin: 20px 16px 20px;
   background: var(--ios26-card-bg-light);
-  border-radius: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 16px 16px 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
+  overflow: hidden;
 }
 
 .settings-profile-card:active {
   transform: scale(0.98);
 }
 
-.settings-profile-top {
-  padding: 20px 20px 0;
-  display: flex;
-  justify-content: center;
-}
-
-.settings-profile-avatar-wrapper {
-  position: relative;
+.settings-profile-accent {
+  width: 5px;
+  height: 100%;
+  min-height: 56px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6, #d946ef);
+  border-radius: 0 4px 4px 0;
+  flex-shrink: 0;
+  margin-left: 0;
 }
 
 .settings-profile-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   background: linear-gradient(145deg, #6366f1, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
   letter-spacing: 0.5px;
 }
 
-.settings-profile-status-dot {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #34c759;
-  border: 2.5px solid var(--ios26-card-bg-light, white);
-  box-shadow: 0 1px 4px rgba(52, 199, 89, 0.4);
-}
-
-.settings-profile-bottom {
-  padding: 14px 20px 18px;
-  text-align: center;
-  position: relative;
+.settings-profile-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .settings-profile-name {
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 3px;
-  letter-spacing: -0.3px;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
 
 .settings-profile-email {
   font-size: 13px;
   color: #8e8e93;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.settings-profile-chevron {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+.settings-profile-arrow {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -108,10 +102,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   color: #c7c7cc;
+  transition: all 0.2s ease;
 }
 
-.settings-profile-chevron ion-icon {
+.settings-profile-card:active .settings-profile-arrow {
+  transform: translateX(2px);
+}
+
+.settings-profile-arrow ion-icon {
   font-size: 13px;
 }
 
@@ -879,16 +879,16 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
 [data-theme="dark"] .settings-profile-card {
   background: var(--ios26-card-bg-dark) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .settings-profile-accent {
+  background: linear-gradient(180deg, #6366f1, #a855f7, #d946ef) !important;
 }
 
 [data-theme="dark"] .settings-profile-avatar {
   background: linear-gradient(145deg, #6366f1, #a855f7) !important;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45) !important;
-}
-
-[data-theme="dark"] .settings-profile-status-dot {
-  border-color: var(--ios26-card-bg-dark) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45) !important;
 }
 
 [data-theme="dark"] .settings-profile-name {
@@ -899,7 +899,7 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   color: var(--ios26-text-secondary-dark) !important;
 }
 
-[data-theme="dark"] .settings-profile-chevron {
+[data-theme="dark"] .settings-profile-arrow {
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--ios26-text-tertiary-dark) !important;
 }
@@ -1132,16 +1132,16 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
 
   :root:not([data-theme="light"]) .settings-profile-card {
     background: var(--ios26-card-bg-dark);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+
+  :root:not([data-theme="light"]) .settings-profile-accent {
+    background: linear-gradient(180deg, #6366f1, #a855f7, #d946ef);
   }
 
   :root:not([data-theme="light"]) .settings-profile-avatar {
     background: linear-gradient(145deg, #6366f1, #a855f7);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
-  }
-
-  :root:not([data-theme="light"]) .settings-profile-status-dot {
-    border-color: var(--ios26-card-bg-dark);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45);
   }
 
   :root:not([data-theme="light"]) .settings-profile-name {
@@ -1152,7 +1152,7 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
     color: var(--ios26-text-secondary-dark);
   }
 
-  :root:not([data-theme="light"]) .settings-profile-chevron {
+  :root:not([data-theme="light"]) .settings-profile-arrow {
     background: rgba(255, 255, 255, 0.08);
     color: var(--ios26-text-tertiary-dark);
   }
