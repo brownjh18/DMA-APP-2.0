@@ -107,8 +107,17 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
       const stored = localStorage.getItem('app-update-available');
       const storedVersion = localStorage.getItem('app-update-version');
       if (stored === 'true' && storedVersion) {
-        setLatestVersion(storedVersion);
-        setHasUpdate(compareVersions(storedVersion, CURRENT_APP_VERSION) > 0);
+        // Verify cached version is still newer than current app
+        const stillHasUpdate = compareVersions(storedVersion, CURRENT_APP_VERSION) > 0;
+        if (stillHasUpdate) {
+          setLatestVersion(storedVersion);
+          setHasUpdate(true);
+        } else {
+          // Cached version is no longer newer, clear stale cache
+          localStorage.removeItem('app-update-available');
+          localStorage.removeItem('app-update-version');
+          setHasUpdate(false);
+        }
       }
     }
   }, []);

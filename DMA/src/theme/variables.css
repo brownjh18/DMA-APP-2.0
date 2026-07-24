@@ -868,6 +868,18 @@ ion-action-sheet .action-sheet-wrapper {
 ion-alert .alert-wrapper {
   border-radius: 20px !important;
   overflow: hidden;
+  animation: alertPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes alertPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 ion-alert .alert-head {
@@ -944,6 +956,12 @@ ion-alert::part(backdrop) {
   background: rgba(0, 0, 0, 0.4) !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
+  animation: backdropFadeIn 0.15s ease !important;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ============================================

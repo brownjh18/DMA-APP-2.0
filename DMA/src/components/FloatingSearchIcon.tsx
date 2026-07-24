@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { IonIcon, IonBadge, IonButton, IonPopover, IonAvatar } from '@ionic/react';
+import { IonIcon, IonBadge, IonButton, IonAvatar } from '@ionic/react';
 import { search, radio, playCircle, calendar, book, people } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AuthContext } from '../App';
