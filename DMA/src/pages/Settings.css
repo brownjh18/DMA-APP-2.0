@@ -413,55 +413,153 @@
   color: #ff3b30;
 }
 
-/* Theme Selector */
-.settings-theme-selector {
+/* Theme Cards */
+.settings-theme-cards {
   display: flex;
-  gap: 8px;
-  padding: 8px 16px 16px;
+  gap: 10px;
+  padding: 4px 16px 16px;
 }
 
-.settings-theme-option {
+.settings-theme-card {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 8px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.03);
+  position: relative;
+  background: var(--ios26-card-bg-light);
+  border-radius: 16px;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.settings-theme-option:active {
+.settings-theme-card:active {
   transform: scale(0.96);
 }
 
-.settings-theme-option.active {
-  background: rgba(102, 126, 234, 0.1);
+.settings-theme-card.active {
   border-color: #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25), 0 0 0 1px rgba(102, 126, 234, 0.1);
+  transform: scale(1.02);
 }
 
-.settings-theme-option-icon {
-  font-size: 22px;
-  color: #1a1a1a;
+.settings-theme-card-preview {
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.settings-theme-card-mini-theme {
+  width: 52px;
+  height: 70px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.settings-theme-card-mini-theme.light {
+  background: #f2f2f7;
+}
+
+.settings-theme-card-mini-theme.dark {
+  background: #1c1c1e;
+}
+
+.settings-theme-card-mini-theme.system {
+  background: linear-gradient(135deg, #f2f2f7 50%, #1c1c1e 50%);
+}
+
+.mini-header {
+  height: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light .mini-header {
+  background: #ffffff;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.dark .mini-header {
+  background: #2c2c2e;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.system .mini-header {
+  background: linear-gradient(135deg, #ffffff 50%, #2c2c2e 50%);
+}
+
+.mini-body {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mini-card {
+  height: 8px;
+  border-radius: 3px;
+}
+
+.light .mini-card {
+  background: #ffffff;
+}
+
+.dark .mini-card {
+  background: #3a3a3c;
+}
+
+.system .mini-card {
+  background: linear-gradient(135deg, #ffffff 50%, #3a3a3c 50%);
+}
+
+.mini-card.short {
+  width: 65%;
+}
+
+.settings-theme-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.settings-theme-card-icon {
+  font-size: 18px;
+  color: #8e8e93;
   transition: color 0.2s ease;
 }
 
-.settings-theme-option.active .settings-theme-option-icon {
+.settings-theme-card.active .settings-theme-card-icon {
   color: #667eea;
 }
 
-.settings-theme-option-label {
+.settings-theme-card-label {
   font-size: 11px;
   font-weight: 600;
   color: #1a1a1a;
-  transition: color 0.2s ease;
+  letter-spacing: 0.2px;
 }
 
-.settings-theme-option.active .settings-theme-option-label {
+.settings-theme-card.active .settings-theme-card-label {
   color: #667eea;
+}
+
+.settings-theme-card-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 16px;
+  color: #667eea;
+  animation: settingsPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes settingsPopIn {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Toggle Switch */
@@ -741,28 +839,42 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
   background: var(--ios26-fill-dark) !important;
 }
 
-[data-theme="dark"] .settings-theme-option {
-  background: var(--ios26-fill-dark) !important;
+[data-theme="dark"] .settings-theme-card {
+  background: var(--ios26-card-bg-dark) !important;
+  border: 2px solid transparent !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
-[data-theme="dark"] .settings-theme-option.active {
-  background: rgba(99, 102, 241, 0.2) !important;
+[data-theme="dark"] .settings-theme-card.active {
   border-color: #8b5cf6 !important;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.15) !important;
 }
 
-[data-theme="dark"] .settings-theme-option-icon {
-  color: var(--ios26-text-primary-dark) !important;
+[data-theme="dark"] .settings-theme-card-mini-theme {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] .settings-theme-option.active .settings-theme-option-icon {
+[data-theme="dark"] .settings-theme-card-info {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .settings-theme-card-icon {
+  color: var(--ios26-text-secondary-dark) !important;
+}
+
+[data-theme="dark"] .settings-theme-card.active .settings-theme-card-icon {
   color: #8b5cf6 !important;
 }
 
-[data-theme="dark"] .settings-theme-option-label {
+[data-theme="dark"] .settings-theme-card-label {
   color: var(--ios26-text-primary-dark) !important;
 }
 
-[data-theme="dark"] .settings-theme-option.active .settings-theme-option-label {
+[data-theme="dark"] .settings-theme-card.active .settings-theme-card-label {
+  color: #8b5cf6 !important;
+}
+
+[data-theme="dark"] .settings-theme-card-check {
   color: #8b5cf6 !important;
 }
 
@@ -969,28 +1081,37 @@ ion-header ion-toolbar.toolbar-ios ion-icon {
     background: var(--ios26-fill-dark);
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option {
-    background: var(--ios26-fill-dark);
+  :root:not([data-theme="light"]) .settings-theme-card {
+    background: var(--ios26-card-bg-dark);
+    border: 2px solid transparent;
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option.active {
-    background: rgba(99, 102, 241, 0.2);
+  :root:not([data-theme="light"]) .settings-theme-card.active {
     border-color: #8b5cf6;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.15);
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option-icon {
-    color: var(--ios26-text-primary-dark);
+  :root:not([data-theme="light"]) .settings-theme-card-info {
+    border-top-color: rgba(255, 255, 255, 0.06);
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option.active .settings-theme-option-icon {
+  :root:not([data-theme="light"]) .settings-theme-card-icon {
+    color: var(--ios26-text-secondary-dark);
+  }
+
+  :root:not([data-theme="light"]) .settings-theme-card.active .settings-theme-card-icon {
     color: #8b5cf6;
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option-label {
+  :root:not([data-theme="light"]) .settings-theme-card-label {
     color: var(--ios26-text-primary-dark);
   }
 
-  :root:not([data-theme="light"]) .settings-theme-option.active .settings-theme-option-label {
+  :root:not([data-theme="light"]) .settings-theme-card.active .settings-theme-card-label {
+    color: #8b5cf6;
+  }
+
+  :root:not([data-theme="light"]) .settings-theme-card-check {
     color: #8b5cf6;
   }
 

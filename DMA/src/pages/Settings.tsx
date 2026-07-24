@@ -151,19 +151,33 @@ const Settings: React.FC = () => {
         {/* Appearance Section */}
         <div className="settings-section">
           <p className="settings-section-title">Appearance</p>
-          <div className="settings-section-card">
-            <div className="settings-theme-selector">
-              {themeOptions.map((opt) => (
-                <div
-                  key={opt.key}
-                  className={`settings-theme-option ${appearance === opt.key ? 'active' : ''}`}
-                  onClick={() => setAppearance(opt.key)}
-                >
-                  <IonIcon icon={opt.icon} className="settings-theme-option-icon" />
-                  <span className="settings-theme-option-label">{opt.label}</span>
+          <div className="settings-theme-cards">
+            {themeOptions.map((opt) => (
+              <div
+                key={opt.key}
+                className={`settings-theme-card ${appearance === opt.key ? 'active' : ''}`}
+                onClick={() => setAppearance(opt.key)}
+              >
+                <div className="settings-theme-card-preview">
+                  <div className={`settings-theme-card-mini-theme ${opt.key}`}>
+                    <div className="mini-header" />
+                    <div className="mini-body">
+                      <div className="mini-card" />
+                      <div className="mini-card short" />
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="settings-theme-card-info">
+                  <IonIcon icon={opt.icon} className="settings-theme-card-icon" />
+                  <span className="settings-theme-card-label">{opt.label}</span>
+                </div>
+                {appearance === opt.key && (
+                  <div className="settings-theme-card-check">
+                    <IonIcon icon={checkmarkCircle} />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
