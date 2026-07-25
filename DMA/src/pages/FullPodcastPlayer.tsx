@@ -32,8 +32,6 @@ import {
   chevronBack,
   list,
   informationCircle,
-  chatbubbleOutline,
-  send,
   alertCircleOutline,
   calendar,
   time,
@@ -71,17 +69,7 @@ interface Podcast {
   broadcastStartTime?: string;
 }
 
-interface Comment {
-  _id: string;
-  content: string;
-  user?: {
-    name: string;
-    profileImage?: string;
-  };
-  createdAt: string;
-}
-
-type ViewType = 'home' | 'upnext' | 'comments';
+type ViewType = 'home' | 'upnext';
 
 const FullPodcastPlayer: React.FC = () => {
   const history = useHistory();
@@ -102,17 +90,12 @@ const FullPodcastPlayer: React.FC = () => {
   
   // View navigation state
   const [currentView, setCurrentView] = useState<ViewType>('home');
-  const [views] = useState<ViewType[]>(['home', 'upnext', 'comments']);
+  const [views] = useState<ViewType[]>(['home', 'upnext']);
   
   // Swipe gesture state
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const touchEndRef = useRef<{ x: number; y: number; time: number } | null>(null);
   
-  // Comments state
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-
   // Check for id query parameter and fetch podcast if not in context
   useEffect(() => {
     const fetchPodcastById = async () => {
@@ -240,27 +223,6 @@ const FullPodcastPlayer: React.FC = () => {
     checkSavedStatus();
   }, [podcast, isLoggedIn]);
 
-  // Fetch comments when podcast changes and poll every 5s for live updates
-  useEffect(() => {
-    if (!podcast?.id) return;
-
-    const fetchComments = async () => {
-      try {
-        const response = await fetch(`${BACKEND_BASE_URL}/api/comments/${podcast.id}?_t=${Date.now()}`);
-        if (response.ok) {
-          const data = await response.json();
-          setComments(data.comments || []);
-        }
-      } catch (error) {
-        console.warn('Failed to fetch comments:', error);
-      }
-    };
-
-    fetchComments();
-    const interval = setInterval(fetchComments, 5000);
-    return () => clearInterval(interval);
-  }, [podcast?.id]);
-
   // Global mouse event listeners for volume dragging
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -346,35 +308,6 @@ const FullPodcastPlayer: React.FC = () => {
       }
     } catch (error) {
       console.error('Error sharing:', error);
-    }
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!podcast || !newComment.trim()) return;
-
-    setIsSubmittingComment(true);
-    try {
-      const contentType = podcast.isLive ? 'live_broadcast' : 'podcast';
-      const response = await fetch(`${BACKEND_BASE_URL}/api/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: newComment.trim(),
-          contentId: podcast.id,
-          contentType
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setComments(prev => [data.comment, ...prev]);
-        setNewComment('');
-      }
-    } catch (error) {
-      console.error('Error posting comment:', error);
-    } finally {
-      setIsSubmittingComment(false);
     }
   };
 
@@ -526,7 +459,6 @@ const FullPodcastPlayer: React.FC = () => {
     switch (view) {
       case 'home': return 'Home';
       case 'upnext': return 'Up Next';
-      case 'comments': return 'Comments';
       default: return '';
     }
   };
@@ -568,7 +500,7 @@ const FullPodcastPlayer: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => { clearPlayer(); history.goBack(); }} style={{ marginLeft: '4px' }}>
             <IonIcon icon={chevronBack} style={{ fontSize: '22px', color: 'white' }} />
           </IonButton>
-          <IonTitle style={{ color: 'white', textAlign: 'center', paddingRight: '60px' }}>
+          <IonTitle style={{ color: 'white' }}>
             Now Playing
           </IonTitle>
         </IonToolbar>
@@ -878,133 +810,6 @@ const FullPodcastPlayer: React.FC = () => {
                       No other podcasts available
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Comments View */}
-              {currentView === 'comments' && (
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '10px',
-                  animation: 'fadeIn 0.3s ease-out'
-                }}>
-                  {/* Comment Form */}
-                  <form onSubmit={handleSubmitComment} style={{
-                    padding: '18px',
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Write a comment..."
-                      style={{
-                        width: '100%',
-                        minHeight: '80px',
-                        padding: '14px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        borderRadius: '12px',
-                        color: 'white',
-                        fontSize: '0.9em',
-                        resize: 'vertical',
-                        outline: 'none',
-                        fontFamily: 'inherit'
-                      }}
-                      disabled={isSubmittingComment}
-                    />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                      <IonButton
-                        type="submit"
-                        fill="solid"
-                        disabled={!newComment.trim() || isSubmittingComment}
-                        style={{
-                          '--background': 'rgba(255,255,255,0.2)',
-                          '--color': 'white',
-                          '--border-radius': '10px',
-                          fontSize: '0.85em',
-                          padding: '10px 20px',
-                          fontWeight: '600'
-                        }}
-                      >
-                        <IonIcon icon={send} style={{ fontSize: '14px', marginRight: '6px' }} />
-                        {isSubmittingComment ? 'Posting...' : 'Post'}
-                      </IonButton>
-                    </div>
-                  </form>
-
-                  {/* Comments List */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {comments.length > 0 ? (
-                      comments.map((comment) => (
-                        <div key={comment._id} style={{
-                          padding: '12px',
-                          backgroundColor: 'rgba(255,255,255,0.06)',
-                          borderRadius: '12px',
-                          border: '1px solid rgba(255,255,255,0.06)',
-                          transition: 'all 0.25s ease'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
-                              backgroundColor: 'rgba(99, 102, 241, 0.3)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.9em',
-                              fontWeight: '600',
-                              color: 'white',
-                              boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)'
-                            }}>
-                              {(comment.user?.name || 'U')[0].toUpperCase()}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <span style={{
-                                fontSize: '0.85em',
-                                fontWeight: '600',
-                                color: 'white'
-                              }}>
-                                {comment.user?.name || 'Anonymous'}
-                              </span>
-                              <span style={{
-                                fontSize: '0.75em',
-                                color: 'rgba(255,255,255,0.4)',
-                                marginLeft: '8px'
-                              }}>
-                                {new Date(comment.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <p style={{
-                            margin: 0,
-                            fontSize: '0.9em',
-                            color: 'rgba(255,255,255,0.8)',
-                            lineHeight: '1.6',
-                            paddingLeft: '36px'
-                          }}>
-                            {comment.content}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '48px 24px',
-                        color: 'rgba(255,255,255,0.5)',
-                        fontSize: '0.9em',
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.08)'
-                      }}>
-                        No comments yet. Be the first to comment!
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
             </div>
