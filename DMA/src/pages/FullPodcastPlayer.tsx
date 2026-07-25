@@ -552,13 +552,14 @@ const FullPodcastPlayer: React.FC = () => {
 
         {/* Main Content Container */}
         <div style={{
-          minHeight: '100vh',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           padding: '16px 16px 0 16px',
           color: 'white',
           maxWidth: '100vw',
-          margin: '0 auto'
+          margin: '0 auto',
+          overflow: 'hidden'
         }}>
           {/* Middle Section - View Content (Home/UpNext/About/Comments) */}
           <div style={{
@@ -611,53 +612,61 @@ const FullPodcastPlayer: React.FC = () => {
             <div style={{
               flex: 1,
               overflowY: 'auto',
-              paddingRight: '8px'
+              paddingRight: '8px',
+              minHeight: 0
             }}>
-              {/* Home View - Centered Podcast Info */}
+              {/* Home View - Centered Podcast Info (no scroll, stretches to fill) */}
               {currentView === 'home' && (
-                <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                  {/* Album Art - Centered */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  animation: 'fadeIn 0.3s ease-out'
+                }}>
+                  {/* Album Art - Responsive */}
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginBottom: '20px'
+                    width: 'clamp(140px, 35vmin, 220px)',
+                    height: 'clamp(140px, 35vmin, 220px)',
+                    borderRadius: '20px',
+                    backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    marginBottom: 'clamp(12px, 3vmin, 20px)'
                   }}>
                     <div style={{
-                      width: 'clamp(180px, 45vw, 220px)',
-                      height: 'clamp(180px, 45vw, 220px)',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      border: '2px solid rgba(255,255,255,0.3)',
                       borderRadius: '20px',
-                      backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderRadius: '20px',
-                        animation: isPlaying ? 'pulse-border 2s infinite' : 'none',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
-                      }} />
-                    </div>
+                      animation: isPlaying ? 'pulse-border 2s infinite' : 'none',
+                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
+                    }} />
                   </div>
 
-                  {/* Podcast Details - Centered, No Container */}
+                  {/* Podcast Details - Centered */}
                   <div style={{
                     textAlign: 'center',
                     maxWidth: '400px',
-                    margin: '0 auto',
-                    padding: '0 8px'
+                    width: '100%',
+                    padding: '0 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 'clamp(6px, 1.5vmin, 14px)'
                   }}>
                     <h1 style={{
-                      fontSize: 'clamp(1.2em, 4vw, 1.5em)',
+                      fontSize: 'clamp(1.1em, 3.5vmin, 1.5em)',
                       fontWeight: '700',
-                      margin: '0 0 10px 0',
+                      margin: 0,
                       lineHeight: '1.3',
                       color: 'white',
                       textShadow: '0 2px 8px rgba(0,0,0,0.5)'
@@ -666,10 +675,10 @@ const FullPodcastPlayer: React.FC = () => {
                     </h1>
 
                     <p style={{
-                      fontSize: 'clamp(0.9em, 2.5vw, 1em)',
+                      fontSize: 'clamp(0.85em, 2.2vmin, 1em)',
                       color: 'rgba(255,255,255,0.85)',
                       fontWeight: '500',
-                      margin: '0 0 14px 0'
+                      margin: 0
                     }}>
                       {podcast.speaker || 'Dove Ministries Africa'}
                     </p>
@@ -678,10 +687,9 @@ const FullPodcastPlayer: React.FC = () => {
                       display: 'flex',
                       flexWrap: 'wrap',
                       justifyContent: 'center',
-                      gap: '16px',
-                      fontSize: 'clamp(0.75em, 2vw, 0.85em)',
-                      color: 'rgba(255,255,255,0.65)',
-                      marginBottom: '16px'
+                      gap: '12px',
+                      fontSize: 'clamp(0.7em, 1.8vmin, 0.85em)',
+                      color: 'rgba(255,255,255,0.65)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <IonIcon icon={calendar} style={{ fontSize: '14px' }} />
@@ -696,10 +704,14 @@ const FullPodcastPlayer: React.FC = () => {
                     {/* Description */}
                     <p style={{
                       margin: 0,
-                      fontSize: 'clamp(0.85em, 2vw, 0.95em)',
+                      fontSize: 'clamp(0.78em, 1.8vmin, 0.95em)',
                       color: 'rgba(255,255,255,0.75)',
-                      lineHeight: '1.6',
-                      maxWidth: '100%'
+                      lineHeight: '1.5',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical'
                     }}>
                       {podcast.description || 'No description available for this podcast.'}
                     </p>
