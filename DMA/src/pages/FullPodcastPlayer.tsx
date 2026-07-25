@@ -509,6 +509,7 @@ const FullPodcastPlayer: React.FC = () => {
       <IonContent 
         ref={contentRef}
         fullscreen 
+        scrollY={false}
         style={{ '--background': 'transparent' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -561,13 +562,12 @@ const FullPodcastPlayer: React.FC = () => {
           margin: '0 auto',
           overflow: 'hidden'
         }}>
-          {/* Middle Section - View Content (Home/UpNext/About/Comments) */}
+          {/* Middle Section - View Content */}
           <div style={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            minHeight: 0,
-            paddingBottom: '340px' // Space for fixed controls
+            minHeight: 0
           }}>
             {/* View Header - Tabs Only */}
             <div style={{
@@ -611,9 +611,9 @@ const FullPodcastPlayer: React.FC = () => {
             {/* View Content */}
             <div style={{
               flex: 1,
-              overflowY: 'auto',
-              paddingRight: '8px',
-              minHeight: 0
+              minHeight: 0,
+              overflow: 'hidden',
+              paddingRight: '8px'
             }}>
               {/* Home View - Centered Podcast Info (no scroll, stretches to fill) */}
               {currentView === 'home' && (
@@ -721,7 +721,7 @@ const FullPodcastPlayer: React.FC = () => {
 
               {/* UpNext View */}
               {currentView === 'upnext' && (
-                <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                <div style={{ animation: 'fadeIn 0.3s ease-out', height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                   <div style={{ marginBottom: '32px' }}>
                     <h4 style={{
                       margin: '0 0 4px 0',
