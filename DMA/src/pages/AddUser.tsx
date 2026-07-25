@@ -127,7 +127,7 @@ const AddUser: React.FC = () => {
       if (hasProfile) {
         const input = fileInputRef.current!;
         const profileFormData = new FormData();
-        profileFormData.append('profileFile', input.files![0]);
+        profileFormData.append('thumbnailFile', input.files![0]);
 
         updateStep(0, { status: 'active', progress: 0 });
 
