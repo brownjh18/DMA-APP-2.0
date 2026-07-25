@@ -178,7 +178,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             channelId: 'dma-notifications',
             actionTypeId: 'notification-open',
             sound: 'default',
-            vibration: true,
           }],
         });
         console.log('📱 Device notification shown:', title);
@@ -195,7 +194,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           tag: `dma-${Date.now()}`,
           renotify: true,
           vibrate: [200, 100, 200],
-        });
+        } as any);
 
         notification.onclick = () => {
           window.focus();
