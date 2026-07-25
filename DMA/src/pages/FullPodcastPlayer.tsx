@@ -623,6 +623,7 @@ const FullPodcastPlayer: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   height: '100%',
+                  paddingBottom: '15%',
                   animation: 'fadeIn 0.3s ease-out'
                 }}>
                   {/* Album Art - Responsive */}
