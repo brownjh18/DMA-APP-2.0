@@ -554,9 +554,20 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
           filename: 'cloud-upload'
         });
 
-        // Fetch duration asynchronously in the background
-        getCloudinaryDuration(publicId).then((dur) => {
+        // Fetch duration asynchronously in the background, then update the sermon
+        getCloudinaryDuration(publicId).then(async (dur) => {
           console.log(`Duration resolved asynchronously: ${dur}`);
+          try {
+            const updated = await Sermon.findOneAndUpdate(
+              { videoUrl },
+              { duration: dur },
+              { new: true }
+            );
+            if (updated) console.log(`✅ Sermon duration updated to ${dur}`);
+            else console.log('⚠️ No sermon found with videoUrl:', videoUrl);
+          } catch (e) {
+            console.warn('Failed to update sermon duration:', e.message);
+          }
         }).catch((err) => {
           console.warn('Background duration fetch failed:', err.message);
         });
@@ -580,10 +591,11 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
         filename: req.file.filename
       });
 
-      // Background: get duration + generate thumbnail
+      // Background: get duration + generate thumbnail, then update sermon
       (async () => {
+        let dur = '00:00';
         try {
-          const dur = await getVideoDuration(videoPath);
+          dur = await getVideoDuration(videoPath);
           console.log('Video duration (async):', dur);
         } catch (e) {
           console.warn('Failed to get video duration:', e.message);
@@ -593,6 +605,17 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
           console.log('Thumbnail generated (async):', thumb);
         } catch (e) {
           console.warn('Failed to generate thumbnail:', e.message);
+        }
+        try {
+          const updated = await Sermon.findOneAndUpdate(
+            { videoUrl },
+            { duration: dur },
+            { new: true }
+          );
+          if (updated) console.log(`✅ Sermon duration updated to ${dur}`);
+          else console.log('⚠️ No sermon found with videoUrl:', videoUrl);
+        } catch (e) {
+          console.warn('Failed to update sermon duration:', e.message);
         }
       })();
 
