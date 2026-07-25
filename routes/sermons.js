@@ -554,23 +554,8 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
           filename: 'cloud-upload'
         });
 
-        // Fetch duration asynchronously in the background, then update the sermon
-        getCloudinaryDuration(publicId).then(async (dur) => {
-          console.log(`Duration resolved asynchronously: ${dur}`);
-          try {
-            const updated = await Sermon.findOneAndUpdate(
-              { videoUrl },
-              { duration: dur },
-              { new: true }
-            );
-            if (updated) console.log(`✅ Sermon duration updated to ${dur}`);
-            else console.log('⚠️ No sermon found with videoUrl:', videoUrl);
-          } catch (e) {
-            console.warn('Failed to update sermon duration:', e.message);
-          }
-        }).catch((err) => {
-          console.warn('Background duration fetch failed:', err.message);
-        });
+        // Duration will be resolved by the sermon creation route's background job
+        // No need to poll here — the POST / route handles it after saving
 
         return;
       } else {
@@ -591,31 +576,14 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
         filename: req.file.filename
       });
 
-      // Background: get duration + generate thumbnail, then update sermon
+      // Duration will be resolved by the sermon creation route's background job
+      // Just generate the thumbnail here
       (async () => {
-        let dur = '00:00';
-        try {
-          dur = await getVideoDuration(videoPath);
-          console.log('Video duration (async):', dur);
-        } catch (e) {
-          console.warn('Failed to get video duration:', e.message);
-        }
         try {
           const thumb = await generateThumbnail(videoPath);
           console.log('Thumbnail generated (async):', thumb);
         } catch (e) {
           console.warn('Failed to generate thumbnail:', e.message);
-        }
-        try {
-          const updated = await Sermon.findOneAndUpdate(
-            { videoUrl },
-            { duration: dur },
-            { new: true }
-          );
-          if (updated) console.log(`✅ Sermon duration updated to ${dur}`);
-          else console.log('⚠️ No sermon found with videoUrl:', videoUrl);
-        } catch (e) {
-          console.warn('Failed to update sermon duration:', e.message);
         }
       })();
 
@@ -738,13 +706,22 @@ router.post('/', authenticateToken, requireAdmin, [
       if (isUploadedVideo && (!sermon.duration || sermon.duration === '00:00')) {
         const updateDuration = async () => {
           try {
-            let dur = '00:00';
+            let dur = null;
             if (videoUrl.includes('cloudinary.com') || videoUrl.includes('res.cloudinary.com')) {
-              const cloudinary = require('cloudinary').v2;
-              const publicIdMatch = videoUrl.match(/\/v\d+\/(.+)\.(mp4|webm|mov)/);
-              if (publicIdMatch) {
-                const publicId = publicIdMatch[1];
-                dur = await getCloudinaryDuration(publicId);
+              const publicId = cloudStorage.extractPublicId(videoUrl);
+              if (publicId) {
+                // Quick single attempt — don't wait for processing
+                const cloudinary = require('cloudinary').v2;
+                const result = await cloudinary.api.resource(publicId, { resource_type: 'video' });
+                if (result && result.duration != null) {
+                  const totalSeconds = Math.floor(result.duration);
+                  const h = Math.floor(totalSeconds / 3600);
+                  const m = Math.floor((totalSeconds % 3600) / 60);
+                  const s = totalSeconds % 60;
+                  dur = h > 0
+                    ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+                    : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                }
               }
             } else {
               const localPath = path.join(__dirname, '..', videoUrl);
@@ -755,6 +732,8 @@ router.post('/', authenticateToken, requireAdmin, [
             if (dur && dur !== '00:00') {
               await Sermon.findByIdAndUpdate(sermon._id, { duration: dur });
               console.log(`✅ Sermon "${sermon.title}" duration updated to ${dur}`);
+            } else {
+              console.log(`⏳ Sermon "${sermon.title}" video not ready yet — run /api/sermons/fix-durations later`);
             }
           } catch (e) {
             console.warn('Failed to update sermon duration:', e.message);
@@ -1196,12 +1175,21 @@ router.post('/fix-durations', authenticateToken, requireAdmin, async (req, res) 
       if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) continue;
 
       try {
-        let dur = '00:00';
+        let dur = null;
         if (videoUrl.includes('cloudinary.com') || videoUrl.includes('res.cloudinary.com')) {
-          const cloudinary = require('cloudinary').v2;
-          const publicIdMatch = videoUrl.match(/\/v\d+\/(.+)\.(mp4|webm|mov)/);
-          if (publicIdMatch) {
-            dur = await getCloudinaryDuration(publicIdMatch[1]);
+          const publicId = cloudStorage.extractPublicId(videoUrl);
+          if (publicId) {
+            const cloudinary = require('cloudinary').v2;
+            const result = await cloudinary.api.resource(publicId, { resource_type: 'video' });
+            if (result && result.duration != null) {
+              const totalSeconds = Math.floor(result.duration);
+              const h = Math.floor(totalSeconds / 3600);
+              const m = Math.floor((totalSeconds % 3600) / 60);
+              const s = totalSeconds % 60;
+              dur = h > 0
+                ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+                : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
           }
         } else {
           const localPath = path.join(__dirname, '..', videoUrl);
