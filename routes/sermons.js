@@ -528,14 +528,12 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
       console.log('Cloudinary video URL:', videoUrl);
       
       // Generate thumbnail URL using Cloudinary transformation
-      // Cloudinary can generate thumbnails from video URLs directly
       let publicId = cloudStorage.extractPublicId(videoUrl);
       console.log('Extracted public ID:', publicId);
       
       // If extraction failed, try to construct public ID manually
       if (!publicId) {
         console.log('Extraction failed, trying manual construction...');
-        // Try to extract from the URL pattern: /v<version>/<publicId>
         const match = videoUrl.match(/\/v\d+\/(.+)$/);
         if (match && match[1]) {
           publicId = match[1];
@@ -544,12 +542,26 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
       }
       
       if (publicId) {
-        // Generate thumbnail URL using Cloudinary video thumbnail API
         thumbnailUrl = cloudStorage.getVideoThumbnailUrl(publicId);
         console.log('Cloudinary thumbnail URL:', thumbnailUrl);
         
-        // Fetch video duration from Cloudinary API with polling
-        duration = await getCloudinaryDuration(publicId);
+        // Respond immediately — don't block on duration polling
+        res.json({
+          message: 'Video uploaded successfully',
+          videoUrl,
+          thumbnailUrl,
+          duration: '00:00',
+          filename: 'cloud-upload'
+        });
+
+        // Fetch duration asynchronously in the background
+        getCloudinaryDuration(publicId).then((dur) => {
+          console.log(`Duration resolved asynchronously: ${dur}`);
+        }).catch((err) => {
+          console.warn('Background duration fetch failed:', err.message);
+        });
+
+        return;
       } else {
         console.error('❌ Could not extract public ID from Cloudinary URL:', videoUrl);
       }
@@ -558,31 +570,41 @@ async function getCloudinaryDuration(publicId, maxRetries = 60, initialDelayMs =
       videoUrl = `/uploads/videos/${req.file.filename}`;
       const videoPath = req.file.path;
       console.log('Local video path:', videoPath);
-      
-      // Process video to get duration and generate thumbnail
-      try {
-        console.log('Getting video duration...');
-        duration = await getVideoDuration(videoPath);
-        console.log('Video duration:', duration);
-      } catch (durationError) {
-        console.warn('Failed to get video duration:', durationError.message);
-      }
-      
-      try {
-        console.log('Generating thumbnail...');
-        thumbnailUrl = await generateThumbnail(videoPath);
-        console.log('Thumbnail generated:', thumbnailUrl);
-      } catch (thumbnailError) {
-        console.warn('Failed to generate thumbnail:', thumbnailError.message);
-      }
+
+      // Respond immediately — process duration and thumbnail asynchronously
+      res.json({
+        message: 'Video uploaded successfully',
+        videoUrl,
+        thumbnailUrl: '',
+        duration: '00:00',
+        filename: req.file.filename
+      });
+
+      // Background: get duration + generate thumbnail
+      (async () => {
+        try {
+          const dur = await getVideoDuration(videoPath);
+          console.log('Video duration (async):', dur);
+        } catch (e) {
+          console.warn('Failed to get video duration:', e.message);
+        }
+        try {
+          const thumb = await generateThumbnail(videoPath);
+          console.log('Thumbnail generated (async):', thumb);
+        } catch (e) {
+          console.warn('Failed to generate thumbnail:', e.message);
+        }
+      })();
+
+      return;
     }
 
-    console.log('Video upload completed successfully');
+    // Fallback — shouldn't reach here
     res.json({
       message: 'Video uploaded successfully',
-      videoUrl: videoUrl,
-      thumbnailUrl: thumbnailUrl,
-      duration: duration,
+      videoUrl,
+      thumbnailUrl,
+      duration,
       filename: isCloudStorage ? 'cloud-upload' : req.file.filename
     });
   } catch (error) {

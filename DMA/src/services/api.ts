@@ -897,10 +897,12 @@ class ApiService {
     formData: FormData,
     headers: Record<string, string>,
     onProgress?: (percent: number) => void,
+    timeoutMs = 300000,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
+      xhr.timeout = timeoutMs;
       Object.entries(headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
 
       if (onProgress) {
@@ -924,6 +926,7 @@ class ApiService {
         }
       };
 
+      xhr.ontimeout = () => reject(new Error('Upload timed out. Please try again.'));
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.send(formData);
     });
