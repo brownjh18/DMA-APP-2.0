@@ -223,6 +223,20 @@ const AddSermon: React.FC = () => {
     setFormData(prev => ({ ...prev, videoFile: file }));
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        const totalSeconds = Math.floor(video.duration);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const dur = h > 0
+          ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+          : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        setFormData(prev => ({ ...prev, duration: dur }));
+        URL.revokeObjectURL(video.src);
+      };
+      video.src = URL.createObjectURL(file);
     }
   };
 
@@ -369,7 +383,7 @@ const AddSermon: React.FC = () => {
         });
         videoUrl = uploadResponse.videoUrl;
         thumbnailUrl = uploadResponse.thumbnailUrl || thumbnailUrl;
-        videoDuration = uploadResponse.duration || '00:00';
+        videoDuration = formData.duration || uploadResponse.duration || '00:00';
         updateStep(videoIdx, { status: 'success', progress: 100 });
         setSaveProgress(66);
       } else {

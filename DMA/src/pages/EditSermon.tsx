@@ -265,6 +265,20 @@ const EditSermon: React.FC = () => {
     setFormData(prev => ({ ...prev, videoFile: file }));
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        const totalSeconds = Math.floor(video.duration);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const dur = h > 0
+          ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+          : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        setFormData(prev => ({ ...prev, duration: dur }));
+        URL.revokeObjectURL(video.src);
+      };
+      video.src = URL.createObjectURL(file);
     }
   };
 
@@ -369,6 +383,7 @@ const EditSermon: React.FC = () => {
             setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, progress: pct } : s));
           });
           videoUrl = uploadResponse.videoUrl;
+          setFormData(prev => ({ ...prev, duration: formData.duration || uploadResponse.duration || '00:00' }));
           setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'success', progress: 100 } : s));
           setSaveProgress(66);
         }
@@ -380,7 +395,7 @@ const EditSermon: React.FC = () => {
       setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'active', progress: 0 } : s));
       setSaveProgress(70);
 
-      const sermonData = {
+      const sermonData: any = {
         title: formData.title,
         speaker: formData.speaker,
         description: formData.description,
@@ -388,6 +403,10 @@ const EditSermon: React.FC = () => {
         thumbnailUrl: thumbnailUrl,
         isPublished: formData.status === 'published'
       };
+
+      if (formData.duration && formData.duration !== '00:00') {
+        sermonData.duration = formData.duration;
+      }
 
       if (!thumbnailRemoved && formData.videoSource === 'external' && videoUrl && (!formData.existingVideoUrl || formData.existingVideoUrl !== videoUrl)) {
         if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
