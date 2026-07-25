@@ -121,26 +121,32 @@ const AddUser: React.FC = () => {
         role: formData.role
       };
 
+      const updateStep = (idx: number, patch: Partial<SaveProgressStep>) =>
+        setSaveSteps(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
+
       if (hasProfile) {
         const input = fileInputRef.current!;
         const profileFormData = new FormData();
         profileFormData.append('profileFile', input.files![0]);
 
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'loading' } : s));
+        updateStep(0, { status: 'active', progress: 0 });
 
-        const response = await apiService.uploadThumbnail(profileFormData);
+        const response = await apiService.uploadThumbnail(profileFormData, (pct) => {
+          updateStep(0, { progress: pct });
+          setSaveProgress(Math.round((pct / 100) * 50));
+        });
         userData.profilePicture = response.thumbnailUrl;
 
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        updateStep(0, { status: 'success', progress: 100 });
         setSaveProgress(50);
         currentStepIndex = 1;
       }
 
-      setSaveSteps(prev => prev.map((s, i) => i === currentStepIndex ? { ...s, status: 'loading' } : s));
+      updateStep(currentStepIndex, { status: 'active' });
 
       await apiService.adminRegister(userData);
 
-      setSaveSteps(prev => prev.map((s, i) => i === currentStepIndex ? { ...s, status: 'success' } : s));
+      updateStep(currentStepIndex, { status: 'success' });
       setSaveProgress(100);
       setSaveStatus('success');
       sessionStorage.setItem('usersNeedRefresh', 'true');
@@ -148,6 +154,7 @@ const AddUser: React.FC = () => {
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create user');
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     }
   };
 

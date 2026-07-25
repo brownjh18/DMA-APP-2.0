@@ -457,26 +457,13 @@ class ApiService {
     return this.request('/sermons/admin/stats');
   }
 
-  async uploadSermonVideo(formData: FormData) {
+  async uploadSermonVideo(formData: FormData, onProgress?: (percent: number) => void) {
     const url = `${API_BASE_URL}/sermons/upload-video`;
-    const headers: HeadersInit = {};
-
+    const headers: Record<string, string> = {};
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Network error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
+    return this.uploadWithProgress(url, formData, headers, onProgress);
   }
 
   async saveSermon(id: string) {
@@ -709,52 +696,37 @@ class ApiService {
     return this.request(`/podcasts/${id}`);
   }
 
-  async createPodcast(formData: FormData) {
+  async createPodcast(formData: FormData, onProgress?: (percent: number) => void) {
     const url = `${API_BASE_URL}/podcasts`;
-    const headers: HeadersInit = {};
+    const headers: Record<string, string> = {};
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Network error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    // Clear podcasts cache after creating a new podcast
+    const result = await this.uploadWithProgress(url, formData, headers, onProgress);
     this.clearCacheByType('podcasts');
     return result;
   }
 
-  async updatePodcast(id: string, formData: FormData) {
+  async updatePodcast(id: string, formData: FormData, onProgress?: (percent: number) => void) {
     const url = `${API_BASE_URL}/podcasts/${id}`;
-    const headers: HeadersInit = {};
+    const headers: Record<string, string> = {};
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(url, {
+    const result = await this.uploadWithProgress(url, formData, headers, onProgress);
+    this.clearCacheByType('podcasts');
+    return result;
+  }
+
+  async updatePodcastJson(id: string, data: any) {
+    const result = await this.request(`/podcasts/${id}`, {
       method: 'PUT',
-      headers,
-      body: formData,
+      body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Network error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    // Clear podcasts cache after updating a podcast
     this.clearCacheByType('podcasts');
     return result;
   }
@@ -919,55 +891,59 @@ class ApiService {
     return this.request(`/youtube/video-details?url=${encodeURIComponent(url)}`);
   }
   
-  // Upload thumbnail
-  async uploadThumbnail(formData: FormData) {
-    const url = `${API_BASE_URL}/upload/thumbnail`;
-    const headers: Record<string, string> = {};
-    // Note: Thumbnail upload doesn't require authentication
+  // XHR-based upload with progress tracking
+  private uploadWithProgress(
+    url: string,
+    formData: FormData,
+    headers: Record<string, string>,
+    onProgress?: (percent: number) => void,
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      Object.entries(headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP ${response.status}`);
+      if (onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
       }
 
-      return response.json();
-    } catch (error: any) {
-      throw error;
-    }
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || `HTTP ${xhr.status}`));
+          }
+        } catch {
+          reject(new Error(`HTTP ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(formData);
+    });
+  }
+
+  // Upload thumbnail
+  async uploadThumbnail(formData: FormData, onProgress?: (percent: number) => void) {
+    const url = `${API_BASE_URL}/upload/thumbnail`;
+    const headers: Record<string, string> = {};
+    return this.uploadWithProgress(url, formData, headers, onProgress);
   }
 
   // Upload event video
-  async uploadEventVideo(formData: FormData) {
+  async uploadEventVideo(formData: FormData, onProgress?: (percent: number) => void) {
     const url = `${API_BASE_URL}/events/upload-video`;
     const headers: Record<string, string> = {};
-
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP ${response.status}`);
-      }
-
-      return response.json();
-    } catch (error: any) {
-      throw error;
-    }
+    return this.uploadWithProgress(url, formData, headers, onProgress);
   }
 
   // Comments

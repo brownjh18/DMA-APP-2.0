@@ -281,9 +281,12 @@ const EditEvent: React.FC = () => {
       if (formData.thumbnailFile) {
         const thumbnailFormData = new FormData();
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
-        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        const thumbStepIdx = steps.findIndex(s => s.label.includes('thumbnail'));
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+          setSaveSteps(prev => prev.map((s, i) => i === thumbStepIdx ? { ...s, progress: pct } : s));
+        });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
-        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveSteps(prev => prev.map((s, i) => i === thumbStepIdx ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(hasVideo ? 33 : 50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
@@ -296,7 +299,9 @@ const EditEvent: React.FC = () => {
         setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'active', progress: 0 } : s));
         const videoFormData = new FormData();
         videoFormData.append('videoFile', formData.videoFile);
-        const uploadResponse = await apiService.uploadEventVideo(videoFormData);
+        const uploadResponse = await apiService.uploadEventVideo(videoFormData, (pct) => {
+          setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, progress: pct } : s));
+        });
         videoUrl = uploadResponse.videoUrl;
         setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(66);

@@ -159,10 +159,8 @@ const AddPodcast: React.FC = () => {
       return;
     }
 
-    const hasThumbnail = !!thumbnailPreview;
     const steps: SaveProgressStep[] = [
-      ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
-      { label: 'Creating podcast', status: 'pending' as const }
+      { label: 'Uploading & creating podcast', status: 'pending' as const }
     ];
     setSaveSteps(steps);
     setSaveProgress(0);
@@ -172,10 +170,6 @@ const AddPodcast: React.FC = () => {
     setLoading(true);
 
     try {
-      let currentStep = 0;
-      const thumbSteps = hasThumbnail ? 1 : 0;
-      const totalSteps = thumbSteps + 1;
-
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('speaker', formData.speaker);
@@ -188,23 +182,19 @@ const AddPodcast: React.FC = () => {
         formDataToSend.append('audioFile', audioInput.files[0]);
       }
 
-      if (hasThumbnail) {
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
-        const thumbInput = thumbnailInputRef.current;
-        if (thumbInput && thumbInput.files && thumbInput.files[0]) {
-          formDataToSend.append('thumbnailFile', thumbInput.files[0]);
-        }
-        currentStep++;
-        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+      const thumbInput = thumbnailInputRef.current;
+      if (thumbInput && thumbInput.files && thumbInput.files[0]) {
+        formDataToSend.append('thumbnailFile', thumbInput.files[0]);
       }
 
-      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
-      await apiService.createPodcast(formDataToSend);
-      currentStep++;
-      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
+      setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active', progress: 0 } : s));
 
+      await apiService.createPodcast(formDataToSend, (pct) => {
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
+        setSaveProgress(pct);
+      });
+
+      setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
       setSaveStatus('success');
       setSaveProgress(100);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');

@@ -322,6 +322,10 @@ const AddSermon: React.FC = () => {
     const hasThumbnail = !!formData.thumbnailFile;
     const hasVideo = formData.videoSource === 'upload';
 
+    const thumbIdx = 0;
+    const videoIdx = hasVideo ? 1 : -1;
+    const saveIdx = hasVideo ? 2 : 1;
+
     const steps: SaveProgressStep[] = [
       { label: 'Uploading thumbnail', status: hasThumbnail ? 'active' : 'pending', progress: hasThumbnail ? 0 : undefined },
       ...(hasVideo ? [{ label: 'Uploading video', status: 'active' as const, progress: 0 }] : []),
@@ -338,26 +342,35 @@ const AddSermon: React.FC = () => {
       let thumbnailUrl = '';
       let videoDuration = '00:00';
 
+      const updateStep = (idx: number, patch: Partial<SaveProgressStep>) =>
+        setSaveSteps(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
+
       if (hasThumbnail) {
         const thumbnailFormData = new FormData();
-        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
-        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile!);
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+          updateStep(thumbIdx, { progress: pct });
+          setSaveProgress(Math.round((pct / 100) * (hasVideo ? 33 : 50)));
+        });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
+        updateStep(thumbIdx, { status: 'success', progress: 100 });
         setSaveProgress(hasVideo ? 33 : 50);
       } else {
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        updateStep(thumbIdx, { status: 'success' });
         setSaveProgress(hasVideo ? 33 : 50);
       }
 
       if (hasVideo) {
         const videoFormData = new FormData();
         videoFormData.append('video', formData.videoFile!);
-        const uploadResponse = await apiService.uploadSermonVideo(videoFormData);
+        const uploadResponse = await apiService.uploadSermonVideo(videoFormData, (pct) => {
+          updateStep(videoIdx, { progress: pct });
+          setSaveProgress(33 + Math.round((pct / 100) * 33));
+        });
         videoUrl = uploadResponse.videoUrl;
         thumbnailUrl = uploadResponse.thumbnailUrl || thumbnailUrl;
         videoDuration = uploadResponse.duration || '00:00';
-        setSaveSteps(prev => prev.map((s, i) => i === 1 ? { ...s, status: 'success', progress: 100 } : s));
+        updateStep(videoIdx, { status: 'success', progress: 100 });
         setSaveProgress(66);
       } else {
         videoUrl = formData.videoUrl.trim();
@@ -365,8 +378,7 @@ const AddSermon: React.FC = () => {
         videoDuration = formData.duration;
       }
 
-      const saveStepIdx = hasVideo ? 2 : 1;
-      setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'active', progress: 0 } : s));
+      updateStep(saveIdx, { status: 'active', progress: 0 });
       setSaveProgress(hasVideo ? 70 : 60);
 
       const sermonData = {
@@ -382,7 +394,7 @@ const AddSermon: React.FC = () => {
 
       await apiService.createSermon(sermonData);
 
-      setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'success', progress: 100 } : s));
+      updateStep(saveIdx, { status: 'success', progress: 100 });
       setSaveProgress(100);
       setSaveStatus('success');
       setLoading(false);

@@ -193,6 +193,11 @@ const AddEvent: React.FC = () => {
 
       const hasThumbnail = !!formData.thumbnailFile;
       const hasVideo = !!formData.videoFile;
+      const thumbIdx = 0;
+      const videoIdx = hasVideo ? (hasThumbnail ? 1 : 0) : -1;
+      const saveIdx = (hasThumbnail ? 1 : 0) + (hasVideo ? 1 : 0);
+      const totalWeight = (hasThumbnail ? 40 : 0) + (hasVideo ? 40 : 0) + 20;
+
       const steps: SaveProgressStep[] = [
         ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
         ...(hasVideo ? [{ label: 'Uploading video', status: 'pending' as const }] : []),
@@ -204,34 +209,39 @@ const AddEvent: React.FC = () => {
       setSaveError('');
       setShowSaveModal(true);
 
-      let currentStep = 0;
-      const thumbSteps = hasThumbnail ? 1 : 0;
-      const videoSteps = hasVideo ? 1 : 0;
-      const totalSteps = thumbSteps + videoSteps + 1;
+      const updateStep = (idx: number, patch: Partial<SaveProgressStep>) =>
+        setSaveSteps(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
 
       if (hasThumbnail) {
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
+        updateStep(thumbIdx, { status: 'active', progress: 0 });
         const thumbnailFormData = new FormData();
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile!);
-        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        const thumbWeight = 40;
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+          updateStep(thumbIdx, { progress: pct });
+          setSaveProgress(Math.round((pct / 100) * thumbWeight));
+        });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
-        currentStep++;
-        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        updateStep(thumbIdx, { status: 'success', progress: 100 });
+        setSaveProgress(Math.round((thumbWeight / totalWeight) * 100));
       }
 
       if (hasVideo) {
-        setSaveSteps(prev => prev.map((s, i) => i === thumbSteps ? { ...s, status: 'active' } : s));
+        updateStep(videoIdx, { status: 'active', progress: 0 });
         const videoFormData = new FormData();
         videoFormData.append('videoFile', formData.videoFile!);
-        const uploadResponse = await apiService.uploadEventVideo(videoFormData);
+        const videoWeight = 40;
+        const thumbWeight = hasThumbnail ? 40 : 0;
+        const uploadResponse = await apiService.uploadEventVideo(videoFormData, (pct) => {
+          updateStep(videoIdx, { progress: pct });
+          setSaveProgress(Math.round(((thumbWeight + (pct / 100) * videoWeight) / totalWeight) * 100));
+        });
         videoUrl = uploadResponse.videoUrl;
-        currentStep++;
-        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === thumbSteps ? { ...s, status: 'success' } : s));
+        updateStep(videoIdx, { status: 'success', progress: 100 });
+        setSaveProgress(Math.round(((hasThumbnail ? 40 : 0) + 40) / totalWeight * 100));
       }
 
-      setSaveSteps(prev => prev.map((s, i) => i === thumbSteps + videoSteps ? { ...s, status: 'active' } : s));
+      updateStep(saveIdx, { status: 'active' });
       const eventData = {
         title: formData.title,
         description: formData.description,
@@ -248,9 +258,7 @@ const AddEvent: React.FC = () => {
       };
 
       await apiService.createEvent(eventData);
-      currentStep++;
-      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-      setSaveSteps(prev => prev.map((s, i) => i === thumbSteps + videoSteps ? { ...s, status: 'success' } : s));
+      updateStep(saveIdx, { status: 'success' });
 
       setSaveStatus('success');
       setSaveProgress(100);

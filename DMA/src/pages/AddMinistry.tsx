@@ -142,25 +142,27 @@ const AddMinistry: React.FC = () => {
       setSaveError('');
       setShowSaveModal(true);
 
-      let currentStep = 0;
-      const thumbSteps = hasThumbnail ? 1 : 0;
-      const totalSteps = thumbSteps + 1;
+      const updateStep = (idx: number, patch: Partial<SaveProgressStep>) =>
+        setSaveSteps(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
 
       if (hasThumbnail) {
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
+        updateStep(0, { status: 'active', progress: 0 });
         const input = fileInputRef.current;
         if (input && input.files && input.files[0]) {
           const thumbnailFormData = new FormData();
           thumbnailFormData.append('thumbnailFile', input.files[0]);
-          const response = await apiService.uploadThumbnail(thumbnailFormData);
+          const response = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+            updateStep(0, { progress: pct });
+            setSaveProgress(Math.round((pct / 100) * 50));
+          });
           thumbnailUrl = response.thumbnailUrl;
         }
-        currentStep++;
-        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        updateStep(0, { status: 'success', progress: 100 });
+        setSaveProgress(50);
       }
 
-      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
+      const saveIdx = hasThumbnail ? 1 : 0;
+      updateStep(saveIdx, { status: 'active' });
       const ministryData: any = {
         name: formData.name,
         description: formData.description,
@@ -189,9 +191,7 @@ const AddMinistry: React.FC = () => {
       }
 
       await apiService.createMinistry(ministryData);
-      currentStep++;
-      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
+      updateStep(saveIdx, { status: 'success' });
 
       setSaveStatus('success');
       setSaveProgress(100);

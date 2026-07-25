@@ -221,79 +221,47 @@ const EditDevotion: React.FC = () => {
       if (formData.thumbnailFile) {
         const thumbnailFormData = new FormData();
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
-        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+          setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
+        });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
-        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
-        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success' } : s));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
         setSaveProgress(50);
-      }
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
-        setSaveStatus('error');
-        setSaveError('You must be logged in to update devotions. Please sign in first.');
-        setLoading(false);
-        return;
       }
 
       const saveIdx = steps.findIndex(s => s.label.includes('Saving'));
       setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active', progress: 0 } : s));
       setSaveProgress(60);
 
-      const response = await fetch(`/api/devotions/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          scripture: formData.scripture,
-          content: formData.content,
-          reflection: formData.reflection,
-          prayer: formData.prayer,
-          isFeatured: formData.featured,
-          thumbnailUrl: thumbnailUrl
-        })
+      await apiService.updateDevotion(id, {
+        title: formData.title,
+        scripture: formData.scripture,
+        content: formData.content,
+        reflection: formData.reflection,
+        prayer: formData.prayer,
+        isFeatured: formData.featured,
+        thumbnailUrl: thumbnailUrl
       });
 
-      if (response.ok) {
-        setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
-        setSaveProgress(100);
-        setSaveStatus('success');
-        setLoading(false);
+      setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
+      setSaveProgress(100);
+      setSaveStatus('success');
+      setLoading(false);
 
-        sessionStorage.setItem('devotionsNeedRefresh', 'true');
+      sessionStorage.setItem('devotionsNeedRefresh', 'true');
 
-        setTimeout(() => {
-          history.push('/admin/devotions');
-        }, 2000);
-      } else {
-        let errorMessage = `Failed to update devotion (${response.status})`;
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-        } catch (parseError) {
-          errorMessage = `Server error (${response.status})`;
-        }
-        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
-        setSaveStatus('error');
-        setSaveError(errorMessage);
-        setLoading(false);
-      }
+      setTimeout(() => {
+        history.push('/admin/devotions');
+      }, 2000);
     } catch (error) {
       console.error('Error updating devotion:', error);
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
-      setSaveError('Network error. Please try again.');
+      setSaveError(error instanceof Error ? error.message : 'Network error. Please try again.');
       setLoading(false);
     }
   };

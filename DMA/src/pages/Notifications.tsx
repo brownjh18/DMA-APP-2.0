@@ -107,8 +107,9 @@ function normalizeThumbUrl(url?: unknown) {
   const trimmed = url.trim();
   if (!trimmed) return '';
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  if (trimmed.startsWith('/')) return `${BACKEND_BASE_URL}${trimmed}`;
-  return `${BACKEND_BASE_URL}/${trimmed}`;
+  const base = BACKEND_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  if (trimmed.startsWith('/')) return `${base}${trimmed}`;
+  return `${base}/${trimmed}`;
 }
 
 function getYouTubeSectionLabel(createdAt: string) {

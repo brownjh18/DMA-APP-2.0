@@ -170,9 +170,11 @@ const EditMinistry: React.FC = () => {
         if (input && input.files && input.files[0]) {
           const thumbnailFormData = new FormData();
           thumbnailFormData.append('thumbnailFile', input.files[0]);
-          const response = await apiService.uploadThumbnail(thumbnailFormData);
+          const response = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+            setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
+          });
           imageUrl = response.thumbnailUrl;
-          setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+          setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
           setSaveProgress(50);
         }
       }

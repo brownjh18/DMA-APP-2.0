@@ -7,7 +7,7 @@ import {
   documentText, cloudUpload, arrowBack
 } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
-import { apiService, API_BASE_URL } from '../services/api';
+import { apiService } from '../services/api';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
@@ -153,7 +153,7 @@ const EditPodcast: React.FC = () => {
 
     const steps: SaveProgressStep[] = [];
     if (hasFiles) {
-      steps.push({ label: 'Upload files', status: 'active', progress: 0 });
+      steps.push({ label: 'Uploading files', status: 'active', progress: 0 });
     }
     steps.push({ label: 'Save podcast', status: hasFiles ? 'pending' : 'active' });
 
@@ -173,23 +173,22 @@ const EditPodcast: React.FC = () => {
         formDataToSend.append('status', formData.status);
         if (fileInputRef.current?.files?.[0]) formDataToSend.append('audioFile', fileInputRef.current.files[0]);
         if (thumbnailInputRef.current?.files?.[0]) formDataToSend.append('thumbnailFile', thumbnailInputRef.current.files[0]);
-        await apiService.updatePodcast(id, formDataToSend);
+        await apiService.updatePodcast(id, formDataToSend, (pct) => {
+          setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
+          setSaveProgress(pct);
+        });
         setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
-        setSaveProgress(60);
-        setSaveSteps(prev => prev.map((s, i) => i === 1 ? { ...s, status: 'active', progress: 0 } : s));
+        setSaveProgress(100);
+        setSaveSteps(prev => prev.map((s, i) => i === 1 ? { ...s, status: 'active' } : s));
       } else {
         const updateData: any = { title: formData.title, speaker: formData.speaker, description: formData.description,
           duration: formData.duration, status: formData.status };
         if (thumbnailRemoved) {
           updateData.thumbnailUrl = '';
         }
-        const response = await fetch(`${API_BASE_URL}/podcasts/${id}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json',
-            ...(localStorage.getItem('token') && { Authorization: `Bearer ${localStorage.getItem('token')}` }) },
-          body: JSON.stringify(updateData)
-        });
-        if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || 'Failed to update podcast'); }
         const saveIdx = steps.findIndex(s => s.label.includes('Save'));
+        setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active' } : s));
+        await apiService.updatePodcastJson(id, updateData);
         setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
       }
 

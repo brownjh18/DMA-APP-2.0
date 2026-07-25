@@ -163,78 +163,51 @@ const AddDevotion: React.FC = () => {
       const thumbSteps = hasThumbnail ? 1 : 0;
       const totalSteps = thumbSteps + 1;
 
+      const updateStep = (idx: number, patch: Partial<SaveProgressStep>) =>
+        setSaveSteps(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
+
       if (hasThumbnail) {
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
+        updateStep(0, { status: 'active', progress: 0 });
         const thumbnailFormData = new FormData();
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile!);
-        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
+        const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
+          updateStep(0, { progress: pct });
+          setSaveProgress(Math.round((pct / 100) * 50));
+        });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         currentStep++;
         setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        updateStep(0, { status: 'success', progress: 100 });
       }
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setAlertHeader('Authentication Error');
-        setAlertMessage('You must be logged in to add devotions. Please sign in first.');
-        setShowAlert(true);
-        setLoading(false);
-        setShowSaveModal(false);
-        return;
-      }
+      const saveIdx = hasThumbnail ? 1 : 0;
+      updateStep(saveIdx, { status: 'active' });
+      setSaveProgress(hasThumbnail ? 60 : 50);
 
-      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
-      const response = await fetch('/api/devotions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          scripture: formData.scripture,
-          content: formData.content,
-          reflection: formData.reflection,
-          prayer: formData.prayer,
-          status: 'publish',
-          isFeatured: formData.featured,
-          thumbnailUrl: thumbnailUrl || undefined
-        })
+      await apiService.createDevotion({
+        title: formData.title,
+        scripture: formData.scripture,
+        content: formData.content,
+        reflection: formData.reflection,
+        prayer: formData.prayer,
+        status: 'publish',
+        isFeatured: formData.featured,
+        thumbnailUrl: thumbnailUrl || undefined
       });
 
-      if (response.ok) {
-        currentStep++;
-        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
-        setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
-        setSaveStatus('success');
-        setSaveProgress(100);
-        sessionStorage.setItem('devotionsNeedRefresh', 'true');
-        setTimeout(() => {
-          history.push('/admin/devotions');
-        }, 1500);
-      } else {
-        let errorMessage = `Failed to add devotion (${response.status})`;
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.errors && Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.map((e: any) => e.msg || e.message).join(', ');
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-        } catch (parseError) {
-          errorMessage = `Server error (${response.status})`;
-        }
-        setSaveStatus('error');
-        setSaveError(errorMessage);
-        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
-      }
+      currentStep++;
+      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+      updateStep(saveIdx, { status: 'success' });
+      setSaveStatus('success');
+      setSaveProgress(100);
+      sessionStorage.setItem('devotionsNeedRefresh', 'true');
+      setTimeout(() => {
+        history.push('/admin/devotions');
+      }, 1500);
     } catch (error) {
       console.error('Error adding devotion:', error);
       setSaveStatus('error');
-      setSaveError('Network error. Please try again.');
+      setSaveError(error instanceof Error ? error.message : 'Network error. Please try again.');
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     } finally {
       setLoading(false);
