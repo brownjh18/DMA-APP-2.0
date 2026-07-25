@@ -732,6 +732,37 @@ router.post('/', authenticateToken, requireAdmin, [
 
       console.log('Sermon created successfully:', sermon._id);
 
+      // For uploaded (non-YouTube) videos with no duration, fetch it in the background
+      const videoUrl = sermon.videoUrl || '';
+      const isUploadedVideo = videoUrl && !videoUrl.includes('youtube.com') && !videoUrl.includes('youtu.be') && !videoUrl.includes('youtube-nocookie.com');
+      if (isUploadedVideo && (!sermon.duration || sermon.duration === '00:00')) {
+        const updateDuration = async () => {
+          try {
+            let dur = '00:00';
+            if (videoUrl.includes('cloudinary.com') || videoUrl.includes('res.cloudinary.com')) {
+              const cloudinary = require('cloudinary').v2;
+              const publicIdMatch = videoUrl.match(/\/v\d+\/(.+)\.(mp4|webm|mov)/);
+              if (publicIdMatch) {
+                const publicId = publicIdMatch[1];
+                dur = await getCloudinaryDuration(publicId);
+              }
+            } else {
+              const localPath = path.join(__dirname, '..', videoUrl);
+              if (fs.existsSync(localPath)) {
+                dur = await getVideoDuration(localPath);
+              }
+            }
+            if (dur && dur !== '00:00') {
+              await Sermon.findByIdAndUpdate(sermon._id, { duration: dur });
+              console.log(`✅ Sermon "${sermon.title}" duration updated to ${dur}`);
+            }
+          } catch (e) {
+            console.warn('Failed to update sermon duration:', e.message);
+          }
+        };
+        updateDuration();
+      }
+
       res.status(201).json({
         message: 'Sermon created successfully',
         sermon
@@ -1144,6 +1175,53 @@ router.post('/update-live-status', authenticateToken, requireAdmin, async (req, 
   } catch (error) {
     console.error('Error updating live status:', error);
     res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// Fix durations for uploaded videos stuck at 00:00
+router.post('/fix-durations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const sermons = await Sermon.find({
+      $or: [
+        { duration: '00:00' },
+        { duration: { $exists: false } },
+        { duration: '' }
+      ],
+      videoUrl: { $exists: true, $ne: '', $nin: [null] }
+    });
+
+    const results = [];
+    for (const sermon of sermons) {
+      const videoUrl = sermon.videoUrl || '';
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) continue;
+
+      try {
+        let dur = '00:00';
+        if (videoUrl.includes('cloudinary.com') || videoUrl.includes('res.cloudinary.com')) {
+          const cloudinary = require('cloudinary').v2;
+          const publicIdMatch = videoUrl.match(/\/v\d+\/(.+)\.(mp4|webm|mov)/);
+          if (publicIdMatch) {
+            dur = await getCloudinaryDuration(publicIdMatch[1]);
+          }
+        } else {
+          const localPath = path.join(__dirname, '..', videoUrl);
+          if (fs.existsSync(localPath)) {
+            dur = await getVideoDuration(localPath);
+          }
+        }
+        if (dur && dur !== '00:00') {
+          await Sermon.findByIdAndUpdate(sermon._id, { duration: dur });
+          results.push({ id: sermon._id, title: sermon.title, duration: dur });
+        }
+      } catch (e) {
+        console.warn(`Failed to fix duration for "${sermon.title}":`, e.message);
+      }
+    }
+
+    res.json({ message: `Fixed ${results.length} sermon(s)`, results });
+  } catch (error) {
+    console.error('Fix durations error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
