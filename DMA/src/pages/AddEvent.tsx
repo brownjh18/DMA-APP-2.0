@@ -7,11 +7,11 @@ import {
   IonToolbar,
   IonButton,
   IonIcon,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
 } from '@ionic/react';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import {
   save,
   calendar,
@@ -39,7 +39,11 @@ const AddEvent: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -187,22 +191,47 @@ const AddEvent: React.FC = () => {
       let thumbnailUrl = '';
       let videoUrl = '';
 
-      if (formData.thumbnailFile) {
+      const hasThumbnail = !!formData.thumbnailFile;
+      const hasVideo = !!formData.videoFile;
+      const steps: SaveProgressStep[] = [
+        ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
+        ...(hasVideo ? [{ label: 'Uploading video', status: 'pending' as const }] : []),
+        { label: 'Saving event', status: 'pending' as const }
+      ];
+      setSaveSteps(steps);
+      setSaveProgress(0);
+      setSaveStatus('uploading');
+      setSaveError('');
+      setShowSaveModal(true);
+
+      let currentStep = 0;
+      const thumbSteps = hasThumbnail ? 1 : 0;
+      const videoSteps = hasVideo ? 1 : 0;
+      const totalSteps = thumbSteps + videoSteps + 1;
+
+      if (hasThumbnail) {
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
         const thumbnailFormData = new FormData();
-        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
+        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile!);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
       }
 
-      if (formData.videoFile) {
-        setUploadingVideo(true);
+      if (hasVideo) {
+        setSaveSteps(prev => prev.map((s, i) => i === thumbSteps ? { ...s, status: 'active' } : s));
         const videoFormData = new FormData();
-        videoFormData.append('videoFile', formData.videoFile);
+        videoFormData.append('videoFile', formData.videoFile!);
         const uploadResponse = await apiService.uploadEventVideo(videoFormData);
         videoUrl = uploadResponse.videoUrl;
-        setUploadingVideo(false);
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === thumbSteps ? { ...s, status: 'success' } : s));
       }
 
+      setSaveSteps(prev => prev.map((s, i) => i === thumbSteps + videoSteps ? { ...s, status: 'active' } : s));
       const eventData = {
         title: formData.title,
         description: formData.description,
@@ -219,24 +248,22 @@ const AddEvent: React.FC = () => {
       };
 
       await apiService.createEvent(eventData);
+      currentStep++;
+      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+      setSaveSteps(prev => prev.map((s, i) => i === thumbSteps + videoSteps ? { ...s, status: 'success' } : s));
 
-      setLoading(false);
-
-      setAlertHeader('Success!');
-      setAlertMessage('Event created successfully!');
-      setShowAlert(true);
-
+      setSaveStatus('success');
+      setSaveProgress(100);
       sessionStorage.setItem('eventsNeedRefresh', 'true');
-
       setTimeout(() => {
         history.push('/admin/events');
       }, 1500);
     } catch (error) {
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to create event');
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+    } finally {
       setLoading(false);
-      setUploadingVideo(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to create event');
-      setShowAlert(true);
     }
   };
 
@@ -524,7 +551,7 @@ const AddEvent: React.FC = () => {
           {loading ? (
             <>
               <IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} />
-              <span>{uploadingVideo ? 'Uploading Video...' : 'Saving Event...'}</span>
+              <span>Saving Event...</span>
             </>
           ) : (
             <>
@@ -538,10 +565,21 @@ const AddEvent: React.FC = () => {
           <IonText>Dove Church - Event Management System</IonText>
         </div>
 
-        <IonLoading 
-          isOpen={loading} 
-          message={uploadingVideo ? "Uploading video..." : "Saving event..."} 
-          duration={0}
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Saving event..."
         />
         <IonAlert
           isOpen={showAlert}

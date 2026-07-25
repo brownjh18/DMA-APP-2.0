@@ -82,6 +82,7 @@ const AdminDashboard: React.FC = () => {
     { label: 'Event', icon: calendar, route: '/admin/events/add', color: '#f59e0b' },
     { label: 'Devotion', icon: book, route: '/admin/devotions/add', color: '#8b5cf6' },
     { label: 'Podcast', icon: radio, route: '/admin/radio/add', color: '#ec4899' },
+    { label: 'Ministry', icon: people, route: '/admin/ministries/add', color: '#10b981' },
     { label: 'User', icon: person, route: '/admin/users/add', color: '#06b6d4' },
   ];
 

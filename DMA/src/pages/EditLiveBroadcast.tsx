@@ -273,12 +273,14 @@ const EditLiveBroadcast: React.FC = () => {
               {formData.thumbnailUrl && !formData.thumbnailFile ? (
                 <div style={{ marginBottom: '12px' }}>
                   <img src={formData.thumbnailUrl} alt="Current thumbnail" className="af-upload-preview" />
-                  <div className="af-row" style={{ marginTop: '12px' }}>
-                    <button type="button" className="af-submit" style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+                  <div className="af-row" style={{ marginTop: '12px', gap: '12px', justifyContent: 'center' }}>
+                    <button type="button" className="role-btn role-btn-user"
+                      style={{ background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' }}
                       onClick={() => document.getElementById('thumbnail-file-edit')?.click()}>
                       <IonIcon icon={image} style={{ marginRight: '6px' }} />Change
                     </button>
-                    <button type="button" className="af-submit af-submit-secondary" style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+                    <button type="button" className="role-btn role-btn-admin"
+                      style={{ background: 'rgba(239, 68, 68, 0.18)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                       onClick={() => setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }))}>
                       Remove
                     </button>
@@ -287,12 +289,14 @@ const EditLiveBroadcast: React.FC = () => {
               ) : formData.thumbnailFile ? (
                 <div style={{ marginBottom: '12px' }}>
                   <img src={URL.createObjectURL(formData.thumbnailFile)} alt="New thumbnail preview" className="af-upload-preview" />
-                  <div className="af-row" style={{ marginTop: '12px' }}>
-                    <button type="button" className="af-submit" style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+                  <div className="af-row" style={{ marginTop: '12px', gap: '12px', justifyContent: 'center' }}>
+                    <button type="button" className="role-btn role-btn-user"
+                      style={{ background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' }}
                       onClick={() => document.getElementById('thumbnail-file-edit')?.click()}>
                       <IonIcon icon={image} style={{ marginRight: '6px' }} />Change
                     </button>
-                    <button type="button" className="af-submit af-submit-secondary" style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+                    <button type="button" className="role-btn role-btn-admin"
+                      style={{ background: 'rgba(239, 68, 68, 0.18)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                       onClick={() => setFormData(prev => ({ ...prev, thumbnailFile: null, thumbnailUrl: '' }))}>
                       Remove
                     </button>

@@ -22,6 +22,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import './AdminForm.css';
 import './AdminDashboard.css';
@@ -36,6 +37,11 @@ const EditDevotion: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -195,6 +201,18 @@ const EditDevotion: React.FC = () => {
       return;
     }
 
+    const hasThumbnail = !!formData.thumbnailFile || thumbnailRemoved;
+
+    const steps: SaveProgressStep[] = [];
+    if (hasThumbnail) {
+      steps.push({ label: 'Uploading thumbnail', status: 'active', progress: 0 });
+    }
+    steps.push({ label: 'Saving devotion', status: hasThumbnail ? 'pending' : 'active' });
+
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setShowSaveModal(true);
     setLoading(true);
 
     try {
@@ -205,18 +223,26 @@ const EditDevotion: React.FC = () => {
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveProgress(50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
+        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success' } : s));
+        setSaveProgress(50);
       }
 
       const token = localStorage.getItem('token');
       if (!token) {
-        setAlertHeader('Authentication Error');
-        setAlertMessage('You must be logged in to update devotions. Please sign in first.');
-        setShowAlert(true);
+        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+        setSaveStatus('error');
+        setSaveError('You must be logged in to update devotions. Please sign in first.');
         setLoading(false);
         return;
       }
+
+      const saveIdx = steps.findIndex(s => s.label.includes('Saving'));
+      setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active', progress: 0 } : s));
+      setSaveProgress(60);
 
       const response = await fetch(`/api/devotions/${id}`, {
         method: 'PUT',
@@ -236,16 +262,16 @@ const EditDevotion: React.FC = () => {
       });
 
       if (response.ok) {
+        setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveProgress(100);
+        setSaveStatus('success');
         setLoading(false);
-        setAlertHeader('Success!');
-        setAlertMessage('Devotion updated successfully!');
-        setShowAlert(true);
 
         sessionStorage.setItem('devotionsNeedRefresh', 'true');
 
         setTimeout(() => {
           history.push('/admin/devotions');
-        }, 1500);
+        }, 2000);
       } else {
         let errorMessage = `Failed to update devotion (${response.status})`;
         try {
@@ -258,16 +284,16 @@ const EditDevotion: React.FC = () => {
         } catch (parseError) {
           errorMessage = `Server error (${response.status})`;
         }
-        setAlertHeader('Error');
-        setAlertMessage(errorMessage);
-        setShowAlert(true);
+        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+        setSaveStatus('error');
+        setSaveError(errorMessage);
         setLoading(false);
       }
     } catch (error) {
       console.error('Error updating devotion:', error);
-      setAlertHeader('Network Error');
-      setAlertMessage('Network error. Please try again.');
-      setShowAlert(true);
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+      setSaveStatus('error');
+      setSaveError('Network error. Please try again.');
       setLoading(false);
     }
   };
@@ -285,20 +311,6 @@ const EditDevotion: React.FC = () => {
 
       <IonContent fullscreen className="ion-padding">
         <div className="af-page">
-          <div className="af-section">
-            <div className="af-card">
-              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <IonIcon icon={book} style={{ fontSize: '32px', color: '#6366f1' }} />
-                <h2 className="af-section-title" style={{ textAlign: 'center', marginTop: '8px' }}>
-                  Edit Devotion
-                </h2>
-                <p className="af-hint" style={{ textAlign: 'center' }}>
-                  Update devotion details and settings
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="af-section">
             <div className="af-toggle-row">
               <span className="af-toggle-label">
@@ -475,6 +487,22 @@ const EditDevotion: React.FC = () => {
           </div>
         </div>
 
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Updating devotion..."
+        />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

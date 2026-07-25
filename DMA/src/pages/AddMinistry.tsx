@@ -5,12 +5,13 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  IonButton,
   IonIcon,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
 } from '@ionic/react';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import {
   save,
   people,
@@ -34,13 +35,17 @@ import { apiService } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
-import BackButton from '../components/BackButton';
 import './AdminDashboard.css';
 
 const AddMinistry: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -126,7 +131,23 @@ const AddMinistry: React.FC = () => {
     try {
       let thumbnailUrl = '';
 
-      if (thumbnailPreview) {
+      const hasThumbnail = !!thumbnailPreview;
+      const steps: SaveProgressStep[] = [
+        ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
+        { label: 'Saving ministry', status: 'pending' as const }
+      ];
+      setSaveSteps(steps);
+      setSaveProgress(0);
+      setSaveStatus('uploading');
+      setSaveError('');
+      setShowSaveModal(true);
+
+      let currentStep = 0;
+      const thumbSteps = hasThumbnail ? 1 : 0;
+      const totalSteps = thumbSteps + 1;
+
+      if (hasThumbnail) {
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
         const input = fileInputRef.current;
         if (input && input.files && input.files[0]) {
           const thumbnailFormData = new FormData();
@@ -134,8 +155,12 @@ const AddMinistry: React.FC = () => {
           const response = await apiService.uploadThumbnail(thumbnailFormData);
           thumbnailUrl = response.thumbnailUrl;
         }
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
       }
 
+      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
       const ministryData: any = {
         name: formData.name,
         description: formData.description,
@@ -164,54 +189,35 @@ const AddMinistry: React.FC = () => {
       }
 
       await apiService.createMinistry(ministryData);
+      currentStep++;
+      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
 
-      setLoading(false);
-
-      setAlertHeader('Success!');
-      setAlertMessage('Ministry created successfully!');
-      setShowAlert(true);
-
+      setSaveStatus('success');
+      setSaveProgress(100);
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
-
       setTimeout(() => {
         history.push('/admin/ministries');
       }, 1500);
     } catch (error) {
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to create ministry');
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+    } finally {
       setLoading(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to create ministry');
-      setShowAlert(true);
     }
   };
 
   return (
     <IonPage>
       <IonHeader translucent>
-        <IonToolbar className="toolbar-ios" style={{ background: 'transparent' }}>
-          <BackButton />
-          <IonTitle className="nd-title" style={{ textAlign: 'center' }}>
-            Add Ministry
-          </IonTitle>
+        <IonToolbar className="toolbar-ios">
+          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}><IonIcon icon={arrowBack} style={{ fontSize: '22px' }} /></IonButton>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add Ministry</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="ion-padding af-page">
-        <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-          borderRadius: '24px',
-          padding: '32px 24px',
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          <IonIcon icon={people} style={{ color: '#fff', fontSize: '32px', marginBottom: '12px' }} />
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#fff' }}>
-            Add New Ministry
-          </h1>
-          <p style={{ margin: '0', color: 'rgba(255, 255, 255, 0.85)', fontSize: '14px' }}>
-            Create a new church ministry
-          </p>
-        </div>
-
         <div className="af-section">
           <div className="af-toggle-row">
             <span className="af-toggle-label">Active</span>
@@ -455,10 +461,21 @@ const AddMinistry: React.FC = () => {
           <IonText>Dove Church • Ministry Management System</IonText>
         </div>
 
-        <IonLoading
-          isOpen={loading}
-          message="Saving ministry..."
-          duration={0}
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Saving ministry..."
         />
         <IonAlert
           isOpen={showAlert}

@@ -7,11 +7,11 @@ import {
   IonToolbar,
   IonButton,
   IonIcon,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
 } from '@ionic/react';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import {
   save,
   book,
@@ -32,6 +32,11 @@ const AddDevotion: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -140,16 +145,33 @@ const AddDevotion: React.FC = () => {
       return;
     }
 
+    const hasThumbnail = !!formData.thumbnailFile;
+    const steps: SaveProgressStep[] = [
+      ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
+      { label: 'Saving devotion', status: 'pending' as const }
+    ];
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setSaveError('');
+    setShowSaveModal(true);
     setLoading(true);
 
     try {
       let thumbnailUrl = '';
+      let currentStep = 0;
+      const thumbSteps = hasThumbnail ? 1 : 0;
+      const totalSteps = thumbSteps + 1;
 
-      if (formData.thumbnailFile) {
+      if (hasThumbnail) {
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
         const thumbnailFormData = new FormData();
-        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
+        thumbnailFormData.append('thumbnailFile', formData.thumbnailFile!);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
       }
 
       const token = localStorage.getItem('token');
@@ -158,9 +180,11 @@ const AddDevotion: React.FC = () => {
         setAlertMessage('You must be logged in to add devotions. Please sign in first.');
         setShowAlert(true);
         setLoading(false);
+        setShowSaveModal(false);
         return;
       }
 
+      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
       const response = await fetch('/api/devotions', {
         method: 'POST',
         headers: {
@@ -180,13 +204,12 @@ const AddDevotion: React.FC = () => {
       });
 
       if (response.ok) {
-        setLoading(false);
-        setAlertHeader('Success!');
-        setAlertMessage('Devotion added successfully!');
-        setShowAlert(true);
-
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
+        setSaveStatus('success');
+        setSaveProgress(100);
         sessionStorage.setItem('devotionsNeedRefresh', 'true');
-
         setTimeout(() => {
           history.push('/admin/devotions');
         }, 1500);
@@ -204,16 +227,16 @@ const AddDevotion: React.FC = () => {
         } catch (parseError) {
           errorMessage = `Server error (${response.status})`;
         }
-        setAlertHeader('Error');
-        setAlertMessage(errorMessage);
-        setShowAlert(true);
-        setLoading(false);
+        setSaveStatus('error');
+        setSaveError(errorMessage);
+        setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       }
     } catch (error) {
       console.error('Error adding devotion:', error);
-      setAlertHeader('Network Error');
-      setAlertMessage('Network error. Please try again.');
-      setShowAlert(true);
+      setSaveStatus('error');
+      setSaveError('Network error. Please try again.');
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+    } finally {
       setLoading(false);
     }
   };
@@ -229,20 +252,6 @@ const AddDevotion: React.FC = () => {
 
       <IonContent fullscreen className="ion-padding">
         <div className="af-page">
-          <div className="af-section">
-            <div className="af-card">
-              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <IonIcon icon={book} style={{ fontSize: '32px', color: '#6366f1' }} />
-                <h2 className="af-section-title" style={{ textAlign: 'center', marginTop: '8px' }}>
-                  Add New Devotion
-                </h2>
-                <p className="af-hint" style={{ textAlign: 'center' }}>
-                  Create a new daily devotion
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="af-section">
             <div className="af-toggle-row">
               <span className="af-toggle-label">
@@ -415,10 +424,21 @@ const AddDevotion: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading
-          isOpen={loading}
-          message="Saving devotion..."
-          duration={0}
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Saving devotion..."
         />
         <IonAlert
           isOpen={showAlert}

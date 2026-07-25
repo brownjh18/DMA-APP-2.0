@@ -4,7 +4,7 @@
 
 /* --- Page Container --- */
 .af-page {
-  padding: 16px;
+  padding: 16px 24px;
   max-width: 800px;
   margin: 0 auto;
   padding-bottom: 100px;
@@ -284,6 +284,56 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
+/* Role Toggle Buttons - Frosted Glass */
+.role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--ios26-separator-light);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.role-btn:active {
+  transform: scale(0.96);
+}
+
+.role-btn ion-icon {
+  font-size: 16px;
+}
+
+.role-btn-user {
+  color: #6366f1;
+}
+
+.role-btn-admin {
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .role-btn {
+  background: rgba(44, 44, 46, 0.6);
+  border-color: rgba(84, 84, 88, 0.36);
+}
+
+[data-theme="dark"] .role-btn-user {
+  color: #818cf8;
+}
+
+[data-theme="dark"] .role-btn-admin {
+  color: #fbbf24;
+}
+
 /* ============================================
    Loading
    ============================================ */
@@ -432,8 +482,17 @@
     gap: 0;
   }
 
+  .af-row:has(.role-btn) {
+    flex-direction: row;
+    gap: 12px;
+  }
+
   .af-submit {
     padding: 14px;
     font-size: 15px;
+  }
+
+  .role-btn {
+    flex: 1;
   }
 }

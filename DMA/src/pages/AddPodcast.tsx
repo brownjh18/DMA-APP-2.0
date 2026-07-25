@@ -7,11 +7,11 @@ import {
   IonToolbar,
   IonIcon,
   IonButton,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
 } from '@ionic/react';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import {
   save,
   radio,
@@ -57,6 +57,11 @@ const AddPodcast: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -154,8 +159,23 @@ const AddPodcast: React.FC = () => {
       return;
     }
 
+    const hasThumbnail = !!thumbnailPreview;
+    const steps: SaveProgressStep[] = [
+      ...(hasThumbnail ? [{ label: 'Uploading thumbnail', status: 'pending' as const }] : []),
+      { label: 'Creating podcast', status: 'pending' as const }
+    ];
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setSaveError('');
+    setShowSaveModal(true);
     setLoading(true);
+
     try {
+      let currentStep = 0;
+      const thumbSteps = hasThumbnail ? 1 : 0;
+      const totalSteps = thumbSteps + 1;
+
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('speaker', formData.speaker);
@@ -168,25 +188,33 @@ const AddPodcast: React.FC = () => {
         formDataToSend.append('audioFile', audioInput.files[0]);
       }
 
-      if (thumbnailPreview) {
+      if (hasThumbnail) {
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' } : s));
         const thumbInput = thumbnailInputRef.current;
         if (thumbInput && thumbInput.files && thumbInput.files[0]) {
           formDataToSend.append('thumbnailFile', thumbInput.files[0]);
         }
+        currentStep++;
+        setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
       }
 
+      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'active' } : s));
       await apiService.createPodcast(formDataToSend);
-      setLoading(false);
-      setAlertHeader('Success!');
-      setAlertMessage('Podcast created successfully!');
-      setShowAlert(true);
+      currentStep++;
+      setSaveProgress(Math.round((currentStep / totalSteps) * 100));
+      setSaveSteps(prev => prev.map((s, i) => i === (hasThumbnail ? 1 : 0) ? { ...s, status: 'success' } : s));
+
+      setSaveStatus('success');
+      setSaveProgress(100);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
       setTimeout(() => history.push('/admin/radio'), 1500);
     } catch (error) {
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to create podcast');
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+    } finally {
       setLoading(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to create podcast');
-      setShowAlert(true);
     }
   };
 
@@ -203,12 +231,6 @@ const AddPodcast: React.FC = () => {
 
       <IonContent fullscreen className="ion-padding">
         <div className="af-page">
-          {/* Hero Section */}
-          <div className="af-section">
-            <h1 className="nd-title" style={{ textAlign: 'center', marginBottom: '8px' }}>Add New Podcast</h1>
-            <p style={{ textAlign: 'center', color: 'var(--ion-color-medium)', fontSize: '14px', margin: 0 }}>Create a new radio broadcast podcast</p>
-          </div>
-
           {/* Status Toggle */}
           <div className="af-section">
             <div className="af-card">
@@ -219,11 +241,20 @@ const AddPodcast: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <div className="af-row" style={{ display: 'flex', gap: '12px', marginTop: '8px', justifyContent: 'center' }}>
                 {['draft', 'published', 'scheduled'].map((s) => (
                   <button key={s} onClick={() => handleInputChange('status', s)}
-                    className={`af-submit ${formData.status === s ? '' : 'af-submit-secondary'}`}
-                    style={{ flex: 1, padding: '8px', fontSize: '13px', textTransform: 'capitalize' }}>
+                    className="role-btn"
+                    style={{
+                      ...(formData.status === s
+                        ? s === 'published'
+                          ? { background: 'rgba(16, 185, 129, 0.18)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                          : s === 'scheduled'
+                            ? { background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' }
+                            : { background: 'rgba(245, 158, 11, 0.18)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }
+                        : {}),
+                      textTransform: 'capitalize',
+                    }}>
                     {s}
                   </button>
                 ))}
@@ -317,7 +348,22 @@ const AddPodcast: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Creating podcast..." duration={0} />
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Creating podcast..."
+        />
         <IonAlert isOpen={showAlert} onDidDismiss={() => setShowAlert(false)} header={alertHeader} message={alertMessage} buttons={[{ text: 'OK', role: 'cancel' }]} />
       </IonContent>
     </IonPage>

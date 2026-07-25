@@ -30,6 +30,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
@@ -45,6 +46,11 @@ const EditMinistry: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -144,6 +150,18 @@ const EditMinistry: React.FC = () => {
       return;
     }
 
+    const hasThumbnail = !!(thumbnailPreview && fileInputRef.current?.files?.[0]);
+
+    const steps: SaveProgressStep[] = [];
+    if (hasThumbnail) {
+      steps.push({ label: 'Uploading thumbnail', status: 'active', progress: 0 });
+    }
+    steps.push({ label: 'Saving ministry', status: hasThumbnail ? 'pending' : 'active' });
+
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setShowSaveModal(true);
     setLoading(true);
     try {
       let imageUrl = currentThumbnailUrl;
@@ -154,8 +172,14 @@ const EditMinistry: React.FC = () => {
           thumbnailFormData.append('thumbnailFile', input.files[0]);
           const response = await apiService.uploadThumbnail(thumbnailFormData);
           imageUrl = response.thumbnailUrl;
+          setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+          setSaveProgress(50);
         }
       }
+
+      const saveIdx = steps.findIndex(s => s.label.includes('Saving'));
+      setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active', progress: 0 } : s));
+      setSaveProgress(60);
 
       const ministryData: any = {
         name: formData.name, description: formData.description, leader: formData.leader,
@@ -166,17 +190,17 @@ const EditMinistry: React.FC = () => {
       };
 
       await apiService.updateMinistry(id, ministryData);
+      setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
+      setSaveProgress(100);
+      setSaveStatus('success');
       setLoading(false);
-      setAlertHeader('Success!');
-      setAlertMessage('Ministry updated successfully!');
-      setShowAlert(true);
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/ministries'), 1500);
+      setTimeout(() => history.push('/admin/ministries'), 2000);
     } catch (error) {
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to update ministry');
       setLoading(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to update ministry');
-      setShowAlert(true);
     }
   };
 
@@ -432,6 +456,22 @@ const EditMinistry: React.FC = () => {
           <IonText>Dove Church • Ministry Management System</IonText>
         </div>
 
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Updating ministry..."
+        />
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

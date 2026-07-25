@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
-  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonLoading, IonAlert, IonText, IonSpinner
+  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonAlert, IonText, IonSpinner
 } from '@ionic/react';
 import {
   save, person, closeCircle, image, personOutline, mail, lockClosed, call, shield, checkmarkCircle, informationCircle, arrowBack
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { apiService } from '../services/api';
 
 import { AuthContext } from '../App';
@@ -23,6 +24,11 @@ const AddUser: React.FC = () => {
   const { isDarkMode } = useSettings();
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     return () => {
@@ -88,8 +94,25 @@ const AddUser: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    const hasProfile = profilePreview && fileInputRef.current?.files?.[0];
+    const steps: SaveProgressStep[] = hasProfile
+      ? [
+          { label: 'Uploading profile picture', status: 'pending' },
+          { label: 'Creating user account', status: 'pending' },
+        ]
+      : [
+          { label: 'Creating user account', status: 'pending' },
+        ];
+
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setSaveError('');
+    setShowSaveModal(true);
+
     try {
+      let currentStepIndex = 0;
+
       const userData: any = {
         name: formData.name,
         email: formData.email,
@@ -98,28 +121,33 @@ const AddUser: React.FC = () => {
         role: formData.role
       };
 
-      if (profilePreview) {
-        const input = fileInputRef.current;
-        if (input && input.files && input.files[0]) {
-          const profileFormData = new FormData();
-          profileFormData.append('profileFile', input.files[0]);
-          const response = await apiService.uploadThumbnail(profileFormData);
-          userData.profilePicture = response.thumbnailUrl;
-        }
+      if (hasProfile) {
+        const input = fileInputRef.current!;
+        const profileFormData = new FormData();
+        profileFormData.append('profileFile', input.files![0]);
+
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'loading' } : s));
+
+        const response = await apiService.uploadThumbnail(profileFormData);
+        userData.profilePicture = response.thumbnailUrl;
+
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
+        setSaveProgress(50);
+        currentStepIndex = 1;
       }
 
+      setSaveSteps(prev => prev.map((s, i) => i === currentStepIndex ? { ...s, status: 'loading' } : s));
+
       await apiService.adminRegister(userData);
-      setLoading(false);
-      setAlertHeader('Success!');
-      setAlertMessage('User created successfully!');
-      setShowAlert(true);
+
+      setSaveSteps(prev => prev.map((s, i) => i === currentStepIndex ? { ...s, status: 'success' } : s));
+      setSaveProgress(100);
+      setSaveStatus('success');
       sessionStorage.setItem('usersNeedRefresh', 'true');
       setTimeout(() => history.push('/admin/users'), 1500);
     } catch (error) {
-      setLoading(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to create user');
-      setShowAlert(true);
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to create user');
     }
   };
 
@@ -146,15 +174,15 @@ const AddUser: React.FC = () => {
 
           <div className="af-section">
             <div className="af-card">
-              <div className="af-row" style={{ marginBottom: '16px' }}>
+              <div className="af-row" style={{ marginBottom: '16px', gap: '12px', justifyContent: 'center' }}>
                 <button type="button" onClick={() => handleInputChange('role', 'user')}
-                  className={`af-submit ${formData.role === 'user' ? '' : 'af-submit-secondary'}`}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  className="role-btn role-btn-user"
+                  style={formData.role === 'user' ? { background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' } : undefined}>
                   <IonIcon icon={person} /> User
                 </button>
                 <button type="button" onClick={() => handleInputChange('role', 'admin')}
-                  className={`af-submit ${formData.role === 'admin' ? '' : 'af-submit-secondary'}`}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  className="role-btn role-btn-admin"
+                  style={formData.role === 'admin' ? { background: 'rgba(245, 158, 11, 0.18)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' } : undefined}>
                   <IonIcon icon={shield} /> Admin
                 </button>
               </div>
@@ -203,7 +231,7 @@ const AddUser: React.FC = () => {
 
           <button onClick={handleSave} disabled={loading} className="af-submit">
             {loading ? (
-              <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span> Creating User...</span></>
+              <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span> Saving...</span></>
             ) : (
               <><IonIcon icon={save} style={{ fontSize: '18px', marginRight: '8px' }} />Create User</>
             )}
@@ -214,7 +242,22 @@ const AddUser: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Creating user..." duration={0} />
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Creating user..."
+        />
         <IonAlert isOpen={showAlert} onDidDismiss={() => setShowAlert(false)} header={alertHeader} message={alertMessage} buttons={[{ text: 'OK', role: 'cancel' }]} />
       </IonContent>
     </IonPage>

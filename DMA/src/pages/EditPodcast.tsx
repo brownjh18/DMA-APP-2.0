@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
-  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonLoading, IonAlert, IonText, IonSpinner
+  IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonAlert, IonText, IonSpinner
 } from '@ionic/react';
 import {
   save, radio, closeCircle, image, musicalNote, checkmarkCircle, informationCircle, person,
@@ -8,6 +8,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import { apiService, API_BASE_URL } from '../services/api';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import './AdminForm.css';
@@ -45,6 +46,11 @@ const EditPodcast: React.FC = () => {
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -142,9 +148,22 @@ const EditPodcast: React.FC = () => {
       setAlertHeader('Validation Error'); setAlertMessage('Please fill in all required fields (Title, Speaker)'); setShowAlert(true);
       return;
     }
+
+    const hasFiles = !!(fileInputRef.current?.files?.[0] || thumbnailInputRef.current?.files?.[0]);
+
+    const steps: SaveProgressStep[] = [];
+    if (hasFiles) {
+      steps.push({ label: 'Upload files', status: 'active', progress: 0 });
+    }
+    steps.push({ label: 'Save podcast', status: hasFiles ? 'pending' : 'active' });
+
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setShowSaveModal(true);
     setSaving(true);
+
     try {
-      const hasFiles = fileInputRef.current?.files?.[0] || thumbnailInputRef.current?.files?.[0];
       if (hasFiles) {
         const formDataToSend = new FormData();
         formDataToSend.append('title', formData.title);
@@ -155,6 +174,9 @@ const EditPodcast: React.FC = () => {
         if (fileInputRef.current?.files?.[0]) formDataToSend.append('audioFile', fileInputRef.current.files[0]);
         if (thumbnailInputRef.current?.files?.[0]) formDataToSend.append('thumbnailFile', thumbnailInputRef.current.files[0]);
         await apiService.updatePodcast(id, formDataToSend);
+        setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveProgress(60);
+        setSaveSteps(prev => prev.map((s, i) => i === 1 ? { ...s, status: 'active', progress: 0 } : s));
       } else {
         const updateData: any = { title: formData.title, speaker: formData.speaker, description: formData.description,
           duration: formData.duration, status: formData.status };
@@ -167,14 +189,20 @@ const EditPodcast: React.FC = () => {
           body: JSON.stringify(updateData)
         });
         if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || 'Failed to update podcast'); }
+        const saveIdx = steps.findIndex(s => s.label.includes('Save'));
+        setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
       }
+
+      setSaveProgress(100);
+      setSaveStatus('success');
       setSaving(false);
-      setAlertHeader('Success!'); setAlertMessage('Podcast updated successfully!'); setShowAlert(true);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/radio'), 1500);
+      setTimeout(() => history.push('/admin/radio'), 2000);
     } catch (error) {
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to update podcast');
       setSaving(false);
-      setAlertHeader('Error'); setAlertMessage(error instanceof Error ? error.message : 'Failed to update podcast'); setShowAlert(true);
     }
   };
 
@@ -217,12 +245,6 @@ const EditPodcast: React.FC = () => {
 
       <IonContent fullscreen className="ion-padding">
         <div className="af-page">
-          {/* Hero Section */}
-          <div className="af-section">
-            <h1 className="nd-title" style={{ textAlign: 'center', marginBottom: '8px' }}>Edit Podcast</h1>
-            <p style={{ textAlign: 'center', color: 'var(--ion-color-medium)', fontSize: '14px', margin: 0 }}>Update podcast information and media files</p>
-          </div>
-
           {/* Status Toggle */}
           <div className="af-section">
             <div className="af-card">
@@ -233,11 +255,20 @@ const EditPodcast: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <div className="af-row" style={{ display: 'flex', gap: '12px', marginTop: '8px', justifyContent: 'center' }}>
                 {['draft', 'published', 'scheduled'].map((s) => (
                   <button key={s} onClick={() => handleInputChange('status', s)}
-                    className={`af-submit ${formData.status === s ? '' : 'af-submit-secondary'}`}
-                    style={{ flex: 1, padding: '8px', fontSize: '13px', textTransform: 'capitalize' }}>
+                    className="role-btn"
+                    style={{
+                      ...(formData.status === s
+                        ? s === 'published'
+                          ? { background: 'rgba(16, 185, 129, 0.18)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                          : s === 'scheduled'
+                            ? { background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' }
+                            : { background: 'rgba(245, 158, 11, 0.18)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }
+                        : {}),
+                      textTransform: 'capitalize',
+                    }}>
                     {s}
                   </button>
                 ))}
@@ -319,7 +350,7 @@ const EditPodcast: React.FC = () => {
           {/* Save Button */}
           <button onClick={handleSave} disabled={saving} className="af-submit">
             {saving ? (
-              <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span>Updating Podcast...</span></>
+              <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span>Saving...</span></>
             ) : (
               <><IonIcon icon={save} style={{ fontSize: '20px' }} /><span>Update Podcast</span></>
             )}
@@ -331,7 +362,22 @@ const EditPodcast: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading isOpen={saving} message="Updating podcast..." duration={0} />
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Updating podcast..."
+        />
         <IonAlert isOpen={showAlert} onDidDismiss={() => setShowAlert(false)} header={alertHeader} message={alertMessage} buttons={[{ text: 'OK', role: 'cancel' }]} />
       </IonContent>
     </IonPage>

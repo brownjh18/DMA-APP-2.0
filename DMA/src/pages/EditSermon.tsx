@@ -7,7 +7,6 @@ import {
   IonToolbar,
   IonIcon,
   IonButton,
-  IonLoading,
   IonAlert,
   IonText,
   IonSpinner
@@ -26,6 +25,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
+import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
@@ -42,7 +42,11 @@ const EditSermon: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
+  const [saveProgress, setSaveProgress] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'uploading' | 'success' | 'error'>('uploading');
+  const [saveError, setSaveError] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -317,6 +321,22 @@ const EditSermon: React.FC = () => {
       return;
     }
 
+    const hasThumbnail = !!formData.thumbnailFile || thumbnailRemoved;
+    const hasVideo = formData.videoSource === 'upload' && !!formData.videoFile;
+
+    const steps: SaveProgressStep[] = [];
+    if (formData.thumbnailFile || thumbnailRemoved) {
+      steps.push({ label: 'Uploading thumbnail', status: 'active', progress: 0 });
+    }
+    if (hasVideo) {
+      steps.push({ label: 'Uploading video', status: steps.length === 0 ? 'active' : 'pending', progress: 0 });
+    }
+    steps.push({ label: 'Saving sermon', status: 'pending' });
+
+    setSaveSteps(steps);
+    setSaveProgress(0);
+    setSaveStatus('uploading');
+    setShowSaveModal(true);
     setLoading(true);
 
     try {
@@ -328,23 +348,32 @@ const EditSermon: React.FC = () => {
         thumbnailFormData.append('thumbnailFile', formData.thumbnailFile);
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData);
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
+        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success', progress: 100 } : s));
+        setSaveProgress(hasVideo ? 33 : 50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
+        setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success' } : s));
+        setSaveProgress(hasVideo ? 33 : 50);
       }
 
+      const videoStepIdx = steps.findIndex(s => s.label.includes('video'));
       if (formData.videoSource === 'upload') {
         if (formData.videoFile) {
-          setUploadingVideo(true);
+          setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'active', progress: 0 } : s));
           const videoFormData = new FormData();
           videoFormData.append('video', formData.videoFile);
-
           const uploadResponse = await apiService.uploadSermonVideo(videoFormData);
           videoUrl = uploadResponse.videoUrl;
-          setUploadingVideo(false);
+          setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'success', progress: 100 } : s));
+          setSaveProgress(66);
         }
       } else {
         videoUrl = formData.videoUrl.trim();
       }
+
+      const saveStepIdx = steps.findIndex(s => s.label.includes('Saving'));
+      setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'active', progress: 0 } : s));
+      setSaveProgress(70);
 
       const sermonData = {
         title: formData.title,
@@ -369,23 +398,21 @@ const EditSermon: React.FC = () => {
 
       await apiService.updateSermon(id, sermonData);
 
+      setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'success', progress: 100 } : s));
+      setSaveProgress(100);
+      setSaveStatus('success');
       setLoading(false);
-
-      setAlertHeader('Success!');
-      setAlertMessage('Sermon updated successfully!');
-      setShowAlert(true);
 
       sessionStorage.setItem('sermonsNeedRefresh', 'true');
 
       setTimeout(() => {
         history.push('/admin/sermons');
-      }, 1500);
+      }, 2000);
     } catch (error) {
+      setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to update sermon');
       setLoading(false);
-      setUploadingVideo(false);
-      setAlertHeader('Error');
-      setAlertMessage(error instanceof Error ? error.message : 'Failed to update sermon');
-      setShowAlert(true);
     }
   };
 
@@ -408,19 +435,21 @@ const EditSermon: React.FC = () => {
 
           {/* Video Source Tabs */}
           <div className="af-section">
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+            <div className="af-row" style={{ marginBottom: '24px', gap: '12px', justifyContent: 'center' }}>
               <button
                 onClick={() => handleInputChange('videoSource', 'upload')}
-                className={`af-submit ${activeTab === 'upload' ? '' : 'af-submit-secondary'}`}
+                className="role-btn role-btn-user"
                 type="button"
+                style={activeTab === 'upload' ? { background: 'rgba(99, 102, 241, 0.18)', color: '#6366f1', borderColor: 'rgba(99, 102, 241, 0.3)' } : undefined}
               >
                 <IonIcon icon={cloudUpload} />
                 Upload File
               </button>
               <button
                 onClick={() => handleInputChange('videoSource', 'external')}
-                className={`af-submit ${activeTab === 'external' ? '' : 'af-submit-secondary'}`}
+                className="role-btn role-btn-admin"
                 type="button"
+                style={activeTab === 'external' ? { background: 'rgba(245, 158, 11, 0.18)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' } : undefined}
               >
                 <IonIcon icon={link} />
                 External Link
@@ -659,7 +688,7 @@ const EditSermon: React.FC = () => {
             {loading ? (
               <>
                 <IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} />
-                <span>{uploadingVideo ? 'Uploading Video...' : 'Updating Sermon...'}</span>
+                <span>Saving...</span>
               </>
             ) : (
               <>
@@ -677,10 +706,21 @@ const EditSermon: React.FC = () => {
           </div>
         </div>
 
-        <IonLoading
-          isOpen={loading}
-          message={uploadingVideo ? "Uploading video..." : "Updating sermon..."}
-          duration={0}
+        <SaveProgressModal
+          isOpen={showSaveModal}
+          steps={saveSteps}
+          overallProgress={saveProgress}
+          status={saveStatus}
+          errorMessage={saveError}
+          onDismiss={() => {
+            setShowSaveModal(false);
+            if (saveStatus === 'error') {
+              setSaveSteps([]);
+              setSaveProgress(0);
+              setSaveError('');
+            }
+          }}
+          title="Updating sermon..."
         />
         <IonAlert
           isOpen={showAlert}
