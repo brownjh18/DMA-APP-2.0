@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { LocalNotifications, PermissionStatus } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { API_BASE_URL } from '../services/api';
 import { useSocket } from './SocketContext';
 import { useSettings } from './SettingsContext';
+
+const POLL_INTERVAL = 30000;
 
 export interface Notification {
   _id?: string;
@@ -151,6 +153,36 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   useEffect(() => {
     refreshNotifications();
   }, [refreshNotifications]);
+
+  // Polling fallback — catches notifications missed during socket disconnects
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const interval = setInterval(() => {
+      refreshNotifications();
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [refreshNotifications]);
+
+  // Refresh on visibility change — catches notifications when user returns to app
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshNotifications();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [refreshNotifications]);
+
+  // Refresh when socket reconnects — fetch any missed notifications
+  useEffect(() => {
+    if (socketContext?.isConnected) {
+      refreshNotifications();
+    }
+  }, [socketContext?.isConnected, refreshNotifications]);
 
   // Join user room for real-time notifications
   useEffect(() => {

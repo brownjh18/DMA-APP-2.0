@@ -187,7 +187,6 @@ import OfflineIndicator from './components/OfflineIndicator';
 import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
-import NotificationListener from './components/NotificationListener';
 import './components/FloatingSearchIcon.css';
 import Tab1 from './pages/Tab1';
 import Tab2 from './pages/Tab2';
@@ -649,7 +648,6 @@ const App: React.FC = () => {
                     <PageTitleUpdater />
                     <AudioPlayer />
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} user={user} />
-                <NotificationListener />
 
                 <IonRouterOutlet id="main-content">
                 <Route exact path="/tab1">
