@@ -1046,7 +1046,7 @@ ion-alert::part(backdrop) {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 120px;
+  height: max(12px, env(safe-area-inset-bottom));
   pointer-events: none;
   z-index: 998;
   background: linear-gradient(

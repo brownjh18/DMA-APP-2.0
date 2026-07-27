@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { IonIcon } from '@ionic/react';
 import { cloudOffline, wifi } from 'ionicons/icons';
 import { useNetwork } from '../contexts/NetworkContext';
@@ -7,30 +7,34 @@ const OfflineIndicator: React.FC = () => {
   const { isOnline } = useNetwork();
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState<'online' | 'offline'>('online');
-  const [wasOnline, setWasOnline] = useState<boolean | null>(null);
+  const wasOnlineRef = useRef<boolean | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Only show indicator when connection status changes
-    if (wasOnline === null) {
-      // Initial load - don't show
-      setWasOnline(isOnline);
+    if (wasOnlineRef.current === null) {
+      wasOnlineRef.current = isOnline;
       return;
     }
 
-    if (isOnline !== wasOnline) {
-      // Connection status changed - show indicator
+    if (isOnline !== wasOnlineRef.current) {
       setStatus(isOnline ? 'online' : 'offline');
       setIsVisible(true);
-      setWasOnline(isOnline);
+      wasOnlineRef.current = isOnline;
 
-      // Auto-hide after 5 seconds
-      const timer = setTimeout(() => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
         setIsVisible(false);
+        timerRef.current = null;
       }, 5000);
-
-      return () => clearTimeout(timer);
     }
-  }, [isOnline, wasOnline]);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isOnline]);
 
   // Don't render anything if not visible
   if (!isVisible) return null;
