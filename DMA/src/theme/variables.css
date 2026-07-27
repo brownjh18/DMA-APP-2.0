@@ -1040,8 +1040,7 @@ ion-alert::part(backdrop) {
   -webkit-backdrop-filter: blur(7px) saturate(220%);
 }
 
-.liquid-tab-bar::before {
-  content: "";
+.bottom-nav-fade {
   position: fixed;
   left: 0;
   right: 0;
@@ -1172,8 +1171,8 @@ ion-content[fullscreen] {
     radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.24), transparent 44%);
 }
 
-[data-theme="dark"] .liquid-tab-bar::before,
-:root:not([data-theme="light"]) .liquid-tab-bar::before {
+[data-theme="dark"] .bottom-nav-fade,
+:root:not([data-theme="light"]) .bottom-nav-fade {
   background: linear-gradient(
     to top,
     var(--ios26-grouped-bg-dark),
