@@ -1029,7 +1029,7 @@ ion-alert::part(backdrop) {
   padding: 6px;
   border: 1px solid var(--liquid-glass-border);
   border-radius: 999px;
-  overflow: hidden;
+  overflow: visible;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
     radial-gradient(ellipse at 16% 0%, rgba(255, 255, 255, 0.9), transparent 34%),
@@ -1038,6 +1038,23 @@ ion-alert::part(backdrop) {
   box-shadow: none;
   backdrop-filter: blur(7px) saturate(220%);
   -webkit-backdrop-filter: blur(7px) saturate(220%);
+}
+
+.liquid-tab-bar::before {
+  content: "";
+  position: absolute;
+  left: -100vw;
+  right: -100vw;
+  bottom: -100vh;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    var(--ios26-grouped-bg-light) 0%,
+    var(--ios26-grouped-bg-light) 16px,
+    transparent 100%
+  );
 }
 
 .liquid-tab-bar::after {
@@ -1154,6 +1171,16 @@ ion-content[fullscreen] {
     linear-gradient(145deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.14)),
     radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.22), transparent 34%),
     radial-gradient(ellipse at 50% 112%, rgba(0, 122, 255, 0.24), transparent 44%);
+}
+
+[data-theme="dark"] .liquid-tab-bar::before,
+:root:not([data-theme="light"]) .liquid-tab-bar::before {
+  background: linear-gradient(
+    to top,
+    var(--ios26-grouped-bg-dark) 0%,
+    var(--ios26-grouped-bg-dark) 16px,
+    transparent 100%
+  );
 }
 
 [data-theme="dark"] .liquid-tab-button,
