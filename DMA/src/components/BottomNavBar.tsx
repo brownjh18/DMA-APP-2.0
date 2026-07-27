@@ -77,32 +77,29 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onSidebarToggle }) => {
   };
 
   return (
-    <>
-      <div className="bottom-nav-fade" aria-hidden="true" />
-      <nav
-        className={`bottom-nav-bar liquid-tab-bar ${isFlowing ? 'is-flowing' : ''} ${isSettling ? 'is-settling' : ''}`}
-        style={{ '--active-index': activeIndex } as React.CSSProperties}
-        aria-label="Primary navigation"
-      >
-        <span className="liquid-selection-lens" aria-hidden="true" />
-        {navigationItems.map((item) => {
-          const isActive = selectedName === item.name;
+    <nav
+      className={`bottom-nav-bar liquid-tab-bar ${isFlowing ? 'is-flowing' : ''} ${isSettling ? 'is-settling' : ''}`}
+      style={{ '--active-index': activeIndex } as React.CSSProperties}
+      aria-label="Primary navigation"
+    >
+      <span className="liquid-selection-lens" aria-hidden="true" />
+      {navigationItems.map((item) => {
+        const isActive = selectedName === item.name;
 
-          return (
-            <button
-              key={item.name}
-              type="button"
-              className={`liquid-tab-button ${isActive ? 'active' : ''}`}
-              aria-label={item.label}
-              aria-current={isActive && item.action === 'nav' ? 'page' : undefined}
-              onClick={() => handlePress(item)}
-            >
-              <IonIcon icon={item.icon} className="liquid-tab-icon" aria-hidden="true" />
-            </button>
-          );
-        })}
-      </nav>
-    </>
+        return (
+          <button
+            key={item.name}
+            type="button"
+            className={`liquid-tab-button ${isActive ? 'active' : ''}`}
+            aria-label={item.label}
+            aria-current={isActive && item.action === 'nav' ? 'page' : undefined}
+            onClick={() => handlePress(item)}
+          >
+            <IonIcon icon={item.icon} className="liquid-tab-icon" aria-hidden="true" />
+          </button>
+        );
+      })}
+    </nav>
   );
 };
 

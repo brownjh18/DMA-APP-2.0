@@ -922,6 +922,7 @@ const App: React.FC = () => {
               <FloatingSearchIcon />
               <ProgressOverlay />
               </IonReactRouter>
+              <div className="bottom-nav-fade" aria-hidden="true" />
             </IonApp>
           </PlayerProvider>
         </AuthContext.Provider>
