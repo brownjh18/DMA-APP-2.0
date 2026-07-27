@@ -1029,7 +1029,7 @@ ion-alert::part(backdrop) {
   padding: 6px;
   border: 1px solid var(--liquid-glass-border);
   border-radius: 999px;
-  overflow: visible;
+  overflow: hidden;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
     radial-gradient(ellipse at 16% 0%, rgba(255, 255, 255, 0.9), transparent 34%),
@@ -1042,18 +1042,17 @@ ion-alert::part(backdrop) {
 
 .liquid-tab-bar::before {
   content: "";
-  position: absolute;
-  left: -100vw;
-  right: -100vw;
-  bottom: -100vh;
-  height: 100vh;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
   pointer-events: none;
-  z-index: -1;
+  z-index: 998;
   background: linear-gradient(
     to top,
-    var(--ios26-grouped-bg-light) 0%,
-    var(--ios26-grouped-bg-light) 16px,
-    transparent 100%
+    var(--ios26-grouped-bg-light),
+    transparent
   );
 }
 
@@ -1177,9 +1176,8 @@ ion-content[fullscreen] {
 :root:not([data-theme="light"]) .liquid-tab-bar::before {
   background: linear-gradient(
     to top,
-    var(--ios26-grouped-bg-dark) 0%,
-    var(--ios26-grouped-bg-dark) 16px,
-    transparent 100%
+    var(--ios26-grouped-bg-dark),
+    transparent
   );
 }
 
