@@ -495,6 +495,10 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     }
 
     const updates = {};
+    if (req.body.name) updates.name = req.body.name;
+    if (req.body.email) updates.email = req.body.email;
+    if (req.body.phone !== undefined) updates.phone = req.body.phone;
+    if (req.body.profilePicture) updates.profilePicture = req.body.profilePicture;
     if (req.body.role) updates.role = req.body.role;
     if (req.body.isActive !== undefined) updates.isActive = req.body.isActive;
 

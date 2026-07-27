@@ -228,6 +228,7 @@ import FullPodcastPlayer from './pages/FullPodcastPlayer';
 import FullSermonPlayer from './pages/FullSermonPlayer';
 import EventDetail from './pages/EventDetail';
 import AddUser from './pages/AddUser';
+import EditUser from './pages/EditUser';
 import AddPodcast from './pages/AddPodcast';
 import EditPodcast from './pages/EditPodcast';
 import EditLiveBroadcast from './pages/EditLiveBroadcast';
@@ -876,6 +877,14 @@ const App: React.FC = () => {
                 <ProtectedRoute
                   path="/admin/users/add"
                   component={AddUser}
+                  isAuthenticated={isLoggedIn}
+                  isAdmin={isAdmin}
+                  isAuthChecking={isAuthChecking}
+                  exact
+                />
+                <ProtectedRoute
+                  path="/admin/users/edit/:id"
+                  component={EditUser}
                   isAuthenticated={isLoggedIn}
                   isAdmin={isAdmin}
                   isAuthChecking={isAuthChecking}
