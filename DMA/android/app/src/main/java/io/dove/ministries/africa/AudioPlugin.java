@@ -44,7 +44,11 @@ public class AudioPlugin extends Plugin {
     public void stopService(PluginCall call) {
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.STOP");
-        startServiceIntent(intent);
+        try {
+            getContext().startService(intent);
+        } catch (Exception e) {
+            // Service may not be running
+        }
 
         unregisterAudioControlReceiver();
 
@@ -137,7 +141,15 @@ public class AudioPlugin extends Plugin {
             intent.putExtra("position", position != null ? position.longValue() : 0L);
         }
 
-        startServiceIntent(intent);
+        if (action.equals("stop")) {
+            try {
+                getContext().startService(intent);
+            } catch (Exception e) {
+                // Service may not be running
+            }
+        } else {
+            startServiceIntent(intent);
+        }
 
         JSObject result = new JSObject();
         result.put("sent", true);
