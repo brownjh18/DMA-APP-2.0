@@ -12,17 +12,10 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { AuthContext } from '../App';
-import { usePlayer } from '../contexts/PlayerContext';
-import { isPodcast } from '../utils/mediaUtils';
-import VideoPlayer from '../components/VideoPlayer';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import {
   arrowBack,
   book,
-  heart,
-  play,
-  pause,
-  close,
   playCircle,
   radio,
   trash,
@@ -90,30 +83,7 @@ const MyFavorites: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [itemToDelete, setItemToDelete] = useState<{ type: ActiveTab; id: string } | null>(null);
-  const [selectedSermon, setSelectedSermon] = useState<any>(null);
-  const [selectedPodcast, setSelectedPodcast] = useState<any>(null);
-  const [selectedMediaType, setSelectedMediaType] = useState<'sermon' | 'podcast' | null>(null);
-  const [playerLoading, setPlayerLoading] = useState(false);
-  const [playerError, setPlayerError] = useState('');
-
-  const { currentMedia, isPlaying, setCurrentMedia, setIsPlaying, clearPlayer } = usePlayer();
-
   const totalCount = savedSermons.length + savedPodcasts.length + savedDevotions.length;
-
-  const inlineSermon = selectedMediaType === 'sermon'
-    ? selectedSermon
-    : !selectedMediaType && currentMedia && !isPodcast(currentMedia)
-      ? currentMedia
-      : null;
-
-  const inlinePodcast = selectedMediaType === 'podcast'
-    ? selectedPodcast
-    : !selectedMediaType && currentMedia && isPodcast(currentMedia)
-      ? currentMedia
-      : null;
-
-  const showSermonPlayerCard = Boolean(inlineSermon);
-  const showPodcastPlayerCard = Boolean(inlinePodcast);
 
   const stats = [
     { label: 'Sermons', value: savedSermons.length, color: '#6366f1' },
@@ -147,15 +117,6 @@ const MyFavorites: React.FC = () => {
       window.removeEventListener('savedItemsChanged', handleSavedItemsChanged as EventListener);
     };
   }, [isLoggedIn]);
-
-  useEffect(() => {
-    if (!currentMedia) {
-      setSelectedMediaType(null);
-      setSelectedSermon(null);
-      setSelectedPodcast(null);
-      setPlayerError('');
-    }
-  }, [currentMedia]);
 
   const loadSavedContent = async () => {
     setLoading(true);
@@ -256,78 +217,12 @@ const MyFavorites: React.FC = () => {
     setItemToDelete(null);
   };
 
-  const handleClosePlayer = () => {
-    setSelectedMediaType(null);
-    setSelectedSermon(null);
-    setSelectedPodcast(null);
-    setPlayerError('');
-    clearPlayer();
+  const handleOpenSermon = (id: string) => {
+    history.push(`/sermon-player?id=${encodeURIComponent(id)}`);
   };
 
-  const handleOpenSermonPlayer = async (id: string) => {
-    if (selectedMediaType === 'sermon' && selectedSermon?.id === id) return;
-    setPlayerLoading(true);
-    setPlayerError('');
-    setSelectedMediaType('sermon');
-    setSelectedPodcast(null);
-
-    try {
-      const response = await apiService.getSermon(id);
-      const sermonData = response.sermon || response;
-      const formattedSermon = {
-        id: sermonData._id || sermonData.id,
-        title: sermonData.title || 'Sermon',
-        description: sermonData.description || sermonData.summary || '',
-        thumbnailUrl: sermonData.thumbnailUrl || sermonData.thumbnail || '',
-        publishedAt: sermonData.publishedAt || sermonData.date || new Date().toISOString(),
-        duration: sermonData.duration || sermonData.length || '00:00',
-        viewCount: sermonData.viewCount?.toString() || '0',
-        videoUrl: sermonData.videoUrl || sermonData.streamUrl || sermonData.video || '',
-        streamUrl: sermonData.streamUrl || sermonData.videoUrl || '',
-        speaker: sermonData.speaker || 'Dove Ministries Africa'
-      };
-      setSelectedSermon(formattedSermon);
-      setCurrentMedia(formattedSermon);
-      setIsPlaying(true);
-    } catch (error) {
-      console.error('Failed to open sermon player:', error);
-      setPlayerError('Unable to load sermon player.');
-    } finally {
-      setPlayerLoading(false);
-    }
-  };
-
-  const handleOpenPodcastPlayer = async (id: string) => {
-    if (selectedMediaType === 'podcast' && selectedPodcast?.id === id) return;
-    setPlayerLoading(true);
-    setPlayerError('');
-    setSelectedMediaType('podcast');
-    setSelectedSermon(null);
-
-    try {
-      const response = await apiService.getPodcast(id);
-      const podcastData = response.podcast || response;
-      const formattedPodcast = {
-        id: podcastData._id || podcastData.id,
-        title: podcastData.title || 'Podcast',
-        description: podcastData.description || '',
-        thumbnailUrl: podcastData.thumbnailUrl || podcastData.thumbnail || '',
-        publishedAt: podcastData.publishedAt || podcastData.date || new Date().toISOString(),
-        duration: podcastData.duration || '00:00',
-        viewCount: podcastData.viewCount?.toString() || '0',
-        audioUrl: podcastData.audioUrl || podcastData.audioFile || '',
-        speaker: podcastData.speaker || 'Dove Ministries Africa',
-        isLive: podcastData.isLive || false
-      };
-      setSelectedPodcast(formattedPodcast);
-      setCurrentMedia(formattedPodcast);
-      setIsPlaying(true);
-    } catch (error) {
-      console.error('Failed to open podcast player:', error);
-      setPlayerError('Unable to load podcast player.');
-    } finally {
-      setPlayerLoading(false);
-    }
+  const handleOpenPodcast = (id: string) => {
+    history.push(`/full-podcast-player?id=${encodeURIComponent(id)}`);
   };
 
   const currentItems = activeTab === 'sermons' ? savedSermons 
@@ -354,82 +249,6 @@ const MyFavorites: React.FC = () => {
         <div className="fav-page">
 
           {/* Content Type Tabs */}
-          {showSermonPlayerCard && inlineSermon && (
-            <div className="fav-player-card">
-              <div className="fav-player-card-header">
-                <div>
-                  <p className="fav-player-label">Now playing</p>
-                  <h2 className="fav-player-title">{inlineSermon.title}</h2>
-                  <p className="fav-player-meta">{inlineSermon.speaker} • {new Date(inlineSermon.publishedAt).toLocaleDateString()}</p>
-                </div>
-                <IonButton fill="clear" onClick={handleClosePlayer} className="fav-player-close-button">
-                  <IonIcon icon={close} />
-                </IonButton>
-              </div>
-              {playerLoading ? (
-                <div className="fav-player-loading">Loading sermon player...</div>
-              ) : playerError ? (
-                <div className="fav-player-error">{playerError}</div>
-              ) : (
-                <div className="fav-player-video-wrap">
-                  <VideoPlayer
-                    url={getFullUrl(inlineSermon.videoUrl || inlineSermon.streamUrl || '')}
-                    title={inlineSermon.title}
-                    playing={isPlaying}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    fullScreen={false}
-                    startTime={0}
-                    onTimeUpdate={(time) => {
-                      /* persist play position */
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {showPodcastPlayerCard && inlinePodcast && (
-            <div className="fav-player-card fav-podcast-card">
-              <div className="fav-player-card-header">
-                <div>
-                  <p className="fav-player-label">Podcast player</p>
-                  <h2 className="fav-player-title">{inlinePodcast.title}</h2>
-                  <p className="fav-player-meta">{inlinePodcast.speaker} • {new Date(inlinePodcast.publishedAt).toLocaleDateString()}</p>
-                </div>
-                <div className="fav-player-actions">
-                  <IonButton fill="clear" onClick={() => setIsPlaying(!isPlaying)}>
-                    <IonIcon icon={isPlaying ? pause : play} />
-                  </IonButton>
-                  <IonButton fill="clear" onClick={handleClosePlayer} className="fav-player-close-button">
-                    <IonIcon icon={close} />
-                  </IonButton>
-                </div>
-              </div>
-              {playerLoading ? (
-                <div className="fav-player-loading">Loading podcast player...</div>
-              ) : playerError ? (
-                <div className="fav-player-error">{playerError}</div>
-              ) : (
-                <div className="fav-player-podcast-body">
-                  <div className="fav-player-thumbnail">
-                    <img src={getFullUrl(inlinePodcast.thumbnailUrl)} alt={inlinePodcast.title} onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      if (!target.dataset['tried']) {
-                        target.dataset['tried'] = 'true';
-                        target.src = '/bible.JPG';
-                      }
-                    }} />
-                  </div>
-                  <div className="fav-player-podcast-info">
-                    <p className="fav-player-description">{inlinePodcast.description || 'Play this podcast from your favorites.'}</p>
-                    <p className="fav-player-duration">Duration: {inlinePodcast.duration}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="fav-section">
             <div className="fav-section-header">
               <h2 className="fav-section-title">Browse by Type</h2>
@@ -469,7 +288,7 @@ const MyFavorites: React.FC = () => {
                       <div
                         key={s.id}
                         className="fav-media-list-item"
-                        onClick={() => handleOpenSermonPlayer(s.id)}
+                        onClick={() => handleOpenSermon(s.id)}
                       >
                         <div className="fav-media-thumb">
                           <img
@@ -513,7 +332,7 @@ const MyFavorites: React.FC = () => {
                       <div
                         key={p.id}
                         className="fav-media-list-item"
-                        onClick={() => handleOpenPodcastPlayer(p.id)}
+                        onClick={() => handleOpenPodcast(p.id)}
                       >
                         <div className="fav-media-thumb">
                           <img
