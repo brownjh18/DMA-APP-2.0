@@ -195,6 +195,34 @@ const FullPodcastPlayer: React.FC = () => {
     fetchQueuePodcasts();
   }, [podcast]);
 
+  // Listen for notification next/prev controls
+  useEffect(() => {
+    const handleNotificationNext = () => {
+      if (queuePodcasts.length > 0) {
+        const nextPod = queuePodcasts[0];
+        if (nextPod) {
+          setCurrentMedia(nextPod);
+          setIsPlaying(true);
+        }
+      }
+    };
+    const handleNotificationPrev = () => {
+      if (queuePodcasts.length > 0) {
+        const prevPod = queuePodcasts[queuePodcasts.length - 1];
+        if (prevPod) {
+          setCurrentMedia(prevPod);
+          setIsPlaying(true);
+        }
+      }
+    };
+    window.addEventListener('notification-next', handleNotificationNext);
+    window.addEventListener('notification-prev', handleNotificationPrev);
+    return () => {
+      window.removeEventListener('notification-next', handleNotificationNext);
+      window.removeEventListener('notification-prev', handleNotificationPrev);
+    };
+  }, [queuePodcasts, setCurrentMedia, setIsPlaying]);
+
   // Check if podcast is saved
   useEffect(() => {
     const checkSavedStatus = async () => {

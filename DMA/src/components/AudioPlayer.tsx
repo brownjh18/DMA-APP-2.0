@@ -38,6 +38,15 @@ if (Capacitor.isNativePlatform()) {
 }
 
 const SKIP_SECONDS = 10;
+const API_BASE = 'https://dove-church.onrender.com';
+
+const resolveArtUri = (url?: string | null): string => {
+  if (!url || url.trim() === '') return '';
+  if (url.startsWith('http')) return url;
+  const base = BACKEND_BASE_URL || API_BASE;
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const AudioPlayer: React.FC = () => {
   const { currentMedia, isPlaying, setIsPlaying, savePlaybackPosition, setCurrentTime } = usePlayer();
   const { socket } = useSocket();
@@ -341,6 +350,7 @@ const AudioPlayer: React.FC = () => {
       AudioService.startService({
         title: podcast.title,
         subtitle: podcast.speaker || 'Dove Church',
+        artUri: resolveArtUri(podcast.thumbnailUrl),
         position: currentTimeMs,
         duration: durationMs,
       }).catch(() => {});
@@ -365,6 +375,7 @@ const AudioPlayer: React.FC = () => {
     AudioService.updateMetadata({
       title: podcast.title,
       subtitle: podcast.speaker || 'Dove Church',
+      artUri: resolveArtUri(podcast.thumbnailUrl),
       position: currentTimeMs,
       duration: durationMs,
       isPlaying,
@@ -378,7 +389,7 @@ const AudioPlayer: React.FC = () => {
     let listenerHandle: any = null;
     const setupListener = async () => {
       try {
-        listenerHandle = await AudioService.addListener('audioControl', (data: { action: string }) => {
+        listenerHandle = await AudioService.addListener('audioControl', (data: { action: string; position?: string }) => {
           if (!audioRef.current) return;
           switch (data.action) {
             case 'play':
@@ -394,17 +405,16 @@ const AudioPlayer: React.FC = () => {
               setIsPlaying(false);
               AudioService?.stopService().catch(() => {});
               break;
-            case 'next':
-              audioRef.current.currentTime = Math.min(
-                audioRef.current.duration || 0,
-                audioRef.current.currentTime + SKIP_SECONDS
-              );
+            case 'next': {
+              window.dispatchEvent(new Event('notification-next'));
               break;
-            case 'prev':
-              audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
+            }
+            case 'prev': {
+              window.dispatchEvent(new Event('notification-prev'));
               break;
+            }
             case 'seek': {
-              const seekTime = parseFloat((data as any).position || '0') / 1000;
+              const seekTime = parseFloat(data.position || '0') / 1000;
               if (seekTime > 0) {
                 audioRef.current.currentTime = seekTime;
               }

@@ -6,8 +6,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 
 import androidx.core.app.NotificationCompat;
@@ -27,11 +31,14 @@ public class AudioForegroundService extends Service {
 
     private PowerManager.WakeLock wakeLock;
     private MediaSessionCompat mediaSession;
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean isPlaying = false;
     private String currentTitle = "Dove Church";
     private String currentSubtitle = "Playing podcast";
+    private String currentArtUri = "";
     private long currentPosition = 0;
     private long totalDuration = 0;
+    private Bitmap artBitmap = null;
 
     @Override
     public void onCreate() {
@@ -45,6 +52,57 @@ public class AudioForegroundService extends Service {
         mediaSession = new MediaSessionCompat(this, "DoveAudioSession");
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         mediaSession.setActive(true);
+
+        mediaSession.setCallback(new MediaSessionCompat.Callback() {
+            @Override
+            public void onPlay() {
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendControlToJS("play");
+                isPlaying = true;
+                updateMediaSessionState();
+                updateNotification();
+            }
+
+            @Override
+            public void onPause() {
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendControlToJS("pause");
+                isPlaying = false;
+                updateMediaSessionState();
+                updateNotification();
+            }
+
+            @Override
+            public void onStop() {
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendControlToJS("stop");
+                isPlaying = false;
+                updateMediaSessionState();
+                stopForeground(STOP_FOREGROUND_REMOVE);
+                stopSelf();
+            }
+
+            @Override
+            public void onSkipToNext() {
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendControlToJS("next");
+            }
+
+            @Override
+            public void onSkipToPrevious() {
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendControlToJS("prev");
+            }
+
+            @Override
+            public void onSeekTo(long pos) {
+                currentPosition = pos;
+                AudioPlugin plugin = AudioPlugin.getInstance();
+                if (plugin != null) plugin.sendSeekToJS(pos);
+                updateMediaSessionState();
+                updateNotification();
+            }
+        });
     }
 
     @Override
@@ -53,38 +111,45 @@ public class AudioForegroundService extends Service {
             switch (intent.getAction()) {
                 case ACTION_PLAY:
                     isPlaying = true;
-                    sendBroadcastToWebView("play");
+                    notifyPlugin("play");
                     break;
                 case ACTION_PAUSE:
                     isPlaying = false;
-                    sendBroadcastToWebView("pause");
+                    notifyPlugin("pause");
                     break;
                 case ACTION_STOP:
                     isPlaying = false;
-                    sendBroadcastToWebView("stop");
+                    notifyPlugin("stop");
                     updateMediaSessionState();
                     stopForeground(STOP_FOREGROUND_REMOVE);
                     stopSelf();
                     return START_NOT_STICKY;
                 case ACTION_NEXT:
-                    sendBroadcastToWebView("next");
+                    notifyPlugin("next");
                     break;
                 case ACTION_PREV:
-                    sendBroadcastToWebView("prev");
+                    notifyPlugin("prev");
                     break;
                 case ACTION_SEEK:
                     long seekTo = intent.getLongExtra("position", 0);
                     currentPosition = seekTo;
-                    sendBroadcastToWebView("seek:" + seekTo);
+                    AudioPlugin plugin = AudioPlugin.getInstance();
+                    if (plugin != null) plugin.sendSeekToJS(seekTo);
                     break;
             }
 
-            // Update metadata from intent extras
             if (intent.hasExtra("title")) {
                 currentTitle = intent.getStringExtra("title");
             }
             if (intent.hasExtra("subtitle")) {
                 currentSubtitle = intent.getStringExtra("subtitle");
+            }
+            if (intent.hasExtra("artUri")) {
+                String newArtUri = intent.getStringExtra("artUri");
+                if (newArtUri != null && !newArtUri.equals(currentArtUri)) {
+                    currentArtUri = newArtUri;
+                    downloadArtAndNotify();
+                }
             }
             if (intent.hasExtra("position")) {
                 currentPosition = intent.getLongExtra("position", 0);
@@ -100,6 +165,26 @@ public class AudioForegroundService extends Service {
         updateMediaSessionState();
         startForeground(NOTIFICATION_ID, buildNotification());
         return START_STICKY;
+    }
+
+    private void notifyPlugin(String action) {
+        AudioPlugin plugin = AudioPlugin.getInstance();
+        if (plugin != null) {
+            plugin.sendControlToJS(action);
+        }
+    }
+
+    private void downloadArtAndNotify() {
+        AudioPlugin plugin = AudioPlugin.getInstance();
+        if (plugin != null && !currentArtUri.isEmpty()) {
+            plugin.downloadBitmap(currentArtUri, bitmap -> {
+                artBitmap = bitmap;
+                updateNotification();
+            });
+        } else {
+            artBitmap = null;
+            updateNotification();
+        }
     }
 
     private void updateMediaSessionState() {
@@ -122,12 +207,6 @@ public class AudioForegroundService extends Service {
         mediaSession.setPlaybackState(stateBuilder.build());
     }
 
-    private void sendBroadcastToWebView(String action) {
-        Intent intent = new Intent("io.dove.ministries.africa.AUDIO_CONTROL");
-        intent.putExtra("action", action);
-        sendBroadcast(intent);
-    }
-
     private String formatTime(long millis) {
         long totalSeconds = millis / 1000;
         long minutes = totalSeconds / 60;
@@ -136,13 +215,11 @@ public class AudioForegroundService extends Service {
     }
 
     private Notification buildNotification() {
-        // Content intent - opens the app
         Intent contentIntent = new Intent(this, MainActivity.class);
         contentIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent contentPending = PendingIntent.getActivity(this, 0, contentIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Build subtitle with timeline
         String timelineText;
         if (totalDuration > 0) {
             timelineText = currentSubtitle + "  \u2022  " + formatTime(currentPosition) + " / " + formatTime(totalDuration);
@@ -150,7 +227,6 @@ public class AudioForegroundService extends Service {
             timelineText = currentSubtitle;
         }
 
-        // Action intents - use unique request codes for each
         Intent prevIntent = new Intent(this, AudioForegroundService.class);
         prevIntent.setAction(ACTION_PREV);
         PendingIntent prevPending = PendingIntent.getService(this, 10, prevIntent,
@@ -171,7 +247,6 @@ public class AudioForegroundService extends Service {
         PendingIntent stopPending = PendingIntent.getService(this, 13, stopIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Build MediaStyle notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_music_note)
                 .setContentTitle(currentTitle)
@@ -182,7 +257,6 @@ public class AudioForegroundService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setShowWhen(false)
-                // Add actions: Previous, Play/Pause, Next
                 .addAction(new NotificationCompat.Action(
                         R.drawable.ic_media_previous, "Previous", prevPending))
                 .addAction(new NotificationCompat.Action(
@@ -190,14 +264,29 @@ public class AudioForegroundService extends Service {
                         isPlaying ? "Pause" : "Play", playPausePending))
                 .addAction(new NotificationCompat.Action(
                         R.drawable.ic_media_next, "Next", nextPending))
-                // MediaStyle: show first 3 actions in compact view, link to media session
                 .setStyle(new MediaStyle()
                         .setMediaSession(mediaSession.getSessionToken())
                         .setShowActionsInCompactView(0, 1, 2)
                         .setShowCancelButton(true)
                         .setCancelButtonIntent(stopPending));
 
+        if (artBitmap != null) {
+            builder.setLargeIcon(artBitmap);
+        } else if (!currentArtUri.isEmpty()) {
+            Bitmap defaultIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note);
+            if (defaultIcon != null) {
+                builder.setLargeIcon(defaultIcon);
+            }
+        }
+
         return builder.build();
+    }
+
+    private void updateNotification() {
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.notify(NOTIFICATION_ID, buildNotification());
+        }
     }
 
     private void createNotificationChannel() {
@@ -221,7 +310,7 @@ public class AudioForegroundService extends Service {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         if (pm != null) {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "dove:audio_playback");
-            wakeLock.acquire(60 * 60 * 1000L); // 1 hour max
+            wakeLock.acquire(60 * 60 * 1000L);
         }
     }
 

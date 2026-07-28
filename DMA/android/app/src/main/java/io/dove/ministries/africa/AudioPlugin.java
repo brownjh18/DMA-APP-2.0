@@ -1,10 +1,13 @@
 package io.dove.ministries.africa;
 
-import android.content.BroadcastReceiver;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Build;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -12,15 +15,71 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @CapacitorPlugin(name = "AudioService")
 public class AudioPlugin extends Plugin {
-    private BroadcastReceiver audioControlReceiver;
-    private static final String AUDIO_CONTROL_ACTION = "io.dove.ministries.africa.AUDIO_CONTROL";
+    private static final String TAG = "AudioServicePlugin";
+    private static AudioPlugin instance;
+    private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    public static AudioPlugin getInstance() {
+        return instance;
+    }
+
+    @Override
+    public void load() {
+        instance = this;
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        instance = null;
+        imageExecutor.shutdownNow();
+        super.handleOnDestroy();
+    }
+
+    public void sendControlToJS(String action) {
+        Log.d(TAG, "sendControlToJS: " + action);
+        JSObject data = new JSObject();
+        data.put("action", action);
+        notifyListeners("audioControl", data);
+        bringAppToForeground();
+    }
+
+    public void sendSeekToJS(long position) {
+        Log.d(TAG, "sendSeekToJS: " + position);
+        JSObject data = new JSObject();
+        data.put("action", "seek");
+        data.put("position", String.valueOf(position));
+        notifyListeners("audioControl", data);
+        bringAppToForeground();
+    }
+
+    private void bringAppToForeground() {
+        Activity activity = getActivity();
+        if (activity == null) return;
+        try {
+            Intent launchIntent = activity.getPackageManager()
+                .getLaunchIntentForPackage(activity.getPackageName());
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                activity.startActivity(launchIntent);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to bring app to foreground", e);
+        }
+    }
 
     @PluginMethod
     public void startService(PluginCall call) {
         String title = call.getString("title", "Dove Church");
         String subtitle = call.getString("subtitle", "Playing podcast");
+        String artUri = call.getString("artUri", "");
         Double position = call.getDouble("position", 0.0);
         Double duration = call.getDouble("duration", 0.0);
 
@@ -28,12 +87,12 @@ public class AudioPlugin extends Plugin {
         intent.setAction("io.dove.ministries.africa.PLAY");
         intent.putExtra("title", title);
         intent.putExtra("subtitle", subtitle);
+        intent.putExtra("artUri", artUri != null ? artUri : "");
         intent.putExtra("position", position != null ? position.longValue() : 0L);
         intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
         intent.putExtra("isPlaying", true);
 
         startServiceIntent(intent);
-        registerAudioControlReceiver();
 
         JSObject result = new JSObject();
         result.put("started", true);
@@ -47,10 +106,8 @@ public class AudioPlugin extends Plugin {
         try {
             getContext().startService(intent);
         } catch (Exception e) {
-            // Service may not be running
+            Log.e(TAG, "Failed to stop service", e);
         }
-
-        unregisterAudioControlReceiver();
 
         JSObject result = new JSObject();
         result.put("stopped", true);
@@ -61,6 +118,7 @@ public class AudioPlugin extends Plugin {
     public void updateMetadata(PluginCall call) {
         String title = call.getString("title", "Dove Church");
         String subtitle = call.getString("subtitle", "Playing podcast");
+        String artUri = call.getString("artUri", "");
         Double position = call.getDouble("position", 0.0);
         Double duration = call.getDouble("duration", 0.0);
         Boolean playing = call.getBoolean("isPlaying", true);
@@ -69,6 +127,7 @@ public class AudioPlugin extends Plugin {
         intent.setAction(playing ? "io.dove.ministries.africa.PLAY" : "io.dove.ministries.africa.PAUSE");
         intent.putExtra("title", title);
         intent.putExtra("subtitle", subtitle);
+        intent.putExtra("artUri", artUri != null ? artUri : "");
         intent.putExtra("position", position != null ? position.longValue() : 0L);
         intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
         intent.putExtra("isPlaying", playing);
@@ -145,7 +204,7 @@ public class AudioPlugin extends Plugin {
             try {
                 getContext().startService(intent);
             } catch (Exception e) {
-                // Service may not be running
+                Log.e(TAG, "Failed to send stop control", e);
             }
         } else {
             startServiceIntent(intent);
@@ -157,50 +216,38 @@ public class AudioPlugin extends Plugin {
     }
 
     private void startServiceIntent(Intent intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        try {
             getContext().startForegroundService(intent);
-        } else {
-            getContext().startService(intent);
-        }
-    }
-
-    private void registerAudioControlReceiver() {
-        if (audioControlReceiver != null) return;
-
-        audioControlReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getStringExtra("action");
-                if (action != null) {
-                    JSObject data = new JSObject();
-                    data.put("action", action);
-                    notifyListeners("audioControl", data);
-                }
-            }
-        };
-
-        IntentFilter filter = new IntentFilter(AUDIO_CONTROL_ACTION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getContext().registerReceiver(audioControlReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            getContext().registerReceiver(audioControlReceiver, filter);
-        }
-    }
-
-    private void unregisterAudioControlReceiver() {
-        if (audioControlReceiver != null) {
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start foreground service", e);
             try {
-                getContext().unregisterReceiver(audioControlReceiver);
-            } catch (Exception e) {
-                // Already unregistered
+                getContext().startService(intent);
+            } catch (Exception e2) {
+                Log.e(TAG, "Failed to start service as fallback", e2);
             }
-            audioControlReceiver = null;
         }
     }
 
-    @Override
-    protected void handleOnDestroy() {
-        unregisterAudioControlReceiver();
-        super.handleOnDestroy();
+    public void downloadBitmap(String artUri, OnBitmapDownloadedListener listener) {
+        if (artUri == null || artUri.isEmpty()) {
+            listener.onBitmapDownloaded(null);
+            return;
+        }
+        imageExecutor.execute(() -> {
+            try {
+                URL url = new URL(artUri);
+                InputStream in = url.openStream();
+                Bitmap bitmap = BitmapFactory.decodeStream(in);
+                in.close();
+                mainHandler.post(() -> listener.onBitmapDownloaded(bitmap));
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to download bitmap: " + artUri, e);
+                mainHandler.post(() -> listener.onBitmapDownloaded(null));
+            }
+        });
+    }
+
+    public interface OnBitmapDownloadedListener {
+        void onBitmapDownloaded(Bitmap bitmap);
     }
 }
