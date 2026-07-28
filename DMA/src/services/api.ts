@@ -829,6 +829,10 @@ class ApiService {
     return this.request(`/giving?${queryString}`);
   }
 
+  async getDonation(id: string) {
+    return this.request(`/giving/${id}`);
+  }
+
   async createDonation(donationData: any) {
     return this.request('/giving', {
       method: 'POST',

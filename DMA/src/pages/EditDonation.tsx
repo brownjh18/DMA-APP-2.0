@@ -18,6 +18,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import { apiService } from '../services/api';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -46,18 +47,36 @@ const EditDonation: React.FC = () => {
     const donation = (location.state as any)?.donation;
     if (donation) {
       setFormData({
-        donor: donation.donor || '',
+        donor: donation.donorName || donation.donor || '',
         amount: donation.amount?.toString() || '',
         purpose: donation.purpose || '',
-        date: donation.date || '',
-        method: donation.method || ''
+        date: donation.date || (donation.createdAt ? new Date(donation.createdAt).toISOString().split('T')[0] : ''),
+        method: donation.paymentMethod || donation.method || ''
       });
     } else {
       loadDonation();
     }
   }, [location.state]);
 
-  const loadDonation = async () => {};
+  const loadDonation = async () => {
+    try {
+      setLoading(true);
+      const res = await apiService.getDonation(id);
+      const donation = res.donation || res;
+      setFormData({
+        donor: donation.donorName || '',
+        amount: donation.amount?.toString() || '',
+        purpose: donation.purpose || '',
+        date: donation.createdAt ? new Date(donation.createdAt).toISOString().split('T')[0] : '',
+        method: donation.paymentMethod || ''
+      });
+    } catch (error) {
+      setAlertMessage('Failed to load donation');
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -76,18 +95,14 @@ const EditDonation: React.FC = () => {
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const updatedDonation = {
-        ...(location.state as any)?.donation,
-        donor: formData.donor,
+      const updateData: any = {
+        donorName: formData.donor,
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
-        date: formData.date,
-        method: formData.method
+        paymentMethod: formData.method || undefined,
       };
 
-      localStorage.setItem('updatedDonation', JSON.stringify(updatedDonation));
+      await apiService.updateDonation(id, updateData);
 
       setLoading(false);
       setAlertMessage('Donation updated successfully!');
