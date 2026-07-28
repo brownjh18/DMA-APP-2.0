@@ -187,42 +187,32 @@ const AudioPlayer: React.FC = () => {
     }
   }, [currentMedia, cleanupLive, initLiveStream]);
 
-  // Handle play/pause
+  // Handle play/pause - use a ref to prevent rapid toggling
+  const lastPlayPauseActionRef = useRef<number>(0);
   useEffect(() => {
     if (!audioRef.current || !podcast) return;
 
     const audio = audioRef.current;
+    const now = Date.now();
+    
+    // Throttle: ignore if last action was less than 200ms ago
+    if (now - lastPlayPauseActionRef.current < 200) return;
+    lastPlayPauseActionRef.current = now;
 
-    const playAudio = () => {
+    if (isPlaying) {
       if (podcast.isLive) {
         audio.play().catch(() => {});
         return;
       }
       const playPromise = audio.play();
       if (playPromise) {
-        playPromise.catch((error) => {
-          setTimeout(() => {
-            if (isPlaying) {
-              audio.play().catch(() => {});
-            }
-          }, 300);
+        playPromise.catch(() => {
+          // Silently fail - don't retry to avoid loops
         });
       }
-    };
-
-    const pauseAudio = () => {
+    } else {
       audio.pause();
-    };
-
-    const timer = setTimeout(() => {
-      if (isPlaying) {
-        playAudio();
-      } else {
-        pauseAudio();
-      }
-    }, 150);
-
-    return () => clearTimeout(timer);
+    }
   }, [isPlaying, podcast]);
 
   const lastPositionUpdateRef = useRef<number>(0);
@@ -259,10 +249,8 @@ const AudioPlayer: React.FC = () => {
   }, [setIsPlaying]);
 
   const handleCanPlay = useCallback(() => {
-    if (podcast && loadedPodcastIdRef.current !== podcast.id) {
-      needsReloadRef.current = true;
-    }
-  }, [podcast]);
+    // No-op: audio loaded successfully, no need to trigger reload
+  }, []);
 
   // Media Session API: set up notification controls and background playback
   useEffect(() => {
