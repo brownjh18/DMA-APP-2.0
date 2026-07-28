@@ -4,15 +4,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-
-import androidx.annotation.NonNull;
+import android.os.Build;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.getcapacitor.annotation.ActivityCallback;
 
 @CapacitorPlugin(name = "AudioService")
 public class AudioPlugin extends Plugin {
@@ -23,18 +21,18 @@ public class AudioPlugin extends Plugin {
     public void startService(PluginCall call) {
         String title = call.getString("title", "Dove Church");
         String subtitle = call.getString("subtitle", "Playing podcast");
+        Double position = call.getDouble("position", 0.0);
+        Double duration = call.getDouble("duration", 0.0);
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.PLAY");
         intent.putExtra("title", title);
         intent.putExtra("subtitle", subtitle);
+        intent.putExtra("position", position != null ? position.longValue() : 0L);
+        intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
+        intent.putExtra("isPlaying", true);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            getContext().startForegroundService(intent);
-        } else {
-            getContext().startService(intent);
-        }
-
+        startServiceIntent(intent);
         registerAudioControlReceiver();
 
         JSObject result = new JSObject();
@@ -46,7 +44,7 @@ public class AudioPlugin extends Plugin {
     public void stopService(PluginCall call) {
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.STOP");
-        getContext().startService(intent);
+        startServiceIntent(intent);
 
         unregisterAudioControlReceiver();
 
@@ -59,17 +57,42 @@ public class AudioPlugin extends Plugin {
     public void updateMetadata(PluginCall call) {
         String title = call.getString("title", "Dove Church");
         String subtitle = call.getString("subtitle", "Playing podcast");
+        Double position = call.getDouble("position", 0.0);
+        Double duration = call.getDouble("duration", 0.0);
+        Boolean playing = call.getBoolean("isPlaying", true);
+
+        Intent intent = new Intent(getContext(), AudioForegroundService.class);
+        intent.setAction(playing ? "io.dove.ministries.africa.PLAY" : "io.dove.ministries.africa.PAUSE");
+        intent.putExtra("title", title);
+        intent.putExtra("subtitle", subtitle);
+        intent.putExtra("position", position != null ? position.longValue() : 0L);
+        intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
+        intent.putExtra("isPlaying", playing);
+
+        startServiceIntent(intent);
+
+        JSObject result = new JSObject();
+        result.put("updated", true);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void updatePosition(PluginCall call) {
+        Double position = call.getDouble("position", 0.0);
+        Double duration = call.getDouble("duration", 0.0);
+        Boolean playing = call.getBoolean("isPlaying", null);
+        String title = call.getString("title", null);
+        String subtitle = call.getString("subtitle", null);
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.PLAY");
-        intent.putExtra("title", title);
-        intent.putExtra("subtitle", subtitle);
+        intent.putExtra("position", position != null ? position.longValue() : 0L);
+        intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
+        if (playing != null) intent.putExtra("isPlaying", playing);
+        if (title != null) intent.putExtra("title", title);
+        if (subtitle != null) intent.putExtra("subtitle", subtitle);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            getContext().startForegroundService(intent);
-        } else {
-            getContext().startService(intent);
-        }
+        startServiceIntent(intent);
 
         JSObject result = new JSObject();
         result.put("updated", true);
@@ -98,6 +121,9 @@ public class AudioPlugin extends Plugin {
             case "prev":
                 serviceAction = "io.dove.ministries.africa.PREV";
                 break;
+            case "seek":
+                serviceAction = "io.dove.ministries.africa.SEEK";
+                break;
             default:
                 serviceAction = "io.dove.ministries.africa.PLAY";
                 break;
@@ -105,11 +131,25 @@ public class AudioPlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction(serviceAction);
-        getContext().startService(intent);
+
+        if (action.equals("seek")) {
+            Double position = call.getDouble("position", 0.0);
+            intent.putExtra("position", position != null ? position.longValue() : 0L);
+        }
+
+        startServiceIntent(intent);
 
         JSObject result = new JSObject();
         result.put("sent", true);
         call.resolve(result);
+    }
+
+    private void startServiceIntent(Intent intent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getContext().startForegroundService(intent);
+        } else {
+            getContext().startService(intent);
+        }
     }
 
     private void registerAudioControlReceiver() {
@@ -128,7 +168,7 @@ public class AudioPlugin extends Plugin {
         };
 
         IntentFilter filter = new IntentFilter(AUDIO_CONTROL_ACTION);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getContext().registerReceiver(audioControlReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
             getContext().registerReceiver(audioControlReceiver, filter);

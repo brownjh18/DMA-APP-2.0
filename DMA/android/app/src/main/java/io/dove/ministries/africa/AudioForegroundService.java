@@ -6,14 +6,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 
 import androidx.core.app.NotificationCompat;
+import androidx.media.app.NotificationCompat.MediaStyle;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 
 public class AudioForegroundService extends Service {
     private static final String CHANNEL_ID = "dove_audio_playback";
@@ -23,16 +23,28 @@ public class AudioForegroundService extends Service {
     private static final String ACTION_STOP = "io.dove.ministries.africa.STOP";
     private static final String ACTION_NEXT = "io.dove.ministries.africa.NEXT";
     private static final String ACTION_PREV = "io.dove.ministries.africa.PREV";
+    private static final String ACTION_SEEK = "io.dove.ministries.africa.SEEK";
 
     private PowerManager.WakeLock wakeLock;
-    private AudioFocusRequest audioFocusRequest;
+    private MediaSessionCompat mediaSession;
     private boolean isPlaying = false;
+    private String currentTitle = "Dove Church";
+    private String currentSubtitle = "Playing podcast";
+    private long currentPosition = 0;
+    private long totalDuration = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
         acquireWakeLock();
+        setupMediaSession();
+    }
+
+    private void setupMediaSession() {
+        mediaSession = new MediaSessionCompat(this, "DoveAudioSession");
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mediaSession.setActive(true);
     }
 
     @Override
@@ -41,17 +53,16 @@ public class AudioForegroundService extends Service {
             switch (intent.getAction()) {
                 case ACTION_PLAY:
                     isPlaying = true;
-                    updateNotification(true);
                     sendBroadcastToWebView("play");
                     break;
                 case ACTION_PAUSE:
                     isPlaying = false;
-                    updateNotification(false);
                     sendBroadcastToWebView("pause");
                     break;
                 case ACTION_STOP:
                     isPlaying = false;
                     sendBroadcastToWebView("stop");
+                    updateMediaSessionState();
                     stopForeground(STOP_FOREGROUND_REMOVE);
                     stopSelf();
                     return START_NOT_STICKY;
@@ -61,14 +72,54 @@ public class AudioForegroundService extends Service {
                 case ACTION_PREV:
                     sendBroadcastToWebView("prev");
                     break;
+                case ACTION_SEEK:
+                    long seekTo = intent.getLongExtra("position", 0);
+                    currentPosition = seekTo;
+                    sendBroadcastToWebView("seek:" + seekTo);
+                    break;
+            }
+
+            // Update metadata from intent extras
+            if (intent.hasExtra("title")) {
+                currentTitle = intent.getStringExtra("title");
+            }
+            if (intent.hasExtra("subtitle")) {
+                currentSubtitle = intent.getStringExtra("subtitle");
+            }
+            if (intent.hasExtra("position")) {
+                currentPosition = intent.getLongExtra("position", 0);
+            }
+            if (intent.hasExtra("duration")) {
+                totalDuration = intent.getLongExtra("duration", 0);
+            }
+            if (intent.hasExtra("isPlaying")) {
+                isPlaying = intent.getBooleanExtra("isPlaying", isPlaying);
             }
         }
 
-        String title = "Dove Church";
-        String subtitle = intent != null ? intent.getStringExtra("title") : "Playing podcast";
-
-        startForeground(NOTIFICATION_ID, buildNotification(title, subtitle, isPlaying));
+        updateMediaSessionState();
+        startForeground(NOTIFICATION_ID, buildNotification());
         return START_STICKY;
+    }
+
+    private void updateMediaSessionState() {
+        int state = isPlaying
+                ? PlaybackStateCompat.STATE_PLAYING
+                : PlaybackStateCompat.STATE_PAUSED;
+
+        PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+                .setActions(
+                        PlaybackStateCompat.ACTION_PLAY
+                        | PlaybackStateCompat.ACTION_PAUSE
+                        | PlaybackStateCompat.ACTION_PLAY_PAUSE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        | PlaybackStateCompat.ACTION_SEEK_TO
+                        | PlaybackStateCompat.ACTION_STOP
+                )
+                .setState(state, currentPosition, isPlaying ? 1.0f : 0.0f);
+
+        mediaSession.setPlaybackState(stateBuilder.build());
     }
 
     private void sendBroadcastToWebView(String action) {
@@ -77,70 +128,83 @@ public class AudioForegroundService extends Service {
         sendBroadcast(intent);
     }
 
-    private Notification buildNotification(String title, String subtitle, boolean playing) {
+    private String formatTime(long millis) {
+        long totalSeconds = millis / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%d:%02d", minutes, seconds);
+    }
+
+    private Notification buildNotification() {
         // Content intent - opens the app
         Intent contentIntent = new Intent(this, MainActivity.class);
-        contentIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        contentIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent contentPending = PendingIntent.getActivity(this, 0, contentIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Action intents
-        Intent pauseIntent = new Intent(this, AudioForegroundService.class);
-        pauseIntent.setAction(playing ? ACTION_PAUSE : ACTION_PLAY);
-        PendingIntent pausePending = PendingIntent.getService(this, 1, pauseIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        // Build subtitle with timeline
+        String timelineText;
+        if (totalDuration > 0) {
+            timelineText = currentSubtitle + "  \u2022  " + formatTime(currentPosition) + " / " + formatTime(totalDuration);
+        } else {
+            timelineText = currentSubtitle;
+        }
 
-        Intent stopIntent = new Intent(this, AudioForegroundService.class);
-        stopIntent.setAction(ACTION_STOP);
-        PendingIntent stopPending = PendingIntent.getService(this, 2, stopIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
+        // Action intents - use unique request codes for each
         Intent prevIntent = new Intent(this, AudioForegroundService.class);
         prevIntent.setAction(ACTION_PREV);
-        PendingIntent prevPending = PendingIntent.getService(this, 3, prevIntent,
+        PendingIntent prevPending = PendingIntent.getService(this, 10, prevIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent playPauseIntent = new Intent(this, AudioForegroundService.class);
+        playPauseIntent.setAction(isPlaying ? ACTION_PAUSE : ACTION_PLAY);
+        PendingIntent playPausePending = PendingIntent.getService(this, 11, playPauseIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Intent nextIntent = new Intent(this, AudioForegroundService.class);
         nextIntent.setAction(ACTION_NEXT);
-        PendingIntent nextPending = PendingIntent.getService(this, 4, nextIntent,
+        PendingIntent nextPending = PendingIntent.getService(this, 12, nextIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+        Intent stopIntent = new Intent(this, AudioForegroundService.class);
+        stopIntent.setAction(ACTION_STOP);
+        PendingIntent stopPending = PendingIntent.getService(this, 13, stopIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        // Build MediaStyle notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_media_play)
-                .setContentTitle(title)
-                .setContentText(subtitle)
+                .setSmallIcon(R.drawable.ic_music_note)
+                .setContentTitle(currentTitle)
+                .setContentText(timelineText)
                 .setContentIntent(contentPending)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setShowWhen(false)
+                // Add actions: Previous, Play/Pause, Next
                 .addAction(new NotificationCompat.Action(
-                        android.R.drawable.ic_media_previous, "Previous", prevPending))
+                        R.drawable.ic_media_previous, "Previous", prevPending))
                 .addAction(new NotificationCompat.Action(
-                        playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
-                        playing ? "Pause" : "Play", pausePending))
+                        isPlaying ? R.drawable.ic_media_pause : R.drawable.ic_media_play,
+                        isPlaying ? "Pause" : "Play", playPausePending))
                 .addAction(new NotificationCompat.Action(
-                        android.R.drawable.ic_media_next, "Next", nextPending))
-                .addAction(new NotificationCompat.Action(
-                        android.R.drawable.ic_delete, "Stop", stopPending));
+                        R.drawable.ic_media_next, "Next", nextPending))
+                // MediaStyle: show first 3 actions in compact view, link to media session
+                .setStyle(new MediaStyle()
+                        .setMediaSession(mediaSession.getSessionToken())
+                        .setShowActionsInCompactView(0, 1, 2)
+                        .setShowCancelButton(true)
+                        .setCancelButtonIntent(stopPending));
 
         return builder.build();
-    }
-
-    private void updateNotification(boolean playing) {
-        NotificationManager manager = getSystemService(NotificationManager.class);
-        if (manager != null) {
-            String title = "Dove Church";
-            String subtitle = playing ? "Playing podcast" : "Paused";
-            manager.notify(NOTIFICATION_ID, buildNotification(title, subtitle, playing));
-        }
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Audio Playback",
+                    "Podcast Playback",
                     NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Dove Church podcast playback controls");
@@ -157,20 +221,18 @@ public class AudioForegroundService extends Service {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         if (pm != null) {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "dove:audio_playback");
-            wakeLock.acquire();
+            wakeLock.acquire(60 * 60 * 1000L); // 1 hour max
         }
     }
 
     @Override
     public void onDestroy() {
+        if (mediaSession != null) {
+            mediaSession.setActive(false);
+            mediaSession.release();
+        }
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
-        }
-        if (audioFocusRequest != null) {
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                am.abandonAudioFocusRequest(audioFocusRequest);
-            }
         }
         super.onDestroy();
     }

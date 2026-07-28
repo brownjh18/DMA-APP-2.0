@@ -216,13 +216,28 @@ const AudioPlayer: React.FC = () => {
     return () => clearTimeout(timer);
   }, [isPlaying, podcast]);
 
+  const lastPositionUpdateRef = useRef<number>(0);
+
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
       const currentTime = audioRef.current.currentTime;
       savePlaybackPosition(currentTime);
       setCurrentTime(currentTime);
+
+      // Send position update to native notification (throttle to every 1 second)
+      if (AudioService && podcast) {
+        const now = Date.now();
+        if (now - lastPositionUpdateRef.current >= 1000) {
+          lastPositionUpdateRef.current = now;
+          AudioService.updatePosition({
+            position: currentTime * 1000,
+            duration: (audioRef.current.duration || 0) * 1000,
+            isPlaying,
+          }).catch(() => {});
+        }
+      }
     }
-  }, [savePlaybackPosition, setCurrentTime]);
+  }, [savePlaybackPosition, setCurrentTime, AudioService, podcast, isPlaying]);
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
@@ -320,21 +335,18 @@ const AudioPlayer: React.FC = () => {
     if (!AudioService || !podcast) return;
 
     if (isPlaying) {
-      const artworkUrl = podcast.thumbnailUrl
-        ? (podcast.thumbnailUrl.startsWith('http') ? podcast.thumbnailUrl : `${BACKEND_BASE_URL}${podcast.thumbnailUrl}`)
-        : '';
+      const currentTimeMs = (audioRef.current?.currentTime || 0) * 1000;
+      const durationMs = (audioRef.current?.duration || 0) * 1000;
 
       AudioService.startService({
         title: podcast.title,
         subtitle: podcast.speaker || 'Dove Church',
+        position: currentTimeMs,
+        duration: durationMs,
       }).catch(() => {});
     } else if (!isPlaying && podcast) {
       AudioService.sendControl({ action: 'pause' }).catch(() => {});
     }
-
-    return () => {
-      // Don't stop service on unmount — only on explicit stop
-    };
   }, [isPlaying, podcast]);
 
   // Stop foreground service when no podcast is loaded
@@ -347,10 +359,15 @@ const AudioPlayer: React.FC = () => {
 
   // Update notification metadata when podcast changes
   useEffect(() => {
-    if (!AudioService || !podcast || !isPlaying) return;
+    if (!AudioService || !podcast) return;
+    const currentTimeMs = (audioRef.current?.currentTime || 0) * 1000;
+    const durationMs = (audioRef.current?.duration || 0) * 1000;
     AudioService.updateMetadata({
       title: podcast.title,
       subtitle: podcast.speaker || 'Dove Church',
+      position: currentTimeMs,
+      duration: durationMs,
+      isPlaying,
     }).catch(() => {});
   }, [podcast, isPlaying]);
 
@@ -380,12 +397,19 @@ const AudioPlayer: React.FC = () => {
             case 'next':
               audioRef.current.currentTime = Math.min(
                 audioRef.current.duration || 0,
-                audioRef.current.currentTime + 10
+                audioRef.current.currentTime + SKIP_SECONDS
               );
               break;
             case 'prev':
-              audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+              audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
               break;
+            case 'seek': {
+              const seekTime = parseFloat((data as any).position || '0') / 1000;
+              if (seekTime > 0) {
+                audioRef.current.currentTime = seekTime;
+              }
+              break;
+            }
           }
         });
       } catch (e) {
