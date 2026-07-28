@@ -202,7 +202,7 @@ const AddDevotion: React.FC = () => {
       setSaveProgress(100);
       sessionStorage.setItem('devotionsNeedRefresh', 'true');
       setTimeout(() => {
-        history.push('/admin/devotions');
+        history.replace('/admin/devotions');
       }, 1500);
     } catch (error) {
       console.error('Error adding devotion:', error);

@@ -150,7 +150,7 @@ const AddUser: React.FC = () => {
       setSaveProgress(100);
       setSaveStatus('success');
       sessionStorage.setItem('usersNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/users'), 1500);
+      setTimeout(() => history.replace('/admin/users'), 1500);
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create user');

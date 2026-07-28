@@ -95,7 +95,7 @@ const EditLiveBroadcast: React.FC = () => {
     } catch (error) {
       console.error('Error loading broadcast data:', error);
       alert('Failed to load broadcast data');
-      history.push('/admin/radio');
+      history.replace('/admin/radio');
     } finally {
       setLoading(false);
     }
@@ -155,7 +155,7 @@ const EditLiveBroadcast: React.FC = () => {
 
         if (response.ok) {
           alert('Live broadcast updated successfully!');
-          history.push('/admin/radio');
+          history.replace('/admin/radio');
         } else {
           const errorData = await response.json();
           alert(`Failed to update broadcast: ${errorData.error || 'Please try again.'}`);
@@ -189,7 +189,7 @@ const EditLiveBroadcast: React.FC = () => {
 
         if (response.ok) {
           alert('Live broadcast updated successfully!');
-          history.push('/admin/radio');
+          history.replace('/admin/radio');
         } else {
           const errorData = await response.json();
           alert(`Failed to update broadcast: ${errorData.error || 'Please try again.'}`);

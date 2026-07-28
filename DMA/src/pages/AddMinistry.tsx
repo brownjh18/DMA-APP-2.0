@@ -197,7 +197,7 @@ const AddMinistry: React.FC = () => {
       setSaveProgress(100);
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
       setTimeout(() => {
-        history.push('/admin/ministries');
+        history.replace('/admin/ministries');
       }, 1500);
     } catch (error) {
       setSaveStatus('error');

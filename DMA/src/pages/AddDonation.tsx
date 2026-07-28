@@ -79,7 +79,7 @@ const AddDonation: React.FC = () => {
         setShowAlert(true);
 
         setTimeout(() => {
-          history.push('/admin/giving');
+          history.replace('/admin/giving');
         }, 1500);
       } else {
         const error = await response.json();

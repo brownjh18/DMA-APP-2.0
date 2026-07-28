@@ -341,7 +341,7 @@ const EditEvent: React.FC = () => {
       sessionStorage.setItem('eventsNeedRefresh', 'true');
 
       setTimeout(() => {
-        history.push('/admin/events');
+        history.replace('/admin/events');
       }, 2000);
     } catch (error) {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));

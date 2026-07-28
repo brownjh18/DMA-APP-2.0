@@ -197,7 +197,7 @@ const EditMinistry: React.FC = () => {
       setSaveStatus('success');
       setLoading(false);
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/ministries'), 2000);
+      setTimeout(() => history.replace('/admin/ministries'), 2000);
     } catch (error) {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');

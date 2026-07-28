@@ -94,7 +94,7 @@ const EditDonation: React.FC = () => {
       setShowAlert(true);
 
       setTimeout(() => {
-        history.push('/admin/giving');
+        history.replace('/admin/giving');
       }, 1500);
     } catch (error) {
       setLoading(false);

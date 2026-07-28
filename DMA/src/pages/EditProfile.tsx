@@ -207,7 +207,7 @@ const EditProfile: React.FC = () => {
 
       // Redirect to profile page after a short delay
       setTimeout(() => {
-        history.push('/profile');
+        history.replace('/profile');
       }, 1500);
 
     } catch (err: any) {

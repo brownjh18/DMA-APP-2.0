@@ -264,7 +264,7 @@ const AddEvent: React.FC = () => {
       setSaveProgress(100);
       sessionStorage.setItem('eventsNeedRefresh', 'true');
       setTimeout(() => {
-        history.push('/admin/events');
+        history.replace('/admin/events');
       }, 1500);
     } catch (error) {
       setSaveStatus('error');

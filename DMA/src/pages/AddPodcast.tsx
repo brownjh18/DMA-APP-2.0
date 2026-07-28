@@ -198,7 +198,7 @@ const AddPodcast: React.FC = () => {
       setSaveStatus('success');
       setSaveProgress(100);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/radio'), 1500);
+      setTimeout(() => history.replace('/admin/radio'), 1500);
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create podcast');

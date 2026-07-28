@@ -416,7 +416,7 @@ const AddSermon: React.FC = () => {
       sessionStorage.setItem('sermonsNeedRefresh', 'true');
 
       setTimeout(() => {
-        history.push('/admin/sermons');
+        history.replace('/admin/sermons');
       }, 2000);
     } catch (error) {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));

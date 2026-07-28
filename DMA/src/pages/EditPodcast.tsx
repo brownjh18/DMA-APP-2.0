@@ -196,7 +196,7 @@ const EditPodcast: React.FC = () => {
       setSaveStatus('success');
       setSaving(false);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/radio'), 2000);
+      setTimeout(() => history.replace('/admin/radio'), 2000);
     } catch (error) {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');

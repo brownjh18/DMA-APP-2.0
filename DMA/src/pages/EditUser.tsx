@@ -97,7 +97,7 @@ const EditUser: React.FC = () => {
           setAlertHeader('Error');
           setAlertMessage('User not found');
           setShowAlert(true);
-          setTimeout(() => history.push('/admin/users'), 1500);
+          setTimeout(() => history.replace('/admin/users'), 1500);
         }
       } catch {
         setAlertHeader('Error');
@@ -200,7 +200,7 @@ const EditUser: React.FC = () => {
       setSaveProgress(100);
       setSaveStatus('success');
       sessionStorage.setItem('usersNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/users'), 1500);
+      setTimeout(() => history.replace('/admin/users'), 1500);
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to update user');

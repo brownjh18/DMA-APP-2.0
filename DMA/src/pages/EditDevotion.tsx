@@ -255,7 +255,7 @@ const EditDevotion: React.FC = () => {
       sessionStorage.setItem('devotionsNeedRefresh', 'true');
 
       setTimeout(() => {
-        history.push('/admin/devotions');
+        history.replace('/admin/devotions');
       }, 2000);
     } catch (error) {
       console.error('Error updating devotion:', error);
