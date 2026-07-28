@@ -722,8 +722,8 @@ const FullPodcastPlayer: React.FC = () => {
 
               {/* UpNext View */}
               {currentView === 'upnext' && (
-                <div style={{ animation: 'fadeIn 0.3s ease-out', height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
-                  <div style={{ marginBottom: '32px' }}>
+                <div style={{ animation: 'fadeIn 0.3s ease-out', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ flexShrink: 0, marginBottom: '16px' }}>
                     <h4 style={{
                       margin: '0 0 4px 0',
                       fontSize: '0.9em',
@@ -742,6 +742,7 @@ const FullPodcastPlayer: React.FC = () => {
                       {queuePodcasts.length} podcasts in queue
                     </p>
                   </div>
+                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', minHeight: 0 }}>
                   {queuePodcasts.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {queuePodcasts.map((queuePodcast, index) => (
@@ -823,6 +824,7 @@ const FullPodcastPlayer: React.FC = () => {
                       No other podcasts available
                     </div>
                   )}
+                  </div>
                 </div>
               )}
             </div>
