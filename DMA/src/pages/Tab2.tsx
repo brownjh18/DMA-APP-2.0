@@ -84,9 +84,6 @@ const Tab2: React.FC = () => {
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
   const { isDarkMode } = useSettings();
 
-  // Mini player state
-  const videoContainerRef = useRef<HTMLDivElement>(null);
-  const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const contentRef = useRef<HTMLIonContentElement>(null);
   const initialSelectionDoneRef = useRef(false);
   useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
@@ -107,22 +104,6 @@ const Tab2: React.FC = () => {
     if (!currentSermon) return '';
     return getFullUrl((currentSermon as any).videoUrl || (currentSermon as any).streamUrl || '');
   }, [currentSermon?.id, (currentSermon as any)?.videoUrl, (currentSermon as any)?.streamUrl]);
-
-  // IntersectionObserver to detect when video scrolls out of view
-  useEffect(() => {
-    const container = videoContainerRef.current;
-    if (!container || !currentSermon) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowMiniPlayer(!entry.isIntersecting);
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [currentSermon]);
 
   // Clear all caches on page load/refresh
   useEffect(() => {
@@ -1289,92 +1270,6 @@ const Tab2: React.FC = () => {
             }
           ]}
         />
-
-        {/* YouTube-style Mini Player */}
-        {showMiniPlayer && currentSermon && (
-          <div
-            className="sermon-mini-player"
-            onClick={() => {
-              setShowMiniPlayer(false);
-              videoContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            style={{
-              position: 'fixed',
-              bottom: '90px',
-              right: '10px',
-              width: '200px',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              zIndex: 9998,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              background: '#000',
-            }}
-          >
-            <VideoPlayer
-              key={`mini-${currentSermon.id}`}
-              url={videoUrl}
-              title={currentSermon.title}
-              playing={isPlaying}
-              mini={true}
-              miniWidth={200}
-              miniHeight={112}
-              startTime={savedStartTime}
-              onPlay={stableOnPlay}
-              onTimeUpdate={stableOnTimeUpdate}
-            />
-            {/* Mini Player Overlay */}
-            <div style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-              padding: '20px 8px 6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin: 0,
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: '#fff',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  lineHeight: '1.3',
-                }}>
-                  {currentSermon.title}
-                </p>
-              </div>
-              {/* Close button */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentSermon(null);
-                  setIsPlaying(false);
-                  setShowMiniPlayer(false);
-                }}
-                style={{
-                  width: '22px',
-                  height: '22px',
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <IonIcon icon={close} style={{ fontSize: '12px', color: '#fff' }} />
-              </div>
-            </div>
-          </div>
-        )}
 
         <IonAlert isOpen={showAuthAlert} onDidDismiss={() => setShowAuthAlert(false)}
           header="Sign In Required" message="You must sign in to save this sermon."

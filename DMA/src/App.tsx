@@ -182,7 +182,6 @@ import UploadIndicator from './components/UploadIndicator';
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
 import MiniPlayer from './components/MiniPlayer';
-import SermonMiniPlayer from './components/SermonMiniPlayer';
 import AudioPlayer from './components/AudioPlayer';
 import FloatingSearchIcon from './components/FloatingSearchIcon';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -922,7 +921,6 @@ const App: React.FC = () => {
               </IonRouterOutlet>
               <BottomNavBar onSidebarToggle={() => setIsSidebarOpen(true)} />
               <MiniPlayer />
-              <SermonMiniPlayer />
               <FloatingSearchIcon />
               <ProgressOverlay />
               </IonReactRouter>
