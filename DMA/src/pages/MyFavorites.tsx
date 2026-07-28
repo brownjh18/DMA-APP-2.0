@@ -344,9 +344,7 @@ const MyFavorites: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div className="fav-page">
-
-          {/* Inline Sermon Player (like Tab2) */}
+          {/* Inline Sermon Player (like Tab2) - Sticky */}
           {activeTab === 'sermons' && selectedSermon && (
             <div className="fav-sermon-player">
               {/* Video Player */}
@@ -512,6 +510,7 @@ const MyFavorites: React.FC = () => {
             </div>
           )}
 
+        <div className="fav-page">
           {/* Content Type Tabs */}
           <div className="fav-section">
             <div className="fav-section-header">
