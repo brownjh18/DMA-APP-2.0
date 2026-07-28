@@ -11,12 +11,14 @@ import { apiService } from '../services/api';
 
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
 const AddUser: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-user', 'New user');
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -111,6 +113,7 @@ const AddUser: React.FC = () => {
     setShowSaveModal(true);
 
     try {
+      bgUpload.register();
       let currentStepIndex = 0;
 
       const userData: any = {
@@ -134,11 +137,13 @@ const AddUser: React.FC = () => {
         const response = await apiService.uploadThumbnail(profileFormData, (pct) => {
           updateStep(0, { progress: pct });
           setSaveProgress(Math.round((pct / 100) * 50));
+          bgUpload.progress(Math.round((pct / 100) * 50));
         });
         userData.profilePicture = response.thumbnailUrl;
 
         updateStep(0, { status: 'success', progress: 100 });
         setSaveProgress(50);
+        bgUpload.progress(50);
         currentStepIndex = 1;
       }
 
@@ -149,11 +154,13 @@ const AddUser: React.FC = () => {
       updateStep(currentStepIndex, { status: 'success' });
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       sessionStorage.setItem('usersNeedRefresh', 'true');
       setTimeout(() => history.replace('/admin/users'), 1500);
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create user');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to create user');
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     }
   };

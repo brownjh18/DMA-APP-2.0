@@ -22,6 +22,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(AudioPlugin.class);
+        
         super.onCreate(savedInstanceState);
         
         // Request all permissions at runtime for Android 6.0+

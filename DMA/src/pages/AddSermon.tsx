@@ -29,12 +29,14 @@ import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressM
 
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
 const AddSermon: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-sermon', 'New sermon');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -352,6 +354,7 @@ const AddSermon: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let videoUrl = '';
       let thumbnailUrl = '';
       let videoDuration = '00:00';
@@ -365,13 +368,16 @@ const AddSermon: React.FC = () => {
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
           updateStep(thumbIdx, { progress: pct });
           setSaveProgress(Math.round((pct / 100) * (hasVideo ? 33 : 50)));
+          bgUpload.progress(Math.round((pct / 100) * (hasVideo ? 33 : 50)));
         });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         updateStep(thumbIdx, { status: 'success', progress: 100 });
         setSaveProgress(hasVideo ? 33 : 50);
+        bgUpload.progress(hasVideo ? 33 : 50);
       } else {
         updateStep(thumbIdx, { status: 'success' });
         setSaveProgress(hasVideo ? 33 : 50);
+        bgUpload.progress(hasVideo ? 33 : 50);
       }
 
       if (hasVideo) {
@@ -380,12 +386,14 @@ const AddSermon: React.FC = () => {
         const uploadResponse = await apiService.uploadSermonVideo(videoFormData, (pct) => {
           updateStep(videoIdx, { progress: pct });
           setSaveProgress(33 + Math.round((pct / 100) * 33));
+          bgUpload.progress(33 + Math.round((pct / 100) * 33));
         });
         videoUrl = uploadResponse.videoUrl;
         thumbnailUrl = uploadResponse.thumbnailUrl || thumbnailUrl;
         videoDuration = formData.duration || uploadResponse.duration || '00:00';
         updateStep(videoIdx, { status: 'success', progress: 100 });
         setSaveProgress(66);
+        bgUpload.progress(66);
       } else {
         videoUrl = formData.videoUrl.trim();
         thumbnailUrl = formData.thumbnailUrl || thumbnailUrl;
@@ -394,6 +402,7 @@ const AddSermon: React.FC = () => {
 
       updateStep(saveIdx, { status: 'active', progress: 0 });
       setSaveProgress(hasVideo ? 70 : 60);
+      bgUpload.progress(hasVideo ? 70 : 60);
 
       const sermonData = {
         title: formData.title,
@@ -411,6 +420,7 @@ const AddSermon: React.FC = () => {
       updateStep(saveIdx, { status: 'success', progress: 100 });
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       setLoading(false);
 
       sessionStorage.setItem('sermonsNeedRefresh', 'true');
@@ -422,6 +432,7 @@ const AddSermon: React.FC = () => {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to add sermon');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to add sermon');
       setLoading(false);
     }
   };

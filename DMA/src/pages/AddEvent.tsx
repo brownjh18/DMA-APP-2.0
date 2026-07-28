@@ -32,12 +32,14 @@ import { apiService } from '../services/api';
 
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
 const AddEvent: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-event', 'New event');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -188,6 +190,7 @@ const AddEvent: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let thumbnailUrl = '';
       let videoUrl = '';
 
@@ -220,10 +223,12 @@ const AddEvent: React.FC = () => {
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
           updateStep(thumbIdx, { progress: pct });
           setSaveProgress(Math.round((pct / 100) * thumbWeight));
+          bgUpload.progress(Math.round((pct / 100) * thumbWeight));
         });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         updateStep(thumbIdx, { status: 'success', progress: 100 });
         setSaveProgress(Math.round((thumbWeight / totalWeight) * 100));
+        bgUpload.progress(Math.round((thumbWeight / totalWeight) * 100));
       }
 
       if (hasVideo) {
@@ -235,10 +240,12 @@ const AddEvent: React.FC = () => {
         const uploadResponse = await apiService.uploadEventVideo(videoFormData, (pct) => {
           updateStep(videoIdx, { progress: pct });
           setSaveProgress(Math.round(((thumbWeight + (pct / 100) * videoWeight) / totalWeight) * 100));
+          bgUpload.progress(Math.round(((thumbWeight + (pct / 100) * videoWeight) / totalWeight) * 100));
         });
         videoUrl = uploadResponse.videoUrl;
         updateStep(videoIdx, { status: 'success', progress: 100 });
         setSaveProgress(Math.round(((hasThumbnail ? 40 : 0) + 40) / totalWeight * 100));
+        bgUpload.progress(Math.round(((hasThumbnail ? 40 : 0) + 40) / totalWeight * 100));
       }
 
       updateStep(saveIdx, { status: 'active' });
@@ -262,6 +269,7 @@ const AddEvent: React.FC = () => {
 
       setSaveStatus('success');
       setSaveProgress(100);
+      bgUpload.complete();
       sessionStorage.setItem('eventsNeedRefresh', 'true');
       setTimeout(() => {
         history.replace('/admin/events');
@@ -269,6 +277,7 @@ const AddEvent: React.FC = () => {
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create event');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to create event');
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     } finally {
       setLoading(false);

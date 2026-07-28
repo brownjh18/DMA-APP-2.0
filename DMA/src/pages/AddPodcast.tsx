@@ -29,6 +29,7 @@ import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -56,6 +57,7 @@ const getAudioDuration = (file: File): Promise<string> => {
 const AddPodcast: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-podcast', 'New podcast');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -170,6 +172,7 @@ const AddPodcast: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('speaker', formData.speaker);
@@ -192,16 +195,19 @@ const AddPodcast: React.FC = () => {
       await apiService.createPodcast(formDataToSend, (pct) => {
         setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
         setSaveProgress(pct);
+        bgUpload.progress(pct);
       });
 
       setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
       setSaveStatus('success');
       setSaveProgress(100);
+      bgUpload.complete();
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
       setTimeout(() => history.replace('/admin/radio'), 1500);
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create podcast');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to create podcast');
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     } finally {
       setLoading(false);

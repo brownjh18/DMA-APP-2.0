@@ -25,12 +25,14 @@ import { useHistory } from 'react-router-dom';
 import { apiService } from '../services/api';
 
 import { AuthContext } from '../App';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
 const AddDevotion: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-devotion', 'New devotion');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -158,6 +160,7 @@ const AddDevotion: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let thumbnailUrl = '';
       let currentStep = 0;
       const thumbSteps = hasThumbnail ? 1 : 0;
@@ -173,6 +176,7 @@ const AddDevotion: React.FC = () => {
         const thumbnailResponse = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
           updateStep(0, { progress: pct });
           setSaveProgress(Math.round((pct / 100) * 50));
+          bgUpload.progress(Math.round((pct / 100) * 50));
         });
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         currentStep++;

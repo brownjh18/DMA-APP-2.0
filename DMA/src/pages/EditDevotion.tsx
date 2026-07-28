@@ -24,6 +24,7 @@ import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -36,6 +37,7 @@ const EditDevotion: React.FC = () => {
   const location = useLocation();
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('edit-devotion', 'Edit devotion');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -216,6 +218,7 @@ const EditDevotion: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let thumbnailUrl = currentThumbnailUrl;
 
       if (formData.thumbnailFile) {
@@ -227,15 +230,18 @@ const EditDevotion: React.FC = () => {
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(50);
+        bgUpload.progress(50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
         setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success' } : s));
         setSaveProgress(50);
+        bgUpload.progress(50);
       }
 
       const saveIdx = steps.findIndex(s => s.label.includes('Saving'));
       setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active', progress: 0 } : s));
       setSaveProgress(60);
+      bgUpload.progress(60);
 
       await apiService.updateDevotion(id, {
         title: formData.title,
@@ -250,6 +256,7 @@ const EditDevotion: React.FC = () => {
       setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       setLoading(false);
 
       sessionStorage.setItem('devotionsNeedRefresh', 'true');
@@ -262,6 +269,7 @@ const EditDevotion: React.FC = () => {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Network error. Please try again.');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to update devotion');
       setLoading(false);
     }
   };

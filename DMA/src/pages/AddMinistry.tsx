@@ -34,12 +34,14 @@ import { apiService } from '../services/api';
 
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
 const AddMinistry: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('add-ministry', 'New ministry');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -129,6 +131,7 @@ const AddMinistry: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let thumbnailUrl = '';
 
       const hasThumbnail = !!thumbnailPreview;
@@ -154,11 +157,13 @@ const AddMinistry: React.FC = () => {
           const response = await apiService.uploadThumbnail(thumbnailFormData, (pct) => {
             updateStep(0, { progress: pct });
             setSaveProgress(Math.round((pct / 100) * 50));
+            bgUpload.progress(Math.round((pct / 100) * 50));
           });
           thumbnailUrl = response.thumbnailUrl;
         }
         updateStep(0, { status: 'success', progress: 100 });
         setSaveProgress(50);
+        bgUpload.progress(50);
       }
 
       const saveIdx = hasThumbnail ? 1 : 0;
@@ -195,6 +200,7 @@ const AddMinistry: React.FC = () => {
 
       setSaveStatus('success');
       setSaveProgress(100);
+      bgUpload.complete();
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
       setTimeout(() => {
         history.replace('/admin/ministries');
@@ -202,6 +208,7 @@ const AddMinistry: React.FC = () => {
     } catch (error) {
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to create ministry');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to create ministry');
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
     } finally {
       setLoading(false);

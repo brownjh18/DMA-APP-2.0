@@ -176,6 +176,8 @@ import { DownloadsProvider } from './contexts/DownloadsContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AppUpdateProvider } from './contexts/AppUpdateContext';
+import { UploadProvider } from './contexts/UploadContext';
+import UploadIndicator from './components/UploadIndicator';
 
 // Create Auth Context
 export const AuthContext = React.createContext<any>(null);
@@ -642,8 +644,10 @@ const App: React.FC = () => {
           <SocketProvider>
             <AuthContext.Provider value={authValue}>
               <PlayerProvider>
+                <UploadProvider>
                 <IonApp>
                   <OfflineIndicator />
+                  <UploadIndicator />
                   <IonReactRouter>
                     <PageTitleUpdater />
                     <AudioPlayer />
@@ -924,6 +928,7 @@ const App: React.FC = () => {
               </IonReactRouter>
               <div className="bottom-nav-fade" aria-hidden="true" />
             </IonApp>
+            </UploadProvider>
           </PlayerProvider>
         </AuthContext.Provider>
         </SocketProvider>

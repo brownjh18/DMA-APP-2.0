@@ -29,6 +29,7 @@ import { apiService } from '../services/api';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -41,6 +42,7 @@ const EditEvent: React.FC = () => {
   const location = useLocation();
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('edit-event', 'Edit event');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -258,6 +260,7 @@ const EditEvent: React.FC = () => {
     setLoading(true);
 
     try {
+      bgUpload.register();
       let thumbnailUrl = currentThumbnailUrl;
       let videoUrl = currentVideoUrl;
 
@@ -288,10 +291,12 @@ const EditEvent: React.FC = () => {
         thumbnailUrl = thumbnailResponse.thumbnailUrl;
         setSaveSteps(prev => prev.map((s, i) => i === thumbStepIdx ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(hasVideo ? 33 : 50);
+        bgUpload.progress(hasVideo ? 33 : 50);
       } else if (thumbnailRemoved) {
         thumbnailUrl = '';
         setSaveSteps(prev => prev.map((s, i) => i === 0 && s.label.includes('thumbnail') ? { ...s, status: 'success' } : s));
         setSaveProgress(hasVideo ? 33 : 50);
+        bgUpload.progress(hasVideo ? 33 : 50);
       }
 
       const videoStepIdx = steps.findIndex(s => s.label.includes('video'));
@@ -305,11 +310,13 @@ const EditEvent: React.FC = () => {
         videoUrl = uploadResponse.videoUrl;
         setSaveSteps(prev => prev.map((s, i) => i === videoStepIdx ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(66);
+        bgUpload.progress(66);
       }
 
       const saveStepIdx = steps.findIndex(s => s.label.includes('Saving'));
       setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'active', progress: 0 } : s));
       setSaveProgress(70);
+      bgUpload.progress(70);
 
       const updateData: any = {
         title: formData.title,
@@ -336,6 +343,7 @@ const EditEvent: React.FC = () => {
       setSaveSteps(prev => prev.map((s, i) => i === saveStepIdx ? { ...s, status: 'success', progress: 100 } : s));
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       setLoading(false);
 
       sessionStorage.setItem('eventsNeedRefresh', 'true');
@@ -347,6 +355,7 @@ const EditEvent: React.FC = () => {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to update event');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to update event');
       setLoading(false);
     }
   };

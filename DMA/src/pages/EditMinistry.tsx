@@ -33,6 +33,7 @@ import { apiService } from '../services/api';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -45,6 +46,7 @@ const EditMinistry: React.FC = () => {
   const location = useLocation();
   const { id } = useParams<RouteParams>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('edit-ministry', 'Edit ministry');
   const [loading, setLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveSteps, setSaveSteps] = useState<SaveProgressStep[]>([]);
@@ -164,6 +166,7 @@ const EditMinistry: React.FC = () => {
     setShowSaveModal(true);
     setLoading(true);
     try {
+      bgUpload.register();
       let imageUrl = currentThumbnailUrl;
       if (thumbnailPreview) {
         const input = fileInputRef.current;
@@ -176,12 +179,14 @@ const EditMinistry: React.FC = () => {
           imageUrl = response.thumbnailUrl;
           setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
           setSaveProgress(50);
+          bgUpload.progress(50);
         }
       }
 
       const saveIdx = steps.findIndex(s => s.label.includes('Saving'));
       setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'active', progress: 0 } : s));
       setSaveProgress(60);
+      bgUpload.progress(60);
 
       const ministryData: any = {
         name: formData.name, description: formData.description, leader: formData.leader,
@@ -195,6 +200,7 @@ const EditMinistry: React.FC = () => {
       setSaveSteps(prev => prev.map((s, i) => i === saveIdx ? { ...s, status: 'success', progress: 100 } : s));
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       setLoading(false);
       sessionStorage.setItem('ministriesNeedRefresh', 'true');
       setTimeout(() => history.replace('/admin/ministries'), 2000);
@@ -202,6 +208,7 @@ const EditMinistry: React.FC = () => {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to update ministry');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to update ministry');
       setLoading(false);
     }
   };

@@ -3,6 +3,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useSocket } from '../contexts/SocketContext';
 import { isPodcast } from '../utils/mediaUtils';
 import { BACKEND_BASE_URL } from '../services/api';
+import { Capacitor } from '@capacitor/core';
 
 const resolveUrl = (url: string) => {
   if (!url || url.trim() === '') {
@@ -30,6 +31,11 @@ const resolveUrl = (url: string) => {
   console.log('AudioPlayer: Resolved relative to:', resolved);
   return resolved;
 };
+
+let AudioService: any = null;
+if (Capacitor.isNativePlatform()) {
+  AudioService = (Capacitor as any).Plugins?.AudioService;
+}
 
 const SKIP_SECONDS = 10;
 const AudioPlayer: React.FC = () => {
@@ -233,6 +239,167 @@ const AudioPlayer: React.FC = () => {
       needsReloadRef.current = true;
     }
   }, [podcast]);
+
+  // Media Session API: set up notification controls and background playback
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!podcast) {
+      navigator.mediaSession.metadata = null;
+      return;
+    }
+
+    const artworkUrl = podcast.thumbnailUrl
+      ? (podcast.thumbnailUrl.startsWith('http') ? podcast.thumbnailUrl : `${BACKEND_BASE_URL}${podcast.thumbnailUrl}`)
+      : `${BACKEND_BASE_URL}/api/placeholder/300/300`;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: podcast.title,
+      artist: podcast.speaker || 'Dove Church',
+      album: 'Podcast',
+      artwork: [
+        { src: artworkUrl, sizes: '300x300', type: 'image/jpeg' },
+      ],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (audioRef.current) audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (audioRef.current) audioRef.current.pause();
+      setIsPlaying(false);
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', () => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekforward', () => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + SKIP_SECONDS);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (audioRef.current && details.seekTime != null) {
+        audioRef.current.currentTime = details.seekTime;
+      }
+    });
+    navigator.mediaSession.setActionHandler('stop', () => {
+      if (audioRef.current) audioRef.current.pause();
+      setIsPlaying(false);
+    });
+
+    return () => {
+      try {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
+        navigator.mediaSession.setActionHandler('stop', null);
+      } catch {}
+    };
+  }, [podcast, setIsPlaying]);
+
+  // Update media session playback state on time updates
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !audioRef.current) return;
+    const audio = audioRef.current;
+    if (!podcast || !isFinite(audio.duration)) return;
+
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    navigator.mediaSession.setPositionState({
+      duration: audio.duration || 0,
+      playbackRate: audio.playbackRate,
+      position: audio.currentTime || 0,
+    });
+  }, [isPlaying, podcast, setCurrentTime]);
+
+  // Start/stop native foreground service for background audio
+  useEffect(() => {
+    if (!AudioService || !podcast) return;
+
+    if (isPlaying) {
+      const artworkUrl = podcast.thumbnailUrl
+        ? (podcast.thumbnailUrl.startsWith('http') ? podcast.thumbnailUrl : `${BACKEND_BASE_URL}${podcast.thumbnailUrl}`)
+        : '';
+
+      AudioService.startService({
+        title: podcast.title,
+        subtitle: podcast.speaker || 'Dove Church',
+      }).catch(() => {});
+    } else if (!isPlaying && podcast) {
+      AudioService.sendControl({ action: 'pause' }).catch(() => {});
+    }
+
+    return () => {
+      // Don't stop service on unmount — only on explicit stop
+    };
+  }, [isPlaying, podcast]);
+
+  // Stop foreground service when no podcast is loaded
+  useEffect(() => {
+    if (!AudioService) return;
+    if (!podcast) {
+      AudioService.stopService().catch(() => {});
+    }
+  }, [podcast]);
+
+  // Update notification metadata when podcast changes
+  useEffect(() => {
+    if (!AudioService || !podcast || !isPlaying) return;
+    AudioService.updateMetadata({
+      title: podcast.title,
+      subtitle: podcast.speaker || 'Dove Church',
+    }).catch(() => {});
+  }, [podcast, isPlaying]);
+
+  // Listen for native notification controls (play/pause from notification)
+  useEffect(() => {
+    if (!AudioService) return;
+
+    let listenerHandle: any = null;
+    const setupListener = async () => {
+      try {
+        listenerHandle = await AudioService.addListener('audioControl', (data: { action: string }) => {
+          if (!audioRef.current) return;
+          switch (data.action) {
+            case 'play':
+              audioRef.current.play().catch(() => {});
+              setIsPlaying(true);
+              break;
+            case 'pause':
+              audioRef.current.pause();
+              setIsPlaying(false);
+              break;
+            case 'stop':
+              audioRef.current.pause();
+              setIsPlaying(false);
+              AudioService?.stopService().catch(() => {});
+              break;
+            case 'next':
+              audioRef.current.currentTime = Math.min(
+                audioRef.current.duration || 0,
+                audioRef.current.currentTime + 10
+              );
+              break;
+            case 'prev':
+              audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+              break;
+          }
+        });
+      } catch (e) {
+        console.warn('AudioPlayer: Could not add native audio listener', e);
+      }
+    };
+    setupListener();
+
+    return () => {
+      if (listenerHandle) {
+        listenerHandle.remove().catch(() => {});
+      }
+    };
+  }, [setIsPlaying]);
 
   // Set up event listeners for skip operations (not applicable for live)
   useEffect(() => {

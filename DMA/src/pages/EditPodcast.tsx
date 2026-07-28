@@ -11,6 +11,7 @@ import { apiService } from '../services/api';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
+import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -44,6 +45,7 @@ const EditPodcast: React.FC = () => {
   const history = useHistory();
   const { id } = useParams<{ id: string }>();
   const { isLoggedIn, isAdmin } = useContext(AuthContext);
+  const bgUpload = useBackgroundUpload('edit-podcast', 'Edit podcast');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -164,6 +166,7 @@ const EditPodcast: React.FC = () => {
     setSaving(true);
 
     try {
+      bgUpload.register();
       if (hasFiles) {
         const formDataToSend = new FormData();
         formDataToSend.append('title', formData.title);
@@ -176,6 +179,7 @@ const EditPodcast: React.FC = () => {
         await apiService.updatePodcast(id, formDataToSend, (pct) => {
           setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
           setSaveProgress(pct);
+          bgUpload.progress(pct);
         });
         setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'success', progress: 100 } : s));
         setSaveProgress(100);
@@ -194,6 +198,7 @@ const EditPodcast: React.FC = () => {
 
       setSaveProgress(100);
       setSaveStatus('success');
+      bgUpload.complete();
       setSaving(false);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
       setTimeout(() => history.replace('/admin/radio'), 2000);
@@ -201,6 +206,7 @@ const EditPodcast: React.FC = () => {
       setSaveSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'error' } : s));
       setSaveStatus('error');
       setSaveError(error instanceof Error ? error.message : 'Failed to update podcast');
+      bgUpload.fail(error instanceof Error ? error.message : 'Failed to update podcast');
       setSaving(false);
     }
   };
