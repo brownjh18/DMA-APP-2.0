@@ -108,18 +108,20 @@ public class AudioForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.getAction() != null) {
+            boolean fromJS = intent.getBooleanExtra("from_js", false);
+
             switch (intent.getAction()) {
                 case ACTION_PLAY:
                     isPlaying = true;
-                    notifyPlugin("play");
+                    if (!fromJS) notifyPlugin("play");
                     break;
                 case ACTION_PAUSE:
                     isPlaying = false;
-                    notifyPlugin("pause");
+                    if (!fromJS) notifyPlugin("pause");
                     break;
                 case ACTION_STOP:
                     isPlaying = false;
-                    notifyPlugin("stop");
+                    if (!fromJS) notifyPlugin("stop");
                     updateMediaSessionState();
                     stopForeground(STOP_FOREGROUND_REMOVE);
                     stopSelf();

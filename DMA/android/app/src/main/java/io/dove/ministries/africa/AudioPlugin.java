@@ -85,6 +85,7 @@ public class AudioPlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.PLAY");
+        intent.putExtra("from_js", true);
         intent.putExtra("title", title);
         intent.putExtra("subtitle", subtitle);
         intent.putExtra("artUri", artUri != null ? artUri : "");
@@ -103,6 +104,7 @@ public class AudioPlugin extends Plugin {
     public void stopService(PluginCall call) {
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.STOP");
+        intent.putExtra("from_js", true);
         try {
             getContext().startService(intent);
         } catch (Exception e) {
@@ -125,6 +127,7 @@ public class AudioPlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction(playing ? "io.dove.ministries.africa.PLAY" : "io.dove.ministries.africa.PAUSE");
+        intent.putExtra("from_js", true);
         intent.putExtra("title", title);
         intent.putExtra("subtitle", subtitle);
         intent.putExtra("artUri", artUri != null ? artUri : "");
@@ -149,6 +152,7 @@ public class AudioPlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction("io.dove.ministries.africa.PLAY");
+        intent.putExtra("from_js", true);
         intent.putExtra("position", position != null ? position.longValue() : 0L);
         intent.putExtra("duration", duration != null ? duration.longValue() : 0L);
         if (playing != null) intent.putExtra("isPlaying", playing);
@@ -194,6 +198,7 @@ public class AudioPlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), AudioForegroundService.class);
         intent.setAction(serviceAction);
+        intent.putExtra("from_js", true);
 
         if (action.equals("seek")) {
             Double position = call.getDouble("position", 0.0);
