@@ -1250,8 +1250,8 @@ ion-content[fullscreen] {
 }
 
 .podcast-controls-section {
-  background: rgba(242, 242, 247, 0.85);
-  backdrop-filter: blur(30px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .podcast-player-content {
@@ -1300,8 +1300,8 @@ ion-content[fullscreen] {
 }
 
 [data-theme="dark"] .podcast-controls-section {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(30px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 [data-theme="dark"] .podcast-player-content {
