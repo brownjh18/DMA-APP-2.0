@@ -94,77 +94,92 @@ const AdminGoLive: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const waveformBufferRef = useRef<number[]>([]);
   const drawVisualizer = () => {
     const canvas = canvasRef.current;
     if (!canvas || !analyserRef.current) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const bufferLength = analyserRef.current.frequencyBinCount;
-    const freqData = new Uint8Array(bufferLength);
+    const analyser = analyserRef.current;
+    const bufferLength = analyser.frequencyBinCount;
     const timeData = new Uint8Array(bufferLength);
-    const barHeights = new Float32Array(64).fill(0);
-    let frameCount = 0;
+    const waveformBuffer = waveformBufferRef.current;
+    const maxWidth = canvas.width;
+    const centerY = canvas.height / 2;
 
     const draw = () => {
-      if (!analyserRef.current || !canvas || !ctx) return;
-      analyserRef.current.getByteFrequencyData(freqData);
-      analyserRef.current.getByteTimeDomainData(timeData);
-      const width = canvas.width;
-      const height = canvas.height;
-      const centerY = height / 2;
-      ctx.clearRect(0, 0, width, height);
-
-      const barCount = 64;
-      const gap = 3;
-      const barWidth = (width - (barCount - 1) * gap) / barCount;
-      const maxBarHeight = centerY * 0.85;
-
-      const usableBins = Math.floor(bufferLength * 0.55);
-      for (let i = 0; i < barCount; i++) {
-        const idx = Math.floor((i / barCount) * usableBins);
-        const raw = freqData[idx] / 255;
-        const boosted = Math.pow(raw, 0.7);
-        const target = Math.max(0.02, boosted);
-        barHeights[i] += (target - barHeights[i]) * 0.3;
-        const barH = barHeights[i] * maxBarHeight;
-        const x = i * (barWidth + gap);
-
-        const t = i / (barCount - 1);
-        let r, g, b;
-        if (t < 0.33) {
-          const p = t / 0.33;
-          r = Math.round(99 + (168 - 99) * p);
-          g = Math.round(102 + (85 - 102) * p);
-          b = Math.round(241 + (247 - 241) * p);
-        } else if (t < 0.66) {
-          const p = (t - 0.33) / 0.33;
-          r = Math.round(168 + (217 - 168) * p);
-          g = Math.round(85 + (70 - 85) * p);
-          b = Math.round(247 + (239 - 247) * p);
-        } else {
-          const p = (t - 0.66) / 0.34;
-          r = Math.round(217 + (236 - 217) * p);
-          g = Math.round(70 + (72 - 70) * p);
-          b = Math.round(239 + (253 - 239) * p);
-        }
-
-        const grad = ctx.createLinearGradient(x, centerY - barH, x, centerY + barH);
-        grad.addColorStop(0, `rgba(${r},${g},${b},0.2)`);
-        grad.addColorStop(0.4, `rgba(${r},${g},${b},0.9)`);
-        grad.addColorStop(0.5, `rgba(255,255,255,1)`);
-        grad.addColorStop(0.6, `rgba(${r},${g},${b},0.9)`);
-        grad.addColorStop(1, `rgba(${r},${g},${b},0.2)`);
-
-        ctx.fillStyle = grad;
-        ctx.shadowColor = `rgba(${r},${g},${b},0.5)`;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.roundRect(x, centerY - barH, barWidth, barH * 2, barWidth / 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+      if (!analyser || !canvas || !ctx) return;
+      analyser.getByteTimeDomainData(timeData);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i += 4) {
+        const v = (timeData[i] / 128.0) - 1.0;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / (bufferLength / 4));
+      const smoothed = waveformBuffer.length > 0
+        ? waveformBuffer[waveformBuffer.length - 1] * 0.4 + rms * 0.6
+        : rms;
+      waveformBuffer.push(Math.min(1, smoothed));
+      if (waveformBuffer.length > maxWidth + 20) {
+        waveformBuffer.splice(0, waveformBuffer.length - maxWidth);
       }
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const dataLen = waveformBuffer.length;
+      const startX = width - dataLen;
+
+      const gradFill = ctx.createLinearGradient(startX, 0, width, 0);
+      gradFill.addColorStop(0, 'rgba(52,199,89,0.08)');
+      gradFill.addColorStop(0.5, 'rgba(52,199,89,0.35)');
+      gradFill.addColorStop(1, 'rgba(52,199,89,0.6)');
+
+      ctx.beginPath();
+      ctx.moveTo(startX, centerY);
+      for (let i = 0; i < dataLen; i++) {
+        const x = startX + i;
+        const amp = waveformBuffer[i];
+        const y = centerY - amp * centerY * 0.85;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      for (let i = dataLen - 1; i >= 0; i--) {
+        const x = startX + i;
+        const amp = waveformBuffer[i];
+        const y = centerY + amp * centerY * 0.85;
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = gradFill;
+      ctx.fill();
+
+      ctx.beginPath();
+      for (let i = 0; i < dataLen; i++) {
+        const x = startX + i;
+        const amp = waveformBuffer[i];
+        const y = centerY - amp * centerY * 0.85;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(52,199,89,0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i < dataLen; i++) {
+        const x = startX + i;
+        const amp = waveformBuffer[i];
+        const y = centerY + amp * centerY * 0.85;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(52,199,89,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(52,199,89,0.15)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -173,20 +188,18 @@ const AdminGoLive: React.FC = () => {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      if (frameCount % 3 === 0) {
-        ctx.strokeStyle = `rgba(168,85,247,0.15)`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 0; i < width; i++) {
-          const idx = Math.floor((i / width) * bufferLength);
-          const v = (timeData[idx] / 128.0) - 1.0;
-          const y = centerY + v * centerY * 0.4;
-          if (i === 0) ctx.moveTo(i, y);
-          else ctx.lineTo(i, y);
-        }
-        ctx.stroke();
-      }
-      frameCount++;
+      const dotX = width - 1;
+      const dotY = centerY;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#e11d48';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(225,29,72,0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
       animationFrameRef.current = requestAnimationFrame(draw);
     };
     draw();
@@ -248,7 +261,8 @@ const AdminGoLive: React.FC = () => {
       setTimeout(() => {
         if (canvasRef.current) {
           canvasRef.current.width = canvasRef.current.offsetWidth;
-          canvasRef.current.height = 160;
+          canvasRef.current.height = 180;
+          waveformBufferRef.current = [];
           drawVisualizer();
         }
       }, 100);
@@ -464,8 +478,8 @@ const AdminGoLive: React.FC = () => {
         .gl-status.rec { color: #e11d48; animation: gl-blink 1.2s ease-in-out infinite; }
         .gl-status.paused { color: #f59e0b; }
 
-        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: rgba(0,0,0,0.03); }
-        .gl-visualizer canvas { width: 100%; height: 160px; display: block; }
+        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: #000; border: 1px solid rgba(255,255,255,0.06); }
+        .gl-visualizer canvas { width: 100%; height: 180px; display: block; background: #000; }
         .gl-preview-bar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; cursor: pointer; position: relative; }
         .gl-preview-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 3px; transition: width 0.1s linear; }
         .gl-preview-times { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: #8e8e93; font-weight: 500; }
