@@ -105,11 +105,15 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
           localPath = result.filePath;
         } else {
           // Fallback to Capacitor Filesystem
-          await Filesystem.mkdir({
-            path: 'DMA',
-            directory: Directory.Documents,
-            recursive: true
-          });
+          try {
+            await Filesystem.mkdir({
+              path: 'DMA',
+              directory: Directory.Documents,
+              recursive: true
+            });
+          } catch (mkdirErr: any) {
+            if (!mkdirErr?.message?.includes('already exist')) throw mkdirErr;
+          }
           localPath = `DMA/${fileName}`;
           const response = await fetch(item.url);
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -124,11 +128,15 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
         }
       } else {
         // Web fallback - use Capacitor Filesystem
-        await Filesystem.mkdir({
-          path: 'DMA',
-          directory: Directory.Documents,
-          recursive: true
-        });
+        try {
+          await Filesystem.mkdir({
+            path: 'DMA',
+            directory: Directory.Documents,
+            recursive: true
+          });
+        } catch (mkdirErr: any) {
+          if (!mkdirErr?.message?.includes('already exist')) throw mkdirErr;
+        }
         localPath = `DMA/${fileName}`;
         const response = await fetch(item.url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
