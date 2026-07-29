@@ -11,6 +11,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { isPodcast } from '../utils/mediaUtils';
 import { useHistory, useLocation } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../services/api';
+import './MiniPlayer.css';
 
 // Helper function to resolve thumbnail URLs to full backend URLs
 const resolveThumbnailUrl = (url: string) => {
@@ -114,23 +115,14 @@ const MiniPlayer: React.FC = () => {
           width: 28px !important;
           height: 28px !important;
         }
-        .mini-player-btn {
-          --border-radius: 12px;
-          transition: all 0.2s ease;
-        }
-        .mini-player-btn:hover {
-          background: rgba(255,255,255,0.1) !important;
-        }
       `}</style>
       <div
+        className="mini-player"
         style={{
           position: 'fixed',
           bottom: '85px',
           left: 8,
           right: 8,
-          background: 'linear-gradient(135deg, rgba(30,30,35,0.98) 0%, rgba(20,20,25,0.98) 100%)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
           zIndex: 9999,
           padding: '8px 12px',
           paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
@@ -138,40 +130,27 @@ const MiniPlayer: React.FC = () => {
           flexDirection: 'column',
           gap: '6px',
           cursor: 'pointer',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderTop: '1px solid rgba(255,255,255,0.12)',
           borderRadius: '16px',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease'
         }}
         onClick={handleOpenPlayer}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.02)';
-          e.currentTarget.style.boxShadow = '0 -6px 25px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08) inset';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 -4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset';
-        }}
       >
         {/* Progress Bar with Time */}
         {!podcast.isLive && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <IonProgressBar 
               value={progress} 
+              className="mp-progress-bar"
               style={{ 
                 flex: 1,
                 height: '3px', 
-                '--progress-background': 'rgba(255,255,255,0.8)',
-                '--background': 'rgba(255,255,255,0.1)',
                 borderRadius: '2px',
                 overflow: 'hidden'
               }} 
             />
-            <span style={{
+            <span className="mp-time" style={{
               fontSize: '0.65em',
               fontWeight: '500',
-              color: 'rgba(255,255,255,0.5)',
               fontVariantNumeric: 'tabular-nums',
               whiteSpace: 'nowrap',
               minWidth: '35px',
@@ -227,14 +206,12 @@ const MiniPlayer: React.FC = () => {
             minWidth: 0,
             overflow: 'hidden'
           }}>
-            <div style={{
+            <div className="mp-title" style={{
               fontSize: '0.85em',
               fontWeight: '600',
-              color: '#ffffff',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
               letterSpacing: '0.2px',
               display: 'flex',
               alignItems: 'center',
@@ -257,9 +234,8 @@ const MiniPlayer: React.FC = () => {
               )}
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{podcast.title}</span>
             </div>
-            <div style={{
+            <div className="mp-speaker" style={{
               fontSize: '0.7em',
-              color: 'rgba(255,255,255,0.5)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -282,8 +258,6 @@ const MiniPlayer: React.FC = () => {
               onClick={handleSkipBackward}
               className="mini-player-btn"
               style={{
-                '--color': 'rgba(255,255,255,0.75)',
-                '--ripple-color': 'rgba(255,255,255,0.3)',
                 width: '32px',
                 height: '32px',
                 '--padding-start': '0px',
@@ -302,8 +276,6 @@ const MiniPlayer: React.FC = () => {
               }}
               className="mini-player-btn"
               style={{
-                '--color': 'rgba(255,255,255,0.9)',
-                '--ripple-color': 'rgba(255,255,255,0.3)',
                 width: '32px',
                 height: '32px',
                 '--padding-start': '0px',
@@ -319,8 +291,6 @@ const MiniPlayer: React.FC = () => {
               onClick={handleSkipForward}
               className="mini-player-btn"
               style={{
-                '--color': 'rgba(255,255,255,0.75)',
-                '--ripple-color': 'rgba(255,255,255,0.3)',
                 width: '32px',
                 height: '32px',
                 '--padding-start': '0px',
@@ -336,8 +306,6 @@ const MiniPlayer: React.FC = () => {
               onClick={handleClose}
               className="mini-player-btn"
               style={{
-                '--color': 'rgba(255,255,255,0.5)',
-                '--ripple-color': 'rgba(255,255,255,0.2)',
                 width: '32px',
                 height: '32px',
                 '--padding-start': '0px',
