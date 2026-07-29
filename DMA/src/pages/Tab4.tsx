@@ -571,11 +571,11 @@ const Tab4: React.FC = () => {
                 {/* YouTube-style Thumbnail */}
                 <div style={{
                   position: 'relative',
-                  width: '168px',
+                  width: '120px',
                   aspectRatio: '16/9',
                   flexShrink: 0,
-                  marginRight: '12px',
-                  borderRadius: '8px',
+                  marginRight: '8px',
+                  borderRadius: '6px',
                   overflow: 'hidden'
                 }}>
                   <img
@@ -629,10 +629,10 @@ const Tab4: React.FC = () => {
                 {/* YouTube-style Podcast Details */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                   <h4 style={{
-                    fontSize: '0.9em',
+                    fontSize: '0.85em',
                     fontWeight: '600',
-                    margin: '0 0 4px 0',
-                    lineHeight: '1.3',
+                    margin: '0 0 3px 0',
+                    lineHeight: '1.2',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -642,8 +642,8 @@ const Tab4: React.FC = () => {
                     {podcast.title}
                   </h4>
                   <p style={{
-                    margin: '0 0 2px 0',
-                    fontSize: '0.8em',
+                    margin: '0 0 1px 0',
+                    fontSize: '0.75em',
                     color: 'var(--ion-color-medium)',
                     fontWeight: '500'
                   }}>
@@ -651,7 +651,7 @@ const Tab4: React.FC = () => {
                   </p>
                   <p style={{
                     margin: '0',
-                    fontSize: '0.8em',
+                    fontSize: '0.75em',
                     color: 'var(--ion-color-medium)'
                   }}>
                     {formatDate(podcast.publishedAt)}
