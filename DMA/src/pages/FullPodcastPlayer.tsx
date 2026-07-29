@@ -538,6 +538,7 @@ const FullPodcastPlayer: React.FC = () => {
         ref={contentRef}
         fullscreen 
         scrollY={false}
+        className="podcast-player-content"
         style={{ '--background': 'transparent' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -545,6 +546,7 @@ const FullPodcastPlayer: React.FC = () => {
       >
         {/* Background Image with Blur */}
         <div
+          className="podcast-player-bg"
           style={{
             position: 'absolute',
             top: 0,
@@ -562,19 +564,13 @@ const FullPodcastPlayer: React.FC = () => {
 
         {/* Gradient Overlay */}
         <div
+          className="podcast-player-overlay"
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: `
-              linear-gradient(180deg,
-                rgba(0,0,0,0.3) 0%,
-                rgba(0,0,0,0.4) 40%,
-                rgba(0,0,0,0.6) 100%
-              )
-            `,
             zIndex: -1
           }}
         />
@@ -585,7 +581,6 @@ const FullPodcastPlayer: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           padding: '16px 16px 0 16px',
-          color: 'white',
           maxWidth: '100vw',
           margin: '0 auto',
           overflow: 'hidden'
@@ -697,7 +692,6 @@ const FullPodcastPlayer: React.FC = () => {
                       fontWeight: '700',
                       margin: 0,
                       lineHeight: '1.3',
-                      color: 'white',
                       textShadow: '0 2px 8px rgba(0,0,0,0.5)'
                     }}>
                       {podcast.title}
