@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import apiService from '../services/api';
 import {
   IonContent,
@@ -17,6 +18,7 @@ import {
   documentText, musicalNotes
 } from 'ionicons/icons';
 import { AuthContext } from '../App';
+import AdminPopover from '../components/AdminPopover';
 import './AdminDashboard.css';
 
 const STEP_SETUP = 0;
@@ -46,6 +48,7 @@ const AdminGoLive: React.FC = () => {
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [audioEnhancement, setAudioEnhancement] = useState(true);
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false);
   useContext(AuthContext);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,9 +68,20 @@ const AdminGoLive: React.FC = () => {
     : hasStoppedRecording && !isPublishing ? STEP_REVIEW
     : STEP_PUBLISHED;
 
-  useEffect(() => {
-    return () => { cleanup(); };
-  }, []);
+   useEffect(() => {
+     return () => { cleanup(); };
+   }, []);
+
+   useEffect(() => {
+     if (!isRecording) return;
+     const handler = (e: BeforeUnloadEvent) => {
+       e.preventDefault();
+       e.returnValue = 'You are currently recording. Are you sure you want to leave?';
+       return e.returnValue;
+     };
+     window.addEventListener('beforeunload', handler);
+     return () => { window.removeEventListener('beforeunload', handler); };
+   }, [isRecording]);
 
   useEffect(() => {
     if (!recordedBlob) return;
@@ -258,6 +272,17 @@ const AdminGoLive: React.FC = () => {
       setCurrentTime(0);
       setRecordedBlob(null);
       recordingIntervalRef.current = setInterval(() => setRecordingTime(p => p + 1), 1000);
+      const AudioService = (Capacitor as any).Plugins?.AudioService;
+      if (AudioService?.startService) {
+        AudioService.startService({
+          title: title || 'Live Broadcast',
+          subtitle: 'Recording in progress',
+          artUri: '',
+          position: 0,
+          duration: 0,
+          isPlaying: true
+        }).catch(() => {});
+      }
       setTimeout(() => {
         if (canvasRef.current) {
           canvasRef.current.width = canvasRef.current.offsetWidth;
@@ -290,17 +315,21 @@ const AdminGoLive: React.FC = () => {
     }
   };
 
-  const stopRecording = async () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      setIsPaused(false);
-      setHasStoppedRecording(true);
-      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-      cleanup();
-    }
-  };
+   const stopRecording = async () => {
+     if (mediaRecorderRef.current) {
+       mediaRecorderRef.current.stop();
+       setIsRecording(false);
+       setIsPaused(false);
+       setHasStoppedRecording(true);
+       if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+       cleanup();
+       const AudioService = (Capacitor as any).Plugins?.AudioService;
+       if (AudioService?.stopService) {
+         AudioService.stopService().catch(() => {});
+       }
+     }
+   };
 
   const uploadPodcast = async (blob: Blob, duration: string) => {
     let ext = 'webm';
@@ -541,7 +570,10 @@ const AdminGoLive: React.FC = () => {
 
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
-          <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
+           <IonButton fill="clear" slot="start" onClick={() => {
+             if (isRecording) { setShowLeaveWarning(true); return; }
+             history.goBack();
+           }} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
           <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>
@@ -820,6 +852,28 @@ const AdminGoLive: React.FC = () => {
 
         <IonAlert isOpen={showAlert} onDidDismiss={() => setShowAlert(false)}
           header="Alert" message={alertMessage} buttons={['OK']} />
+        <AdminPopover
+          isOpen={showLeaveWarning}
+          onDidDismiss={() => setShowLeaveWarning(false)}
+          header="Leave Recording?"
+          options={[
+            {
+              text: 'Stop Broadcast',
+              icon: stop,
+              role: 'destructive' as const,
+              handler: () => {
+                setShowLeaveWarning(false);
+                if (isRecording) stopRecording();
+                setTimeout(() => history.goBack(), 300);
+              }
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel' as const,
+              handler: () => setShowLeaveWarning(false)
+            }
+          ]}
+        />
       </IonContent>
     </IonPage>
   );
