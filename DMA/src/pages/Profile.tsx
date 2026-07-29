@@ -5,7 +5,8 @@ import {
 } from '@ionic/react';
 import {
   person, logOut, arrowBack, chevronForward, statsChart,
-  settings, helpCircle, informationCircle, close, lockClosed
+  settings, helpCircle, informationCircle, close, lockClosed,
+  eye, eyeOff
 } from 'ionicons/icons';
 import { useState, useEffect, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -30,6 +31,9 @@ const Profile: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMsg, setAlertMsg] = useState('');
 
@@ -299,34 +303,49 @@ const Profile: React.FC = () => {
             <div className="settings-popover-body-scroll">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <label className="profile-password-label">Current Password</label>
+                  <div className="profile-password-wrap">
+                    <input
+                      type={showCurrentPw ? 'text' : 'password'}
+                      className="profile-password-input"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                    />
+                    <button type="button" className="profile-password-toggle" onClick={() => setShowCurrentPw(!showCurrentPw)}>
+                      <IonIcon icon={showCurrentPw ? eyeOff : eye} />
+                    </button>
+                  </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <label className="profile-password-label">New Password</label>
+                  <div className="profile-password-wrap">
+                    <input
+                      type={showNewPw ? 'text' : 'password'}
+                      className="profile-password-input"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min. 6 characters"
+                    />
+                    <button type="button" className="profile-password-toggle" onClick={() => setShowNewPw(!showNewPw)}>
+                      <IonIcon icon={showNewPw ? eyeOff : eye} />
+                    </button>
+                  </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter new password"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <label className="profile-password-label">Confirm New Password</label>
+                  <div className="profile-password-wrap">
+                    <input
+                      type={showConfirmPw ? 'text' : 'password'}
+                      className="profile-password-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                    />
+                    <button type="button" className="profile-password-toggle" onClick={() => setShowConfirmPw(!showConfirmPw)}>
+                      <IonIcon icon={showConfirmPw ? eyeOff : eye} />
+                    </button>
+                  </div>
                 </div>
                 {passwordError && <p style={{ color: '#ef4444', fontSize: '13px', margin: 0 }}>{passwordError}</p>}
                 {passwordSuccess && <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>{passwordSuccess}</p>}
