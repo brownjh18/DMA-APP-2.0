@@ -9,7 +9,7 @@ COPY . .
 RUN npm ci --omit=dev
 
 # Install frontend dependencies and build
-RUN cd DMA && npm ci && npm run build
+RUN cd DMA && npm ci --legacy-peer-deps && npm run build
 
 EXPOSE 10000
 
