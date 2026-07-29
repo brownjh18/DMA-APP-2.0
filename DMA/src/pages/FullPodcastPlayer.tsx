@@ -556,7 +556,7 @@ const FullPodcastPlayer: React.FC = () => {
             backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'blur(30px) brightness(0.5) saturate(1.1)',
+            filter: 'blur(30px) saturate(1.1)',
             zIndex: -1,
             transform: 'scale(1.1)'
           }}

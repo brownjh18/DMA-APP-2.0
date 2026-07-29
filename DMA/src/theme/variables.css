@@ -1240,13 +1240,35 @@ ion-content[fullscreen] {
   --color: var(--ios26-text-primary-dark);
 }
 
-/* Podcast player page — light mode: dark text for lighter background */
+/* Podcast player — light mode: solid uniform light background */
+.podcast-player-bg {
+  display: none;
+}
+
+.podcast-player-overlay {
+  background: #f2f2f7;
+}
+
+.podcast-player-content {
+  --background: #f2f2f7;
+}
+
+/* Podcast player page */
 .podcast-player-page ion-content {
   --color: #1a1a1a !important;
+  --background: #f2f2f7 !important;
 }
 
 .podcast-player-page ion-button {
   --color: #1a1a1a !important;
+}
+
+.podcast-player-page ion-title {
+  color: #1a1a1a !important;
+}
+
+.podcast-player-page ion-icon {
+  color: #1a1a1a !important;
 }
 
 .podcast-player-page ion-text,
@@ -1258,13 +1280,40 @@ ion-content[fullscreen] {
   color: #1a1a1a !important;
 }
 
-/* Dark mode: force white text on podcast player */
+/* Dark mode: blurred image + dark overlay + white text */
+[data-theme="dark"] .podcast-player-bg {
+  display: block;
+  filter: blur(30px) brightness(0.5) saturate(1.1) !important;
+}
+
+[data-theme="dark"] .podcast-player-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+[data-theme="dark"] .podcast-player-content {
+  --background: transparent;
+}
+
 [data-theme="dark"] .podcast-player-page ion-content {
   --color: white !important;
+  --background: transparent !important;
 }
 
 [data-theme="dark"] .podcast-player-page ion-button {
   --color: white !important;
+}
+
+[data-theme="dark"] .podcast-player-page ion-title {
+  color: white !important;
+}
+
+[data-theme="dark"] .podcast-player-page ion-icon {
+  color: white !important;
 }
 
 [data-theme="dark"] .podcast-player-page ion-text,
@@ -1274,28 +1323,4 @@ ion-content[fullscreen] {
 [data-theme="dark"] .podcast-player-page span,
 [data-theme="dark"] .podcast-player-page div {
   color: white !important;
-}
-
-/* Podcast player - light mode: lighter overlay */
-.podcast-player-overlay {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(242, 242, 247, 0.5) 40%,
-    rgba(242, 242, 247, 0.85) 100%
-  );
-}
-
-.podcast-player-content {
-  --background: transparent;
-}
-
-/* Podcast player - dark mode: dark overlay */
-[data-theme="dark"] .podcast-player-overlay {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
 }
