@@ -37,6 +37,7 @@ const AdminGoLive: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishProgress, setPublishProgress] = useState(0);
   const [audioData, setAudioData] = useState<number[]>([]);
   const [hasStoppedRecording, setHasStoppedRecording] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
@@ -99,31 +100,93 @@ const AdminGoLive: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const bufferLength = analyserRef.current.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    const freqData = new Uint8Array(bufferLength);
+    const timeData = new Uint8Array(bufferLength);
+    const barHeights = new Float32Array(64).fill(0);
+    let frameCount = 0;
+
     const draw = () => {
       if (!analyserRef.current || !canvas || !ctx) return;
-      analyserRef.current.getByteFrequencyData(dataArray);
+      analyserRef.current.getByteFrequencyData(freqData);
+      analyserRef.current.getByteTimeDomainData(timeData);
       const width = canvas.width;
       const height = canvas.height;
+      const centerY = height / 2;
       ctx.clearRect(0, 0, width, height);
-      const barCount = 48;
-      const step = Math.floor(bufferLength / barCount);
-      const barWidth = (width - (barCount - 1) * 3) / barCount;
+
+      const barCount = 64;
+      const gap = 3;
+      const barWidth = (width - (barCount - 1) * gap) / barCount;
+      const maxBarHeight = centerY * 0.85;
+
+      const usableBins = Math.floor(bufferLength * 0.55);
       for (let i = 0; i < barCount; i++) {
-        const idx = i * step;
-        const value = dataArray[idx] / 255;
-        const barHeight = Math.max(2, value * height * 0.9);
-        const x = i * (barWidth + 3);
-        const y = height - barHeight;
-        const gradient = ctx.createLinearGradient(x, y, x, height);
-        gradient.addColorStop(0, '#6366f1');
-        gradient.addColorStop(0.5, '#a855f7');
-        gradient.addColorStop(1, '#d946ef');
-        ctx.fillStyle = gradient;
+        const idx = Math.floor((i / barCount) * usableBins);
+        const raw = freqData[idx] / 255;
+        const boosted = Math.pow(raw, 0.7);
+        const target = Math.max(0.02, boosted);
+        barHeights[i] += (target - barHeights[i]) * 0.3;
+        const barH = barHeights[i] * maxBarHeight;
+        const x = i * (barWidth + gap);
+
+        const t = i / (barCount - 1);
+        let r, g, b;
+        if (t < 0.33) {
+          const p = t / 0.33;
+          r = Math.round(99 + (168 - 99) * p);
+          g = Math.round(102 + (85 - 102) * p);
+          b = Math.round(241 + (247 - 241) * p);
+        } else if (t < 0.66) {
+          const p = (t - 0.33) / 0.33;
+          r = Math.round(168 + (217 - 168) * p);
+          g = Math.round(85 + (70 - 85) * p);
+          b = Math.round(247 + (239 - 247) * p);
+        } else {
+          const p = (t - 0.66) / 0.34;
+          r = Math.round(217 + (236 - 217) * p);
+          g = Math.round(70 + (72 - 70) * p);
+          b = Math.round(239 + (253 - 239) * p);
+        }
+
+        const grad = ctx.createLinearGradient(x, centerY - barH, x, centerY + barH);
+        grad.addColorStop(0, `rgba(${r},${g},${b},0.2)`);
+        grad.addColorStop(0.4, `rgba(${r},${g},${b},0.9)`);
+        grad.addColorStop(0.5, `rgba(255,255,255,1)`);
+        grad.addColorStop(0.6, `rgba(${r},${g},${b},0.9)`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0.2)`);
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = `rgba(${r},${g},${b},0.5)`;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, 3);
+        ctx.roundRect(x, centerY - barH, barWidth, barH * 2, barWidth / 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
       }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      if (frameCount % 3 === 0) {
+        ctx.strokeStyle = `rgba(168,85,247,0.15)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < width; i++) {
+          const idx = Math.floor((i / width) * bufferLength);
+          const v = (timeData[idx] / 128.0) - 1.0;
+          const y = centerY + v * centerY * 0.4;
+          if (i === 0) ctx.moveTo(i, y);
+          else ctx.lineTo(i, y);
+        }
+        ctx.stroke();
+      }
+      frameCount++;
       animationFrameRef.current = requestAnimationFrame(draw);
     };
     draw();
@@ -141,7 +204,7 @@ const AdminGoLive: React.FC = () => {
           echoCancellation: audioEnhancement,
           noiseSuppression: audioEnhancement,
           autoGainControl: audioEnhancement,
-          sampleRate: 44100,
+          sampleRate: 22050,
           channelCount: 1
         }
       });
@@ -158,7 +221,7 @@ const AdminGoLive: React.FC = () => {
         for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
         return 'audio/webm';
       })();
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mr = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 64000 });
       mediaRecorderRef.current = mr;
       recordedChunksRef.current = [];
       mr.ondataavailable = (e) => {
@@ -185,7 +248,7 @@ const AdminGoLive: React.FC = () => {
       setTimeout(() => {
         if (canvasRef.current) {
           canvasRef.current.width = canvasRef.current.offsetWidth;
-          canvasRef.current.height = 120;
+          canvasRef.current.height = 160;
           drawVisualizer();
         }
       }, 100);
@@ -239,21 +302,23 @@ const AdminGoLive: React.FC = () => {
       fd.append('speaker', 'Dove Church');
       fd.append('description', description || '');
       fd.append('status', 'published');
-      await apiService.createPodcast(fd);
+      await apiService.createPodcast(fd, (pct) => setPublishProgress(pct));
       setAlertMessage(`"${title || 'Untitled'}" published!`);
       setShowAlert(true);
       sessionStorage.setItem('podcastsNeedRefresh', 'true');
-      setTimeout(() => history.push('/admin/radio'), 1500);
+      setTimeout(() => history.replace('/admin/radio'), 1500);
     } catch (err: any) {
       setAlertMessage(`Failed to publish: ${err.message || 'Please try again.'}`);
       setShowAlert(true);
       setIsPublishing(false);
+      setPublishProgress(0);
     }
   };
 
   const publishPreview = async () => {
     if (recordedBlob) {
       setIsPublishing(true);
+      setPublishProgress(0);
       const duration = formatTime(recordingTime);
       await uploadPodcast(recordedBlob, duration);
       setIsPublishing(false);
@@ -400,7 +465,7 @@ const AdminGoLive: React.FC = () => {
         .gl-status.paused { color: #f59e0b; }
 
         .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: rgba(0,0,0,0.03); }
-        .gl-visualizer canvas { width: 100%; height: 120px; display: block; }
+        .gl-visualizer canvas { width: 100%; height: 160px; display: block; }
         .gl-preview-bar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; cursor: pointer; position: relative; }
         .gl-preview-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 3px; transition: width 0.1s linear; }
         .gl-preview-times { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: #8e8e93; font-weight: 500; }
@@ -648,7 +713,7 @@ const AdminGoLive: React.FC = () => {
           )}
 
           {/* STEP 3: Review & Publish */}
-          {currentStep === STEP_REVIEW && (
+          {(currentStep === STEP_REVIEW || (currentStep === STEP_PUBLISHED && isPublishing)) && (
             <>
               <div className="gl-card">
                 <h3 className="gl-card-title">
@@ -700,9 +765,9 @@ const AdminGoLive: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button className="gl-publish-btn primary" onClick={publishPreview} disabled={isPublishing}>
                   {isPublishing ? (
-                    <><div className="gl-spinner" /> Publishing...</>
+                    <><div className="gl-spinner" /><span>Publishing{publishProgress > 0 ? ` ${Math.round(publishProgress)}%` : '...'}</span></>
                   ) : (
-                    <><IonIcon icon={cloudUpload} style={{ fontSize: '18px' }} /> Publish to Podcasts</>
+                    <><IonIcon icon={cloudUpload} style={{ fontSize: '18px' }} /><span>Publish to Podcasts</span></>
                   )}
                 </button>
                 <button className="gl-publish-btn secondary" onClick={resetAll}>

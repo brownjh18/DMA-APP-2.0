@@ -329,7 +329,7 @@ const EditLiveBroadcast: React.FC = () => {
           </div>
 
           <div className="af-row" style={{ marginBottom: '40px' }}>
-            <button type="button" className="af-submit af-submit-secondary" style={{ flex: 1 }} onClick={() => history.push('/admin/radio')}>
+            <button type="button" className="af-submit af-submit-secondary" style={{ flex: 1 }} onClick={() => history.replace('/admin/radio')}>
               Cancel
             </button>
             <button onClick={handleSubmit} disabled={saving} className="af-submit" style={{ flex: 1 }}>

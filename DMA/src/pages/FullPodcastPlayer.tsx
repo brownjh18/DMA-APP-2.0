@@ -576,290 +576,269 @@ const FullPodcastPlayer: React.FC = () => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 16px 0 16px',
+          padding: '0 16px',
           maxWidth: '100vw',
           margin: '0 auto',
           overflow: 'hidden'
         }}>
-          {/* Middle Section - View Content */}
+          {/* View Tabs */}
           <div style={{
-            flex: 1,
             display: 'flex',
-            flexDirection: 'column',
-            minHeight: 0
+            justifyContent: 'center',
+            paddingTop: '16px',
+            marginBottom: '12px',
+            padding: '16px 4px 0',
+            flexShrink: 0
           }}>
-            {/* View Header - Tabs Only */}
-            <div style={{
+            <div className="pc-tabs" style={{
               display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '20px',
-              padding: '0 4px'
+              gap: '4px',
+              padding: '4px',
+              borderRadius: '12px'
             }}>
-              {/* View Tabs */}
-              <div style={{
-                display: 'flex',
-                gap: '4px',
-                background: 'rgba(255,255,255,0.1)',
-                padding: '4px',
-                borderRadius: '12px'
-              }}>
-                {views.map((view) => (
-                  <div
-                    key={view}
-                    onClick={() => setCurrentView(view)}
-                    style={{
-                      padding: '10px 20px',
-                      borderRadius: '10px',
-                      fontSize: '0.85em',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: currentView === view ? 'rgba(255,255,255,0.25)' : 'transparent',
-                      color: currentView === view ? 'white' : 'rgba(255,255,255,0.6)',
-                      textTransform: 'capitalize',
-                      minWidth: '80px',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {view}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* View Content */}
-            <div style={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'hidden',
-              paddingRight: '8px'
-            }}>
-              {/* Home View - Centered Podcast Info (no scroll, stretches to fill) */}
-              {currentView === 'home' && (
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  paddingBottom: '33%',
-                  animation: 'fadeIn 0.3s ease-out'
-                }}>
-                  {/* Album Art - Responsive */}
-                  <div style={{
-                    width: 'clamp(160px, 42vmin, 280px)',
-                    height: 'clamp(160px, 42vmin, 280px)',
-                    borderRadius: '20px',
-                    backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    marginBottom: 'clamp(12px, 3vmin, 20px)'
-                  }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: '20px',
-                      animation: isPlaying ? 'pulse-border 2s infinite' : 'none',
-                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
-                    }} />
-                  </div>
-
-                  {/* Podcast Details - Centered */}
-                  <div style={{
-                    textAlign: 'center',
-                    maxWidth: '400px',
-                    width: '100%',
-                    padding: '0 8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 'clamp(6px, 1.5vmin, 14px)'
-                  }}>
-                    <h1 style={{
-                      fontSize: 'clamp(1.1em, 3.5vmin, 1.5em)',
-                      fontWeight: '700',
-                      margin: 0,
-                      lineHeight: '1.3',
-                      textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-                    }}>
-                      {podcast.title}
-                    </h1>
-
-                    <p style={{
-                      fontSize: 'clamp(0.85em, 2.2vmin, 1em)',
-                      color: 'rgba(255,255,255,0.85)',
-                      fontWeight: '500',
-                      margin: 0
-                    }}>
-                      {podcast.speaker || 'Dove Ministries Africa'}
-                    </p>
-
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      justifyContent: 'center',
-                      gap: '12px',
-                      fontSize: 'clamp(0.7em, 1.8vmin, 0.85em)',
-                      color: 'rgba(255,255,255,0.65)'
-                    }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <IonIcon icon={calendar} style={{ fontSize: '14px' }} />
-                        {formatDate(podcast.publishedAt)}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <IonIcon icon={time} style={{ fontSize: '14px' }} />
-                        {podcast.duration}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <p style={{
-                      margin: 0,
-                      fontSize: 'clamp(0.78em, 1.8vmin, 0.95em)',
-                      color: 'rgba(255,255,255,0.75)',
-                      lineHeight: '1.5',
-                      maxWidth: '100%',
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical'
-                    }}>
-                      {podcast.description || 'No description available for this podcast.'}
-                    </p>
-                  </div>
+              {views.map((view) => (
+                <div
+                  key={view}
+                  onClick={() => setCurrentView(view)}
+                  className={currentView === view ? 'pc-tab pc-tab-active' : 'pc-tab'}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontSize: '0.85em',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textTransform: 'capitalize',
+                    minWidth: '80px',
+                    textAlign: 'center'
+                  }}
+                >
+                  {view}
                 </div>
-              )}
-
-              {/* UpNext View */}
-              {currentView === 'upnext' && (
-                <div style={{ animation: 'fadeIn 0.3s ease-out', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-                  <div style={{ flexShrink: 0, marginBottom: '16px' }}>
-                    <h4 style={{
-                      margin: '0 0 4px 0',
-                      fontSize: '0.9em',
-                      fontWeight: '600',
-                      color: 'rgba(255,255,255,0.6)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      Up Next
-                    </h4>
-                    <p style={{
-                      margin: 0,
-                      fontSize: '0.8em',
-                      color: 'rgba(255,255,255,0.4)'
-                    }}>
-                      {queuePodcasts.length} podcasts in queue
-                    </p>
-                  </div>
-                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                  {queuePodcasts.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {queuePodcasts.map((queuePodcast, index) => (
-                        <div
-                          key={queuePodcast.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '14px',
-                            padding: '8px',
-                            backgroundColor: 'rgba(255,255,255,0.08)',
-                            borderRadius: '14px',
-                            cursor: 'pointer',
-                            transition: 'all 0.25s ease',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            backdropFilter: 'blur(10px)'
-                          }}
-                          onClick={() => {
-                            setCurrentMedia(queuePodcast);
-                            setIsPlaying(true);
-                          }}
-                        >
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '10px',
-                            backgroundImage: `url(${getFullUrl(queuePodcast.thumbnailUrl)})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            flexShrink: 0,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                          }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <h4 style={{
-                              margin: '0 0 4px 0',
-                              fontSize: '0.9em',
-                              fontWeight: '600',
-                              color: 'white',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {queuePodcast.title}
-                            </h4>
-                            <p style={{
-                              margin: 0,
-                              fontSize: '0.8em',
-                              color: 'rgba(255,255,255,0.6)',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {queuePodcast.speaker || 'Dove Ministries Africa'} • {queuePodcast.duration}
-                            </p>
-                          </div>
-                          <div style={{
-                            fontSize: '0.75em',
-                            color: 'rgba(255,255,255,0.4)',
-                            fontWeight: '600',
-                            padding: '4px 10px',
-                            background: 'rgba(255,255,255,0.05)',
-                            borderRadius: '8px'
-                          }}>
-                            {index + 1}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{
-                      textAlign: 'center',
-                      padding: '48px 24px',
-                      color: 'rgba(255,255,255,0.5)',
-                      fontSize: '0.9em',
-                      backgroundColor: 'rgba(255,255,255,0.05)',
-                      borderRadius: '16px',
-                      border: '1px solid rgba(255,255,255,0.08)'
-                    }}>
-                      No other podcasts available
-                    </div>
-                  )}
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* Fixed Bottom Controls Section */}
+          {/* Scrollable Content Area - only this scrolls */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Home View */}
+            {currentView === 'home' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                paddingBottom: '180px',
+                animation: 'fadeIn 0.3s ease-out'
+              }}>
+                {/* Album Art */}
+                <div style={{
+                  width: 'clamp(160px, 42vmin, 280px)',
+                  height: 'clamp(160px, 42vmin, 280px)',
+                  borderRadius: '20px',
+                  backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                  marginBottom: 'clamp(12px, 3vmin, 20px)'
+                }}>
+                  <div className="pc-home-album-border" style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderRadius: '20px',
+                    animation: isPlaying ? 'pulse-border 2s infinite' : 'none',
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
+                  }} />
+                </div>
+
+                {/* Podcast Details */}
+                <div style={{
+                  textAlign: 'center',
+                  maxWidth: '400px',
+                  width: '100%',
+                  padding: '0 8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 'clamp(6px, 1.5vmin, 14px)'
+                }}>
+                  <h1 style={{
+                    fontSize: 'clamp(1.1em, 3.5vmin, 1.5em)',
+                    fontWeight: '700',
+                    margin: 0,
+                    lineHeight: '1.3',
+                    textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                  }}>
+                    {podcast.title}
+                  </h1>
+
+                  <p className="pc-home-speaker" style={{
+                    fontSize: 'clamp(0.85em, 2.2vmin, 1em)',
+                    fontWeight: '500',
+                    margin: 0
+                  }}>
+                    {podcast.speaker || 'Dove Ministries Africa'}
+                  </p>
+
+                  <div className="pc-home-meta" style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    fontSize: 'clamp(0.7em, 1.8vmin, 0.85em)'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <IonIcon icon={calendar} style={{ fontSize: '14px' }} />
+                      {formatDate(podcast.publishedAt)}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <IonIcon icon={time} style={{ fontSize: '14px' }} />
+                      {podcast.duration}
+                    </span>
+                  </div>
+
+                  <p className="pc-home-desc" style={{
+                    margin: 0,
+                    fontSize: 'clamp(0.78em, 1.8vmin, 0.95em)',
+                    lineHeight: '1.5',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical'
+                  }}>
+                    {podcast.description || 'No description available for this podcast.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* UpNext View */}
+            {currentView === 'upnext' && (
+              <div style={{ animation: 'fadeIn 0.3s ease-out', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <div style={{ flexShrink: 0, marginBottom: '12px' }}>
+                  <h4 className="pc-upnext-header" style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '0.9em',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    Up Next
+                  </h4>
+                  <p className="pc-upnext-sub" style={{
+                    margin: 0,
+                    fontSize: '0.8em'
+                  }}>
+                    {queuePodcasts.length} podcasts in queue
+                  </p>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: '4px', paddingBottom: '200px' }}>
+                {queuePodcasts.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {queuePodcasts.map((queuePodcast, index) => (
+                      <div
+                        key={queuePodcast.id}
+                        className="pc-upnext-item"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '14px',
+                          padding: '8px',
+                          borderRadius: '14px',
+                          cursor: 'pointer',
+                          transition: 'all 0.25s ease',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                        onClick={() => {
+                          setCurrentMedia(queuePodcast);
+                          setIsPlaying(true);
+                        }}
+                      >
+                        <div style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          backgroundImage: `url(${getFullUrl(queuePodcast.thumbnailUrl)})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          flexShrink: 0,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 className="pc-upnext-item-title" style={{
+                            margin: '0 0 4px 0',
+                            fontSize: '0.9em',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {queuePodcast.title}
+                          </h4>
+                          <p className="pc-upnext-item-sub" style={{
+                            margin: 0,
+                            fontSize: '0.8em',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {queuePodcast.speaker || 'Dove Ministries Africa'} • {queuePodcast.duration}
+                          </p>
+                        </div>
+                        <div className="pc-upnext-item-num" style={{
+                          fontSize: '0.75em',
+                          fontWeight: '600',
+                          padding: '4px 10px',
+                          borderRadius: '8px'
+                        }}>
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="pc-upnext-empty" style={{
+                    textAlign: 'center',
+                    padding: '48px 24px',
+                    fontSize: '0.9em',
+                    borderRadius: '16px'
+                  }}>
+                    No other podcasts available
+                  </div>
+                )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Controls Section - fixed above bottom nav */}
           <div className="podcast-controls-section" style={{
             position: 'fixed',
-            bottom: '25px',
-            left: 0,
-            right: 0,
-            padding: '38px 20px calc(48px + env(safe-area-inset-bottom, 0px))',
+            bottom: '90px',
+            left: '16px',
+            right: '16px',
+            padding: '16px 20px calc(8px + env(safe-area-inset-bottom, 0px))',
+            borderRadius: '20px',
             zIndex: 100
           }}>
             {/* Progress Bar */}
-            <div style={{ marginBottom: '40px' }}>
-              <div style={{
+            <div style={{ marginBottom: '16px' }}>
+              <div className="pc-time" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: 'clamp(0.85em, 2vw, 0.95em)',
@@ -871,29 +850,26 @@ const FullPodcastPlayer: React.FC = () => {
                 <span>{formatTime(getPlaybackPosition())}</span>
                 <span>{formatTime(duration)}</span>
               </div>
-              <div style={{
+              <div className="pc-track" style={{
                 position: 'relative',
                 width: '100%',
                 height: '8px',
-                background: 'rgba(255,255,255,0.2)',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 overflow: 'visible'
               }}>
                 {/* Progress fill */}
-                <div style={{
+                <div className="pc-fill" style={{
                   position: 'absolute',
                   left: 0,
                   top: 0,
                   height: '100%',
                   width: `${duration ? (getPlaybackPosition() / duration) * 100 : 0}%`,
-                  background: 'rgba(255,255,255,0.9)',
                   borderRadius: '4px',
-                  transition: 'width 0.1s linear',
-                  boxShadow: '0 0 8px rgba(255,255,255,0.3)'
+                  transition: 'width 0.1s linear'
                 }} />
                 {/* Thumb indicator */}
-                <div style={{
+                <div className="pc-thumb" style={{
                   position: 'absolute',
                   left: `${duration ? (getPlaybackPosition() / duration) * 100 : 0}%`,
                   top: '50%',
@@ -901,8 +877,6 @@ const FullPodcastPlayer: React.FC = () => {
                   width: '18px',
                   height: '18px',
                   borderRadius: '50%',
-                  background: 'white',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.3)',
                   cursor: 'pointer',
                   zIndex: 10,
                   pointerEvents: 'none'
@@ -942,8 +916,8 @@ const FullPodcastPlayer: React.FC = () => {
               <IonButton
                 fill="clear"
                 onClick={handleSave}
+                className={isSaved ? 'pc-icon-heart' : 'pc-icon-outline'}
                 style={{
-                  '--color': isSaved ? '#ff4d4d' : 'rgba(255,255,255,0.7)',
                   '--ripple-color': 'rgba(255,255,255,0.3)',
                   width: '56px',
                   height: '56px',
@@ -955,13 +929,12 @@ const FullPodcastPlayer: React.FC = () => {
 
               {/* Rewind Button */}
               <div
+                className="pc-btn"
                 style={{
                   width: '52px',
                   height: '52px',
                   borderRadius: '26px',
-                  background: 'rgba(255,255,255,0.1)',
                   backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -971,18 +944,17 @@ const FullPodcastPlayer: React.FC = () => {
                 }}
                 onClick={handleSkipBackward}
               >
-                <IonIcon icon={playBack} style={{ fontSize: '1.4em', color: '#ffffff' }} />
+                <IonIcon icon={playBack} className="pc-icon" style={{ fontSize: '1.4em' }} />
               </div>
 
               {/* Play/Pause Button */}
               <div
+                className="pc-btn-play"
                 style={{
                   width: 'clamp(68px, 16vw, 76px)',
                   height: 'clamp(68px, 16vw, 76px)',
                   borderRadius: '38px',
-                  background: audioError ? 'rgba(102,102,102,0.3)' : 'rgba(255,255,255,0.15)',
                   backdropFilter: 'blur(10px)',
-                  border: audioError ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.2)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -992,18 +964,17 @@ const FullPodcastPlayer: React.FC = () => {
                 }}
                 onClick={audioError ? undefined : handlePlayPause}
               >
-                <IonIcon icon={audioError ? alertCircleOutline : (isPlaying ? pause : play)} style={{ fontSize: '1.7em', color: '#ffffff' }} />
+                <IonIcon icon={audioError ? alertCircleOutline : (isPlaying ? pause : play)} className="pc-icon" style={{ fontSize: '1.7em' }} />
               </div>
 
               {/* Forward Button */}
               <div
+                className="pc-btn"
                 style={{
                   width: '52px',
                   height: '52px',
                   borderRadius: '26px',
-                  background: 'rgba(255,255,255,0.1)',
                   backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1013,15 +984,15 @@ const FullPodcastPlayer: React.FC = () => {
                 }}
                 onClick={handleSkipForward}
               >
-                <IonIcon icon={playForward} style={{ fontSize: '1.4em', color: '#ffffff' }} />
+                <IonIcon icon={playForward} className="pc-icon" style={{ fontSize: '1.4em' }} />
               </div>
 
               {/* Share Button */}
               <IonButton
                 fill="clear"
                 onClick={handleShare}
+                className="pc-icon-share"
                 style={{
-                  '--color': 'rgba(255,255,255,0.7)',
                   '--ripple-color': 'rgba(255,255,255,0.3)',
                   width: '56px',
                   height: '56px',
