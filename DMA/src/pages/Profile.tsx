@@ -1,14 +1,15 @@
 import {
   IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon,
-  IonAvatar, IonButton, IonList, IonItem, IonLabel, IonListHeader
+  IonAvatar, IonButton, IonList, IonItem, IonLabel, IonListHeader,
+  IonAlert
 } from '@ionic/react';
 import {
   person, logOut, arrowBack, chevronForward, statsChart,
-  settings, helpCircle, informationCircle, close
+  settings, helpCircle, informationCircle, close, lockClosed
 } from 'ionicons/icons';
 import { useState, useEffect, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { BACKEND_BASE_URL } from '../services/api';
+import { apiService, BACKEND_BASE_URL } from '../services/api';
 import { AuthContext } from '../App';
 import './Profile.css';
 
@@ -22,6 +23,15 @@ const Profile: React.FC = () => {
 
   const [showHelpFeedbackModal, setShowHelpFeedbackModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMsg, setAlertMsg] = useState('');
 
   const openHelpFeedback = () => {
     setShowHelpFeedbackModal(true);
@@ -29,6 +39,41 @@ const Profile: React.FC = () => {
 
   const openAbout = () => {
     setShowAboutModal(true);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await apiService.changePassword({ currentPassword, newPassword });
+      setPasswordSuccess('Password changed successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess('');
+      }, 1500);
+    } catch (err: any) {
+      setPasswordError(err?.message || 'Failed to change password. Check your current password.');
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   useEffect(() => {
@@ -204,6 +249,11 @@ const Profile: React.FC = () => {
             <IonLabel>Edit Profile</IonLabel>
             <IonIcon slot="end" icon={chevronForward} />
           </IonItem>
+          <IonItem button onClick={() => { setShowPasswordModal(true); setPasswordError(''); setPasswordSuccess(''); setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); }} detail={false}>
+            <IonIcon slot="start" icon={lockClosed} />
+            <IonLabel>Change Password</IonLabel>
+            <IonIcon slot="end" icon={chevronForward} />
+          </IonItem>
           <IonItem button onClick={() => history.push('/settings')} detail={false}>
             <IonIcon slot="start" icon={settings} />
             <IonLabel>Settings</IonLabel>
@@ -238,6 +288,65 @@ const Profile: React.FC = () => {
       </IonContent>
       {showHelpFeedbackModal && <HelpFeedbackModal />}
       {showAboutModal && <AboutModal />}
+      {showPasswordModal && (
+        <>
+          <div className="settings-popover-overlay" onClick={() => setShowPasswordModal(false)} />
+          <div className="settings-popover">
+            <div className="settings-popover-close" onClick={() => setShowPasswordModal(false)}>
+              <IonIcon icon={close} />
+            </div>
+            <h2 className="settings-popover-title">Change Password</h2>
+            <div className="settings-popover-body-scroll">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: '600', color: '#636366', display: 'block', marginBottom: '6px' }}>Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e5e5e7', fontSize: '15px', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                {passwordError && <p style={{ color: '#ef4444', fontSize: '13px', margin: 0 }}>{passwordError}</p>}
+                {passwordSuccess && <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>{passwordSuccess}</p>}
+                <button
+                  onClick={handleChangePassword}
+                  disabled={changingPassword}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
+                    background: changingPassword ? '#a5b4fc' : '#6366f1', color: '#fff',
+                    fontSize: '15px', fontWeight: '600', cursor: changingPassword ? 'not-allowed' : 'pointer',
+                    marginTop: '4px'
+                  }}
+                >
+                  {changingPassword ? 'Changing...' : 'Update Password'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </IonPage>
   );
 };
