@@ -1050,8 +1050,8 @@ ion-alert::part(backdrop) {
   z-index: 998;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 50%,
+    var(--ios26-grouped-bg-light) 0%,
+    var(--ios26-grouped-bg-light) 50%,
     transparent 100%
   );
 }
@@ -1176,8 +1176,9 @@ ion-content[fullscreen] {
 :root:not([data-theme="light"]) .bottom-nav-fade {
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.5),
-    transparent
+    var(--ios26-grouped-bg-dark) 0%,
+    var(--ios26-grouped-bg-dark) 50%,
+    transparent 100%
   );
 }
 
