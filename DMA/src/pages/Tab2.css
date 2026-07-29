@@ -93,6 +93,15 @@
   --ion-item-background: #ffffff;
 }
 
+/* Sticky video player */
+.tab2-sticky-player {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ion-background-color);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+
 /* Video title styling - limit to 2 lines with ellipsis */
 .video-title {
   display: -webkit-box;

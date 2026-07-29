@@ -503,11 +503,11 @@ const Tab2: React.FC = () => {
           </div>
         )}
 
-        {/* YouTube-style Video Player Section */}
+        {/* YouTube-style Video Player Section - Sticky */}
         {!loading && currentSermon && (() => {
           console.log('Rendering video player section, currentSermon:', currentSermon);
           return (
-          <>
+          <div className="tab2-sticky-player">
             {/* Video Player and Details Container */}
             <div ref={videoContainerRef} style={{ position: 'relative' }}>
               {/* Video Player */}
@@ -759,7 +759,7 @@ const Tab2: React.FC = () => {
               </div>
             </div>
           </div>
-          </>
+          </div>
           );
         })()}
 
