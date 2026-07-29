@@ -12,6 +12,8 @@ export interface DownloadItem {
   downloadedAt: number;
   fileSize?: number;
   duration?: string;
+  description?: string;
+  date?: string;
   status: 'downloading' | 'completed' | 'error' | 'pending';
   progress: number;
   error?: string;

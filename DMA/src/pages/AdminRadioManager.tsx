@@ -122,6 +122,8 @@ const AdminRadioManager: React.FC = () => {
       url: fullUrl,
       thumbnailUrl: broadcast.thumbnailUrl || '',
       duration: broadcast.duration || '',
+      description: broadcast.description || '',
+      date: broadcast.publishedAt || broadcast.createdAt || '',
     });
   };
 
