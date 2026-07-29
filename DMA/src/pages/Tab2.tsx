@@ -1085,7 +1085,7 @@ const Tab2: React.FC = () => {
               More Sermons
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '600px', margin: '0 auto' }}>
               {(currentSermon ? [lastSermon, ...sermons].filter(s => s && s.id !== currentSermon.id) : sermons).map((sermon) => (
                 <div
                   key={sermon.id}
@@ -1096,7 +1096,7 @@ const Tab2: React.FC = () => {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     border: 'none',
-                    padding: '12px',
+                    padding: '8px',
                     position: 'relative',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                     transition: 'box-shadow 0.2s ease'
@@ -1125,11 +1125,11 @@ const Tab2: React.FC = () => {
                   {/* YouTube-style Thumbnail */}
                   <div style={{
                     position: 'relative',
-                    width: '168px',
+                    width: '120px',
                     aspectRatio: '16/9',
                     flexShrink: 0,
-                    marginRight: '12px',
-                    borderRadius: '8px',
+                    marginRight: '8px',
+                    borderRadius: '6px',
                     overflow: 'hidden'
                   }}>
                     <img
@@ -1192,10 +1192,10 @@ const Tab2: React.FC = () => {
                   {/* YouTube-style Video Details */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                     <h4 style={{
-                      fontSize: '0.9em',
+                      fontSize: '0.85em',
                       fontWeight: '600',
-                      margin: '0 0 4px 0',
-                      lineHeight: '1.3',
+                      margin: '0 0 3px 0',
+                      lineHeight: '1.2',
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
@@ -1205,8 +1205,8 @@ const Tab2: React.FC = () => {
                       {sermon.title}
                     </h4>
                     <p style={{
-                      margin: '0 0 2px 0',
-                      fontSize: '0.8em',
+                      margin: '0 0 1px 0',
+                      fontSize: '0.75em',
                       color: 'var(--ion-color-medium)',
                       fontWeight: '500'
                     }}>
@@ -1214,7 +1214,7 @@ const Tab2: React.FC = () => {
                     </p>
                     <p style={{
                       margin: '0',
-                      fontSize: '0.8em',
+                      fontSize: '0.75em',
                       color: 'var(--ion-color-medium)'
                     }}>
                       {sermon.viewCount} views • {formatDate(sermon.publishedAt)}
