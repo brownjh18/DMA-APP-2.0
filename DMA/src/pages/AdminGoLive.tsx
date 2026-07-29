@@ -360,21 +360,22 @@ const AdminGoLive: React.FC = () => {
     }
   };
 
-  const downloadRecording = () => {
-    if (!recordedBlob) return;
-    const url = URL.createObjectURL(recordedBlob);
-    let ext = 'webm';
-    if (recordedBlob.type.includes('mp4')) ext = 'm4a';
-    else if (recordedBlob.type.includes('wav')) ext = 'wav';
-    else if (recordedBlob.type.includes('ogg')) ext = 'ogg';
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `recording-${Date.now()}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+   const downloadRecording = () => {
+     if (!recordedBlob) return;
+     const url = URL.createObjectURL(recordedBlob);
+     let ext = 'webm';
+     if (recordedBlob.type.includes('mp4')) ext = 'm4a';
+     else if (recordedBlob.type.includes('wav')) ext = 'wav';
+     else if (recordedBlob.type.includes('ogg')) ext = 'ogg';
+     const safeTitle = (title || 'recording').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
+     const a = document.createElement('a');
+     a.href = url;
+     a.download = `podcast_${safeTitle}_${Date.now()}.${ext}`;
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
+     URL.revokeObjectURL(url);
+   };
 
   const resetAll = () => {
     setTitle('');
