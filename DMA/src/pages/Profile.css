@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 32px;
+  padding: 20px 16px;
   padding-top: calc(var(--ion-safe-area-top) + 20px);
   padding-bottom: 4px;
   margin-bottom: 0;
@@ -49,7 +49,7 @@
 }
 
 .profile-options {
-  margin: 0 32px;
+  margin: 0 16px;
   background: transparent;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .danger-zone {
-  padding: 20px 32px;
+  padding: 20px 16px;
 }
 
 .signout-btn {
