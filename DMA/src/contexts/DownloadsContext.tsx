@@ -96,6 +96,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
       if (isNative) {
         // Use native Android MediaStore to save to Downloads/DMA/
         const AudioService = (Capacitor as any).Plugins?.AudioService;
+        console.log('📱 Native download - AudioService available:', !!AudioService, 'saveToDownloads:', !!AudioService?.saveToDownloads);
         if (AudioService?.saveToDownloads) {
           const result = await AudioService.saveToDownloads({
             url: item.url,
@@ -127,27 +128,19 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
           await Filesystem.writeFile({ path: localPath, data: dataUrl, directory: Directory.Documents });
         }
       } else {
-        // Web fallback - use Capacitor Filesystem
-        try {
-          await Filesystem.mkdir({
-            path: 'DMA',
-            directory: Directory.Documents,
-            recursive: true
-          });
-        } catch (mkdirErr: any) {
-          if (!mkdirErr?.message?.includes('already exist')) throw mkdirErr;
-        }
-        localPath = `DMA/${fileName}`;
+        // Web fallback - trigger browser download
         const response = await fetch(item.url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const blob = await response.blob();
-        const reader = new FileReader();
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        await Filesystem.writeFile({ path: localPath, data: dataUrl, directory: Directory.Documents });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        localPath = `web/${fileName}`;
       }
 
       // Update download status to completed
