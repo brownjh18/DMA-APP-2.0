@@ -158,6 +158,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
           ? { ...d, status: 'error', error: error instanceof Error ? error.message : 'Unknown error' }
           : d
       ));
+      throw error;
     }
   };
 
@@ -183,7 +184,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
   };
 
   const isDownloaded = (id: string) => {
-    return downloads.some(d => d.id === id && d.status === 'completed');
+    return downloads.some(d => d.originalId === id && d.status === 'completed');
   };
 
   const getLocalPath = (id: string) => {

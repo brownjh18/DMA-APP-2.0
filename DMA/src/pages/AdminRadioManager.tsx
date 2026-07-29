@@ -115,16 +115,23 @@ const AdminRadioManager: React.FC = () => {
       setShowAlert(true);
       return;
     }
-    await downloadMedia({
-      originalId: podcastId,
-      title: broadcast.title || 'Untitled',
-      type: 'podcast',
-      url: fullUrl,
-      thumbnailUrl: broadcast.thumbnailUrl || '',
-      duration: broadcast.duration || '',
-      description: broadcast.description || '',
-      date: broadcast.publishedAt || broadcast.createdAt || '',
-    });
+    try {
+      await downloadMedia({
+        originalId: podcastId,
+        title: broadcast.title || 'Untitled',
+        type: 'podcast',
+        url: fullUrl,
+        thumbnailUrl: broadcast.thumbnailUrl || '',
+        duration: broadcast.duration || '',
+        description: broadcast.description || '',
+        date: broadcast.publishedAt || broadcast.createdAt || '',
+      });
+      setAlertMessage('Podcast downloaded successfully!');
+      setShowAlert(true);
+    } catch (error: any) {
+      setAlertMessage(`Download failed: ${error?.message || 'Unknown error'}`);
+      setShowAlert(true);
+    }
   };
 
   // Check if podcast data might be stale and needs refresh
