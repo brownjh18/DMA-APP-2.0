@@ -68,6 +68,8 @@ const AdminGoLive: React.FC = () => {
     : hasStoppedRecording && !isPublishing ? STEP_REVIEW
     : STEP_PUBLISHED;
 
+  const unblockRef = useRef<(() => void) | null>(null);
+
    useEffect(() => {
      return () => { cleanup(); };
    }, []);
@@ -82,6 +84,16 @@ const AdminGoLive: React.FC = () => {
      window.addEventListener('beforeunload', handler);
      return () => { window.removeEventListener('beforeunload', handler); };
    }, [isRecording]);
+
+   useEffect(() => {
+    if (unblockRef.current) { unblockRef.current(); unblockRef.current = null; }
+    if (!isRecording) return;
+    unblockRef.current = history.block((): false => {
+      setShowLeaveWarning(true);
+      return false;
+    });
+    return () => { if (unblockRef.current) { unblockRef.current(); unblockRef.current = null; } };
+  }, [isRecording]);
 
   useEffect(() => {
     if (!recordedBlob) return;
@@ -863,6 +875,7 @@ const AdminGoLive: React.FC = () => {
               role: 'destructive' as const,
               handler: () => {
                 setShowLeaveWarning(false);
+                if (unblockRef.current) { unblockRef.current(); unblockRef.current = null; }
                 if (isRecording) stopRecording();
                 setTimeout(() => history.goBack(), 300);
               }
