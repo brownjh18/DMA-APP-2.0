@@ -479,8 +479,8 @@ const AdminGoLive: React.FC = () => {
         .gl-status.rec { color: #e11d48; animation: gl-blink 1.2s ease-in-out infinite; }
         .gl-status.paused { color: #f59e0b; }
 
-        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: #000; border: 1px solid rgba(255,255,255,0.06); }
-        .gl-visualizer canvas { width: 100%; height: 180px; display: block; background: #000; }
+        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: #0d1117; border: 1px solid rgba(255,255,255,0.05); }
+        .gl-visualizer canvas { width: 100%; height: 180px; display: block; background: transparent; }
         .gl-preview-bar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; cursor: pointer; position: relative; }
         .gl-preview-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 3px; transition: width 0.1s linear; }
         .gl-preview-times { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: #8e8e93; font-weight: 500; }
@@ -508,7 +508,7 @@ const AdminGoLive: React.FC = () => {
         [data-theme="dark"] .gl-footer { border-top-color: rgba(84,84,88,0.36) !important; }
         [data-theme="dark"] .gl-footer ion-text { color: #98989d !important; }
         [data-theme="dark"] .gl-publish-btn.secondary { border-color: rgba(84,84,88,0.36) !important; }
-        [data-theme="dark"] .gl-visualizer { background: rgba(255,255,255,0.03) !important; }
+        [data-theme="dark"] .gl-visualizer { background: #0d0d0d; border-color: rgba(255,255,255,0.08); }
         [data-theme="dark"] .gl-preview-bar { background: rgba(255,255,255,0.08) !important; }
         [data-theme="dark"] .gl-hero-top { background: rgba(28,28,30,0.6) !important; border-color: rgba(255,255,255,0.06) !important; }
         [data-theme="dark"] .gl-hero-top::before { background: radial-gradient(circle, rgba(225,29,72,0.12) 0%, transparent 70%) !important; }
