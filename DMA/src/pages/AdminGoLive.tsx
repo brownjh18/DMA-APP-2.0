@@ -47,7 +47,7 @@ const AdminGoLive: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [audioEnhancement, setAudioEnhancement] = useState(true);
+  const [audioEnhancement, setAudioEnhancement] = useState(false);
   const [showLeaveWarning, setShowLeaveWarning] = useState(false);
   useContext(AuthContext);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
