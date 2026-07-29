@@ -479,7 +479,7 @@ const AdminGoLive: React.FC = () => {
         .gl-status.rec { color: #e11d48; animation: gl-blink 1.2s ease-in-out infinite; }
         .gl-status.paused { color: #f59e0b; }
 
-        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: #0d1117; border: 1px solid rgba(255,255,255,0.05); }
+        .gl-visualizer { border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: #f2f2f7; border: 1px solid rgba(0,0,0,0.08); }
         .gl-visualizer canvas { width: 100%; height: 180px; display: block; background: transparent; }
         .gl-preview-bar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; cursor: pointer; position: relative; }
         .gl-preview-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 3px; transition: width 0.1s linear; }
