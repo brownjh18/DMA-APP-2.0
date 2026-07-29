@@ -29,6 +29,7 @@ import {
   heartOutline
 } from 'ionicons/icons';
 import { useSettings } from '../contexts/SettingsContext';
+import { parseDurationToSeconds, formatRemainingTime } from '../utils/mediaUtils';
 import './MyFavorites.css';
 
 const getFullUrl = (url: string) => {
@@ -99,7 +100,7 @@ const MyFavorites: React.FC = () => {
   const history = useHistory();
   const { isLoggedIn, user, isAuthChecking } = useContext(AuthContext);
   const { isDarkMode } = useSettings();
-  const { currentSermon, setCurrentSermon, isPlaying, setIsPlaying, savePlaybackPosition, getPlaybackPosition, clearPlayer } = usePlayer();
+  const { currentSermon, setCurrentSermon, isPlaying, setIsPlaying, savePlaybackPosition, getPlaybackPosition, getPlaybackPositionById, clearPlayer } = usePlayer();
 
   const [loading, setLoading] = useState(true);
   const [savedSermons, setSavedSermons] = useState<SavedSermon[]>([]);
@@ -126,6 +127,17 @@ const MyFavorites: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+
+  const getProgressInfo = (id: string, duration?: string) => {
+    if (!duration) return { percent: 0, remaining: '' };
+    const total = parseDurationToSeconds(duration);
+    if (total <= 0) return { percent: 0, remaining: '' };
+    const position = getPlaybackPositionById(id);
+    if (position <= 0) return { percent: 0, remaining: '' };
+    const percent = Math.min((position / total) * 100, 100);
+    const remaining = total - position;
+    return { percent, remaining: formatRemainingTime(remaining) };
+  };
 
   const stableOnTimeUpdate = useCallback((time: number) => {
     savePlaybackPosition(time);
@@ -569,6 +581,18 @@ const MyFavorites: React.FC = () => {
                           {s.duration && (
                             <div className="fav-media-duration">{s.duration}</div>
                           )}
+                          {(() => {
+                            const { percent, remaining } = getProgressInfo(s.id, s.duration);
+                            if (percent <= 0) return null;
+                            return (
+                              <>
+                                <div className="sermon-progress-wrap">
+                                  <div className="sermon-progress-bar" style={{ width: `${percent}%` }} />
+                                </div>
+                                {remaining && <div className="sermon-remaining">{remaining}</div>}
+                              </>
+                            );
+                          })()}
                         </div>
                         <div className="fav-media-info">
                           <h4 className="fav-media-title">{s.title}</h4>

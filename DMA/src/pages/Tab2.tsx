@@ -12,6 +12,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import AdminPopover from '../components/AdminPopover';
 
 import { play, eye, share, close, ellipsisVertical, personCircle, heart, heartOutline } from 'ionicons/icons';
+import { parseDurationToSeconds, formatRemainingTime } from '../utils/mediaUtils';
 import './Tab2.css';
 
 const toSermon = (video: YouTubeVideo) => ({
@@ -80,7 +81,7 @@ const Tab2: React.FC = () => {
   const [selectedSermonForActionSheet, setSelectedSermonForActionSheet] = useState<any>(null);
   const [showAuthAlert, setShowAuthAlert] = useState(false);
   const location = useLocation();
-  const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition, clearPlayer } = usePlayer();
+  const { currentSermon, setCurrentSermon, setIsPlaying, setCurrentMedia, isPlaying, savePlaybackPosition, getPlaybackPosition, getPlaybackPositionById, clearPlayer } = usePlayer();
   const { onSermonCreated, onSermonUpdated, onSermonDeleted } = useSocket() || {};
   const { isDarkMode } = useSettings();
 
@@ -346,6 +347,17 @@ const Tab2: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const getProgressInfo = (id: string, duration?: string) => {
+    if (!duration) return { percent: 0, remaining: '' };
+    const total = parseDurationToSeconds(duration);
+    if (total <= 0) return { percent: 0, remaining: '' };
+    const position = getPlaybackPositionById(id);
+    if (position <= 0) return { percent: 0, remaining: '' };
+    const percent = Math.min((position / total) * 100, 100);
+    const remaining = total - position;
+    return { percent, remaining: formatRemainingTime(remaining) };
   };
 
   const isSermonSaved = (sermonId: string) => {
@@ -837,6 +849,18 @@ const Tab2: React.FC = () => {
                      }}>
                        {lastSermon?.isLive ? 'LIVE' : (lastSermon?.duration && lastSermon.duration !== '—' ? lastSermon.duration : '—')}
                      </div>
+                     {(() => {
+                       const { percent, remaining } = getProgressInfo(lastSermon.id, lastSermon.duration);
+                       if (percent <= 0) return null;
+                       return (
+                         <>
+                           <div className="sermon-progress-wrap">
+                             <div className="sermon-progress-bar" style={{ width: `${percent}%` }} />
+                           </div>
+                           {remaining && <div className="sermon-remaining">{remaining}</div>}
+                         </>
+                       );
+                     })()}
                     {/* Play Button Overlay */}
                     <div style={{
                       position: 'absolute',
@@ -979,6 +1003,18 @@ const Tab2: React.FC = () => {
                        }}>
                          {sermon.isLive ? 'LIVE' : (sermon.duration && sermon.duration !== '—' ? sermon.duration : '—')}
                        </div>
+                       {(() => {
+                         const { percent, remaining } = getProgressInfo(sermon.id, sermon.duration);
+                         if (percent <= 0) return null;
+                         return (
+                           <>
+                             <div className="sermon-progress-wrap">
+                               <div className="sermon-progress-bar" style={{ width: `${percent}%` }} />
+                             </div>
+                             {remaining && <div className="sermon-remaining">{remaining}</div>}
+                           </>
+                         );
+                       })()}
                     </div>
 
                     {/* YouTube-style Video Details */}
@@ -1124,7 +1160,7 @@ const Tab2: React.FC = () => {
                      }}>
                        {sermon.isLive ? 'LIVE' : (sermon.duration && sermon.duration !== '—' ? sermon.duration : '—')}
                      </div>
-                    {currentSermon && sermon.id === currentSermon.id && (
+                     {currentSermon && sermon.id === currentSermon.id && (
                     <div style={{
                     position: 'absolute',
                     top: '4px',
@@ -1139,6 +1175,18 @@ const Tab2: React.FC = () => {
                     Playing
                     </div>
                     )}
+                    {(() => {
+                      const { percent, remaining } = getProgressInfo(sermon.id, sermon.duration);
+                      if (percent <= 0) return null;
+                      return (
+                        <>
+                          <div className="sermon-progress-wrap">
+                            <div className="sermon-progress-bar" style={{ width: `${percent}%` }} />
+                          </div>
+                          {remaining && <div className="sermon-remaining">{remaining}</div>}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* YouTube-style Video Details */}

@@ -49,6 +49,7 @@ interface PlayerContextType {
   // New: save and restore playback position
   savePlaybackPosition: (time: number) => void;
   getPlaybackPosition: () => number;
+  getPlaybackPositionById: (id: string) => number;
   clearPlayer: () => void;
   // Skip forward/backward
   skipForward: () => void;
@@ -251,6 +252,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return 0;
   };
 
+  const getPlaybackPositionById = (id: string): number => {
+    return playbackPositions[id] || 0;
+  };
+
   const skipForward = () => {
     console.log('Context: skipForward called');
     window.dispatchEvent(new CustomEvent(SKIP_FORWARD_EVENT));
@@ -276,6 +281,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentTime,
       savePlaybackPosition,
       getPlaybackPosition,
+      getPlaybackPositionById,
       clearPlayer,
       skipForward,
       skipBackward

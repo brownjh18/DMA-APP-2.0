@@ -102,6 +102,34 @@
   box-shadow: 0 2px 12px rgba(0,0,0,0.18);
 }
 
+/* Watch progress bar on thumbnails (YouTube style) */
+.sermon-progress-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sermon-progress-bar {
+  height: 100%;
+  background: #ff0000;
+  border-radius: 0 1px 1px 0;
+}
+
+.sermon-remaining {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 0.7em;
+  font-weight: 500;
+}
+
 /* Video title styling - limit to 2 lines with ellipsis */
 .video-title {
   display: -webkit-box;
