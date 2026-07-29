@@ -35,9 +35,11 @@ import {
   closeCircle as closeIcon,
   checkmarkCircle,
   calendar,
-  stop as stopIcon
+  stop as stopIcon,
+  download
 } from 'ionicons/icons';
 import { useSocket } from '../contexts/SocketContext';
+import { useDownloads } from '../contexts/DownloadsContext';
 import { apiService, BACKEND_BASE_URL } from '../services/api';
 import './AdminManager.css';
 
@@ -66,6 +68,7 @@ const AdminRadioManager: React.FC = () => {
 
   // Socket.io real-time updates (only podcast events are supported in SocketContext)
   const { isConnected, onPodcastCreated, onPodcastUpdated, onPodcastDeleted } = useSocket();
+  const { downloadMedia, isDownloaded } = useDownloads();
 
   // Helper function to clear API cache for podcasts
   const clearPodcastsCache = () => {
@@ -95,6 +98,31 @@ const AdminRadioManager: React.FC = () => {
     }
 
     return false; // Error was not handled, show generic message
+  };
+
+  const handleDownloadPodcast = async (broadcast: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const podcastId = broadcast._id || broadcast.id;
+    const audioUrl = broadcast.audioUrl || broadcast.streamUrl || '';
+    if (!audioUrl) {
+      setAlertMessage('No audio file available for this podcast.');
+      setShowAlert(true);
+      return;
+    }
+    const fullUrl = audioUrl.startsWith('/uploads') ? `${BACKEND_BASE_URL}${audioUrl}` : audioUrl;
+    if (isDownloaded(podcastId)) {
+      setAlertMessage('This podcast is already downloaded.');
+      setShowAlert(true);
+      return;
+    }
+    await downloadMedia({
+      originalId: podcastId,
+      title: broadcast.title || 'Untitled',
+      type: 'podcast',
+      url: fullUrl,
+      thumbnailUrl: broadcast.thumbnailUrl || '',
+      duration: broadcast.duration || '',
+    });
   };
 
   // Check if podcast data might be stale and needs refresh
@@ -580,6 +608,16 @@ const AdminRadioManager: React.FC = () => {
                       >
                         <IonIcon icon={broadcast.isPublished ? eyeOff : eye} />
                       </div>
+                      {broadcast.type === 'podcast' && (
+                        <div
+                          className={`am-btn download ${isDownloaded(broadcast._id || broadcast.id) ? 'downloaded' : ''}`}
+                          onClick={(e) => handleDownloadPodcast(broadcast, e)}
+                          title={isDownloaded(broadcast._id || broadcast.id) ? 'Already downloaded' : 'Download podcast'}
+                          style={{ color: isDownloaded(broadcast._id || broadcast.id) ? '#10b981' : undefined }}
+                        >
+                          <IonIcon icon={download} />
+                        </div>
+                      )}
                       <div
                         className="am-btn more"
                         onClick={(e) => { e.stopPropagation(); openActionSheet(broadcast); }}
@@ -664,6 +702,13 @@ const AdminRadioManager: React.FC = () => {
               icon: stopIcon,
               handler: () => {
                 if (selectedBroadcast) endLiveBroadcast(selectedBroadcast._id || selectedBroadcast.id);
+              }
+            }] : []),
+            ...(selectedBroadcast?.type === 'podcast' ? [{
+              text: isDownloaded(selectedBroadcast?._id || selectedBroadcast?.id) ? 'Already Downloaded' : 'Download Audio',
+              icon: download,
+              handler: () => {
+                if (selectedBroadcast) handleDownloadPodcast(selectedBroadcast);
               }
             }] : []),
             {
