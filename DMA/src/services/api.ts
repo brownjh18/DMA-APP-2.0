@@ -165,7 +165,8 @@ class ApiService {
     }
 
     // If offline and no cache, return empty data for mobile
-    if (!this.isOnline() && Capacitor.isNativePlatform()) {
+    // But never short-circuit auth endpoints — let them attempt the request
+    if (!this.isOnline() && Capacitor.isNativePlatform() && !this.isAuthEndpoint(endpoint)) {
       console.log(`Offline and no cache for ${endpoint}, returning empty data`);
       if (endpoint.includes('/devotions')) return { devotions: [] };
       if (endpoint.includes('/podcasts')) return { podcasts: [] };

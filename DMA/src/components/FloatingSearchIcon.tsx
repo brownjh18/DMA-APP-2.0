@@ -178,7 +178,7 @@ const FloatingSearchIcon: React.FC = () => {
               position: 'absolute',
               top: 'calc(var(--ion-safe-area-top) - 18px)',
               right: 'auto',
-              left: 124, // Position to the left of the search button (124px from right edge)
+              left: 160, // Position to the left of the search button
               width: 45,
               height: 45,
               borderRadius: 25,
@@ -262,7 +262,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 16,
+            right: 'calc(8px + 0.5vw)',
             width: 56,
             height: 44,
             display: 'flex',
@@ -339,7 +339,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 76,
+            right: 'calc(64px + 1vw)',
             width: 44,
             height: 44,
             display: 'flex',
@@ -433,7 +433,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 130,
+            right: 'calc(108px + 1.5vw)',
             width: 44,
             height: 44,
             display: 'flex',

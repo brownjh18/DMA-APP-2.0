@@ -162,7 +162,7 @@ const FullDevotion: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Full Devotion</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>Full Devotion</IonTitle>
         </IonToolbar>
       </IonHeader>
 

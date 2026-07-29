@@ -289,7 +289,7 @@ const AddEvent: React.FC = () => {
       <IonHeader translucent>
         <IonToolbar className="toolbar-ios">
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}><IonIcon icon={arrowBack} style={{ fontSize: '22px' }} /></IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Add Event</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>Add Event</IonTitle>
         </IonToolbar>
       </IonHeader>
 

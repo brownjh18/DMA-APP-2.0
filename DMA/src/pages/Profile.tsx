@@ -227,7 +227,7 @@ const Profile: React.FC = () => {
           <IonButton slot="start" fill="clear" onClick={goBack} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Profile</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
 

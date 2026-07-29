@@ -834,7 +834,8 @@ const FullPodcastPlayer: React.FC = () => {
             right: '16px',
             padding: '16px 20px calc(8px + env(safe-area-inset-bottom, 0px))',
             borderRadius: '20px',
-            zIndex: 100
+            zIndex: 100,
+            minHeight: '150px'
           }}>
             {/* Progress Bar */}
             <div style={{ marginBottom: '16px' }}>
@@ -909,7 +910,7 @@ const FullPodcastPlayer: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 'clamp(20px, 5vw, 36px)',
+              gap: '20px',
               marginBottom: '16px'
             }}>
               {/* Save Button */}
@@ -919,9 +920,11 @@ const FullPodcastPlayer: React.FC = () => {
                 className={isSaved ? 'pc-icon-heart' : 'pc-icon-outline'}
                 style={{
                   '--ripple-color': 'rgba(255,255,255,0.3)',
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%'
+                  width: 'clamp(48px, 12vw, 62px)',
+                  height: 'clamp(48px, 12vw, 62px)',
+                  borderRadius: '50%',
+                  flexShrink: 1,
+                  marginRight: '-6px'
                 }}
               >
                 <IonIcon icon={isSaved ? heart : heartOutline} style={{ fontSize: '1.6em' }} />
@@ -931,14 +934,14 @@ const FullPodcastPlayer: React.FC = () => {
               <div
                 className="pc-btn"
                 style={{
-                  width: '52px',
-                  height: '52px',
+                  width: 'clamp(44px, 10vw, 52px)',
+                  height: 'clamp(44px, 10vw, 52px)',
                   borderRadius: '26px',
                   backdropFilter: 'blur(10px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0,
+                  flexShrink: 1,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
@@ -951,8 +954,8 @@ const FullPodcastPlayer: React.FC = () => {
               <div
                 className="pc-btn-play"
                 style={{
-                  width: 'clamp(68px, 16vw, 76px)',
-                  height: 'clamp(68px, 16vw, 76px)',
+                  width: 'clamp(50px, 14vw, 72px)',
+                  height: 'clamp(50px, 14vw, 72px)',
                   borderRadius: '38px',
                   backdropFilter: 'blur(10px)',
                   display: 'flex',
@@ -971,14 +974,14 @@ const FullPodcastPlayer: React.FC = () => {
               <div
                 className="pc-btn"
                 style={{
-                  width: '52px',
-                  height: '52px',
+                  width: 'clamp(44px, 10vw, 52px)',
+                  height: 'clamp(44px, 10vw, 52px)',
                   borderRadius: '26px',
                   backdropFilter: 'blur(10px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0,
+                  flexShrink: 1,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
@@ -994,9 +997,11 @@ const FullPodcastPlayer: React.FC = () => {
                 className="pc-icon-share"
                 style={{
                   '--ripple-color': 'rgba(255,255,255,0.3)',
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%'
+                  width: 'clamp(48px, 12vw, 62px)',
+                  height: 'clamp(48px, 12vw, 62px)',
+                  borderRadius: '50%',
+                  flexShrink: 1,
+                  marginLeft: '-6px'
                 }}
               >
                 <IonIcon icon={share} style={{ fontSize: '1.6em' }} />

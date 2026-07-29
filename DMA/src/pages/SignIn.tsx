@@ -61,7 +61,7 @@ const SignIn: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Sign In</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>Sign In</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -120,7 +120,7 @@ const SignIn: React.FC = () => {
                 type="email"
                 value={email}
                 onIonChange={(e) => {
-                  setEmail(e.detail.value!);
+                  setEmail(e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Email address"
@@ -139,7 +139,7 @@ const SignIn: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onIonChange={(e) => {
-                  setPassword(e.detail.value!);
+                  setPassword(e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Password"

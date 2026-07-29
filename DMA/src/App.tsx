@@ -461,7 +461,11 @@ const App: React.FC = () => {
       console.log('🔐 Login attempt for:', email);
       const response = await apiService.login(email, password);
       console.log('✅ Login successful, token received', response);
-      console.log('📋 User data received:', response.user);
+
+      if (!response?.token || !response?.user) {
+        console.error('❌ Login response missing token or user:', response);
+        throw new Error('Invalid response from server. Please try again.');
+      }
       
       // Set state first
       setToken(response.token);

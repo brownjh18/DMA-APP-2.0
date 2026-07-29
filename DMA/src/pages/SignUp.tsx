@@ -103,7 +103,7 @@ const SignUp: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>Sign Up</IonTitle>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>Sign Up</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -172,7 +172,7 @@ const SignUp: React.FC = () => {
                 type="text"
                 value={formData.name}
                 onIonChange={(e) => {
-                  handleInputChange('name', e.detail.value!);
+                  handleInputChange('name', e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Full name"
@@ -191,7 +191,7 @@ const SignUp: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onIonChange={(e) => {
-                  handleInputChange('email', e.detail.value!);
+                  handleInputChange('email', e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Email address"
@@ -210,7 +210,7 @@ const SignUp: React.FC = () => {
                 type="tel"
                 value={formData.phone}
                 onIonChange={(e) => {
-                  handleInputChange('phone', e.detail.value!);
+                  handleInputChange('phone', e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Phone number (optional)"
@@ -228,7 +228,7 @@ const SignUp: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onIonChange={(e) => {
-                  handleInputChange('password', e.detail.value!);
+                  handleInputChange('password', e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Password (min. 6 characters)"
@@ -260,7 +260,7 @@ const SignUp: React.FC = () => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
                 onIonChange={(e) => {
-                  handleInputChange('confirmPassword', e.detail.value!);
+                  handleInputChange('confirmPassword', e.detail.value ?? '');
                   if (error) setError(''); // Clear error when user starts typing
                 }}
                 placeholder="Confirm password"

@@ -346,7 +346,7 @@ const Notifications: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>
             Notifications
           </IonTitle>
         </IonToolbar>
@@ -357,21 +357,6 @@ const Notifications: React.FC = () => {
           {/* Filter Actions */}
           <div className="notif-section">
             <div className="notif-section-header">
-              <h2 className="notif-section-title">
-                Notifications
-                {unreadCount > 0 && (
-                  <span
-                    style={{
-                      marginLeft: '8px',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: '#6366f1',
-                    }}
-                  >
-                    {unreadCount} unread
-                  </span>
-                )}
-              </h2>
               {notifList.length > 0 && (
                 <div className="notif-action-row">
                   {unreadCount > 0 && (

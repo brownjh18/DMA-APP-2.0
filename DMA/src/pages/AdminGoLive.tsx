@@ -529,7 +529,7 @@ const AdminGoLive: React.FC = () => {
           <IonButton fill="clear" slot="start" onClick={() => history.goBack()} style={{ marginLeft: '4px' }}>
             <IonIcon icon={arrowBack} style={{ fontSize: '22px' }} />
           </IonButton>
-          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-16px' }}>
+          <IonTitle className="title-ios" style={{ textAlign: 'left', marginLeft: '-28px' }}>
             {currentStep === STEP_RECORDING ? 'Recording' : currentStep === STEP_REVIEW ? 'Review' : 'Go Live'}
           </IonTitle>
         </IonToolbar>
@@ -580,7 +580,7 @@ const AdminGoLive: React.FC = () => {
               {currentStep === STEP_RECORDING && (
                 <div className="gl-hero-timer-track">
                   <div className={`gl-hero-timer-fill ${currentStep === STEP_RECORDING ? 'rec' : currentStep >= STEP_REVIEW ? 'done' : ''}`}
-                    style={{ width: `${Math.min((recordingTime / 3600) * 100, 100)}%` }} />
+                    style={{ width: `${Math.min((recordingTime / 7200) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
