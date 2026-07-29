@@ -1,12 +1,17 @@
 package io.dove.ministries.africa;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.getcapacitor.JSObject;
@@ -15,7 +20,12 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -231,6 +241,97 @@ public class AudioPlugin extends Plugin {
                 Log.e(TAG, "Failed to start service as fallback", e2);
             }
         }
+    }
+
+    @PluginMethod
+    public void saveToDownloads(PluginCall call) {
+        String url = call.getString("url");
+        String fileName = call.getString("fileName", "download.mp3");
+        String mimeType = call.getString("mimeType", "audio/mpeg");
+
+        if (url == null || url.isEmpty()) {
+            call.reject("URL is required");
+            return;
+        }
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
+            try {
+                URL downloadUrl = new URL(url);
+                HttpURLConnection connection = (HttpURLConnection) downloadUrl.openConnection();
+                connection.connect();
+
+                if (connection.getResponseCode() != 200) {
+                    call.reject("HTTP error: " + connection.getResponseCode());
+                    return;
+                }
+
+                inputStream = connection.getInputStream();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Android 10+ - use MediaStore
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+                    values.put(MediaStore.Downloads.MIME_TYPE, mimeType);
+                    values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DMA");
+
+                    Uri uri = getContext().getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                    if (uri == null) {
+                        call.reject("Failed to create MediaStore entry");
+                        return;
+                    }
+
+                    outputStream = getContext().getContentResolver().openOutputStream(uri);
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    long totalBytes = 0;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        totalBytes += bytesRead;
+                    }
+                    outputStream.flush();
+
+                    JSObject result = new JSObject();
+                    result.put("success", true);
+                    result.put("uri", uri.toString());
+                    result.put("filePath", Environment.DIRECTORY_DOWNLOADS + "/DMA/" + fileName);
+                    result.put("fileSize", totalBytes);
+                    call.resolve(result);
+                } else {
+                    // Android 9 and below - direct file write
+                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File dmaDir = new File(downloadsDir, "DMA");
+                    if (!dmaDir.exists()) {
+                        dmaDir.mkdirs();
+                    }
+                    File outputFile = new File(dmaDir, fileName);
+
+                    outputStream = new FileOutputStream(outputFile);
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    long totalBytes = 0;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        totalBytes += bytesRead;
+                    }
+                    outputStream.flush();
+
+                    JSObject result = new JSObject();
+                    result.put("success", true);
+                    result.put("filePath", outputFile.getAbsolutePath());
+                    result.put("fileSize", totalBytes);
+                    call.resolve(result);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "saveToDownloads failed", e);
+                call.reject("Download failed: " + e.getMessage());
+            } finally {
+                try { if (inputStream != null) inputStream.close(); } catch (Exception ignored) {}
+                try { if (outputStream != null) outputStream.close(); } catch (Exception ignored) {}
+            }
+        });
     }
 
     public void downloadBitmap(String artUri, OnBitmapDownloadedListener listener) {

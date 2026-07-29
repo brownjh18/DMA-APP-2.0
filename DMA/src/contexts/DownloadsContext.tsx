@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 import { useNetwork } from './NetworkContext';
 
 export interface DownloadItem {
@@ -85,48 +86,66 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
         throw new Error('Cannot download while offline');
       }
 
-      // Create DMA downloads directory if it doesn't exist
-      try {
-        await Filesystem.mkdir({
-          path: 'DMA/Downloads',
-          directory: Directory.Documents,
-          recursive: true
-        });
-      } catch (error) {
-        // Directory might already exist, continue
-      }
-
-      // Generate safe filename
+      const isNative = Capacitor.isNativePlatform();
       const fileExtension = item.url.split('.').pop() || 'mp3';
       const safeTitle = item.title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
       const fileName = `${item.type}_${safeTitle}_${id}.${fileExtension}`;
-      const filePath = `DMA/Downloads/${fileName}`;
 
-      // Download the file
-      const response = await fetch(item.url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let localPath: string;
+
+      if (isNative) {
+        // Use native Android MediaStore to save to Downloads/DMA/
+        const AudioService = (Capacitor as any).Plugins?.AudioService;
+        if (AudioService?.saveToDownloads) {
+          const result = await AudioService.saveToDownloads({
+            url: item.url,
+            fileName: fileName,
+            mimeType: fileExtension === 'mp3' ? 'audio/mpeg' : `audio/${fileExtension}`
+          });
+          localPath = result.filePath;
+        } else {
+          // Fallback to Capacitor Filesystem
+          await Filesystem.mkdir({
+            path: 'DMA',
+            directory: Directory.Documents,
+            recursive: true
+          });
+          localPath = `DMA/${fileName}`;
+          const response = await fetch(item.url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          await Filesystem.writeFile({ path: localPath, data: dataUrl, directory: Directory.Documents });
+        }
+      } else {
+        // Web fallback - use Capacitor Filesystem
+        await Filesystem.mkdir({
+          path: 'DMA',
+          directory: Directory.Documents,
+          recursive: true
+        });
+        localPath = `DMA/${fileName}`;
+        const response = await fetch(item.url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        await Filesystem.writeFile({ path: localPath, data: dataUrl, directory: Directory.Documents });
       }
-
-      const blob = await response.blob();
-      const reader = new FileReader();
-      
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      await Filesystem.writeFile({
-        path: filePath,
-        data: dataUrl,
-        directory: Directory.Documents
-      });
 
       // Update download status to completed
       setDownloads(prev => prev.map(d => 
         d.id === id 
-          ? { ...d, status: 'completed', progress: 100, localPath: filePath }
+          ? { ...d, status: 'completed', progress: 100, localPath: localPath }
           : d
       ));
 
@@ -147,7 +166,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
     
     if (download?.localPath) {
       try {
-        await Filesystem.rmdir({
+        await Filesystem.deleteFile({
           path: download.localPath,
           directory: Directory.Documents
         });
@@ -177,7 +196,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
     for (const download of downloads) {
       if (download.localPath) {
         try {
-          await Filesystem.rmdir({
+          await Filesystem.deleteFile({
             path: download.localPath,
             directory: Directory.Documents
           });
@@ -193,7 +212,7 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
   const getStorageUsage = async () => {
     try {
       const stat = await Filesystem.stat({
-        path: 'DMA/Downloads',
+        path: 'DMA',
         directory: Directory.Documents
       });
       
