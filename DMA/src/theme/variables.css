@@ -1239,3 +1239,16 @@ ion-content[fullscreen] {
 [data-theme="dark"] ion-button {
   --color: var(--ios26-text-primary-dark);
 }
+
+/* Podcast player page is always dark-themed */
+.podcast-player-page ion-content {
+  --color: white;
+}
+
+.podcast-player-page ion-button {
+  --color: white;
+}
+
+.podcast-player-page ion-text {
+  color: white;
+}

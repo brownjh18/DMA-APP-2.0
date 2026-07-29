@@ -522,7 +522,7 @@ const FullPodcastPlayer: React.FC = () => {
   }
 
   return (
-    <IonPage>
+    <IonPage className="podcast-player-page">
       <IonHeader translucent>
         <IonToolbar style={{ '--background': 'transparent' }}>
           <IonButton fill="clear" slot="start" onClick={() => { clearPlayer(); history.goBack(); }} style={{ marginLeft: '4px' }}>
