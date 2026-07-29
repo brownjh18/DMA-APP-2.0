@@ -87,7 +87,9 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
       }
 
       const isNative = Capacitor.isNativePlatform();
-      const fileExtension = item.url.split('.').pop() || 'mp3';
+      const rawExtension = item.url.split('.').pop() || 'mp3';
+      const isPodcast = item.type === 'podcast';
+      const fileExtension = isPodcast ? 'mp3' : rawExtension;
       const safeTitle = item.title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
       const fileName = `${item.type}_${safeTitle}_${id}.${fileExtension}`;
 
@@ -96,7 +98,6 @@ export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({ children }
       if (isNative) {
         // Use native Android MediaStore to save to Downloads/DMA/
         const AudioService = (Capacitor as any).Plugins?.AudioService;
-        console.log('📱 Native download - AudioService available:', !!AudioService, 'saveToDownloads:', !!AudioService?.saveToDownloads);
         if (AudioService?.saveToDownloads) {
           const result = await AudioService.saveToDownloads({
             url: item.url,
