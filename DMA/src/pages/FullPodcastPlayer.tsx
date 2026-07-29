@@ -647,8 +647,8 @@ const FullPodcastPlayer: React.FC = () => {
                 }}>
                   {/* Album Art - Responsive */}
                   <div style={{
-                    width: 'clamp(140px, 35vmin, 220px)',
-                    height: 'clamp(140px, 35vmin, 220px)',
+                    width: 'clamp(160px, 42vmin, 280px)',
+                    height: 'clamp(160px, 42vmin, 280px)',
                     borderRadius: '20px',
                     backgroundImage: `url(${getFullUrl(podcast.thumbnailUrl)})`,
                     backgroundSize: 'cover',
@@ -740,7 +740,7 @@ const FullPodcastPlayer: React.FC = () => {
 
               {/* UpNext View */}
               {currentView === 'upnext' && (
-                <div style={{ animation: 'fadeIn 0.3s ease-out', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ animation: 'fadeIn 0.3s ease-out', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
                   <div style={{ flexShrink: 0, marginBottom: '16px' }}>
                     <h4 style={{
                       margin: '0 0 4px 0',
@@ -760,7 +760,7 @@ const FullPodcastPlayer: React.FC = () => {
                       {queuePodcasts.length} podcasts in queue
                     </p>
                   </div>
-                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', minHeight: 0 }}>
+                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                   {queuePodcasts.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {queuePodcasts.map((queuePodcast, index) => (
