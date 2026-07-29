@@ -347,8 +347,17 @@ const Profile: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                {passwordError && <p style={{ color: '#ef4444', fontSize: '13px', margin: 0 }}>{passwordError}</p>}
-                {passwordSuccess && <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>{passwordSuccess}</p>}
+                {passwordError && (
+                  <div className="profile-alert profile-alert-error">
+                    <IonIcon icon={close} />
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+                {passwordSuccess && (
+                  <div className="profile-alert profile-alert-success">
+                    <span>{passwordSuccess}</span>
+                  </div>
+                )}
                 <button
                   onClick={handleChangePassword}
                   disabled={changingPassword}
