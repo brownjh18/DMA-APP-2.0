@@ -729,52 +729,73 @@ const AdminGoLive: React.FC = () => {
           {/* STEP 3: Review & Publish */}
           {(currentStep === STEP_REVIEW || (currentStep === STEP_PUBLISHED && isPublishing)) && (
             <>
-              <div className="gl-card">
-                <h3 className="gl-card-title">
-                  <IonIcon icon={play} style={{ color: '#10b981', fontSize: '18px' }} />
-                  Preview Recording
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <button className="gl-ctrl-btn resume" onClick={togglePreview} style={{ width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0 }}>
-                    <IonIcon icon={isPlayingPreview ? pause : play} className="gl-ctrl-icon" style={{ fontSize: '18px' }} />
-                  </button>
-                  <div style={{ flex: 1 }}>
-                    <div className="gl-preview-bar" onClick={seekPreview}>
-                      <div className="gl-preview-fill" style={{ width: `${audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0}%` }} />
-                    </div>
-                    <div className="gl-preview-times">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(audioDuration)}</span>
-                    </div>
-                  </div>
-                  <button className="gl-ctrl-btn" onClick={downloadRecording}
-                    style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(99,102,241,0.1)' }}>
-                    <IonIcon icon={download} style={{ fontSize: '18px', color: '#6366f1' }} />
-                  </button>
-                </div>
-                <audio ref={audioPreviewRef}
-                  onLoadedMetadata={e => setAudioDuration(e.currentTarget.duration)}
-                  onTimeUpdate={e => setCurrentTime(e.currentTarget.currentTime)}
-                  onEnded={() => { setIsPlayingPreview(false); setCurrentTime(0); }}
-                  style={{ display: 'none' }} />
-              </div>
+               <div className="gl-card">
+                 <h3 className="gl-card-title">
+                   <IonIcon icon={play} style={{ color: '#10b981', fontSize: '18px' }} />
+                   Preview Recording
+                 </h3>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                   <button className="gl-ctrl-btn resume" onClick={togglePreview} style={{ width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0 }}>
+                     <IonIcon icon={isPlayingPreview ? pause : play} className="gl-ctrl-icon" style={{ fontSize: '18px' }} />
+                   </button>
+                   <div style={{ flex: 1 }}>
+                     <div className="gl-preview-bar" onClick={seekPreview}>
+                       <div className="gl-preview-fill" style={{ width: `${audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0}%` }} />
+                     </div>
+                     <div className="gl-preview-times">
+                       <span>{formatTime(currentTime)}</span>
+                       <span>{formatTime(audioDuration)}</span>
+                     </div>
+                   </div>
+                   {recordedBlob && (
+                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '80px' }}>
+                       <span style={{ fontSize: '9px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Duration</span>
+                       <span style={{ fontSize: '13px', fontWeight: '700', color: '#6366f1' }}>{formatTime(recordingTime)}</span>
+                     </div>
+                   )}
+                 </div>
+                 <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                   <div style={{ flex: 1, minWidth: 0 }}>
+                     <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ion-text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title || 'Untitled Recording'}</div>
+                     {description && (
+                       <div style={{ fontSize: '11px', color: '#8e8e93', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>{description}</div>
+                     )}
+                   </div>
+                   <button className="gl-ctrl-btn" onClick={downloadRecording}
+                     style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(99,102,241,0.1)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                     title="Download recording">
+                     <IonIcon icon={download} style={{ fontSize: '18px', color: '#6366f1' }} />
+                   </button>
+                 </div>
+                 <audio ref={audioPreviewRef}
+                   onLoadedMetadata={e => setAudioDuration(e.currentTarget.duration)}
+                   onTimeUpdate={e => setCurrentTime(e.currentTarget.currentTime)}
+                   onEnded={() => { setIsPlayingPreview(false); setCurrentTime(0); }}
+                   style={{ display: 'none' }} />
+               </div>
 
-              <div className="gl-card">
-                <h3 className="gl-card-title">
-                  <IonIcon icon={radio} style={{ color: '#10b981', fontSize: '18px' }} />
-                  Broadcast Summary
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(99,102,241,0.06)' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Duration</div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#6366f1', marginTop: '4px' }}>{formatTime(recordingTime)}</div>
-                  </div>
-                  <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(16,185,129,0.06)' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Title</div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-                  </div>
-                </div>
-              </div>
+               <div className="gl-card">
+                 <h3 className="gl-card-title">
+                   <IonIcon icon={radio} style={{ color: '#10b981', fontSize: '18px' }} />
+                   Broadcast Summary
+                 </h3>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                   <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(99,102,241,0.06)' }}>
+                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Duration</div>
+                     <div style={{ fontSize: '18px', fontWeight: '700', color: '#6366f1', marginTop: '4px' }}>{formatTime(recordingTime)}</div>
+                   </div>
+                   <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(16,185,129,0.06)' }}>
+                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Title</div>
+                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title || 'Untitled'}</div>
+                   </div>
+                 </div>
+                 {description && (
+                   <div style={{ marginTop: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.02)' }}>
+                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '4px' }}>Description</div>
+                     <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ion-text-color)', lineHeight: '1.4' }}>{description}</div>
+                   </div>
+                 )}
+               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button className="gl-publish-btn primary" onClick={publishPreview} disabled={isPublishing}>
