@@ -12,6 +12,7 @@ import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressM
 import { AuthContext } from '../App';
 import { useSettings } from '../contexts/SettingsContext';
 import { useBackgroundUpload } from '../hooks/useBackgroundUpload';
+import { Capacitor } from '@capacitor/core';
 import './AdminForm.css';
 import './AdminDashboard.css';
 
@@ -59,6 +60,7 @@ const EditPodcast: React.FC = () => {
   const { isDarkMode } = useSettings();
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [audioFileName, setAudioFileName] = useState<string>('');
+  const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -123,9 +125,39 @@ const EditPodcast: React.FC = () => {
     }
     if (file) {
       setAudioFileName(file.name);
+      setSelectedAudioFile(file);
       getAudioDuration(file).then(duration => {
         setFormData(prev => ({ ...prev, duration }));
       }).catch(() => {});
+    }
+  };
+
+  const handleAudioPickNative = async () => {
+    try {
+      const { FilePicker } = await import('@capawesome/capacitor-file-picker');
+      const result = await FilePicker.pickFiles({
+        types: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/mp4', 'audio/x-m4a'],
+        limit: 1
+      });
+      if (result.files.length > 0) {
+        const picked = result.files[0];
+        if (picked.size > 300 * 1024 * 1024) {
+          setAlertHeader('Upload Error');
+          setAlertMessage('Audio file size must be less than 300MB');
+          setShowAlert(true);
+          return;
+        }
+        setAudioFileName(picked.name);
+        const file = new File([picked.blob!], picked.name, { type: picked.mimeType });
+        setSelectedAudioFile(file);
+        getAudioDuration(file).then(duration => {
+          setFormData(prev => ({ ...prev, duration }));
+        }).catch(() => {});
+      }
+    } catch (error: any) {
+      if (error?.message !== 'User cancelled images app.') {
+        console.error('File picker error:', error);
+      }
     }
   };
 
@@ -174,7 +206,7 @@ const EditPodcast: React.FC = () => {
         formDataToSend.append('description', formData.description);
         formDataToSend.append('duration', formData.duration);
         formDataToSend.append('status', formData.status);
-        if (fileInputRef.current?.files?.[0]) formDataToSend.append('audioFile', fileInputRef.current.files[0]);
+        if (selectedAudioFile) formDataToSend.append('audioFile', selectedAudioFile);
         if (thumbnailInputRef.current?.files?.[0]) formDataToSend.append('thumbnailFile', thumbnailInputRef.current.files[0]);
         await apiService.updatePodcast(id, formDataToSend, (pct) => {
           setSaveSteps(prev => prev.map((s, i) => i === 0 ? { ...s, progress: pct } : s));
@@ -304,7 +336,13 @@ const EditPodcast: React.FC = () => {
                 <label className="af-label">Audio File</label>
                 <input ref={fileInputRef} type="file" accept="audio/*" onChange={handleAudioSelect} style={{ display: 'none' }} />
                 {!audioFileName ? (
-                  <div className="af-upload" onClick={() => fileInputRef.current?.click()}>
+                  <div className="af-upload" onClick={() => {
+                    if (Capacitor.isNativePlatform()) {
+                      handleAudioPickNative();
+                    } else {
+                      fileInputRef.current?.click();
+                    }
+                  }}>
                     <div className="af-upload-icon"><IonIcon icon={musicalNote} /></div>
                     <p className="af-upload-text">Replace audio file</p>
                     <p className="af-upload-hint">Optional &bull; Max 300MB &bull; All audio formats</p>
@@ -317,7 +355,7 @@ const EditPodcast: React.FC = () => {
                         <p className="af-upload-text">{audioFileName}</p>
                         <p className="af-upload-hint">Audio file ready</p>
                       </div>
-                      <button onClick={() => { setAudioFileName(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                      <button onClick={() => { setAudioFileName(''); setSelectedAudioFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
                         className="af-submit af-submit-danger" style={{ width: 'auto', padding: '6px 12px', fontSize: '12px' }}>
                         <IonIcon icon={closeCircle} /> Remove
                       </button>
