@@ -85,6 +85,7 @@ const Tab2: React.FC = () => {
   const { isDarkMode } = useSettings();
 
   const contentRef = useRef<HTMLIonContentElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const initialSelectionDoneRef = useRef(false);
   useIonViewDidEnter(() => { contentRef.current?.scrollToTop(); });
 
