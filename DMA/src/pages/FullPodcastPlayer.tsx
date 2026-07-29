@@ -229,7 +229,7 @@ const FullPodcastPlayer: React.FC = () => {
       if (podcast && isLoggedIn) {
         try {
           const response = await apiService.getSavedPodcasts();
-          const isAlreadySaved = response.savedPodcasts.some((p: any) => p._id === podcast.id);
+          const isAlreadySaved = response.savedPodcasts.some((p: any) => (p._id || p.id) === podcast.id);
           setIsSaved(isAlreadySaved);
         } catch (error) {
           console.warn('Error checking saved status:', error);
@@ -303,13 +303,9 @@ const FullPodcastPlayer: React.FC = () => {
     }
 
     try {
-      if (isSaved) {
-        await apiService.unsavePodcast(podcast.id);
-        setIsSaved(false);
-      } else {
-        await apiService.savePodcast(podcast.id);
-        setIsSaved(true);
-      }
+      const result = await apiService.savePodcast(podcast.id);
+      setIsSaved(result.saved);
+      window.dispatchEvent(new Event('savedItemsChanged'));
     } catch (error) {
       console.error('Error saving/unsaving podcast:', error);
       alert('Failed to save podcast. Please try again.');
@@ -853,14 +849,12 @@ const FullPodcastPlayer: React.FC = () => {
           </div>
 
           {/* Fixed Bottom Controls Section */}
-          <div style={{
+          <div className="podcast-controls-section" style={{
             position: 'fixed',
             bottom: '25px',
             left: 0,
             right: 0,
             padding: '38px 20px calc(48px + env(safe-area-inset-bottom, 0px))',
-            background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 20%)',
-            backdropFilter: 'blur(20px)',
             zIndex: 100
           }}>
             {/* Progress Bar */}
