@@ -4,7 +4,7 @@
    Light & Dark mode support
    ============================================ */
 
-/* --- Overlay (light by default) --- */
+/* --- Overlay --- */
 .ap-overlay {
   position: fixed;
   inset: 0;
@@ -20,30 +20,21 @@
   overflow: hidden;
 }
 
-[data-theme="dark"] .ap-overlay {
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* --- Popover Container (Light) --- */
+/* --- Popover Container --- */
 .ap-popover {
   width: 90%;
   max-width: 380px;
-  background: #ffffff;
   border-radius: 20px;
   overflow: hidden;
+}
+
+/* --- Light Mode (default) --- */
+.ap-light .ap-popover {
+  background: #ffffff;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
-/* --- Popover Container (Dark) --- */
-[data-theme="dark"] .ap-popover {
-  background: #2c2c2e;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.10);
-}
-
-/* --- Header (Light) --- */
-.ap-header {
+.ap-light .ap-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,12 +42,7 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* --- Header (Dark) --- */
-[data-theme="dark"] .ap-header {
-  border-bottom-color: rgba(255, 255, 255, 0.10);
-}
-
-.ap-title {
+.ap-light .ap-title {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
@@ -68,12 +54,7 @@
   max-width: calc(100% - 36px);
 }
 
-[data-theme="dark"] .ap-title {
-  color: #f0f0f0;
-}
-
-/* --- Close Button --- */
-.ap-close-btn {
+.ap-light .ap-close-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,46 +68,29 @@
   transition: background 0.15s ease;
 }
 
-.ap-close-btn:hover {
+.ap-light .ap-close-btn:hover {
   background: rgba(0, 0, 0, 0.10);
 }
 
-.ap-close-btn:active {
+.ap-light .ap-close-btn:active {
   background: rgba(0, 0, 0, 0.14);
   transform: scale(0.92);
 }
 
-.ap-close-btn ion-icon {
+.ap-light .ap-close-btn ion-icon {
   font-size: 16px;
-  color: #8e8e93;
+  color: #6b6b73;
 }
 
-[data-theme="dark"] .ap-close-btn {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .ap-close-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-[data-theme="dark"] .ap-close-btn:active {
-  background: rgba(255, 255, 255, 0.20) !important;
-}
-
-[data-theme="dark"] .ap-close-btn ion-icon {
-  color: #98989d;
-}
-
-/* --- Options List --- */
-.ap-options {
+/* Light Mode Options */
+.ap-light .ap-options {
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-/* --- Option Button (Light) --- */
-.ap-option {
+.ap-light .ap-option {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -140,16 +104,15 @@
   text-align: left;
 }
 
-.ap-option:hover {
+.ap-light .ap-option:hover {
   background: rgba(0, 0, 0, 0.03);
 }
 
-.ap-option:active {
+.ap-light .ap-option:active {
   background: rgba(0, 0, 0, 0.06);
 }
 
-/* --- Option Icon (Light) --- */
-.ap-option-icon {
+.ap-light .ap-option-icon {
   font-size: 20px;
   color: #007aff;
   flex-shrink: 0;
@@ -157,34 +120,31 @@
   text-align: center;
 }
 
-/* --- Option Text (Light) --- */
-.ap-option-text {
+.ap-light .ap-option-text {
   font-size: 15px;
   font-weight: 500;
   color: #1c1c1e;
   letter-spacing: -0.1px;
 }
 
-/* --- Destructive Option (Light) --- */
-.ap-destructive .ap-option-icon {
+.ap-light .ap-destructive .ap-option-icon {
   color: #d41a1a;
 }
 
-.ap-destructive .ap-option-text {
+.ap-light .ap-destructive .ap-option-text {
   color: #d41a1a;
   font-weight: 600;
 }
 
-.ap-destructive:hover {
+.ap-light .ap-destructive:hover {
   background: rgba(212, 26, 26, 0.06);
 }
 
-.ap-destructive:active {
+.ap-light .ap-destructive:active {
   background: rgba(212, 26, 26, 0.12);
 }
 
-/* --- Cancel Option (Light) --- */
-.ap-cancel {
+.ap-light .ap-cancel {
   margin-top: 6px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
@@ -192,81 +152,103 @@
   padding: 14px 16px;
 }
 
-.ap-cancel .ap-option-icon {
-  color: #8e8e93;
+.ap-light .ap-cancel .ap-option-icon {
+  color: #6b6b73;
 }
 
-.ap-cancel .ap-option-text {
-  color: #8e8e93;
+.ap-light .ap-cancel .ap-option-text {
+  color: #6b6b73;
   font-weight: 500;
   font-size: 14px;
 }
 
-.ap-cancel:hover {
+.ap-light .ap-cancel:hover {
   background: rgba(0, 0, 0, 0.02);
 }
 
-.ap-cancel:active {
+.ap-light .ap-cancel:active {
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* ============================================
-   Dark Mode
-   ============================================ */
-
-/* --- Option Button (Dark) --- */
-[data-theme="dark"] .ap-option:hover {
-  background: rgba(255, 255, 255, 0.04);
+/* --- Dark Mode (overrides) --- */
+.ap-dark .ap-popover {
+  background: #2c2c2e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.10);
 }
 
-[data-theme="dark"] .ap-option:active {
-  background: rgba(255, 255, 255, 0.08) !important;
+.ap-dark .ap-header {
+  border-bottom-color: rgba(255, 255, 255, 0.10);
 }
 
-/* --- Option Icon (Dark) --- */
-[data-theme="dark"] .ap-option-icon {
-  color: #5ac8fa;
-}
-
-/* --- Option Text (Dark) --- */
-[data-theme="dark"] .ap-option-text {
+.ap-dark .ap-title {
   color: #f0f0f0;
 }
 
-/* --- Destructive Option (Dark) --- */
-[data-theme="dark"] .ap-destructive .ap-option-icon {
+.ap-dark .ap-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ap-dark .ap-close-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ap-dark .ap-close-btn:active {
+  background: rgba(255, 255, 255, 0.20) !important;
+}
+
+.ap-dark .ap-close-btn ion-icon {
+  color: #98989d;
+}
+
+/* Dark Mode Options */
+.ap-dark .ap-option:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ap-dark .ap-option:active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ap-dark .ap-option-icon {
+  color: #5ac8fa;
+}
+
+.ap-dark .ap-option-text {
+  color: #f0f0f0;
+}
+
+.ap-dark .ap-destructive .ap-option-icon {
   color: #ff6b6b;
 }
 
-[data-theme="dark"] .ap-destructive .ap-option-text {
+.ap-dark .ap-destructive .ap-option-text {
   color: #ff6b6b;
 }
 
-[data-theme="dark"] .ap-destructive:hover {
+.ap-dark .ap-destructive:hover {
   background: rgba(255, 107, 107, 0.10);
 }
 
-[data-theme="dark"] .ap-destructive:active {
+.ap-dark .ap-destructive:active {
   background: rgba(255, 107, 107, 0.18) !important;
 }
 
-/* --- Cancel Option (Dark) --- */
-[data-theme="dark"] .ap-cancel {
+.ap-dark .ap-cancel {
   border-top-color: rgba(255, 255, 255, 0.10);
 }
 
-[data-theme="dark"] .ap-cancel .ap-option-icon {
+.ap-dark .ap-cancel .ap-option-icon {
   color: #98989d;
 }
 
-[data-theme="dark"] .ap-cancel .ap-option-text {
+.ap-dark .ap-cancel .ap-option-text {
   color: #98989d;
 }
 
-[data-theme="dark"] .ap-cancel:hover {
+.ap-dark .ap-cancel:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
-[data-theme="dark"] .ap-cancel:active {
+.ap-dark .ap-cancel:active {
   background: rgba(255, 255, 255, 0.08) !important;
 }
