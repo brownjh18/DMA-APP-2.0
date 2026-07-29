@@ -876,6 +876,12 @@ class ApiService {
     });
   }
 
+  async resetUserPassword(id: string) {
+    return this.request(`/auth/users/${id}/reset-password`, {
+      method: 'POST',
+    });
+  }
+
   // Search
   async search(query: string, filters: any = {}) {
     const searchParams = new URLSearchParams({

@@ -3,7 +3,7 @@ import {
   IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonAlert, IonText, IonSpinner
 } from '@ionic/react';
 import {
-  save, person, closeCircle, image, personOutline, mail, lockClosed, call, shield, checkmarkCircle, informationCircle, arrowBack
+  save, person, closeCircle, image, personOutline, mail, lockClosed, call, shield, checkmarkCircle, informationCircle, arrowBack, key
 } from 'ionicons/icons';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 import SaveProgressModal, { SaveProgressStep } from '../components/SaveProgressModal';
@@ -24,6 +24,7 @@ const EditUser: React.FC = () => {
   const bgUpload = useBackgroundUpload('edit-user', 'Edit user');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertHeader, setAlertHeader] = useState('Notice');
@@ -217,6 +218,24 @@ const EditUser: React.FC = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!userId) return;
+
+    setResetting(true);
+    try {
+      await apiService.resetUserPassword(userId);
+      setAlertHeader('Password Reset');
+      setAlertMessage("Password has been reset to 'password123'");
+      setShowAlert(true);
+    } catch (error) {
+      setAlertHeader('Error');
+      setAlertMessage(error instanceof Error ? error.message : 'Failed to reset password');
+      setShowAlert(true);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) {
     return (
       <IonPage>
@@ -316,6 +335,14 @@ const EditUser: React.FC = () => {
               <><IonSpinner name="crescent" color="white" style={{ width: '20px', height: '20px' }} /><span> Saving...</span></>
             ) : (
               <><IonIcon icon={save} style={{ fontSize: '18px', marginRight: '8px' }} />Update User</>
+            )}
+          </button>
+
+          <button onClick={handleResetPassword} disabled={resetting || saving} className="af-submit" style={{ marginTop: '12px', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            {resetting ? (
+              <><IonSpinner name="crescent" color="#ef4444" style={{ width: '20px', height: '20px' }} /><span> Resetting...</span></>
+            ) : (
+              <><IonIcon icon={key} style={{ fontSize: '18px', marginRight: '8px' }} />Reset Password to "password123"</>
             )}
           </button>
 

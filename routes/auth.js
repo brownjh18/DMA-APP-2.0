@@ -541,6 +541,29 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
   }
 });
 
+// Reset user password (admin only)
+router.post('/users/:id/reset-password', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const protectedAdminEmail = 'brownjh18@gmail.com';
+    if (user.email === protectedAdminEmail) {
+      return res.status(403).json({ error: 'Cannot reset the default admin password' });
+    }
+
+    user.password = 'password123';
+    await user.save();
+
+    res.json({ message: "Password reset to 'password123' successfully" });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
 // Delete user (admin only)
 router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
