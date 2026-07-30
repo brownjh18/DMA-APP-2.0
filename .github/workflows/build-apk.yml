@@ -73,7 +73,7 @@ jobs:
         run: |
           curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.BACKEND_URL || 'https://dove-church.onrender.com' }}/api/app/webhook/notify-update" \
             -H "Content-Type: application/json" \
-            -H "X-GitHub-Action-Secret: ${{ secrets.GITHUB_ACTION_SECRET }}" \
+            -H "X-GitHub-Action-Secret: ${{ secrets.APP_UPDATE_SECRET }}" \
             -d '{
               "latestVersion": "${{ steps.version.outputs.version }}",
               "releaseNotes": ["New build available from GitHub"],

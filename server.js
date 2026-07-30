@@ -633,7 +633,7 @@ app.post('/api/app/notify-update', authenticateToken, requireAdmin, async (req, 
 // POST /api/app/webhook/notify-update — called by GitHub Actions (uses shared secret, no JWT)
 app.post('/api/app/webhook/notify-update', async (req, res) => {
   const secret = req.headers['x-github-action-secret'];
-  const expected = process.env.GITHUB_ACTION_SECRET;
+  const expected = process.env.APP_UPDATE_SECRET;
   if (!expected || secret !== expected) {
     return res.status(401).json({ error: 'Invalid or missing secret' });
   }
