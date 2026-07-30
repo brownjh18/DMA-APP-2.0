@@ -346,14 +346,14 @@
   gap: 8px;
   padding: 6px 14px;
   border-radius: 20px;
-  background: rgba(255, 149, 0, 0.08);
+  background: rgba(255, 149, 0, 0.12);
   margin-bottom: 6px;
 }
 
 .settings-popover-ver-old {
   font-size: 13px;
   font-weight: 600;
-  color: #8e8e93;
+  color: #636366;
   text-decoration: line-through;
 }
 
@@ -371,8 +371,55 @@
 .settings-popover-date {
   display: block;
   font-size: 11px;
-  color: #8e8e93;
+  color: #636366;
   margin-bottom: 16px;
+}
+
+/* Light mode explicit overrides for update popover */
+[data-theme="light"] .settings-popover-version-badge,
+:root:not([data-theme="dark"]) .settings-popover-version-badge {
+  background: rgba(255, 149, 0, 0.12) !important;
+}
+
+[data-theme="light"] .settings-popover-ver-old,
+:root:not([data-theme="dark"]) .settings-popover-ver-old {
+  color: #636366 !important;
+}
+
+[data-theme="light"] .settings-popover-ver-new,
+:root:not([data-theme="dark"]) .settings-popover-ver-new {
+  color: #ff9500 !important;
+}
+
+[data-theme="light"] .settings-popover-ver-arrow,
+:root:not([data-theme="dark"]) .settings-popover-ver-arrow {
+  color: #ff9500 !important;
+}
+
+[data-theme="light"] .settings-popover-date,
+:root:not([data-theme="dark"]) .settings-popover-date {
+  color: #636366 !important;
+}
+
+[data-theme="light"] .settings-popover-title,
+:root:not([data-theme="dark"]) .settings-popover-title {
+  color: #1a1a1a !important;
+}
+
+[data-theme="light"] .settings-popover-install-btn,
+:root:not([data-theme="dark"]) .settings-popover-install-btn {
+  color: white !important;
+}
+
+[data-theme="light"] .settings-popover-hint,
+:root:not([data-theme="dark"]) .settings-popover-hint {
+  color: #8e8e93 !important;
+}
+
+[data-theme="light"] .settings-popover,
+:root:not([data-theme="dark"]) .settings-popover {
+  background: var(--ios26-card-bg-light) !important;
+  color: #1a1a1a !important;
 }
 
 .settings-popover-notes {

@@ -1,0 +1,355 @@
+/* ============================================
+   Update Popover - Auto-show on App Load
+   ============================================ */
+
+/* --- Overlay (light) --- */
+.up-light {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  touch-action: none;
+  overscroll-behavior: contain;
+  overflow: hidden;
+}
+
+/* --- Overlay (dark) --- */
+.up-dark {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  touch-action: none;
+  overscroll-behavior: contain;
+  overflow: hidden;
+}
+
+/* --- Popover Container --- */
+.up-popover {
+  width: 90%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  animation: upPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes upPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* --- Dark Mode Popover --- */
+.up-dark .up-popover {
+  background: #2c2c2e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* --- Close Button --- */
+.up-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  color: #8e8e93;
+}
+
+.up-close-btn:active {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(0.9);
+}
+
+.up-close-btn ion-icon {
+  font-size: 14px;
+  color: #8e8e93;
+}
+
+.up-dark .up-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #98989d;
+}
+
+.up-dark .up-close-btn:active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.up-dark .up-close-btn ion-icon {
+  color: #98989d;
+}
+
+/* --- Icon Circle --- */
+.up-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff9500, #ff6b00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 16px;
+  font-size: 28px;
+  color: white;
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.35);
+}
+
+.up-icon-warning {
+  background: linear-gradient(135deg, #ff3b30, #d70015);
+  box-shadow: 0 6px 20px rgba(255, 59, 48, 0.35);
+}
+
+.up-icon-normal {
+  background: linear-gradient(135deg, #34c759, #30b350);
+  box-shadow: 0 6px 20px rgba(52, 199, 89, 0.35);
+}
+
+/* --- Title --- */
+.up-title {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.3px;
+}
+
+.up-dark .up-title {
+  color: #ffffff !important;
+}
+
+/* --- Version Badge --- */
+.up-version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 149, 0, 0.08);
+  margin-bottom: 6px;
+}
+
+.up-ver-old {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-decoration: line-through;
+}
+
+.up-ver-arrow {
+  font-size: 14px;
+  color: #ff9500;
+}
+
+.up-ver-new {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff9500;
+}
+
+.up-dark .up-version-badge {
+  background: rgba(255, 149, 0, 0.15);
+}
+
+.up-dark .up-ver-old {
+  color: #98989d;
+}
+
+.up-dark .up-ver-arrow {
+  color: #ff9f0a;
+}
+
+.up-dark .up-ver-new {
+  color: #ff9f0a;
+}
+
+/* --- Date --- */
+.up-date {
+  display: block;
+  font-size: 11px;
+  color: #8e8e93;
+  margin-bottom: 16px;
+}
+
+.up-dark .up-date {
+  color: #98989d !important;
+}
+
+/* --- Force Text --- */
+.up-force-text {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #8e8e93;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.up-dark .up-force-text {
+  color: #98989d !important;
+}
+
+/* --- Force Badge --- */
+.up-force-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.up-dark .up-force-badge {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+
+/* --- Install Button --- */
+.up-install-btn {
+  --background: linear-gradient(135deg, #ff9500, #ff6b00) !important;
+  --color: white !important;
+  --border-radius: 12px !important;
+  --box-shadow: 0 4px 14px rgba(255, 149, 0, 0.3) !important;
+  height: 48px;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  margin-bottom: 10px;
+}
+
+.up-install-btn:active {
+  transform: scale(0.97);
+}
+
+/* --- Check Again Button --- */
+.up-check-btn {
+  --background: linear-gradient(135deg, #34c759, #30b350) !important;
+  --color: white !important;
+  --border-radius: 12px !important;
+  --box-shadow: 0 4px 14px rgba(52, 199, 89, 0.3) !important;
+  height: 48px;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.up-check-btn:active {
+  transform: scale(0.97);
+}
+
+/* --- Hint Text --- */
+.up-hint {
+  font-size: 11px;
+  color: #8e8e93;
+  margin: 0;
+  text-align: center;
+}
+
+.up-dark .up-hint {
+  color: #98989d !important;
+}
+
+/* ============================================
+   Light Mode Overrides (Force Visibility)
+   ============================================ */
+.up-light .up-popover {
+  background: #ffffff !important;
+}
+
+.up-light .up-title {
+  color: #1a1a1a !important;
+}
+
+.up-light .up-ver-old {
+  color: #8e8e93 !important;
+}
+
+.up-light .up-ver-arrow {
+  color: #ff9500 !important;
+}
+
+.up-light .up-ver-new {
+  color: #ff9500 !important;
+}
+
+.up-light .up-date {
+  color: #8e8e93 !important;
+}
+
+.up-light .up-hint {
+  color: #8e8e93 !important;
+}
+
+.up-light .up-close-btn {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #8e8e93 !important;
+}
+
+.up-light .up-close-btn ion-icon {
+  color: #8e8e93 !important;
+}
+
+/* ============================================
+   Dark Mode Overrides
+   ============================================ */
+.up-dark .up-popover {
+  background: #2c2c2e !important;
+}
+
+.up-dark .up-title {
+  color: #ffffff !important;
+}
+
+.up-dark .up-ver-old {
+  color: #98989d !important;
+}
+
+.up-dark .up-ver-arrow {
+  color: #ff9f0a !important;
+}
+
+.up-dark .up-ver-new {
+  color: #ff9f0a !important;
+}
+
+.up-dark .up-date {
+  color: #98989d !important;
+}
+
+.up-dark .up-hint {
+  color: #98989d !important;
+}
+
+.up-dark .up-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #98989d !important;
+}
+
+.up-dark .up-close-btn ion-icon {
+  color: #98989d !important;
+}

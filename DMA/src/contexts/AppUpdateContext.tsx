@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { API_BASE_URL } from '../services/api';
+import { Capacitor } from '@capacitor/core';
 
 const CURRENT_APP_VERSION = '1.2.0';
 
@@ -78,20 +79,29 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
       setUpdateUrl(data.updateUrl || '');
 
       const updateAvailable = compareVersions(data.latestVersion, CURRENT_APP_VERSION) > 0;
+      const isBelowMinimum = data.minimumVersion && compareVersions(CURRENT_APP_VERSION, data.minimumVersion) < 0;
+      const shouldForceUpdate = data.forceUpdate || isBelowMinimum;
+      
       setHasUpdate(updateAvailable);
+      if (shouldForceUpdate) {
+        setForceUpdate(true);
+      }
 
       const now = Date.now();
       setLastChecked(now);
       localStorage.setItem('app-update-last-checked', String(now));
       localStorage.setItem('app-update-release-notes', JSON.stringify(data.releaseNotes || []));
       localStorage.setItem('app-update-release-date', data.releaseDate || '');
+      localStorage.setItem('app-update-minimum-version', data.minimumVersion || '');
 
       if (updateAvailable) {
         localStorage.setItem('app-update-available', 'true');
         localStorage.setItem('app-update-version', data.latestVersion);
+        localStorage.setItem('app-update-force', String(shouldForceUpdate));
       } else {
         localStorage.removeItem('app-update-available');
         localStorage.removeItem('app-update-version');
+        localStorage.removeItem('app-update-force');
       }
     } catch (error) {
       console.error('Failed to check for app update:', error);
@@ -108,6 +118,7 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
     } else {
       const stored = localStorage.getItem('app-update-available');
       const storedVersion = localStorage.getItem('app-update-version');
+      const storedForce = localStorage.getItem('app-update-force');
       const storedNotes = localStorage.getItem('app-update-release-notes');
       const storedDate = localStorage.getItem('app-update-release-date');
       if (storedNotes) {
@@ -120,15 +131,46 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
         if (stillHasUpdate) {
           setLatestVersion(storedVersion);
           setHasUpdate(true);
+          if (storedForce === 'true') {
+            setForceUpdate(true);
+          }
         } else {
           // Cached version is no longer newer, clear stale cache
           localStorage.removeItem('app-update-available');
           localStorage.removeItem('app-update-version');
+          localStorage.removeItem('app-update-force');
           setHasUpdate(false);
+          setForceUpdate(false);
         }
       }
     }
   }, []);
+
+  // Check for updates when app comes to foreground (mobile)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleAppStateChange = (state: { isActive: boolean }) => {
+      if (state.isActive) {
+        const sixHours = 6 * 60 * 60 * 1000;
+        const now = Date.now();
+        if (!lastChecked || now - lastChecked > sixHours) {
+          checkForUpdate();
+        }
+      }
+    };
+
+    // Capacitor App listeners
+    const addListener = async () => {
+      const { App } = await import('@capacitor/app');
+      const listener = await App.addListener('appStateChange', handleAppStateChange);
+      return listener;
+    };
+
+    addListener().then(listener => {
+      return () => listener.remove();
+    });
+  }, [lastChecked, checkForUpdate]);
 
   const value: AppUpdateContextType = {
     currentVersion: CURRENT_APP_VERSION,

@@ -188,7 +188,9 @@ import OfflineIndicator from './components/OfflineIndicator';
 import ProgressOverlay from './components/ProgressOverlay';
 import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
+import UpdatePopover from './components/UpdatePopover';
 import './components/FloatingSearchIcon.css';
+import './components/UpdatePopover.css';
 import Tab1 from './pages/Tab1';
 import Tab2 from './pages/Tab2';
 import Tab3 from './pages/Tab3';
@@ -642,6 +644,7 @@ const App: React.FC = () => {
     <SettingsProvider>
     <NotificationProvider>
       <AppUpdateProvider>
+        <UpdatePopover />
       <NetworkProvider>
         <DownloadsProvider>
           <SocketProvider>
