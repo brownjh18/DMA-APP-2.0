@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['sermon', 'podcast', 'devotion', 'event', 'ministry', 'prayer', 'general'],
+    enum: ['sermon', 'podcast', 'devotion', 'event', 'ministry', 'prayer', 'general', 'app_update'],
     default: 'general'
   },
   contentType: {

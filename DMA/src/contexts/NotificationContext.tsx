@@ -12,7 +12,7 @@ export interface Notification {
   id?: string;
   title: string;
   message: string;
-  type: 'sermon' | 'podcast' | 'devotion' | 'event' | 'ministry' | 'prayer' | 'general';
+  type: 'sermon' | 'podcast' | 'devotion' | 'event' | 'ministry' | 'prayer' | 'general' | 'app_update';
   contentType?: string;
   contentId?: string;
   thumbnailUrl?: string;

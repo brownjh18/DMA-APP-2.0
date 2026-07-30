@@ -1,0 +1,12 @@
+{
+  "latestVersion": "1.2.0",
+  "minimumVersion": "1.0.0",
+  "releaseDate": "2026-07-30",
+  "releaseNotes": [
+    "Mini-player safe-area positioning fix",
+    "Update popover now auto-checks for new versions on startup",
+    "Push notifications for app updates when new version is released"
+  ],
+  "updateUrl": "https://github.com/brownjh18/DMA-APP-2.0/releases/latest/download/Dove-Church.apk",
+  "forceUpdate": false
+}

@@ -96,6 +96,7 @@ async function fetchYouTubeVideoDetails(videoUrl) {
 const isCloudStorage = cloudStorage.isConfigured();
 console.log('☁️ Cloud Storage Status:', cloudStorage.getConfigStatus());
 
+const { authenticateToken, requireAdmin } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const sermonRoutes = require('./routes/sermons');
 const podcastRoutes = require('./routes/podcasts');
@@ -547,23 +548,134 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV, platform: isFly ? 'fly.io' : 'local', mongoReady: mongoose.connection.readyState, dbName: mongoose.connection.name });
 });
 
-// App version check
+// ============================================================
+// App Version & Update Management
+// ============================================================
+
+const versionConfigPath = path.join(__dirname, 'version.json');
+
+function readVersionConfig() {
+  try {
+    const raw = fs.readFileSync(versionConfigPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return {
+      latestVersion: '1.2.0',
+      minimumVersion: '1.0.0',
+      releaseDate: new Date().toISOString().slice(0, 10),
+      releaseNotes: [],
+      updateUrl: 'https://github.com/brownjh18/DMA-APP-2.0/releases/latest/download/Dove-Church.apk',
+      forceUpdate: false,
+    };
+  }
+}
+
+// GET /api/app/version — public, returns current version info
 app.get('/api/app/version', (req, res) => {
-  res.json({
-    latestVersion: '1.2.0',
-    minimumVersion: '1.0.0',
-    releaseDate: '2026-07-25',
-    releaseNotes: [
-      'Fixed popover cancel buttons across the app',
-      'Redesigned sign-in button for better visibility',
-      'Improved push notification permission handling',
-      'Fixed authentication header size issue',
-      'Performance improvements and bug fixes',
-    ],
-    updateUrl: 'https://play.google.com/store/apps/details?id=io.dove.ministries.africa',
-    forceUpdate: false,
-  });
+  res.json(readVersionConfig());
 });
+
+// POST /api/app/version — admin-only, updates version.json and notifies all users
+app.post('/api/app/version', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { latestVersion, minimumVersion, releaseDate, releaseNotes, updateUrl, forceUpdate } = req.body;
+    if (!latestVersion) return res.status(400).json({ error: 'latestVersion is required' });
+
+    const config = {
+      latestVersion,
+      minimumVersion: minimumVersion || '1.0.0',
+      releaseDate: releaseDate || new Date().toISOString().slice(0, 10),
+      releaseNotes: releaseNotes || [],
+      updateUrl: updateUrl || 'https://github.com/brownjh18/DMA-APP-2.0/releases/latest/download/Dove-Church.apk',
+      forceUpdate: forceUpdate || false,
+    };
+
+    fs.writeFileSync(versionConfigPath, JSON.stringify(config, null, 2));
+    console.log(`📝 Version config updated to v${config.latestVersion}`);
+
+    // Notify all users about the new update
+    await createAndEmitNotification({
+      title: 'App Update Available',
+      message: `Version ${config.latestVersion} is now available. Tap to update your app.`,
+      type: 'app_update',
+    });
+
+    res.json({ message: 'Version updated and users notified', config });
+  } catch (error) {
+    console.error('❌ Error updating version:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/app/notify-update — admin-only, triggers update notification without changing version.json
+// Used by GitHub Actions after a release build
+app.post('/api/app/notify-update', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { latestVersion, releaseNotes, updateUrl } = req.body;
+    const config = readVersionConfig();
+    const version = latestVersion || config.latestVersion;
+    const notes = releaseNotes || config.releaseNotes || [];
+
+    await createAndEmitNotification({
+      title: 'App Update Available',
+      message: `Version ${version} is now available with ${notes.length > 0 ? notes.length + ' improvements' : 'new features'}. Tap to update.`,
+      type: 'app_update',
+    });
+
+    console.log(`📢 App update notification sent for v${version}`);
+    res.json({ message: 'Update notification sent to all users', version });
+  } catch (error) {
+    console.error('❌ Error sending update notification:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/app/webhook/notify-update — called by GitHub Actions (uses shared secret, no JWT)
+app.post('/api/app/webhook/notify-update', async (req, res) => {
+  const secret = req.headers['x-github-action-secret'];
+  const expected = process.env.GITHUB_ACTION_SECRET;
+  if (!expected || secret !== expected) {
+    return res.status(401).json({ error: 'Invalid or missing secret' });
+  }
+
+  try {
+    const { latestVersion, releaseNotes, updateUrl } = req.body;
+    const config = readVersionConfig();
+
+    // Update version.json so the /api/app/version endpoint reflects the new release
+    if (latestVersion) {
+      const updated = {
+        ...config,
+        latestVersion,
+        releaseDate: new Date().toISOString().slice(0, 10),
+        releaseNotes: releaseNotes || config.releaseNotes || [],
+        updateUrl: updateUrl || config.updateUrl,
+      };
+      fs.writeFileSync(versionConfigPath, JSON.stringify(updated, null, 2));
+      console.log(`📝 Version config auto-updated to v${latestVersion} via webhook`);
+    }
+
+    const version = latestVersion || config.latestVersion;
+    await createAndEmitNotification({
+      title: 'App Update Available',
+      message: `Version ${version} is now available. Tap to update your app.`,
+      type: 'app_update',
+    });
+
+    console.log(`📢 App update notification sent for v${version} via webhook`);
+    res.json({ message: 'Update notification sent to all users', version });
+  } catch (error) {
+    console.error('❌ Error in webhook notify-update:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/app/download — serves the latest APK
+const apkDir = path.join(__dirname, 'uploads', 'apks');
+if (!fs.existsSync(apkDir)) {
+  fs.mkdirSync(apkDir, { recursive: true });
+}
+app.use('/api/app/download', express.static(apkDir));
 
 // Error handling
 app.use((err, req, res, next) => {

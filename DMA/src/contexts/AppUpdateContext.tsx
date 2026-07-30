@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { API_BASE_URL } from '../services/api';
 import { Capacitor } from '@capacitor/core';
+import { useNotifications } from './NotificationContext';
 
 const CURRENT_APP_VERSION = '1.2.0';
 
@@ -171,6 +172,20 @@ export const AppUpdateProvider: React.FC<AppUpdateProviderProps> = ({ children }
       return () => listener.remove();
     });
   }, [lastChecked, checkForUpdate]);
+
+  // Watch for app_update notifications from backend -> trigger immediate check
+  const { notifications } = useNotifications();
+  const prevNotifCount = useRef(notifications.length);
+
+  useEffect(() => {
+    if (notifications.length > prevNotifCount.current) {
+      const latest = notifications[0];
+      if (latest && latest.type === 'app_update') {
+        checkForUpdate();
+      }
+    }
+    prevNotifCount.current = notifications.length;
+  }, [notifications, checkForUpdate]);
 
   const value: AppUpdateContextType = {
     currentVersion: CURRENT_APP_VERSION,
