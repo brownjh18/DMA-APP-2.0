@@ -1,9 +1,22 @@
 /* Mini Player Styles */
 .mini-player {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: 86px;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 9999;
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  border-radius: 16px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.03) inset;
-  height: 72px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
 }
 

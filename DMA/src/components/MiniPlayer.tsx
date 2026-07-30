@@ -118,21 +118,6 @@ const MiniPlayer: React.FC = () => {
       `}</style>
       <div
         className="mini-player"
-        style={{
-          position: 'fixed',
-          bottom: '85px',
-          left: 8,
-          right: 8,
-          zIndex: 9999,
-          padding: '8px 12px',
-          paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-          cursor: 'pointer',
-          borderRadius: '16px',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-        }}
         onClick={handleOpenPlayer}
       >
         {/* Progress Bar with Time */}
