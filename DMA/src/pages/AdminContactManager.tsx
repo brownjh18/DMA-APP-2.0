@@ -255,7 +255,7 @@ const AdminContactManager: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen className="content-ios">
-        <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+        <div className="acm-page" style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
 
           {/* Section Tabs */}
           <div style={{ 

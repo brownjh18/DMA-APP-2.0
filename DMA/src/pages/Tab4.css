@@ -341,3 +341,36 @@
     height: 32px;
   }
 }
+
+/* ============================================
+   About & Contact (admin) - theme-aware fields
+   ============================================ */
+.acm-page {
+  --ion-text-color: #1a1a1a;
+  --ion-color-step-100: #eceef2;
+  --ion-color-step-200: #dfe2e8;
+  --ion-color-medium: #8e8e93;
+}
+
+[data-theme="dark"] .acm-page {
+  --ion-text-color: #ffffff;
+  --ion-color-step-100: #2e2e31;
+  --ion-color-step-200: #3a3a3e;
+  --ion-color-medium: #98989d;
+}
+
+.acm-page input,
+.acm-page textarea {
+  color: var(--ion-text-color) !important;
+  -webkit-text-fill-color: var(--ion-text-color) !important;
+  caret-color: var(--ion-text-color) !important;
+  background: var(--ion-color-step-100) !important;
+  border-color: var(--ion-color-step-200) !important;
+}
+
+.acm-page input::placeholder,
+.acm-page textarea::placeholder {
+  color: var(--ion-color-medium) !important;
+  -webkit-text-fill-color: var(--ion-color-medium) !important;
+  opacity: 1;
+}
