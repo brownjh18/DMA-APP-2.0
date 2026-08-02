@@ -260,7 +260,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 'calc(64px + 1vw)',
+            right: 'calc(8px + 0.5vw)',
             width: 44,
             height: 44,
             display: 'flex',
@@ -354,7 +354,7 @@ const FloatingSearchIcon: React.FC = () => {
           style={{
             position: 'fixed',
             top: 'calc(var(--ion-safe-area-top) + 4px)',
-            right: 'calc(108px + 1.5vw)',
+            right: 'calc(64px + 1vw)',
             width: 44,
             height: 44,
             display: 'flex',
