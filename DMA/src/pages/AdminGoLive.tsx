@@ -59,6 +59,7 @@ const AdminGoLive: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
@@ -107,6 +108,7 @@ const AdminGoLive: React.FC = () => {
     if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    if (gainNodeRef.current) { try { gainNodeRef.current.disconnect(); } catch {} gainNodeRef.current = null; }
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') audioContextRef.current.close();
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
   };
@@ -142,9 +144,11 @@ const AdminGoLive: React.FC = () => {
         sum += v * v;
       }
       const rms = Math.sqrt(sum / (bufferLength / 4));
+      // Boost amplitude for better visibility of quieter audio
+      const boostedRms = Math.min(1, rms * 1.6);
       const smoothed = waveformBuffer.length > 0
-        ? waveformBuffer[waveformBuffer.length - 1] * 0.4 + rms * 0.6
-        : rms;
+        ? waveformBuffer[waveformBuffer.length - 1] * 0.3 + boostedRms * 0.7
+        : boostedRms;
       waveformBuffer.push(Math.min(1, smoothed));
       if (waveformBuffer.length > maxWidth + 20) {
         waveformBuffer.splice(0, waveformBuffer.length - maxWidth);
@@ -158,23 +162,23 @@ const AdminGoLive: React.FC = () => {
       const startX = width - dataLen;
 
       const gradFill = ctx.createLinearGradient(startX, 0, width, 0);
-      gradFill.addColorStop(0, 'rgba(52,199,89,0.08)');
-      gradFill.addColorStop(0.5, 'rgba(52,199,89,0.35)');
-      gradFill.addColorStop(1, 'rgba(52,199,89,0.6)');
+      gradFill.addColorStop(0, 'rgba(225,29,72,0.10)');
+      gradFill.addColorStop(0.5, 'rgba(225,29,72,0.4)');
+      gradFill.addColorStop(1, 'rgba(225,29,72,0.65)');
 
       ctx.beginPath();
       ctx.moveTo(startX, centerY);
       for (let i = 0; i < dataLen; i++) {
         const x = startX + i;
         const amp = waveformBuffer[i];
-        const y = centerY - amp * centerY * 0.85;
+        const y = centerY - amp * centerY * 1.1;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       for (let i = dataLen - 1; i >= 0; i--) {
         const x = startX + i;
         const amp = waveformBuffer[i];
-        const y = centerY + amp * centerY * 0.85;
+        const y = centerY + amp * centerY * 1.1;
         ctx.lineTo(x, y);
       }
       ctx.closePath();
@@ -185,27 +189,27 @@ const AdminGoLive: React.FC = () => {
       for (let i = 0; i < dataLen; i++) {
         const x = startX + i;
         const amp = waveformBuffer[i];
-        const y = centerY - amp * centerY * 0.85;
+        const y = centerY - amp * centerY * 1.1;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = 'rgba(52,199,89,0.9)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(225,29,72,0.9)';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       ctx.beginPath();
       for (let i = 0; i < dataLen; i++) {
         const x = startX + i;
         const amp = waveformBuffer[i];
-        const y = centerY + amp * centerY * 0.85;
+        const y = centerY + amp * centerY * 1.1;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = 'rgba(52,199,89,0.5)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(225,29,72,0.55)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(52,199,89,0.15)';
+      ctx.strokeStyle = 'rgba(225,29,72,0.2)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -254,13 +258,22 @@ const AdminGoLive: React.FC = () => {
       analyserRef.current = analyser;
       analyser.fftSize = 256;
       const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
+
+      // Amplify the audio before it reaches both the visualizer and the recorder
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 2.2;
+      gainNodeRef.current = gainNode;
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(gainNode);
+      gainNode.connect(analyser);
+      gainNode.connect(destination);
+
       const mimeType = (() => {
         const types = ['audio/mp4;codecs=mp4a.40.2', 'audio/webm;codecs=opus', 'audio/webm', 'audio/wav'];
         for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
         return 'audio/webm';
       })();
-      const mr = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 64000 });
+      const mr = new MediaRecorder(destination.stream, { mimeType, audioBitsPerSecond: 128000 });
       mediaRecorderRef.current = mr;
       recordedChunksRef.current = [];
       mr.ondataavailable = (e) => {
